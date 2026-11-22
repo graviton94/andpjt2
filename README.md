@@ -11,7 +11,7 @@
 | 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 광고 두 배 보상은 선택형이며 완료 거래에서 P만 지급. 경쟁 기록은 동일 조건으로 분리 |
 | UI와 손맛 | 기본 화면은 Android 알림창처럼 읽히게, 충돌과 결과는 히트스톱·셰이크·섬광·반동·파티클·SFX·햅틱을 같은 박자에 적용. 움직임 줄이기와 독립적인 소리·진동 옵션 제공 |
 
-1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다.
+1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다. P 지급·가격·레벨 곡선 v0.1과 P1 작업 분해는 [P1 경제 설계](docs/notification-cleaner-p1-economy-design.md)에 있고, `./gradlew -p tools/economy-sim run`으로 다시 잴 수 있습니다.
 2. [개발계획서 5~7장](docs/notification-cleaner-production-plan.md#5-화면-타격감과-활용-스킬)의 타격감 계약, Android 경계와 통과 조건을 기준으로 작업을 나눕니다. 다음 구현 순서는 P0 실기기 타격감 검증, P1 10분 분량과 P·XP 분리, P2 첫 이용자 테스트입니다.
 3. [GameEngine.kt](app/src/main/java/com/graviton94/notificationcleaner/GameEngine.kt)와 [GameSession.kt](app/src/main/java/com/graviton94/notificationcleaner/GameSession.kt)에서 판정·저장·재생을 확인합니다. 화면과 피드백은 [NotificationShade.kt](app/src/main/java/com/graviton94/notificationcleaner/NotificationShade.kt), [ImpactEffects.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactEffects.kt), [ImpactFeedback.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactFeedback.kt)에 있습니다.
 4. 변경마다 고정 시드 판정 테스트와 앱 스모크를 실행합니다. 연출 작업은 실제 기기에서 손을 뗀 순간부터 복구까지 확인하고, 샘플 전용 첫 연쇄 수치를 본편의 밸런스 목표와 구분합니다.
