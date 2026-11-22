@@ -1,32 +1,20 @@
 # 알림 청소부
 
-알림 한 줄을 밀어 같은 앱을 붙이고, 작은 충돌이 대기열과 상태표시줄을 집어삼키는 무한 증분 Android 게임입니다. 이 저장소의 **《알림 청소부 FX》는 손맛과 첫 연쇄를 검증하는 시연 앱**입니다. 본편의 제품 목표, 공식 가안, 개발 순서와 통과 조건은 [추가 개발계획서](docs/notification-cleaner-production-plan.md)에 있습니다.
+스마트폰 알림창을 한 손으로 무너뜨리는 방치형 연쇄 퍼즐(Android). 알림 한 줄을 밀어 같은 앱끼리 터뜨리고, 고른 덱과 쌓인 배율이 같은 스와이프를 수십 자리 숫자로 바꾼다. 막히면 기기를 공장 초기화해 더 깊이 간다.
 
-## 본편 설계 정본 (2026-11-23)
+## 시작은 바이블에서
 
-본편은 시연 앱을 잇지 않고 처음부터 설계합니다. 현재 [개발 순서](docs/core-rules-v3.md#0-개발-순서)의 1단계입니다.
+**[docs/bible](docs/bible/README.md)** 가 프로젝트의 단일 진입점입니다. 비전, 마스터 개발 플랜, 개발 현황, 코어 루프, 경제, 콘텐츠 참조표(코드에서 자동 생성), 화면, 아키텍처, 디렉토리 구조, 사례조사 적용과 추가 조사 발주서, 결정 기록, 용어집이 있습니다.
 
-- [핵심 로직 방향 결정](docs/core-direction-decisions.md) · 덱·슬롯·시너지·점화제·초기화에 대한 기획 인터뷰 결과
-- [코어 규칙 v3](docs/core-rules-v3.md) · 판정 규칙 정본. 기준 구현은 순수 Kotlin 모듈 [`core/`](core) (`./gradlew -p core test`)
-- [디자인 시스템 v1](docs/design/design-system.md) · 데이라이트 기본, 다크 모드 앰버 골드, 글래스모피즘. 값의 원본은 [`tokens.json`](docs/design/tokens.json)
-- [콘텐츠 카탈로그](docs/content/notification-catalog.html) · 알림 앱 24종, 이벤트 카드·기본 돌발, 덱·시너지, 판 강화, 백업 상점, 레벨링 곡선 (브라우저로 열기)
-- [경제 v0.3](docs/economy-v0.3.md) · 8주 일상 플레이 시뮬레이션(`./gradlew -p tools/economy-sim run --args="daily 56 4"`), 지수 레벨, 누적 환생 이득, 오프라인 정산, Lv1~90 해금표
-- [경제 v0.2](docs/economy-v0.2.md) · 회차 전체 시뮬레이션(`./gradlew -p tools/economy-sim run`)으로 정한 가격·시너지·XP·백업파일 수치
-- [이전 경제 설계](docs/notification-cleaner-p1-economy-design.md) · 시연 엔진 실측과 초기 결정 (기록용)
+현재 **2단계(경제 + 콘텐츠)** 진행 중입니다. 본편 판정 엔진은 순수 Kotlin 모듈 [`core/`](core), 경제 시뮬레이터는 [`tools/economy-sim`](tools/economy-sim)입니다.
 
-## 개발 인수인계
+```sh
+./gradlew -p core test                                    # 규칙 테스트 (CI)
+./gradlew -p core run --args="content" > docs/bible/05-content-reference.md   # 참조표 재생성
+./gradlew -p tools/economy-sim run --args="daily 56 4"    # 8주 일상 플레이 시뮬레이션
+```
 
-| 항목 | 본편에서 지킬 것 |
-|---|---|
-| 코어 | 한 손 스와이프 → 같은 앱 묶음 → 실물 폭발 → 과부하 → 알림창 붕괴·자동 복구. 플레이어의 다음 입력은 같은 알림창에서 이어짐 |
-| 성장 | 점수는 과부하 파동에서 자릿수가 뛰고, 앱 강화·권역·카테고리·이벤트가 곱해짐. 앱 고유값은 앱별 한 번 가산. P·XP·행동력의 진행 목표는 각각 관리 |
-| 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 광고 두 배 보상은 선택형이며 완료 거래에서 P만 지급. 경쟁 기록은 동일 조건으로 분리 |
-| UI와 손맛 | 기본 화면은 Android 알림창처럼 읽히게, 충돌과 결과는 히트스톱·셰이크·섬광·반동·파티클·SFX·햅틱을 같은 박자에 적용. 움직임 줄이기와 독립적인 소리·진동 옵션 제공 |
-
-1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다. P 지급·가격·레벨 곡선 v0.1과 P1 작업 분해는 [P1 경제 설계](docs/notification-cleaner-p1-economy-design.md)에 있고, `./gradlew -p tools/economy-sim run`으로 다시 잴 수 있습니다.
-2. [개발계획서 5~7장](docs/notification-cleaner-production-plan.md#5-화면-타격감과-활용-스킬)의 타격감 계약, Android 경계와 통과 조건을 기준으로 작업을 나눕니다. 다음 구현 순서는 P0 실기기 타격감 검증, P1 10분 분량과 P·XP 분리, P2 첫 이용자 테스트입니다.
-3. [GameEngine.kt](app/src/main/java/com/graviton94/notificationcleaner/GameEngine.kt)와 [GameSession.kt](app/src/main/java/com/graviton94/notificationcleaner/GameSession.kt)에서 판정·저장·재생을 확인합니다. 화면과 피드백은 [NotificationShade.kt](app/src/main/java/com/graviton94/notificationcleaner/NotificationShade.kt), [ImpactEffects.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactEffects.kt), [ImpactFeedback.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactFeedback.kt)에 있습니다.
-4. 변경마다 고정 시드 판정 테스트와 앱 스모크를 실행합니다. 연출 작업은 실제 기기에서 손을 뗀 순간부터 복구까지 확인하고, 샘플 전용 첫 연쇄 수치를 본편의 밸런스 목표와 구분합니다.
+`app/`은 손맛과 첫 연쇄를 검증했던 **시연 앱 《알림 청소부 FX》**이며 자체 엔진을 씁니다. 3단계 그레이박스에서 `core` 기반으로 교체합니다. 시연 시절 기획서는 기록용으로 `docs/notification-cleaner-*.md`에 남아 있습니다.
 
 ## 시연 앱 빌드와 첫 플레이
 
