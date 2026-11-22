@@ -10,6 +10,7 @@
 - [코어 규칙 v3](docs/core-rules-v3.md) · 판정 규칙 정본. 기준 구현은 순수 Kotlin 모듈 [`core/`](core) (`./gradlew -p core test`)
 - [디자인 시스템 v1](docs/design/design-system.md) · 데이라이트 기본, 다크 모드 앰버 골드, 글래스모피즘. 값의 원본은 [`tokens.json`](docs/design/tokens.json)
 - [콘텐츠 카탈로그](docs/content/notification-catalog.html) · 알림 앱 24종, 이벤트 카드·기본 돌발, 덱·시너지, 판 강화, 백업 상점, 레벨링 곡선 (브라우저로 열기)
+- [경제 v0.3](docs/economy-v0.3.md) · 8주 일상 플레이 시뮬레이션(`./gradlew -p tools/economy-sim run --args="daily 56 4"`), 지수 레벨, 누적 환생 이득, 오프라인 정산, Lv1~90 해금표
 - [경제 v0.2](docs/economy-v0.2.md) · 회차 전체 시뮬레이션(`./gradlew -p tools/economy-sim run`)으로 정한 가격·시너지·XP·백업파일 수치
 - [이전 경제 설계](docs/notification-cleaner-p1-economy-design.md) · 시연 엔진 실측과 초기 결정 (기록용)
 
