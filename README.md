@@ -6,6 +6,7 @@
 
 본편은 시연 앱을 잇지 않고 처음부터 설계합니다. 현재 [개발 순서](docs/core-rules-v2.md#0-개발-순서)의 1단계입니다.
 
+- [핵심 로직 방향 결정](docs/core-direction-decisions.md) · 덱·슬롯·시너지·점화제·초기화에 대한 기획 인터뷰 결과
 - [코어 규칙 v2](docs/core-rules-v2.md) · 판정 규칙 정본. 기준 구현은 순수 Kotlin 모듈 [`core/`](core) (`./gradlew -p core test`)
 - [디자인 시스템 v1](docs/design/design-system.md) · 데이라이트 기본, 다크 모드 앰버 골드, 글래스모피즘. 값의 원본은 [`tokens.json`](docs/design/tokens.json)
 - [콘텐츠 카탈로그](docs/content/notification-catalog.html) · 알림 앱 24종·돌발 알림 12종·권역·카테고리·레벨링 곡선 (브라우저로 열기)
