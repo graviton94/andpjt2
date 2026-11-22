@@ -1,5 +1,9 @@
 package com.graviton94.notificationcleaner
 
+import java.math.BigInteger
+import java.math.BigInteger.ZERO
+import java.math.BigInteger.valueOf
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -88,7 +92,7 @@ private fun SettingsContent(session: GameSession, navigate: (PanelSheet) -> Unit
         item { ToggleEntry("어두운 화면", "알림창 색상", panel.dark, colors) { session.updatePanel(panel.copy(dark = it)) } }
         item { ToggleEntry("알림 소리", "연쇄 효과음", panel.sound, colors) { session.updatePanel(panel.copy(sound = it)) } }
         item { ToggleEntry("진동", "연쇄 햅틱", panel.haptics, colors) { session.updatePanel(panel.copy(haptics = it)) } }
-        item { ToggleEntry("움직임 줄이기", "조각과 카드 이동 효과 감소", panel.reduceMotion, colors) { session.updatePanel(panel.copy(reduceMotion = it)) } }
+        item { ToggleEntry("움직임 줄이기", "화면 흔들림, 섬광과 파티클 끄기", panel.reduceMotion, colors) { session.updatePanel(panel.copy(reduceMotion = it)) } }
         item { SettingEntry("알림 센터 정보", "게임용 빠른 설정과 조작 방법", colors) { navigate(PanelSheet.Alert) } }
     }
 }
@@ -193,12 +197,12 @@ private fun StoreContent(session: GameSession, colors: ShadeColors) {
                     }
                     when {
                         !owned && app.price > 0 && meetsLevel -> FilledTonalButton(
-                            onClick = { session.buy(app) }, enabled = !session.busy && state.points >= app.price,
-                        ) { Text("${app.price} P 구매", fontSize = 11.sp) }
+                            onClick = { session.buy(app) }, enabled = !session.busy && state.points >= valueOf(app.price.toLong()),
+                        ) { Text("${pretty(app.price.toLong())} P 구매", fontSize = 11.sp) }
                         !owned -> Text("레벨 ${app.requiredLevel}", color = colors.sub, fontSize = 11.sp)
                         upgrade != null -> FilledTonalButton(
                             onClick = { session.upgrade(app) }, enabled = !session.busy && state.points >= upgrade,
-                        ) { Text("$upgrade P 강화", fontSize = 11.sp) }
+                        ) { Text("${pretty(upgrade)} P 강화", fontSize = 11.sp) }
                         else -> Text("강화 완료", color = colors.accent, fontSize = 11.sp)
                     }
                 }
@@ -213,7 +217,7 @@ private fun RecordContent(state: GameState, colors: ShadeColors) {
         item {
             Text("한 번의 최고 스와이프", fontSize = 12.sp, color = colors.sub)
             Text("${pretty(state.bestScore)}점", fontSize = 36.sp, fontWeight = FontWeight.Black, color = colors.gold)
-            Text("최고 ${state.bestCombo}연쇄 · 총 ${state.swipes}회 스와이프", color = colors.sub, fontSize = 12.sp)
+            Text("최고 ${state.bestCombo}연쇄 · 최대 ${pretty(state.bestCleared)}개 처리", color = colors.sub, fontSize = 12.sp)
         }
         state.lastScore?.let { score ->
             item {
@@ -229,19 +233,19 @@ private fun RecordContent(state: GameState, colors: ShadeColors) {
         }
         item { Text("사용권역 배율", fontWeight = FontWeight.Bold, color = colors.label) }
         items(Region.entries) { region ->
-            val count = state.regions[region] ?: 0
+            val count = state.regions[region] ?: ZERO
             RecordLine(region.label, count, GameEngine.regionPercent(count), colors)
         }
         item { Text("카테고리 배율", fontWeight = FontWeight.Bold, color = colors.label) }
         items(Category.entries) { category ->
-            val count = state.categories[category] ?: 0
+            val count = state.categories[category] ?: ZERO
             RecordLine(category.label, count, GameEngine.categoryPercent(count), colors)
         }
     }
 }
 
 @Composable
-private fun RecordLine(label: String, count: Long, multiplier: Int, colors: ShadeColors) {
+private fun RecordLine(label: String, count: BigInteger, multiplier: Int, colors: ShadeColors) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text("$label · ${pretty(count)}개", color = colors.sub, fontSize = 13.sp)
         Text(percent(multiplier), color = colors.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)

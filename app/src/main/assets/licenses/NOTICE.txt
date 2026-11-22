@@ -1,0 +1,12 @@
+Kenney Game Icons by Kenney Vleugels (CC0 1.0)
+https://kenney.nl/assets/game-icons
+
+Hit spark and Critical hit sprite sheets rendered from pixelfx at 5294518 (MIT)
+https://github.com/patch-gg/pixelfx
+Copyright (c) 2026 Patch and Hugo Duprez
+Hit spark adapts Sprite Fusion's open-source impact effect.
+https://www.spritefusion.com/pixel-art-vfx/impact
+The Android app contains the two rendered effects and their MIT license.
+
+The impact sound samples are synthesized for this app. The generator is in
+scripts/synthesize-impact-audio.py in the project repository.

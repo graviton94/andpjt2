@@ -1,5 +1,11 @@
 package com.graviton94.notificationcleaner
 
+import java.math.BigInteger
+import java.math.BigInteger.ONE
+import java.math.BigInteger.ZERO
+import java.math.BigInteger.valueOf
+import kotlin.math.abs
+
 enum class Region(val label: String) {
     Domestic("국내권"),
     Global("글로벌"),
@@ -26,9 +32,9 @@ enum class NoticeApp(
     Chat("톡탁톡", "조용한 단톡방에 메시지가 쌓였어요.", Category.Social, Region.Domestic, uniqueBonus = 3),
     Delivery("문앞왔", "도착 2분 전이라고 한 지 8분 됐어요.", Category.Daily, Region.Domestic),
     Photo("피드또봐", "이미 본 피드를 다시 추천합니다.", Category.Media, Region.Global, 2, uniqueBonus = 2),
-    Inbox("밀린메일", "전부 읽기까지 1,024통 남았어요.", Category.Social, Region.Domestic, 2, 30, 2),
-    Music("비트서랍", "한 곡만 더 듣는 중이에요.", Category.Media, Region.NorthAmerica, 3, 30, 3),
-    Payment("페이한칸", "결제 기억은 나중에 떠오릅니다.", Category.Daily, Region.NorthAmerica, 4, 45, 4),
+    Inbox("밀린메일", "전부 읽기까지 1,024통 남았어요.", Category.Social, Region.Domestic, 2, 1_200, 2),
+    Music("비트서랍", "한 곡만 더 듣는 중이에요.", Category.Media, Region.NorthAmerica, 3, 4_800, 3),
+    Payment("페이한칸", "결제 기억은 나중에 떠오릅니다.", Category.Daily, Region.NorthAmerica, 4, 16_000, 4),
     Spam("스팸", "광고 알림 · 다른 알림을 두 번 밀면 복제", null, null),
     Call("전화", "발신번호 표시 제한 · 자동 정리 잠시 대기", null, null),
     Drill("모의 재난문자", "훈련 알림 · 60초 동안 탭해서 배율을 올리세요.", null, null);
@@ -39,20 +45,20 @@ enum class NoticeApp(
 data class Notice(
     val id: Long,
     val app: NoticeApp,
-    val count: Int = 1,
-    val threshold: Int = 4,
+    val count: BigInteger = ONE,
+    val threshold: BigInteger = valueOf(4),
     val arrivedAt: Long = 0,
     val copyAfter: Int = 0,
 )
 
-data class AppScore(val app: NoticeApp, val points: Long)
+data class AppScore(val app: NoticeApp, val points: BigInteger)
 
 data class Score(
-    val points: Long,
+    val points: BigInteger,
     val xp: Long,
     val combo: Int,
+    val cleared: BigInteger,
     val appScores: List<AppScore>,
-    val direct: Int,
     val eventPercent: Int,
 )
 
@@ -60,16 +66,18 @@ data class GameState(
     val rows: List<Notice>,
     val owned: Set<NoticeApp>,
     val appLevels: Map<NoticeApp, Int> = emptyMap(),
-    val regions: Map<Region, Long> = emptyMap(),
-    val categories: Map<Category, Long> = emptyMap(),
+    val regions: Map<Region, BigInteger> = emptyMap(),
+    val categories: Map<Category, BigInteger> = emptyMap(),
     val pendingApps: List<NoticeApp> = emptyList(),
     val level: Int = 1,
     val xp: Long = 0,
-    val points: Long = 0,
-    val bestScore: Long = 0,
+    val points: BigInteger = ZERO,
+    val bestScore: BigInteger = ZERO,
     val bestCombo: Int = 0,
+    val bestCleared: BigInteger = ZERO,
+    val pressure: Int = 75,
     val lastScore: Score? = null,
-    val rewardOffer: Long = 0,
+    val rewardOffer: BigInteger = ZERO,
     val energy: Int = GameEngine.ENERGY_CAP,
     val nextChargeAt: Long = 0,
     val nextPassiveAt: Long = 0,
@@ -83,10 +91,17 @@ data class GameState(
     val random: Long = 471,
 )
 
+enum class ImpactKind { Swipe, Merge, Burst, Overflow, Finish }
+
 data class ChainFrame(
     val rows: List<Notice>,
-    val merged: NoticeApp? = null,
-    val burst: Int = 0,
+    val kind: ImpactKind,
+    val target: Notice,
+    val partnerId: Long? = null,
+    val steps: Int = 1,
+    val combo: Int = 0,
+    val earned: BigInteger = ZERO,
+    val cleared: BigInteger = ZERO,
 )
 
 data class SwipeResult(val state: GameState, val frames: List<ChainFrame>)
@@ -99,45 +114,42 @@ object GameEngine {
     private const val ROW_COUNT = 7
     private const val PASSIVE_MS = 6_000L
     private val starter = setOf(NoticeApp.Calendar, NoticeApp.Mail, NoticeApp.Chat, NoticeApp.Delivery)
-    private val appPercents = listOf(100, 125, 155, 190, 230)
-    private val upgradePrices = listOf(30, 60, 120, 240)
+    private val three = valueOf(3)
+    private val hundred = valueOf(100)
+    private val pointDivisor = valueOf(100_000_000)
 
-    private data class Burst(val app: NoticeApp, val count: Int)
-    private data class Collapse(val rows: List<Notice>, val bursts: List<Burst>, val frames: List<ChainFrame>)
+    private data class Collapse(val rows: List<Notice>, val frames: List<ChainFrame>) {
+        val breaks = frames.filter { it.kind == ImpactKind.Burst }
+    }
 
     fun initial(now: Long, seed: Long = now): GameState {
         val rows = listOf(
-            NoticeApp.Calendar to 1, NoticeApp.Mail to 2, NoticeApp.Chat to 2,
-            NoticeApp.Delivery to 1, NoticeApp.Chat to 2, NoticeApp.Mail to 2, NoticeApp.Calendar to 1,
+            NoticeApp.Calendar to 3, NoticeApp.Mail to 2, NoticeApp.Chat to 2,
+            NoticeApp.Delivery to 1, NoticeApp.Chat to 2, NoticeApp.Mail to 2, NoticeApp.Calendar to 3,
         ).mapIndexed { i, (app, count) ->
-            Notice(i + 1L, app, count, arrivedAt = now - (i + 1L) * 27_000)
+            Notice(i + 1L, app, valueOf(count.toLong()), arrivedAt = now - (i + 1L) * 27_000)
         }
         return GameState(rows = rows, owned = starter, nextPassiveAt = now + PASSIVE_MS, random = seed)
     }
 
-    fun weight(level: Int): Int = 1 shl ((level - 1) / 3).coerceIn(0, 18)
+    fun weight(level: Int): BigInteger = three.pow(((level - 1) / 3).coerceAtLeast(0))
 
-    fun goal(level: Int): Long = 20L * weight(level) + 6L * (level - 1)
-
-    fun appPercent(state: GameState, app: NoticeApp): Int =
-        appPercents[(state.appLevels[app] ?: 1).coerceIn(1, appPercents.size) - 1]
-
-    fun upgradePrice(state: GameState, app: NoticeApp): Int? =
-        upgradePrices.getOrNull((state.appLevels[app] ?: 1) - 1)
-
-    fun regionPercent(total: Long): Int = when {
-        total >= 12 -> 150
-        total >= 8 -> 125
-        total >= 4 -> 110
-        else -> 100
+    fun goal(level: Int): Long {
+        val depth = (level - 1).toLong()
+        return 20 + 6 * depth + depth * depth / 3
     }
 
-    fun categoryPercent(total: Long): Int = when {
-        total >= 28 -> 135
-        total >= 12 -> 120
-        total >= 4 -> 108
-        else -> 100
+    fun appPercent(state: GameState, app: NoticeApp): BigInteger {
+        val steps = (state.appLevels.getOrDefault(app, 1) - 1).coerceAtLeast(0)
+        return hundred * valueOf(8).pow(steps) / valueOf(5).pow(steps)
     }
+
+    fun upgradePrice(state: GameState, app: NoticeApp): BigInteger =
+        valueOf(750) * three.pow(2 * (state.appLevels.getOrDefault(app, 1) - 1))
+
+    fun regionPercent(total: BigInteger): Int = 100 + ((total.bitLength() - 2).coerceAtLeast(0) * 10)
+
+    fun categoryPercent(total: BigInteger): Int = 100 + ((total.bitLength() - 3).coerceAtLeast(0) * 12)
 
     fun eventPercent(state: GameState, now: Long): Int = if (now < state.eventUntil) 100 + state.eventTaps else 100
 
@@ -177,30 +189,30 @@ object GameEngine {
 
     private fun collapse(input: List<Notice>, index: Int): Collapse {
         val rows = input.toMutableList()
-        rows.removeAt(index)
-        val frames = mutableListOf(ChainFrame(rows.toList()))
-        val bursts = mutableListOf<Burst>()
-        while (true) {
-            val left = rows.zipWithNext().indexOfFirst { (a, b) -> !a.app.isEvent && a.app == b.app }
-            if (left < 0) break
-            val a = rows[left]
-            val b = rows.removeAt(left + 1)
+        var pivot = index
+        val removed = rows.removeAt(index)
+        val frames = mutableListOf(ChainFrame(rows.toList(), ImpactKind.Swipe, removed))
+        while (pivot in 1 until rows.size) {
+            val a = rows[pivot - 1]
+            val b = rows[pivot]
+            if (a.app.isEvent || a.app != b.app) break
             val merged = a.copy(count = a.count + b.count, threshold = minOf(a.threshold, b.threshold))
-            rows[left] = merged
-            frames += ChainFrame(rows.toList(), merged = a.app)
-            if (merged.count >= merged.threshold) {
-                rows.removeAt(left)
-                bursts += Burst(merged.app, merged.count)
-                frames += ChainFrame(rows.toList(), burst = bursts.size)
-            }
+            rows.removeAt(pivot)
+            rows[pivot - 1] = merged
+            frames += ChainFrame(rows.toList(), ImpactKind.Merge, merged, partnerId = b.id)
+            if (merged.count < merged.threshold) break
+            rows.removeAt(--pivot)
+            frames += ChainFrame(rows.toList(), ImpactKind.Burst, merged, partnerId = b.id)
         }
-        return Collapse(rows.toList(), bursts.toList(), frames.toList())
+        return Collapse(rows, frames)
     }
 
     fun autoTarget(state: GameState): Long? {
         val middle = state.rows.size / 2
         return state.rows.indices.maxWithOrNull(
-            compareBy<Int> { collapse(state.rows, it).bursts.size }.thenBy { -kotlin.math.abs(it - middle) }
+            compareBy<Int> { if (state.rows[it].app == NoticeApp.Spam) 1 else 0 }
+                .thenBy { collapse(state.rows, it).breaks.size }
+                .thenBy { -abs(it - middle) },
         )?.let { state.rows[it].id }
     }
 
@@ -211,12 +223,18 @@ object GameEngine {
         if (index < 0) return null
         val removed = current.rows[index]
         val collapsed = collapse(current.rows, index)
-        val report = score(current, removed, collapsed.bursts, now)
+        val breaks = collapsed.breaks
+        val pressure = (current.pressure + 21 + breaks.size * 11).coerceAtMost(100)
+        val overload = breaks.isNotEmpty() && (pressure == 100 || breaks.size >= 3)
+        val depth = 4 + current.level / 3 + breaks.size - 3
+        val overflow = if (overload) overflow(collapsed, depth.coerceAtLeast(3)) else emptyList()
+        val (report, frames) = score(current, removed, collapsed.frames + overflow, now)
         val regions = current.regions.toMutableMap()
         val categories = current.categories.toMutableMap()
-        collapsed.bursts.forEach { burst ->
-            burst.app.region?.let { regions[it] = regions.getOrDefault(it, 0L) + burst.count }
-            burst.app.category?.let { categories[it] = categories.getOrDefault(it, 0L) + burst.count }
+        (breaks + overflow).forEach { frame ->
+            val notice = frame.target
+            notice.app.region?.let { regions[it] = regions.getOrDefault(it, ZERO) + notice.count }
+            notice.app.category?.let { categories[it] = categories.getOrDefault(it, ZERO) + notice.count }
         }
         val progressed = gainXp(
             current.copy(
@@ -227,38 +245,63 @@ object GameEngine {
                 lastScore = report,
                 bestScore = maxOf(current.bestScore, report.points),
                 bestCombo = maxOf(current.bestCombo, report.combo),
-                rewardOffer = if (report.combo >= 2) report.points else current.rewardOffer,
+                bestCleared = maxOf(current.bestCleared, report.cleared),
+                pressure = if (overload) 0 else pressure,
+                rewardOffer = if (report.combo >= 4) maxOf(report.points, current.rewardOffer) else current.rewardOffer,
                 swipes = current.swipes + 1,
                 pauseUntil = if (removed.app == NoticeApp.Call) 0 else current.pauseUntil,
                 regions = regions,
                 categories = categories,
             ), report.xp,
         )
-        val next = fill(progressed, now)
-        return SwipeResult(next, collapsed.frames + ChainFrame(next.rows))
+        return SwipeResult(fill(progressed, now), frames)
     }
 
-    private fun score(state: GameState, removed: Notice, bursts: List<Burst>, now: Long): Score {
-        val values = linkedMapOf<NoticeApp, Long>()
-        bursts.forEachIndexed { i, burst ->
-            values[burst.app] = values.getOrDefault(burst.app, 0) + burst.count.toLong() * (i + 2)
+    private fun overflow(collapse: Collapse, depth: Int): List<ChainFrame> {
+        // Each burst drains a larger wave of the same apps' queued notifications.
+        val bursts = collapse.breaks.map { it.target }
+        var backlog = bursts.fold(ZERO) { total, notice -> total + notice.count }
+        val beats = minOf(depth, 9)
+        return List(beats) { i ->
+            val steps = depth / beats + if (i >= beats - depth % beats) 1 else 0
+            val growth = valueOf(3L + 2L * i)
+            val factor = growth.pow(steps)
+            // A beat can cover several consecutive waves at high levels. Drain their full geometric sum.
+            val cleared = backlog * growth * (factor - ONE) / (growth - ONE)
+            backlog *= factor
+            val app = bursts[i % bursts.size]
+            ChainFrame(collapse.rows, ImpactKind.Overflow, app.copy(count = cleared), steps = steps)
         }
-        val frenzy = eventPercent(state, now)
-        val points = values.map { (app, base) ->
-            val bonus = if (state.level >= 3) app.uniqueBonus.toLong() * weight(state.level) else 0
-            val appValue = base * appPercent(state, app) + bonus * 100
-            val region = regionPercent(state.regions[app.region] ?: 0)
-            val category = categoryPercent(state.categories[app.category] ?: 0)
-            AppScore(app, appValue * region * category * frenzy / 100_000_000L)
+    }
+
+    private fun score(
+        state: GameState, removed: Notice, frames: List<ChainFrame>, now: Long,
+    ): Pair<Score, List<ChainFrame>> {
+        val appScores = linkedMapOf<NoticeApp, BigInteger>()
+        val awardedUnique = mutableSetOf<NoticeApp>()
+        val event = eventPercent(state, now)
+        var earned = removed.count
+        var cleared = removed.count
+        var combo = 0
+        val scored = frames.map { frame ->
+            if (frame.kind == ImpactKind.Burst || frame.kind == ImpactKind.Overflow) {
+                val (app, count) = frame.target.let { it.app to it.count }
+                combo += frame.steps
+                val bonus = if (state.level >= 3 && awardedUnique.add(app)) {
+                    weight(state.level) * valueOf(app.uniqueBonus.toLong()) * hundred
+                } else ZERO
+                val base = count * valueOf(combo + 1L) * appPercent(state, app) + bonus
+                val region = regionPercent(state.regions[app.region] ?: ZERO)
+                val category = categoryPercent(state.categories[app.category] ?: ZERO)
+                val points = base * valueOf(region.toLong() * category * event) / pointDivisor
+                appScores[app] = appScores.getOrDefault(app, ZERO) + points
+                earned += points
+                cleared += count
+            }
+            frame.copy(combo = combo, earned = earned, cleared = cleared)
         }
-        return Score(
-            points = removed.count + points.sumOf { it.points },
-            xp = removed.count + values.values.sum(),
-            combo = bursts.size,
-            appScores = points,
-            direct = removed.count,
-            eventPercent = frenzy,
-        )
+        val xp = 2L + removed.count.bitLength().coerceAtMost(12) + combo.coerceAtMost(15) * 4L
+        return Score(earned, xp, combo, cleared, appScores.map { AppScore(it.key, it.value) }, event) to scored
     }
 
     private fun fill(state: GameState, now: Long): GameState {
@@ -277,7 +320,7 @@ object GameEngine {
         }
 
         fun eventRow(app: NoticeApp, copyAfter: Int = 0) =
-            Notice(id++, app, threshold = 0, arrivedAt = now, copyAfter = copyAfter)
+            Notice(id++, app, threshold = ZERO, arrivedAt = now, copyAfter = copyAfter)
 
         val extras = rows.count { it.app.isEvent }
         if (extras < 2 && state.swipes >= 2 && (state.swipes - 2) % 3 == 0 && rows.size < ROW_COUNT) {
@@ -303,14 +346,25 @@ object GameEngine {
 
         val owned = NoticeApp.entries.filter { it in state.owned }
         val weight = weight(state.level)
+        // Refill emptied space as an alternating sequence players can read at a glance.
+        if (rows.size <= 2 && pending.isEmpty() && extras == 0) {
+            val candidates = owned.filter { it != rows.firstOrNull()?.app }.toMutableList()
+            val a = candidates.removeAt(pick(candidates.size))
+            val b = candidates.removeAt(pick(candidates.size))
+            val blocker = candidates[pick(candidates.size)]
+            val pattern = listOf(a, b, blocker, b, a)
+            rows.addAll(0, pattern.map { app -> Notice(id++, app, weight * valueOf(2), weight * valueOf(4), now) })
+        }
         while (rows.size < ROW_COUNT) {
             val top = rows.firstOrNull()?.app
             val options = owned.filter { it != top }
             val second = rows.getOrNull(1)?.app
             val incoming = pending.indexOfFirst { it != top }
+            val chargedNeighbor = rows.getOrNull(1)?.takeIf { it.app in options && state.pressure == 100 }
             val app = when {
                 incoming >= 0 -> pending.removeAt(incoming)
-                second != null && second in options && pick(100) < 52 -> second
+                chargedNeighbor != null -> chargedNeighbor.app
+                second != null && second in options && pick(100) < 57 -> second
                 else -> {
                     val start = (state.swipes / 4) % owned.size
                     val wave = (0..2).map { owned[(start + it) % owned.size] }.filter { it in options }
@@ -318,8 +372,10 @@ object GameEngine {
                     pool[pick(pool.size)]
                 }
             }
-            val count = listOf(1, 2, 2, 3)[pick(4)] * weight
-            rows.add(0, Notice(id++, app, count, 4 * weight, now))
+            val randomCount = weight * valueOf(listOf(1L, 2L, 2L, 3L)[pick(4)])
+            val needed = if (chargedNeighbor?.app == app) chargedNeighbor.threshold - chargedNeighbor.count else ZERO
+            val count = maxOf(randomCount, needed)
+            rows.add(0, Notice(id++, app, count, weight * valueOf(4), now))
         }
         return state.copy(rows = rows, pendingApps = pending, nextId = id, random = seed, pauseUntil = pause,
             eventUntil = event, eventTaps = taps, lastTapAt = lastTap)
@@ -330,17 +386,17 @@ object GameEngine {
         return state.copy(eventTaps = state.eventTaps + 1, lastTapAt = now)
     }
 
-    fun claimReward(state: GameState): GameState = if (state.rewardOffer <= 0) state
-        else state.copy(points = state.points + state.rewardOffer, rewardOffer = 0)
+    fun claimReward(state: GameState): GameState = if (state.rewardOffer <= ZERO) state
+        else state.copy(points = state.points + state.rewardOffer, rewardOffer = ZERO)
 
     fun buy(state: GameState, app: NoticeApp): GameState {
-        if (app.isEvent || app in state.owned || state.level < app.requiredLevel || state.points < app.price) return state
-        return state.copy(points = state.points - app.price, owned = state.owned + app, pendingApps = state.pendingApps + app)
+        if (app.isEvent || app in state.owned || state.level < app.requiredLevel || state.points < valueOf(app.price.toLong())) return state
+        return state.copy(points = state.points - valueOf(app.price.toLong()), owned = state.owned + app, pendingApps = state.pendingApps + app)
     }
 
     fun upgrade(state: GameState, app: NoticeApp): GameState {
         if (app !in state.owned) return state
-        val price = upgradePrice(state, app) ?: return state
+        val price = upgradePrice(state, app)
         if (state.points < price) return state
         return state.copy(points = state.points - price, appLevels = state.appLevels + (app to (state.appLevels.getOrDefault(app, 1) + 1)))
     }

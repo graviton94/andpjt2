@@ -5,9 +5,11 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 
-PACKAGE = "com.graviton94.notificationcleaner"
+PACKAGE = "com.graviton94.notificationcleaner.playtest"
+ACTIVITY = "com.graviton94.notificationcleaner.MainActivity"
 OUTPUT = pathlib.Path("build/smoke")
 REMOTE_DUMP = "/sdcard/cleaner-smoke.xml"
+REMOTE_RECORDING = "/sdcard/cleaner-first-chain.mp4"
 
 
 def adb(*args, **options):
@@ -31,29 +33,44 @@ def screenshot(filename):
         adb("exec-out", "screencap", "-p", stdout=file)
 
 
+def start():
+    adb("shell", "am", "start", "-W", "-n", PACKAGE + "/" + ACTIVITY)
+
+
+def swipe_and_record():
+    _, y1, _, y2 = wait_node("문앞왔")
+    dimensions = adb("shell", "wm", "size", stdout=subprocess.PIPE, text=True).stdout
+    width = int(re.findall(r"(\d+)x\d+", dimensions)[-1])
+    y = str((y1 + y2) // 2)
+    with subprocess.Popen(
+        ("adb", "shell", "screenrecord", "--time-limit", "7", "--size", "540x1140", REMOTE_RECORDING)
+    ) as recording:
+        time.sleep(.9)
+        adb("shell", "input", "swipe", str(width * 2 // 3), y, str(width // 6), y, "320")
+        wait_node("11.7만 P")
+        wait_node("레벨 2")
+        screenshot("after-first-chain.png")
+        if recording.wait(timeout=25) != 0:
+            raise RuntimeError("Android screen recording failed")
+    adb("pull", REMOTE_RECORDING, str(OUTPUT / "first-chain.mp4"))
+
+
 def main(apk):
     OUTPUT.mkdir(parents=True, exist_ok=True)
     adb("install", "-r", apk)
-    adb("shell", "am", "start", "-W", "-n", PACKAGE + "/.MainActivity")
+    start()
     wait_node("알림 센터")
     x1, y1, x2, y2 = wait_node("블루투스")
     adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
     wait_node("블루투스 켜짐")
     screenshot("notification-shade.png")
 
-    _, y1, _, y2 = wait_node("문앞왔")
-    width = int(re.findall(r"(\d+)x\d+", adb("shell", "wm", "size", stdout=subprocess.PIPE, text=True).stdout)[-1])
-    y = str((y1 + y2) // 2)
-    adb("shell", "input", "swipe", str(width * 2 // 3), y, str(width // 6), y, "350")
-    wait_node("21 P")
-    wait_node("레벨 2")
-    screenshot("after-first-chain.png")
-
+    swipe_and_record()
     adb("shell", "am", "force-stop", PACKAGE)
-    adb("shell", "am", "start", "-W", "-n", PACKAGE + "/.MainActivity")
-    wait_node("21 P")
+    start()
+    wait_node("11.7만 P")
     wait_node("블루투스 켜짐")
-    print("Verified settings, first double chain, and persisted game state on Android.")
+    print("Verified quick settings, first seven-hit overload, and persisted points on Android.")
 
 
 if __name__ == "__main__":

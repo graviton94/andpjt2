@@ -2,57 +2,73 @@ package com.graviton94.notificationcleaner
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.math.BigInteger
+import java.math.BigInteger.ZERO
+import java.math.BigInteger.valueOf
 
 class GameEngineTest {
     private val now = 100_000L
 
     @Test
-    fun tutorialDoubleBurstCostsOneChargeAndIntroducesPhotoWithoutResettingInbox() {
-        val start = GameEngine.initial(now, seed = 19)
-        val result = GameEngine.swipe(start, rowId = 4, now = now)!!
+    fun firstSwipeIgnitesThreeRealMergesAndFourScoringWaves() {
+        val initial = GameEngine.initial(now, seed = 19)
+        val result = GameEngine.swipe(initial, rowId = 4, now = now)!!
         val state = result.state
+        val score = state.lastScore!!
         assertEquals(11, state.energy)
         assertEquals(2, state.level)
-        assertEquals(21L, state.points)
-        assertEquals(2, state.bestCombo)
+        assertEquals(valueOf(117_645), score.points)
+        assertEquals(valueOf(14_967), score.cleared)
+        assertEquals(7, state.bestCombo)
+        assertEquals(0, state.pressure)
         assertEquals(7, state.rows.size)
-        assertEquals(2, state.rows.single { it.id == 1L }.count)
         assertTrue(state.rows.any { it.app == NoticeApp.Photo })
-        assertEquals(listOf(1, 2), result.frames.mapNotNull { it.burst.takeIf { n -> n > 0 } })
-        assertEquals(4L, GameEngine.autoTarget(start))
+        assertEquals(3, result.frames.count { it.kind == ImpactKind.Burst })
+        assertEquals(listOf(42L, 210L, 1_470L, 13_230L).map(::valueOf),
+            result.frames.filter { it.kind == ImpactKind.Overflow }.map { it.target.count })
+        assertEquals(score.points, result.frames.last().earned)
+        assertEquals(score.cleared, result.frames.last().cleared)
+        assertEquals(4L, GameEngine.autoTarget(initial))
     }
 
     @Test
-    fun enhancedChainUsesAdditiveBonusesBeforeMultipliersWithoutChangingXp() {
-        val start = GameEngine.initial(now).copy(
+    fun uniqueBonusesFollowedByIndependentMultipliersDoNotChangeXp() {
+        val initial = GameEngine.initial(now).copy(
             level = 3, appLevels = mapOf(NoticeApp.Chat to 2),
-            regions = mapOf(Region.Domestic to 12, Region.Global to 8),
-            categories = mapOf(Category.Social to 20),
+            regions = mapOf(Region.Domestic to valueOf(12), Region.Global to valueOf(8)),
+            categories = mapOf(Category.Social to valueOf(20)),
             eventUntil = now + 12_000, eventTaps = 50,
         )
-        val state = GameEngine.swipe(start, 4, now)!!.state
-        assertEquals(67L, state.bestScore)
-        assertEquals(21L, state.lastScore!!.xp)
-        assertEquals(listOf(35L, 31L), state.lastScore!!.appScores.map { it.points })
+        val state = GameEngine.swipe(initial, 4, now)!!.state
+        val report = state.lastScore!!
+        // Chat is paid once for the unique app bonus across its physical burst and two overflow waves.
+        val chat = report.appScores.single { it.app == NoticeApp.Chat }
+        val region = 120L
+        val category = 124L
+        val expected = listOf(8L * 160 + 300, 42L * 5 * 160, 13_230L * 8 * 160)
+            .sumOf { it * region * category * 150 / 100_000_000 }
+        assertEquals(valueOf(expected), chat.points)
+        assertEquals(35L, report.xp)
         val claimed = GameEngine.claimReward(state)
-        assertEquals(134L, claimed.points)
-        assertEquals(67L, claimed.bestScore)
+        assertEquals(state.points * valueOf(2), claimed.points)
+        assertEquals(state.bestScore, claimed.bestScore)
         assertEquals(claimed, GameEngine.claimReward(claimed))
     }
 
     @Test
-    fun uniqueBonusIsPaidOnceWhenSameAppBurstsTwice() {
-        val rows = listOf(
-            Notice(1, NoticeApp.Chat, 2), Notice(2, NoticeApp.Mail, 2),
-            Notice(3, NoticeApp.Chat, 2), Notice(4, NoticeApp.Delivery),
-            Notice(5, NoticeApp.Chat, 2), Notice(6, NoticeApp.Mail, 2),
-            Notice(7, NoticeApp.Chat, 2),
-        )
-        val start = GameEngine.initial(now).copy(level = 3, rows = rows)
-        val report = GameEngine.swipe(start, 4, now)!!.state.lastScore!!
-        assertEquals(3, report.combo)
-        assertEquals(27L, report.appScores.single { it.app == NoticeApp.Chat }.points)
-        assertEquals(37L, report.xp)
+    fun heavyQueueKeepsScoringAfterLongRangeWithoutLinearReplayTime() {
+        val initial = GameEngine.initial(now).copy(level = 300)
+        val heavyRows = initial.rows.map { it.copy(count = it.count * BigInteger.TEN.pow(45)) }
+        val result = GameEngine.swipe(initial.copy(rows = heavyRows), 4, now)!!
+        val score = result.state.lastScore!!
+        val waves = result.frames.filter { it.kind == ImpactKind.Overflow }
+        assertEquals(107, score.combo)
+        assertEquals(9, waves.size)
+        assertEquals(104, waves.sumOf { it.steps })
+        assertTrue(score.points > valueOf(Long.MAX_VALUE))
+        assertTrue(waves.zipWithNext().all { (a, b) -> a.cleared < b.cleared && a.earned < b.earned })
+        assertEquals(score.points, result.frames.last().earned)
+        assertEquals(score.cleared, result.state.bestCleared)
     }
 
     @Test
@@ -79,15 +95,32 @@ class GameEngineTest {
     }
 
     @Test
-    fun purchasedAppIsPrioritizedAndUpgradesAreIndependent() {
-        val fresh = GameEngine.initial(now).copy(level = 2, points = 100)
+    fun purchasedAppIsPrioritizedAndUpgradesKeepCompounding() {
+        val fresh = GameEngine.initial(now).copy(level = 2, points = valueOf(2_000))
         val bought = GameEngine.buy(fresh, NoticeApp.Inbox)
         val upgraded = GameEngine.upgrade(bought, NoticeApp.Chat)
         val next = GameEngine.swipe(upgraded, 4, now)!!.state
-        assertEquals(40L, upgraded.points)
-        assertEquals(125, GameEngine.appPercent(upgraded, NoticeApp.Chat))
-        assertEquals(100, GameEngine.appPercent(upgraded, NoticeApp.Inbox))
+        assertEquals(valueOf(50), upgraded.points)
+        assertEquals(valueOf(160), GameEngine.appPercent(upgraded, NoticeApp.Chat))
+        assertEquals(valueOf(100), GameEngine.appPercent(upgraded, NoticeApp.Inbox))
+        val advanced = upgraded.copy(appLevels = mapOf(NoticeApp.Chat to 12), points = BigInteger.TEN.pow(22))
+        assertTrue(GameEngine.upgrade(advanced, NoticeApp.Chat).points < advanced.points)
         assertTrue(next.rows.any { it.app == NoticeApp.Inbox })
         assertEquals(upgraded, GameEngine.buy(upgraded, NoticeApp.Inbox))
+    }
+
+    @Test
+    fun automaticSwipesFindRecurringRealOverloadsAndKeepAValidPanel() {
+        var state = GameEngine.initial(now, seed = 19).copy(points = ZERO)
+        var overloadCount = 0
+        for (i in 0 until 80) {
+            val target = GameEngine.autoTarget(state)!!
+            val result = GameEngine.swipe(state, target, now + i * GameEngine.AUTO_MS)!!
+            state = result.state
+            if (result.frames.any { it.kind == ImpactKind.Overflow }) overloadCount += 1
+            assertEquals(7, state.rows.size)
+            assertEquals(7, state.rows.map { it.id }.distinct().size)
+        }
+        assertTrue("Overloads after 80 swipes: $overloadCount", overloadCount >= 10)
     }
 }
