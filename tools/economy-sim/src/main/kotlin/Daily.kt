@@ -39,7 +39,9 @@ fun unlockLevels(): Map<Int, List<String>> {
     fun add(l: Int, s: String) { m.getOrPut(l) { mutableListOf() } += s }
     Catalog.apps.filter { it.unlockLevel > 1 }.forEach { add(it.unlockLevel, "앱 ${it.name}") }
     EventCard.entries.forEach { add(it.unlockLevel, "카드 ${it.label}") }
-    Assist.entries.forEach { add(it.unlockLevel, "판 강화 ${it.label}") }
+    Assist.entries.forEach { a -> add(a.unlockLevel, "판 강화 ${a.label}"); a.caps.drop(1).forEach { add(it.first, "${a.label} 최대 ${it.second}") } }
+    Catalog.proLevel.forEach { (id, l) -> add(l, "${Catalog.app(id).name} 프로") }
+    r.offlineCapSteps.drop(1).forEach { add(it.first, "오프라인 ${it.second}시간") }
     r.maxSlotSteps.drop(1).forEach { add(it.first, "덱 최대 ${it.second}") }
     r.minSlotSteps.drop(1).forEach { add(it.first, "덱 최소 ${it.second}") }
     r.eventSlotSteps.forEach { add(it.first, "이벤트 슬롯 ${it.second}") }

@@ -18,6 +18,8 @@ data class AppDef(
     val region: Region,
     val category: Category,
     val unlockLevel: Int,
+    /** Factory resets needed before the shop offers it: late apps are run-count goals as well as level goals. */
+    val minResets: Int = 0,
 )
 
 /** Event cards are bought with P and equipped in their own slots. Only equipped cards appear on the board. */
@@ -30,14 +32,32 @@ enum class EventCard(val label: String, val unlockLevel: Int, val price: Long, v
 
     /** Swiping it within [RuleSet.otpLifeSwipes] pays 10× the previous swipe; then it expires. */
     Otp("인증번호", 16, 60_000, 25),
+
+    /** The next app bought costs half. Price 0 = priced from the level curve (RuleSet.cardPrice). */
+    Sale("앱스토어 세일", 22, 0, 35),
+
+    /** Every app row on the board gets one more notification: many rows jump to 3/4 or burst on the next touch. */
+    GroupText("단체 문자", 27, 0, 30),
+
+    /** Every app in the deck gains one upgrade level. */
+    Firmware("펌웨어 업데이트", 37, 0, 60),
+
+    /** Pays the previous swipe × 0 to 60 (half the time nothing): a gamble. */
+    Lotto("로또 알림", 61, 0, 45),
 }
 
-/** Board assists bought with P inside a run. Backup items raise their starting values. */
-enum class Assist(val label: String, val unlockLevel: Int, val max: Int, val base: Long, val growth: Long) {
-    Overload("과부하 깊이", 8, 6, 2_000, 400),
-    Sandwich("샌드위치", 10, 5, 20_000, 15),
-    Board("넓은 알림창", 12, 2, 500_000, 200),
-    Wild("와일드 알림", 20, 5, 1_000_000, 30),
+/**
+ * Board assists bought with P inside a run. [caps] raises the number of steps by level: later levels open
+ * higher caps as content. Backup items raise their starting values.
+ */
+enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<Int, Int>>, val base: Long, val growth: Long) {
+    Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 82 to 9), 2_000, 400),
+    Sandwich("샌드위치", 10, listOf(10 to 5, 24 to 6, 47 to 8), 20_000, 15),
+    Board("넓은 알림창", 12, listOf(12 to 2, 39 to 3), 500_000, 200),
+    Wild("와일드 알림", 20, listOf(20 to 5, 69 to 8), 1_000_000, 30),
+    ;
+
+    fun max(level: Int): Int = caps.lastOrNull { level >= it.first }?.second ?: 0
 }
 
 /** Backup shop. Bought with backup files from factory resets; never reset. */
@@ -65,7 +85,7 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
 }
 
 object Catalog {
-    private fun app(id: String, name: String, tier: Int, order: Int, r: Region, c: Category, lv: Int) = AppDef(id, name, tier, order, r, c, lv)
+    private fun app(id: String, name: String, tier: Int, order: Int, r: Region, c: Category, lv: Int, resets: Int = 0) = AppDef(id, name, tier, order, r, c, lv, resets)
     private val KR = Region.Domestic
     private val GL = Region.Global
     private val NA = Region.NorthAmerica
@@ -89,15 +109,25 @@ object Catalog {
         app("bank", "잔액알림", 4, 1, KR, Category.Money, 23),
         app("cloud", "용량부족", 4, 2, GL, Category.Work, 26),
         app("translate", "번역해줘", 4, 3, EU, Category.Social, 29),
-        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36),
-        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42),
-        app("match", "매칭됨", 5, 2, EU, Category.Social, 48),
-        app("home", "문열림", 5, 3, EU, Category.Daily, 55),
-        app("live", "지금방송중", 6, 0, AS, Category.Media, 64),
-        app("stock", "장마감", 6, 1, NA, Category.Money, 72),
-        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80),
-        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88),
+        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36, 6),
+        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42, 10),
+        app("match", "매칭됨", 5, 2, EU, Category.Social, 48, 14),
+        app("home", "문열림", 5, 3, EU, Category.Daily, 55, 18),
+        app("live", "지금방송중", 6, 0, AS, Category.Media, 64, 25),
+        app("stock", "장마감", 6, 1, NA, Category.Money, 72, 35),
+        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80, 45),
+        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88, 55),
     )
     val starter = listOf("chat", "mail", "delivery")
+
+    /** Level at which each app's pro version (×3 value) opens: tier by tier, Lv31-89. */
+    val proLevel: Map<String, Int> = mapOf(
+        "chat" to 31, "mail" to 32, "delivery" to 33, "steps" to 34,
+        "feed" to 43, "calendar" to 44, "pay" to 45, "shorts" to 46,
+        "music" to 56, "inbox" to 57, "map" to 58, "point" to 59,
+        "reward" to 65, "bank" to 66, "cloud" to 67, "translate" to 68,
+        "meet" to 76, "coin" to 77, "match" to 78, "home" to 79,
+        "live" to 85, "stock" to 86, "comment" to 87, "minutes" to 89,
+    )
     fun app(id: String): AppDef = apps.first { it.id == id }
 }

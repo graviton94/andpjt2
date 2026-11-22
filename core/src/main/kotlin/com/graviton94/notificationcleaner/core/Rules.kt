@@ -25,9 +25,9 @@ data class RuleSet(
     val sandwichPerAssist: Int = 3,
     val wildPerAssist: Int = 2,
     // Deck: level → slots. A deck must hold at least min(minSlots, owned) apps.
-    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8),
-    val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7),
-    val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2),
+    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 73 to 10),
+    val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7, 62 to 8),
+    val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2, 38 to 3, 63 to 4),
     // Synergy: same category / region in the deck → bonus % for those apps
     val synergySteps: List<Pair<Int, Int>> = listOf(2 to 20, 3 to 50, 4 to 100, 5 to 200, 6 to 300),
     /** Bonus % per digit of cumulative notifications cleared in a region / category. */
@@ -75,7 +75,12 @@ data class RuleSet(
     val lifetimeFilePercent: Int = 5,
     // Offline settlement
     val offlineEfficiencyPercent: Int = 10,
-    val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 1, 20 to 2, 40 to 4),
+    val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 1, 7 to 2, 35 to 4),
+    /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
+    val proPricePermille: Int = 1_000,
+    val cardPricePermille: Int = 500,
+    /** Value multiplier of a pro version. */
+    val proMultiplier: Long = 3,
     /** Backup files: cube root of (run P ÷ 10^this). */
     val backupPDigits: Int = 12,
 ) {
@@ -134,6 +139,11 @@ data class RuleSet(
     }
 
     fun assistPrice(a: Assist, owned: Int): BigInteger = big(a.base) * big(a.growth).pow(owned)
+
+    fun proPrice(appId: String): BigInteger = (levelP(Catalog.proLevel.getValue(appId)) * big(proPricePermille.toLong()) / big(1_000)).max(ONE)
+
+    fun cardPrice(card: EventCard): BigInteger =
+        if (card.price > 0) big(card.price) else (levelP(card.unlockLevel) * big(cardPricePermille.toLong()) / big(1_000)).max(ONE)
 
     fun backupPrice(item: BackupItem, owned: Int): Long =
         Math.ceil(item.base * Math.pow(item.growthPermille / 1000.0, owned.toDouble())).toLong()

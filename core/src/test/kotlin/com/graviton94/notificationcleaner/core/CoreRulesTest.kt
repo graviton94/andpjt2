@@ -204,6 +204,49 @@ class CoreRulesTest {
     }
 
     @Test
+    fun proVersionTriplesAnAppForItsLevelPrice() {
+        val s = e.newGame(now, 1).copy(level = 31, wallet = e.rules.levelP(31))
+        val before = e.earn(s, "chat", valueOf(1_000), 0)
+        val pro = e.buyPro(s, "chat")
+        assertTrue("chat" in pro.pro)
+        assertEquals(BigInteger.ZERO, pro.wallet)
+        assertEquals(before * valueOf(3), e.earn(pro, "chat", valueOf(1_000), 0))
+        val early = s.copy(level = 30)
+        assertEquals(early, e.buyPro(early, "chat"), "opens at its pro level")
+    }
+
+    @Test
+    fun lateAppsNeedResetsAsWellAsLevels() {
+        val rich = e.newGame(now, 1).copy(level = 70, wallet = BigInteger.TEN.pow(40))
+        assertEquals(rich, e.buy(rich, "live"), "지금방송중 needs 25 resets")
+        val veteran = rich.copy(backup = Backup(resets = 25))
+        assertTrue("live" in e.buy(veteran, "live").appLevels)
+    }
+
+    @Test
+    fun newCardsChangeTheBoardAndTheShop() {
+        fun withCard(c: EventCard) = e.newGame(now, 2).let { it.copy(level = 70, rows = it.rows.toMutableList().also { r -> r[0] = Row(50, RowKind.Event, event = c) }) }
+        // 앱스토어 세일: the next app costs half.
+        val sale = e.swipe(withCard(EventCard.Sale), 50, now)!!.state.copy(wallet = valueOf(3_000))
+        assertTrue("feed" in e.buy(sale, "feed").appLevels)
+        // 단체 문자: every app row on the board +1 (rows below the swiped one are untouched by refill).
+        val group = withCard(EventCard.GroupText)
+        val after = e.swipe(group, 50, now)!!.state
+        assertEquals(group.rows.drop(1).map { it.count + 1 }, after.rows.takeLast(6).map { it.count })
+        // 펌웨어 업데이트: every deck app +1 level.
+        val fw = e.swipe(withCard(EventCard.Firmware), 50, now)!!.state
+        assertEquals(mapOf("chat" to 2, "mail" to 2, "delivery" to 2), fw.appLevels)
+    }
+
+    @Test
+    fun assistCapsAndSlotsGrowWithLevel() {
+        assertEquals(6, Assist.Overload.max(8))
+        assertEquals(9, Assist.Overload.max(82))
+        assertEquals(10, e.rules.maxSlots(73, Backup()))
+        assertEquals(4, e.rules.eventSlots(63, Backup()))
+    }
+
+    @Test
     fun aBiggerBatteryKeepsCharging() {
         // Battery bought after the run started: cap 14, energy 12, no charge scheduled yet.
         val s = e.newGame(now, 1).copy(backup = Backup(items = mapOf(BackupItem.Battery to 1)))

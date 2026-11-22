@@ -57,7 +57,8 @@ fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
         }
         else -> owned.sortedByDescending { perNotification(s.copy(active = listOf(it)), it) }.take(size)
     }
-    val cards = listOf(EventCard.AllHands, EventCard.Otp, EventCard.Update).filter { it in s.events }.take(e.eventSlots(s))
+    val cards = listOf(EventCard.AllHands, EventCard.Lotto, EventCard.Otp, EventCard.Firmware, EventCard.GroupText, EventCard.Update, EventCard.Sale)
+        .filter { it in s.events }.take(e.eventSlots(s))
     return e.setDeck(s, deck, cards) ?: s
 }
 
@@ -67,19 +68,22 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
     val bought = mutableListOf<String>()
     while (true) {
         val bestTier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
-        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && s.level >= it.unlockLevel }.minByOrNull { e.rules.appPrice(it) }
+        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && s.level >= it.unlockLevel && s.backup.resets >= it.minResets }.minByOrNull { e.rules.appPrice(it) }
         val appPrice = nextApp?.let { e.rules.appPrice(it) }
         // 1. A new app: always for a new tier, otherwise only while the deck has room or the policy wants options.
-        if (nextApp != null && s.wallet >= appPrice!! &&
+        if (nextApp != null && s.wallet >= e.appPrice(s, nextApp.id) &&
             (nextApp.tier > bestTier || s.active.size < e.maxSlots(s) || policy != DeckPolicy.Min)) {
             s = e.buy(s, nextApp.id); bought += "앱:${nextApp.name}"; continue
         }
         // 2. Event cards and assists when they cost at most half the wallet.
         val half = s.wallet / BigInteger.TWO
-        val card = EventCard.entries.firstOrNull { it !in s.events && s.level >= it.unlockLevel && BigInteger.valueOf(it.price) <= half }
+        val card = EventCard.entries.firstOrNull { it !in s.events && s.level >= it.unlockLevel && e.rules.cardPrice(it) <= half }
         if (card != null) { s = e.buyEvent(s, card); bought += "카드:${card.label}"; continue }
-        val assist = Assist.entries.firstOrNull { s.level >= it.unlockLevel && s.assist(it) < it.max && e.rules.assistPrice(it, s.assist(it)) <= half }
+        val assist = Assist.entries.firstOrNull { s.level >= it.unlockLevel && s.assist(it) < it.max(s.level) && e.rules.assistPrice(it, s.assist(it)) <= half }
         if (assist != null) { s = e.buyAssist(s, assist); bought += "판:${assist.label}"; continue }
+        // Pro versions for deck apps when they cost at most half the wallet.
+        val pro = s.active.firstOrNull { it !in s.pro && s.level >= Catalog.proLevel.getValue(it) && e.rules.proPrice(it) <= half }
+        if (pro != null) { s = e.buyPro(s, pro); bought += "프로:${Catalog.app(pro).name}"; continue }
         // 3. The upgrade with the best value gain per P, unless saving for an app it would delay a lot.
         val ups = s.active.map { id ->
             val lv = s.appLevels.getValue(id)

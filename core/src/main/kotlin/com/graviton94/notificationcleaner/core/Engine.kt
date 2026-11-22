@@ -67,6 +67,10 @@ data class GameState(
     val backup: Backup = Backup(),
     /** Recent income, for offline settlement: P per minute (moving average over swipes). */
     val earnRate: BigInteger = ZERO,
+    /** Apps whose pro version was bought this run. */
+    val pro: Set<String> = emptySet(),
+    /** 앱스토어 세일: the next app bought costs half. */
+    val saleNext: Boolean = false,
     val lastSwipeAt: Long = 0,
 ) {
     fun assist(a: Assist): Int = assists[a] ?: 0
@@ -155,7 +159,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
         val pct = BigInteger.valueOf((100L + rs) * (100L + cs) * (100L + rd) * (100L + cd))
         val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost)))
-        return count * num * pct * chainNum / (den * hundred.pow(4) * BigInteger.TEN)
+        val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
+        return count * num * pct * chainNum * pro / (den * hundred.pow(4) * BigInteger.TEN)
     }
 
     private fun valueApp(s: GameState, row: Row): String = if (row.kind == RowKind.Wild) bestApp(s) else row.app!!
@@ -268,6 +273,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
                         pattern = listOf(a, b, a, b, a)
                     }
                     EventCard.Otp -> e = state.lastEarned * BigInteger.TEN
+                    EventCard.Sale -> s = s.copy(saleNext = true)
+                    EventCard.GroupText -> for (i in rows.indices) if (rows[i].kind == RowKind.App) rows[i] = rows[i].copy(count = rows[i].count + 1)
+                    EventCard.Firmware -> s = s.copy(appLevels = s.appLevels.mapValues { (id, lv) -> if (id in s.active) lv + 1 else lv })
+                    EventCard.Lotto -> if (rng.next(2) == 1) e = state.lastEarned * BigInteger.valueOf(1L + rng.next(60))
                 }
                 earned += e
                 beats += Beat.Swiped(removed, e)
@@ -477,17 +486,26 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     // Shop and deck --------------------------------------------------------------------------
 
-    fun canBuy(s: GameState, appId: String): Boolean {
-        val app = Catalog.app(appId)
-        return appId !in s.appLevels && s.level >= app.unlockLevel && s.wallet >= rules.appPrice(app)
-    }
+    /** App price now: half after 앱스토어 세일. */
+    fun appPrice(s: GameState, appId: String): BigInteger =
+        rules.appPrice(Catalog.app(appId)).let { if (s.saleNext) it / BigInteger.TWO else it }
+
+    fun canBuy(s: GameState, appId: String): Boolean =
+        appId !in s.appLevels && s.level >= Catalog.app(appId).unlockLevel && s.backup.resets >= Catalog.app(appId).minResets &&
+            s.wallet >= appPrice(s, appId)
 
     /** A bought app joins the deck if a slot is free; otherwise the player swaps it in. */
     fun buy(s: GameState, appId: String): GameState {
         if (!canBuy(s, appId)) return s
-        val app = Catalog.app(appId)
         val active = if (s.active.size < maxSlots(s)) s.active + appId else s.active
-        return s.copy(wallet = s.wallet - rules.appPrice(app), appLevels = s.appLevels + (appId to 1), active = active)
+        return s.copy(wallet = s.wallet - appPrice(s, appId), appLevels = s.appLevels + (appId to 1), active = active, saleNext = false)
+    }
+
+    /** Pro version: ×3 value for an owned app, from its pro level; priced from the level curve. */
+    fun buyPro(s: GameState, appId: String): GameState {
+        val price = rules.proPrice(appId)
+        if (appId !in s.appLevels || appId in s.pro || s.level < Catalog.proLevel.getValue(appId) || s.wallet < price) return s
+        return s.copy(wallet = s.wallet - price, pro = s.pro + appId)
     }
 
     fun upgrade(s: GameState, appId: String): GameState {
@@ -498,7 +516,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     }
 
     fun buyEvent(s: GameState, card: EventCard): GameState {
-        val price = BigInteger.valueOf(card.price)
+        val price = rules.cardPrice(card)
         if (card in s.events || s.level < card.unlockLevel || s.wallet < price) return s
         val equipped = if (s.equipped.size < eventSlots(s)) s.equipped + card else s.equipped
         return s.copy(wallet = s.wallet - price, events = s.events + card, equipped = equipped)
@@ -507,7 +525,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun buyAssist(s: GameState, a: Assist): GameState {
         val owned = s.assist(a)
         val price = rules.assistPrice(a, owned)
-        if (s.level < a.unlockLevel || owned >= a.max || s.wallet < price) return s
+        if (s.level < a.unlockLevel || owned >= a.max(s.level) || s.wallet < price) return s
         return s.copy(wallet = s.wallet - price, assists = s.assists + (a to owned + 1))
     }
 
