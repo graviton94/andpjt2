@@ -66,7 +66,7 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
 <body>
 <header class="band hero">
   <div>
-    <p class="small">알림 청소부 · 콘텐츠 카탈로그 v2 · 코어 규칙 v3 기준 · 2026-11-23 · 수치는 경제 v0.2 시뮬레이션 전 가안</p>
+    <p class="small">알림 청소부 · 콘텐츠 카탈로그 v3 · 코어 규칙 v3 · 경제 v0.2 수치 · 2026-11-23</p>
     <h1>알림 24종으로 덱을 짜고, 회차를 백업파일로 바꾼다</h1>
     <p class="sub">알림 한 개의 가치는 티어마다 10배다. 초반엔 적은 앱이 쉽게 터지고, 후반엔 많은 앱 중 일부만 골라 덱에 넣는다. 공장 초기화로 회차를 백업파일로 바꿔 영구 업그레이드를 산다.</p>
     <div class="kpis">
@@ -83,11 +83,11 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
 <nav class="scroll" aria-label="섹션"><a href="#leveling">레벨링</a><a href="#apps">알림 앱 24</a><a href="#events">이벤트 카드·돌발</a><a href="#deck">덱·시너지</a><a href="#regions">권역·카테고리</a><a href="#curves">성장 곡선</a><a href="#backup">공장 초기화</a><a href="#open">열린 항목</a></nav>
 
 <section class="band" id="leveling">
-  <h2>레벨링 · 한 회차에 30분이면 Lv10, 4시간이면 첫 초기화</h2>
+  <h2>레벨링 · 한 회차에 15분이면 Lv10, 약 3시간이면 첫 초기화</h2>
   <p>레벨은 회차 레벨이다. 공장 초기화 때 1로 돌아가고, 그 대가로 백업파일을 받는다. 레벨은 앱·이벤트 카드·판 강화·덱 크기를 여는 역할만 하고 알림 가치에는 곱해지지 않는다. 백업 상점의 빠른 부팅(XP +25%/단계)이 다음 회차의 해금을 앞당긴다.</p>
-  <pre class="glass">XP 획득      = 스와이프 +1 · 폭발 +1 · 과부하 파동 +2 (× 빠른 부팅) · 오프라인 정산(효율 50%, 5단계)
+  <pre class="glass">XP 획득      = 스와이프 +1 · 폭발마다 그 앱의 티어 · 과부하 2 × 깊이 × 최고 티어 (× 빠른 부팅)
 다음 레벨까지 = ⌈5 × 레벨^1.4 × 1.09^(레벨 − 1)⌉
-가정 XP 속도  = 분당 30 × (1 + 레벨/10)   ← 그레이박스·시뮬레이터에서 실측으로 교체</pre>
+XP 속도      = 분당 25 × (1 + 레벨/20)^2.5  ← 경제 v0.2 시뮬레이션(시너지 덱, 직접 플레이) 실측에 맞춘 곡선</pre>
   <div class="grid2">
     <div class="glass" style="padding:14px 10px 8px"><h3 style="margin:4px 8px 0">레벨 도달까지 누적 플레이 시간</h3><p class="small" style="margin:0 8px">세로축 로그. 점에 올리면 값.</p><div class="fig" id="xpfig"><svg id="xpsvg" role="img" aria-label="레벨별 누적 플레이 시간 곡선"></svg><div class="tip" id="xptip"></div></div></div>
     <div class="glass tbl"><table class="stack" id="lvtable"><thead><tr><th>레벨</th><th class="n">다음까지 XP</th><th class="n">누적 XP</th><th class="n">누적 시간</th></tr></thead><tbody></tbody></table></div>
@@ -122,15 +122,15 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
       <tr><td>이벤트 슬롯</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">2</td><td class="n">2</td></tr></tbody></table>
       <p class="small" style="margin:8px 10px">이벤트 슬롯은 Lv6에 1개, Lv14에 2개. 백업 상점으로 앱 슬롯 최대 +2, 이벤트 슬롯 +1.</p></div>
     <div class="glass tbl scroll"><table><thead><tr><th>덱 안 같은 권역·카테고리</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5+</th></tr></thead><tbody>
-      <tr><td>시너지 보너스</td><td class="n">0</td><td class="n">+10%</td><td class="n">+25%</td><td class="n">+50%</td><td class="n">+100%</td></tr></tbody></table>
-      <p class="small" style="margin:8px 10px">예: 일정찍 4개(강화 1) = 덱에 일정찍 하나면 40 P, 업무 5개·글로벌 3개면 100 P. 권역과 카테고리 보너스는 곱해진다.</p></div>
+      <tr><td>시너지 보너스</td><td class="n">0</td><td class="n">+20%</td><td class="n">+50%</td><td class="n">+100%</td><td class="n">+200% (6+ +300%)</td></tr></tbody></table>
+      <p class="small" style="margin:8px 10px">예: 일정찍 4개(강화 1) = 계열이 혼자면 40 P, 업무 5개·글로벌 3개면 180 P. 권역과 카테고리 보너스는 곱해진다.</p></div>
   </div>
   <h3>판 강화 · 큰 덱을 돕는 장치 (P로 구매, 회차마다 초기화)</h3>
   <div class="glass tbl scroll"><table class="stack"><thead><tr><th>강화</th><th class="n">해금</th><th class="n">단계</th><th class="n">가격</th><th>효과</th></tr></thead><tbody>
-    <tr><td>과부하 깊이</td><td class="n">Lv 8</td><td class="n">6</td><td class="n">500 × 40ⁿ</td><td>과부하 파동 +1</td></tr>
-    <tr><td>샌드위치</td><td class="n">Lv 10</td><td class="n">5</td><td class="n">2,000 × 6ⁿ</td><td>A·X·A 보충 확률 +3%p (기본 35% + 덱 앱 4개 초과분마다 +2%p)</td></tr>
-    <tr><td>넓은 알림창</td><td class="n">Lv 12</td><td class="n">2</td><td class="n">10,000 × 20ⁿ</td><td>판 +1줄 (기본 7줄 + 덱 앱 4개 초과 2개마다 +1, 최대 12)</td></tr>
-    <tr><td>와일드 알림</td><td class="n">Lv 20</td><td class="n">5</td><td class="n">5,000 × 8ⁿ</td><td>어떤 앱과도 합쳐지는 와일드 줄 확률 +2%p</td></tr></tbody></table></div>
+    <tr><td>과부하 깊이</td><td class="n">Lv 8</td><td class="n">6</td><td class="n">2,000 × 400ⁿ</td><td>과부하 파동 +1</td></tr>
+    <tr><td>샌드위치</td><td class="n">Lv 10</td><td class="n">5</td><td class="n">20,000 × 15ⁿ</td><td>A·X·A 보충 확률 +3%p (기본 35% + 덱 앱 4개 초과분마다 +2%p)</td></tr>
+    <tr><td>넓은 알림창</td><td class="n">Lv 12</td><td class="n">2</td><td class="n">500,000 × 200ⁿ</td><td>판 +1줄 (기본 7줄 + 덱 앱 4개 초과 2개마다 +1, 최대 12)</td></tr>
+    <tr><td>와일드 알림</td><td class="n">Lv 20</td><td class="n">5</td><td class="n">1,000,000 × 30ⁿ</td><td>어떤 앱과도 합쳐지는 와일드 줄 확률 +2%p</td></tr></tbody></table></div>
   <h3>덱 크기의 손익 · 10분, 좋은 플레이어, 모두 1티어, 시드 3개 합</h3>
   <div class="glass tbl scroll"><table><thead><tr><th>덱 앱 수</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">6</th><th class="n">8</th></tr></thead><tbody>
     <tr><td>판 줄 수</td><td class="n">7</td><td class="n">7</td><td class="n">7</td><td class="n">8</td><td class="n">9</td></tr>
@@ -151,8 +151,8 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
 
 <section class="band" id="curves">
   <h2>성장 곡선 · 마일스톤 직전이 가장 싸다</h2>
-  <pre class="glass">앱 가격         = 50 × 25^(티어−1) × (1, 1.6, 2.5, 4)[티어 안 순서]
-강화 가격 L→L+1 = 5 × 25^(티어−1) × 1.15^(L−1)
+  <pre class="glass">앱 가격         = 100 × 60^(티어−1) × (1, 1.6, 2.5, 4)[티어 안 순서]
+강화 가격 L→L+1 = 25 × 60^(티어−1) × 1.3^(L−1)
 마일스톤        = 강화 10 · 25 · 50 · 100 · 200 · 300 · 400 · 500 단계마다 가치 ×2
 연쇄 배율       = 1 + 연쇄 번호. 저티어가 먼저 터지면 번호를 쌓고 게이지(+4/티어 차)를 더 채운다 (점화제)</pre>
   <div class="glass" style="padding:14px 10px 8px"><h3 style="margin:4px 8px 0">1티어 앱 강화의 본전 회수량</h3><p class="small" style="margin:0 8px">강화 가격 ÷ 늘어나는 알림 1개 가치. 알림 몇 개를 터뜨려야 강화 값을 되찾는지다. 낮을수록 이득. 마일스톤 직전에 뚝 떨어지는 톱니가 "조금만 더"를 만든다.</p><div class="fig" id="payfig"><svg id="paysvg" role="img" aria-label="강화 단계별 본전 회수량"></svg><div class="tip" id="paytip"></div></div></div>
@@ -163,11 +163,11 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
 <section class="band" id="backup">
   <h2>공장 초기화와 백업파일 · 회차를 영구 업그레이드로 바꾼다</h2>
   <p>Lv25부터 가능하다. 레벨·앱·강화·P·이벤트 카드·판 강화가 모두 초기화되고 첫 판부터 다시 시작한다. 남는 것은 백업파일, 백업 상점에서 산 것, 과금 콘텐츠다.</p>
-  <pre class="glass">백업파일 = ⌊ ∛(이번 회차 누적 P ÷ 1,000,000) ⌋ + ⌊ (레벨 − 20)² ÷ 10 ⌋</pre>
+  <pre class="glass">백업파일 = ⌊ ∛(이번 회차 누적 P ÷ 1,000,000,000) ⌋ + ⌊ (레벨 − 20)² ÷ 10 ⌋</pre>
   <div class="glass tbl scroll"><table><thead><tr><th>회차</th><th class="n">누적 P</th><th class="n">레벨</th><th class="n">백업파일</th></tr></thead><tbody>
-    <tr><td>첫 초기화</td><td class="n">10억</td><td class="n">25</td><td class="n">10 + 2 = 12</td></tr>
-    <tr><td>중반</td><td class="n">1조</td><td class="n">35</td><td class="n">100 + 22 = 122</td></tr>
-    <tr><td>후반</td><td class="n">1,000조</td><td class="n">50</td><td class="n">10,000 + 90 = 10,090</td></tr></tbody></table></div>
+    <tr><td>첫 초기화 (실측 약 2.9시간)</td><td class="n">1조</td><td class="n">25</td><td class="n">10 + 2 = 12</td></tr>
+    <tr><td>중반</td><td class="n">1,000조</td><td class="n">35</td><td class="n">100 + 22 = 122</td></tr>
+    <tr><td>후반</td><td class="n">10해</td><td class="n">50</td><td class="n">10,000 + 90 = 10,090</td></tr></tbody></table></div>
   <h3>백업 상점 15항목 · 가격 ⌈기본가 × 성장률ⁿ⌉</h3>
   <div class="glass tbl"><table class="stack" id="bktable"><thead><tr><th>항목</th><th>분류</th><th class="n">최대</th><th class="n">1·2·3단계 가격</th><th>효과</th></tr></thead><tbody></tbody></table></div>
   <p class="small">첫 초기화의 12개로 예: 알림 가치(3) · 빠른 부팅(2) · 샌드위치(3) · 시작 자금(1)을 사고 3개가 남는다. 오프라인 정산 항목은 메타 단계에서 추가한다.</p>
@@ -177,7 +177,8 @@ pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-he
   <h2>열린 항목</h2>
   <div class="glass card">
     <p><b>코드 반영.</b> <code>core/</code> 규칙 v3가 이 카탈로그의 앱 24종·권역 5·카테고리 5, 덱 슬롯, 시너지, 점화제, 판 강화, 이벤트 카드 3종, 백업 상점을 구현한다(테스트 20개). 고유 효과와 시간형 카드는 아직이다.</p>
-    <p><b>시뮬레이터로 확정할 수치.</b> 레벨 곡선의 XP 속도 가정, 앱·강화·판 강화·카드 가격, 시너지·자릿수 계수, 슬롯 계단, 백업파일 변환식과 백업 상점 가격, 고유 효과의 세기. 특히 "앱 하나 더 넣기"의 연쇄 손실을 시너지·티어가 언제 넘는지.</p>
+    <p><b>경제 v0.2.</b> 가격·시너지·XP·백업파일 공식은 회차 전체 시뮬레이션으로 정했다(docs/economy-v0.2.md). 시너지를 맞춘 큰 덱이 시간당 백업파일에서 최소 덱보다 8~25% 앞서고, 첫 초기화 약 2.9시간, 2회차 약 2.1시간이다. 3회차부터 가속이 멈추는 문제가 남았다.</p>
+    <p><b>더 다듬을 수치.</b> 레벨 곡선의 XP 속도 가정, 앱·강화·판 강화·카드 가격, 시너지·자릿수 계수, 슬롯 계단, 백업파일 변환식과 백업 상점 가격, 고유 효과의 세기. 특히 "앱 하나 더 넣기"의 연쇄 손실을 시너지·티어가 언제 넘는지.</p>
     <p><b>고유 효과 중 규칙 추가가 필요한 것.</b> 즉시 폭발(매칭됨), 판 8줄(용량부족), 폭발 기준 3(숏츠한편), 무작위 P(떡상알림), 시간대 보너스(장마감). 각각 규칙 v3.1 후보로 테스트를 먼저 쓴다.</p>
     <p style="margin:0"><b>아이콘.</b> 표의 글자 아이콘은 자리표시다. 발주 기준은 "아이콘 콘셉트" 열의 실루엣과 색이며, 실제 서비스의 로고·이름을 닮지 않게 한다.</p>
   </div>
@@ -215,7 +216,7 @@ const A=[
 ['comment','댓글폭탄','💬','#c2410c',6,'KR','social',45,'말풍선 더미가 쏟아지는 모양, 진주황','폭발하면 판의 다른 소통 앱 줄 수량 +1',['내 글에 댓글 999+','누가 당신을 언급했어요','베스트 댓글에 선정됐어요']],
 ['minutes','회의록봇','≡','#4b5563',6,'EU','work',50,'클립보드 위 로봇 눈, 짙은 회색','허용 중이면 자동 정리가 한 수 앞을 본다',['회의 요약: 다음 회의를 잡기로 함','액션 아이템 14개가 배정됐어요','당신이 말한 내용을 정리했어요']]];
 A[22][2]='댓';
-const TIERP=[0,50,1250,31250,781250,19531250,488281250];
+const TIERP=[0,100,6000,360000,21600000,1296000000,77760000000];
 const FAC=[1,1.6,2.5,4];
 const fmt=n=>n>=1e8?(n/1e8).toLocaleString('ko-KR',{maximumFractionDigits:1})+'억':n>=1e4?(n/1e4).toLocaleString('ko-KR',{maximumFractionDigits:1})+'만':Math.round(n).toLocaleString('ko-KR');
 const apps=A.map((a,i)=>{const t=a[4];const idx=A.filter((b,j)=>b[4]===t&&j<i).length;const starter=i<3;return{id:a[0],name:a[1],g:a[2],col:a[3],tier:t,reg:a[5],cat:a[6],lv:a[7],concept:a[8],eff:a[9],ments:a[10],price:starter?0:Math.round(TIERP[t]*FAC[idx]),value:10**(t-1)}});
@@ -225,7 +226,7 @@ const ic=(a,cls='')=>`<span class="ic ${cls}" style="background:${a.col}" aria-h
 document.getElementById('ladder').innerHTML=[1,2,3,4,5,6].map(t=>`<div class="step glass" style="--i:${t-1}"><span class="tv">${T[t]}</span><span class="ap">${apps.filter(a=>a.tier===t).map(a=>ic(a,'sm')).join('')}</span><span class="val">가치 ${(10**(t-1)).toLocaleString('ko-KR')}</span></div>`).join('');
 
 // Leveling
-const goal=L=>Math.ceil(5*L**1.4*1.09**(L-1));const rate=L=>30*(1+L/10);
+const goal=L=>Math.ceil(5*L**1.4*1.09**(L-1));const rate=L=>25*(1+L/20)**2.5;
 const lv=[];let cx=0,ct=0;for(let L=1;L<=60;L++){lv.push({L,goal:goal(L),cumXp:cx,cumMin:ct});cx+=goal(L);ct+=goal(L)/rate(L)}
 const tfmt=m=>m<=0?'시작':m<1?'1분 미만':m<60?Math.round(m)+'분':m<60*48?(m/60).toFixed(1)+'시간':(m/60).toFixed(0)+'시간';
 document.querySelector('#lvtable tbody').innerHTML=[1,2,3,5,8,10,12,15,20,25,30,35,40,45,50,55,60].map(L=>{const r=lv[L-1];return`<tr><td>Lv ${L}</td><td class="n">${r.goal.toLocaleString('ko-KR')}</td><td class="n">${r.cumXp.toLocaleString('ko-KR')}</td><td class="n">${tfmt(r.cumMin)}</td></tr>`}).join('');
@@ -269,12 +270,12 @@ const grp=(key,map,id)=>{document.querySelector(`#${id} tbody`).innerHTML=Object
 grp('reg',R,'regtable');grp('cat',C,'cattable');
 
 // Tier table
-document.querySelector('#tiertable tbody').innerHTML=[1,2,3,4,5,6].map(t=>{const xs=apps.filter(a=>a.tier===t);return`<tr><td>${T[t]}</td><td class="n">${(10**(t-1)).toLocaleString('ko-KR')}</td><td class="n">${t===1?'시작 · 50 P':fmt(TIERP[t])+' P'}</td><td class="n">${fmt(5*25**(t-1))} P</td><td class="n">Lv ${Math.min(...xs.map(a=>a.lv))}~${Math.max(...xs.map(a=>a.lv))}</td></tr>`}).join('');
+document.querySelector('#tiertable tbody').innerHTML=[1,2,3,4,5,6].map(t=>{const xs=apps.filter(a=>a.tier===t);return`<tr><td>${T[t]}</td><td class="n">${(10**(t-1)).toLocaleString('ko-KR')}</td><td class="n">${t===1?'시작 · 만보기왕 400 P':fmt(TIERP[t])+' P'}</td><td class="n">${fmt(25*60**(t-1))} P</td><td class="n">Lv ${Math.min(...xs.map(a=>a.lv))}~${Math.max(...xs.map(a=>a.lv))}</td></tr>`}).join('');
 
 // Charts
 const MS=[10,25,50,100,200,300,400,500];
 const val=L=>L*2**MS.filter(m=>L>=m).length;
-const pay=[];for(let L=1;L<=120;L++){const p=5*1.15**(L-1);pay.push({x:L,y:p/(val(L+1)-val(L)),p,v:val(L+1)})}
+const pay=[];for(let L=1;L<=60;L++){const p=25*1.3**(L-1);pay.push({x:L,y:p/(val(L+1)-val(L)),p,v:val(L+1)})}
 const xpPts=lv.slice(1).map(r=>({x:r.L,y:Math.max(r.cumMin,0.3)}));
 function chart(svg,tip,pts,opt){const draw=()=>{const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;const m={l:narrow?40:56,r:14,t:14,b:34};
 const xs=pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs);const ly=opt.log;const yv=p=>ly?Math.log10(p.y):p.y;
@@ -293,7 +294,7 @@ dot.setAttribute('cx',X(p.x));dot.setAttribute('cy',Y(yv(p)));dot.setAttribute('
 svg.onpointerleave=()=>{dot.setAttribute('opacity',0);tip.style.opacity=0}};
 const ro=new ResizeObserver(draw);ro.observe(svg);}
 chart(document.getElementById('xpsvg'),document.getElementById('xptip'),xpPts,{log:true,ticks:[0,1,Math.log10(60),Math.log10(600),Math.log10(6000),Math.log10(60000)],xticks:[2,10,20,30,40,50,60],xfmt:t=>'Lv'+t,yfmt:t=>{const m=Math.round(10**t);return m<60?m+'분':Math.round(m/60)+'시간'},tip:p=>`<b>Lv ${p.x}</b> · ${tfmt(p.y)}`});
-chart(document.getElementById('paysvg'),document.getElementById('paytip'),pay,{log:true,marks:[10,25,50,100],xticks:[1,10,25,50,75,100,120],xfmt:t=>'Lv'+t,yfmt:t=>fmt(10**t)+'개',tip:p=>`<b>강화 ${p.x} → ${p.x+1}</b> · 가격 ${fmt(p.p)} P · 가치 ${fmt(p.v)} · 회수 ${fmt(p.y)}개`});
+chart(document.getElementById('paysvg'),document.getElementById('paytip'),pay,{log:true,marks:[10,25,50],xticks:[1,10,25,40,50,60],xfmt:t=>'Lv'+t,yfmt:t=>fmt(10**t)+'개',tip:p=>`<b>강화 ${p.x} → ${p.x+1}</b> · 가격 ${fmt(p.p)} P · 가치 ${fmt(p.v)} · 회수 ${fmt(p.y)}개`});
 }
 </script>
 </body>

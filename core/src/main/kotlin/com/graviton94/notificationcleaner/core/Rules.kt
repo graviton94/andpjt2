@@ -29,7 +29,7 @@ data class RuleSet(
     val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7),
     val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2),
     // Synergy: same category / region in the deck → bonus % for those apps
-    val synergySteps: List<Pair<Int, Int>> = listOf(2 to 10, 3 to 25, 4 to 50, 5 to 100),
+    val synergySteps: List<Pair<Int, Int>> = listOf(2 to 20, 3 to 50, 4 to 100, 5 to 200, 6 to 300),
     /** Bonus % per digit of cumulative notifications cleared in a region / category. */
     val regionDigitPercent: Int = 10,
     val categoryDigitPercent: Int = 12,
@@ -55,13 +55,15 @@ data class RuleSet(
     // Value
     val tierBase: Long = 10,
     val levelMilestones: List<Int> = listOf(10, 25, 50, 100, 200, 300, 400, 500),
-    val appPriceBase: Long = 50,
-    val appPriceTierRatio: Long = 25,
+    val appPriceBase: Long = 100,
+    val appPriceTierRatio: Long = 60,
     val appPriceOrderPermille: List<Int> = listOf(1_000, 1_600, 2_500, 4_000),
-    val upgradeBase: Long = 5,
-    val upgradeGrowthPermille: Int = 1_150,
+    val upgradeBase: Long = 25,
+    val upgradeGrowthPermille: Int = 1_300,
     // Progress
     val resetLevel: Int = 25,
+    /** Backup files: cube root of (run P ÷ 10^this). */
+    val backupPDigits: Int = 9,
 ) {
     fun step(steps: List<Pair<Int, Int>>, level: Int): Int = steps.lastOrNull { level >= it.first }?.second ?: 0
 
@@ -103,7 +105,7 @@ data class RuleSet(
     /** Backup files for a factory reset now: ⌊∛(run P ÷ 10⁶)⌋ + ⌊(level − 20)² ÷ 10⌋. */
     fun backupFiles(runEarned: BigInteger, level: Int): Long {
         if (level < resetLevel) return 0
-        val fromP = cubeRoot(runEarned / big(1_000_000)).toLong()
+        val fromP = cubeRoot(runEarned / TEN.pow(backupPDigits)).toLong()
         val d = (level - 20).toLong()
         return fromP + d * d / 10
     }

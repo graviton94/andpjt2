@@ -1,188 +1,196 @@
-import com.graviton94.notificationcleaner.GameEngine
-import com.graviton94.notificationcleaner.ImpactKind
-import com.graviton94.notificationcleaner.NoticeApp
-import com.graviton94.notificationcleaner.Score
+import com.graviton94.notificationcleaner.core.Assist
+import com.graviton94.notificationcleaner.core.BackupItem
+import com.graviton94.notificationcleaner.core.Beat
+import com.graviton94.notificationcleaner.core.Catalog
+import com.graviton94.notificationcleaner.core.Engine
+import com.graviton94.notificationcleaner.core.EventCard
+import com.graviton94.notificationcleaner.core.GameState
 import java.math.BigInteger
 import java.math.BigInteger.ZERO
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /*
- * Economy simulator for the P1 vertical slice (docs/notification-cleaner-p1-design.md).
+ * Economy v0.2 simulator (docs/economy-v0.2.md). Plays whole runs of the core rules:
+ * the reference player swipes every battery charge with Engine.bestTarget, spends P with a greedy
+ * policy, rebuilds the deck by a deck policy, factory-resets when backup files per hour peak, and
+ * spends backup files on the cheapest useful item.
  *
- * Board, chains, overload waves and score come from the real GameEngine. Each candidate replaces only
- * the parts P1 wants to separate from score: P per swipe, prices and (optionally) the XP curve.
- * Player model: swipe the engine's autoTarget whenever energy allows, at a fixed cadence; buy the next
- * shop app as soon as it is unlocked and affordable, otherwise upgrade the lowest-level owned app.
- *
- *   ./gradlew -p tools/economy-sim run --args="10"      # minutes per run (default 10), 40 seeds
+ *   ./gradlew -p tools/economy-sim run --args="6 8 2"   # hours cap per run, seeds, runs per seed
  */
 
-data class Candidate(
-    val name: String,
-    val pFor: (Score) -> BigInteger,
-    val appPrices: List<Long>,
-    val upgradePrice: (Int) -> BigInteger,
-    /** XP needed to leave level L. null keeps the engine's own leveling. */
-    val xpGoal: ((Int) -> Long)? = null,
-)
+enum class DeckPolicy(val label: String) { Min("최소 덱"), Max("최대 덱 (가치순)"), Synergy("최대 덱 (시너지)") }
 
-fun big(x: Long): BigInteger = BigInteger.valueOf(x)
-fun digits(n: BigInteger) = if (n.signum() <= 0) 1 else n.toString().length
-fun isqrt(n: Int) = floor(sqrt(n.toDouble())).toLong()
-fun geometric(first: Long, ratio: Double): (Int) -> BigInteger = { big((first * ratio.pow(it - 1)).toLong()) }
-
-val demoGoal: (Int) -> Long = { val d = (it - 1).toLong(); 20 + 6 * d + d * d / 3 }
-
-/** Demo curve up to [knee], then each level costs [ratio] times more. */
-fun bentGoal(knee: Int, ratio: Double): (Int) -> Long = { l -> (demoGoal(l) * ratio.pow(maxOf(0, l - knee))).toLong() }
-
-val candidates = listOf(
-    Candidate(
-        "A 시연판 · P=점수, 앱 1200/4800/16000, 강화 750×9",
-        { it.points }, listOf(1_200, 4_800, 16_000), { big(750).multiply(big(9).pow(it - 1)) },
-    ),
-    Candidate(
-        "B 계획서 가안 · P=8+3(자릿수-1)²+5⌊√연쇄⌋, 강화 75×2",
-        { s -> val d = digits(s.points) - 1L; big(8 + 3 * d * d + 5 * isqrt(s.combo)) },
-        listOf(150, 300, 600), geometric(75, 2.0),
-    ),
-    Candidate(
-        "C v0.1 제안 · P=2+⌊(자릿수-1)/2⌋+2⌊√연쇄⌋, 앱 120/450/1500, 강화 150×1.8, XP Lv8부터 ×1.22",
-        { s -> big(2 + (digits(s.points) - 1L) / 2 + 2 * isqrt(s.combo)) },
-        listOf(120, 450, 1_500), geometric(150, 1.8), bentGoal(8, 1.22),
-    ),
-)
-
-private val shop = listOf(NoticeApp.Inbox, NoticeApp.Music, NoticeApp.Payment)
+private val e = Engine()
 private const val T0 = 1_000_000L
-private val MARKS = listOf(1, 3, 5, 10, 20, 30, 60)
 
-class Run {
-    var firstSpend: Double? = null
-    var firstApp: Double? = null
-    val spends = mutableListOf<Double>()
-    val levelAt = sortedMapOf<Int, Int>()
+class RunLog {
+    val buys = mutableListOf<Pair<Double, String>>()
+    val levelAt = sortedMapOf<Int, Double>()
     val digitsAt = sortedMapOf<Int, Int>()
-    var firstSwipeDigits = 0
+    var resetAt: Double? = null
+    var files = 0L
     var swipes = 0
-    var overloads = 0
-    var overloadsIn5 = 0
-    var maxDry = 0
-    val overloadGaps = mutableListOf<Double>()
+    var maxChain = 0
+    var runDigits = 0
 }
 
-fun simulate(seed: Long, c: Candidate, everyMs: Long, minutes: Int): Run {
-    var now = T0
-    var s = GameEngine.initial(now, seed)
-    var wallet = ZERO
-    var level = 1
-    var xp = 0L
-    var best = ZERO
-    var dry = 0
-    var bought = 0
-    var lastOverload = T0
-    var mark = 0
-    val out = Run()
+private fun digits(n: BigInteger) = if (n.signum() <= 0) 1 else n.toString().length
+private fun perNotification(s: GameState, app: String): BigInteger = e.earn(s, app, BigInteger.valueOf(1_000), 0)
 
-    // With a custom curve the candidate owns level; the engine only sees the resulting level.
-    fun gain(value: Long) {
-        val goal = c.xpGoal ?: return
-        xp += value
-        while (xp >= goal(level)) { xp -= goal(level); level++ }
-        val photo = level >= 2 && NoticeApp.Photo !in s.owned
-        s = s.copy(
-            level = level, xp = 0,
-            owned = if (photo) s.owned + NoticeApp.Photo else s.owned,
-            pendingApps = if (photo) s.pendingApps + NoticeApp.Photo else s.pendingApps,
-        )
-    }
-
-    while (now < T0 + minutes * 60_000L) {
-        now += everyMs
-        while (mark < MARKS.size && MARKS[mark] <= minutes && now - T0 >= MARKS[mark] * 60_000L) {
-            out.levelAt[MARKS[mark]] = level
-            out.digitsAt[MARKS[mark]] = digits(best)
-            mark++
-        }
-        val before = s
-        s = GameEngine.advance(s, now)
-        if (c.xpGoal == null) level = s.level
-        else if (s.level != before.level || s.xp != before.xp) {
-            gain(if (s.level == before.level) s.xp - before.xp else 1L)
-        }
-        if (s.energy == 0) continue
-        val target = GameEngine.autoTarget(s) ?: continue
-        val result = GameEngine.swipe(s, target, now) ?: continue
-        val score = result.state.lastScore!!
-        s = result.state.copy(points = ZERO, rewardOffer = ZERO)
-        if (c.xpGoal == null) level = s.level else { s = s.copy(level = level, xp = 0); gain(score.xp) }
-
-        out.swipes++
-        if (out.swipes == 1) out.firstSwipeDigits = digits(score.points)
-        if (result.frames.none { it.kind == ImpactKind.Burst }) { dry++; out.maxDry = maxOf(out.maxDry, dry) } else dry = 0
-        if (result.frames.any { it.kind == ImpactKind.Overflow }) {
-            out.overloads++
-            if (now - T0 <= 5 * 60_000L) out.overloadsIn5++
-            out.overloadGaps += (now - lastOverload) / 1000.0
-            lastOverload = now
-        }
-        best = best.max(score.points)
-        wallet += c.pFor(score)
-
-        val t = (now - T0) / 1000.0
-        while (true) {
-            val next = shop.firstOrNull { it !in s.owned }
-            if (next != null && level >= next.requiredLevel && bought < c.appPrices.size && wallet >= big(c.appPrices[bought])) {
-                wallet -= big(c.appPrices[bought])
-                bought++
-                s = s.copy(owned = s.owned + next, pendingApps = s.pendingApps + next)
-                if (out.firstApp == null) out.firstApp = t
-            } else {
-                val app = s.owned.filter { !it.isEvent }.minByOrNull { s.appLevels.getOrDefault(it, 1) } ?: break
-                val lv = s.appLevels.getOrDefault(app, 1)
-                val price = c.upgradePrice(lv)
-                if (wallet < price) break
-                wallet -= price
-                s = s.copy(appLevels = s.appLevels + (app to lv + 1))
+/** Rebuild the app deck and the event deck by policy. */
+fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
+    val owned = s.appLevels.keys.toList()
+    val size = when (policy) {
+        DeckPolicy.Min -> maxOf(2, e.minSlots(s))
+        else -> e.maxSlots(s)
+    }.coerceAtMost(owned.size)
+    val deck: List<String> = when (policy) {
+        DeckPolicy.Synergy -> {
+            val picked = mutableListOf<String>()
+            repeat(size) {
+                val best = owned.filter { it !in picked }.maxBy { cand ->
+                    val trial = s.copy(active = picked + cand)
+                    (picked + cand).fold(ZERO) { acc, a -> acc + perNotification(trial, a) }
+                }
+                picked += best
             }
-            if (out.firstSpend == null) out.firstSpend = t
-            out.spends += t
+            picked
+        }
+        else -> owned.sortedByDescending { perNotification(s.copy(active = listOf(it)), it) }.take(size)
+    }
+    val cards = listOf(EventCard.AllHands, EventCard.Otp, EventCard.Update).filter { it in s.events }.take(e.eventSlots(s))
+    return e.setDeck(s, deck, cards) ?: s
+}
+
+/** Greedy spending. Returns the new state and what was bought. */
+fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
+    var s = input
+    val bought = mutableListOf<String>()
+    while (true) {
+        val bestTier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
+        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && s.level >= it.unlockLevel }.minByOrNull { e.rules.appPrice(it) }
+        val appPrice = nextApp?.let { e.rules.appPrice(it) }
+        // 1. A new app: always for a new tier, otherwise only while the deck has room or the policy wants options.
+        if (nextApp != null && s.wallet >= appPrice!! &&
+            (nextApp.tier > bestTier || s.active.size < e.maxSlots(s) || policy != DeckPolicy.Min)) {
+            s = e.buy(s, nextApp.id); bought += "앱:${nextApp.name}"; continue
+        }
+        // 2. Event cards and assists when they cost at most half the wallet.
+        val half = s.wallet / BigInteger.TWO
+        val card = EventCard.entries.firstOrNull { it !in s.events && s.level >= it.unlockLevel && BigInteger.valueOf(it.price) <= half }
+        if (card != null) { s = e.buyEvent(s, card); bought += "카드:${card.label}"; continue }
+        val assist = Assist.entries.firstOrNull { s.level >= it.unlockLevel && s.assist(it) < it.max && e.rules.assistPrice(it, s.assist(it)) <= half }
+        if (assist != null) { s = e.buyAssist(s, assist); bought += "판:${assist.label}"; continue }
+        // 3. The upgrade with the best value gain per P, unless saving for an app it would delay a lot.
+        val ups = s.active.map { id ->
+            val lv = s.appLevels.getValue(id)
+            val price = e.rules.upgradePrice(Catalog.app(id), lv)
+            val gain = perNotification(s.copy(appLevels = s.appLevels + (id to lv + 1)), id) - perNotification(s, id)
+            Triple(id, price, gain.toDouble() / price.toDouble())
+        }.filter { s.wallet >= it.second }
+        val up = ups.maxByOrNull { it.third } ?: break
+        if (appPrice != null && up.second * BigInteger.TEN > appPrice && s.wallet < appPrice) break
+        s = e.upgrade(s, up.first); bought += "강화"
+    }
+    return s to bought
+}
+
+private val backupOrder = listOf(
+    BackupItem.Value, BackupItem.FastBoot, BackupItem.StartFunds, BackupItem.Sandwich, BackupItem.ChainBoost,
+    BackupItem.Milestone, BackupItem.Synergy, BackupItem.RememberedApps, BackupItem.DeepOverload, BackupItem.Battery,
+    BackupItem.AutoClean, BackupItem.ExtraSlot, BackupItem.Board, BackupItem.Wild, BackupItem.EventSlot,
+)
+
+fun spendBackup(input: GameState): GameState {
+    var s = input
+    while (true) {
+        val item = backupOrder.filter { s.backup.lv(it) < it.max }.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
+        val next = e.buyBackup(s, item)
+        if (next == s) break
+        s = next
+    }
+    return s
+}
+
+/** One run from [start] until the reset policy fires or [capHours]. */
+fun playRun(start: GameState, policy: DeckPolicy, capHours: Double): Pair<GameState, RunLog> {
+    val log = RunLog()
+    var s = chooseDeck(start, policy)
+    var t = T0
+    var bestFilesRate = 0.0
+    var lv25At: Long? = null
+    val marks = listOf(1, 5, 15, 30, 60, 120, 240, 360, 480, 720)
+    var mark = 0
+    while (t < T0 + (capHours * 3_600_000).toLong()) {
+        t += e.chargeMs(s)
+        val min = (t - T0) / 60_000.0
+        while (mark < marks.size && min >= marks[mark]) { log.digitsAt[marks[mark]] = digits(s.bestSwipe); mark++ }
+        s = e.tick(s, t)
+        val target = e.bestTarget(s, t) ?: continue
+        val o = e.swipe(s, target, t) ?: continue
+        val levelUp = o.beats.any { it is Beat.LevelUp }
+        s = o.state
+        log.swipes++
+        log.maxChain = maxOf(log.maxChain, o.chain)
+        if (levelUp) log.levelAt.putIfAbsent(s.level, min)
+        val (spent, bought) = spend(s, policy)
+        s = spent
+        bought.filter { !it.startsWith("강화") }.forEach { log.buys += min to it }
+        bought.filter { it == "강화" }.forEach { log.buys += min to it }
+        if (bought.isNotEmpty() || levelUp) s = chooseDeck(s, policy)
+        if (s.level >= e.rules.resetLevel) {
+            if (lv25At == null) lv25At = t
+            val rate = e.backupFilesNow(s) / ((t - T0) / 3_600_000.0)
+            bestFilesRate = maxOf(bestFilesRate, rate)
+            if (t - lv25At >= 600_000 && rate < bestFilesRate * 0.97) {
+                log.resetAt = min
+                log.files = e.backupFilesNow(s)
+                log.runDigits = digits(s.runEarned)
+                break
+            }
         }
     }
-    return out
+    if (log.resetAt == null && s.level >= e.rules.resetLevel) { log.resetAt = (t - T0) / 60_000.0; log.files = e.backupFilesNow(s); log.runDigits = digits(s.runEarned) }
+    return s to log
 }
 
 fun pct(xs: List<Double>, p: Double) = if (xs.isEmpty()) Double.NaN else xs.sorted()[((xs.size - 1) * p).toInt()]
-fun p50(xs: List<Number>) = pct(xs.map { it.toDouble() }, .5)
-fun f0(x: Double) = if (x.isNaN()) "-" else "%.0f".format(x)
-fun mark(ok: Boolean) = if (ok) "통과" else "미달"
+fun p50(xs: List<Double>) = pct(xs, .5)
+fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 60); m < 60 -> "%.0f분".format(m); else -> "%.1f시간".format(m / 60) }
 
 fun main(args: Array<String>) {
-    val minutes = args.getOrNull(0)?.toInt() ?: 10
-    val seeds = 1L..40L
-    for ((label, every) in listOf("수동 · 행동력이 있으면 1.2초마다" to 1_200L, "자동 · 3.2초마다" to 3_200L)) {
-        println("\n=== $label · ${minutes}분 · 시드 ${seeds.count()}개")
-        for (c in candidates) {
-            val runs = seeds.map { simulate(it, c, every, minutes) }
-            val first = runs.mapNotNull { it.firstSpend }
-            val third = runs.mapNotNull { it.spends.getOrNull(2) }
-            val gaps = runs.flatMap { it.overloadGaps }
-            println("[${c.name}]")
-            println("  첫 지출 p50 ${f0(pct(first, .5))}s p90 ${f0(pct(first, .9))}s · 첫 앱 구매 p50 ${f0(pct(runs.mapNotNull { it.firstApp }, .5))}s" +
-                " · 3번째 지출 p50 ${f0(pct(third, .5))}s · 총 지출 p50 ${f0(p50(runs.map { it.spends.size }))}")
-            println("  " + runs[0].levelAt.keys.joinToString(" | ") { m ->
-                "${m}분 Lv${f0(p50(runs.map { it.levelAt[m]!! }))} 최고 ${f0(p50(runs.map { it.digitsAt[m]!! }))}자리"
-            })
-            println("  스와이프 ${f0(p50(runs.map { it.swipes }))} · 과부하 ${f0(p50(runs.map { it.overloads }))}회" +
-                " · 간격 p50 ${f0(pct(gaps, .5))}s p90 ${f0(pct(gaps, .9))}s · 최장 무폭발 ${runs.maxOf { it.maxDry }}")
-            if (minutes >= 5) {
-                val firstOk = pct(first, .5) in 40.0..90.0
-                val grow = p50(runs.map { it.digitsAt[5]!! - it.firstSwipeDigits })
-                println("  기준: 첫 지출 40~90초 ${mark(firstOk)} · 5분 과부하 3회 이상 ${mark(runs.all { it.overloadsIn5 >= 3 })}" +
-                    " · 5분 최고점이 첫 스와이프보다 3자리 이상 ${mark(grow >= 3)}(+${f0(grow)}) · 무폭발 8회 이하 ${mark(runs.all { it.maxDry <= 8 })}")
+    val cap = args.getOrNull(0)?.toDouble() ?: 6.0
+    val seeds = args.getOrNull(1)?.toLong() ?: 8L
+    val runs = args.getOrNull(2)?.toInt() ?: 2
+    for (policy in DeckPolicy.entries) {
+        val perRun = List(runs) { mutableListOf<RunLog>() }
+        var sample: List<Pair<Double, String>> = emptyList()
+        for (seed in 1L..seeds) {
+            var s = e.newGame(T0, seed)
+            for (r in 0 until runs) {
+                val (end, log) = playRun(s, policy, cap)
+                perRun[r] += log
+                if (seed == 1L && r == 0) sample = log.buys
+                val reset = e.factoryReset(end, T0) ?: break
+                s = spendBackup(reset)
             }
         }
+        println("\n=== ${policy.label} · 회차 상한 ${cap}시간 · 시드 $seeds")
+        perRun.forEachIndexed { r, logs ->
+            if (logs.isEmpty()) return@forEachIndexed
+            val first = logs.mapNotNull { it.buys.firstOrNull()?.first }
+            val firstApp = logs.mapNotNull { l -> l.buys.firstOrNull { it.second.startsWith("앱") }?.first }
+            println("[회차 ${r + 1}] 첫 구매 ${fmtMin(p50(first))} · 첫 앱 ${fmtMin(p50(firstApp))} · " +
+                listOf(5, 10, 15, 20, 25).joinToString(" · ") { lv -> "Lv$lv ${fmtMin(p50(logs.mapNotNull { it.levelAt[lv] }))}" } +
+                " · 초기화 ${fmtMin(p50(logs.mapNotNull { it.resetAt }))} (${logs.count { it.resetAt != null }}/${logs.size}) · 백업파일 ${p50(logs.map { it.files.toDouble() }).toLong()} · 누적 P ${p50(logs.map { it.runDigits.toDouble() }).toInt()}자리")
+            println("         최고점 자릿수 " + listOf(1, 5, 15, 30, 60, 120, 240).joinToString(" · ") { m ->
+                "${fmtMin(m.toDouble())} ${p50(logs.mapNotNull { it.digitsAt[m]?.toDouble() }).let { if (it.isNaN()) "-" else it.toInt().toString() }}"
+            } + " · 최대 연쇄 ${p50(logs.map { it.maxChain.toDouble() }).toInt()}")
+        }
+        // Sawtooth: minutes between non-upgrade purchases for seed 1, run 1.
+        val big = sample.filter { !it.second.startsWith("강화") }
+        println("  시드1 주요 구매: " + big.joinToString(" ") { "${fmtMin(it.first)}:${it.second.substringAfter(':')}" })
+        val ups = sample.filter { it.second == "강화" }.map { it.first }
+        val perHour = (0 until 6).map { h -> ups.count { it >= h * 60 && it < (h + 1) * 60 } }
+        println("  시드1 강화 횟수/시간: $perHour")
     }
 }

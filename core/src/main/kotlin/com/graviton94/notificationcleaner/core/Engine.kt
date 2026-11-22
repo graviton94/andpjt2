@@ -322,7 +322,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
         gauge = gauge.coerceAtMost(100)
 
         // Progress
-        val xpPoints = 1L + bursts.size + if (overload) 2L * depth else 0L
+        // XP grows with the tiers that burst, so a run that climbs tiers also climbs levels.
+        val burstTiers = bursts.sumOf { Catalog.app(valueApp(s, it)).tier.toLong() }
+        val xpPoints = 1L + burstTiers + if (overload) 2L * depth * bursts.maxOf { Catalog.app(valueApp(s, it)).tier } else 0L
         var xp = s.xpCenti + xpPoints * (100 + 25 * s.backup.lv(BackupItem.FastBoot))
         var level = s.level
         while (xp >= rules.xpGoalCenti(level)) {

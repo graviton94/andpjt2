@@ -24,7 +24,7 @@ class CoreRulesTest {
 
     @Test
     fun touchingRowsUnzipOutward() {
-        assertEquals(valueOf(21), doubleChain().second.earned)
+        assertEquals(valueOf(22), doubleChain().second.earned)
     }
 
     @Test
@@ -32,12 +32,12 @@ class CoreRulesTest {
         val o = overload().second
         assertTrue(o.overload)
         assertEquals(listOf(24L, 72L, 216L).map(::valueOf), o.beats.filterIsInstance<Beat.Wave>().map { it.cleared })
-        assertEquals(valueOf(1_859), o.earned)
+        assertEquals(valueOf(1_948), o.earned)
     }
 
     @Test
     fun upgradesMultiplyTheSameSwipe() {
-        assertEquals(valueOf(23_001), upgraded().second.earned)
+        assertEquals(valueOf(24_769), upgraded().second.earned)
     }
 
     @Test
@@ -45,7 +45,7 @@ class CoreRulesTest {
         val (s, o) = igniter()
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
         assertEquals(listOf("chat", "live"), bursts.map { it.row.app })
-        assertEquals(valueOf(1_320_000), bursts[1].earned)
+        assertEquals(valueOf(1_440_000), bursts[1].earned)
         // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(40L, 48L, 62L, 75L, 100L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(40L, 57L, 90L, 120L, 180L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -116,7 +116,7 @@ class CoreRulesTest {
         val rich = e.newGame(now, 1).copy(wallet = valueOf(1_000_000), level = 8)
         val four = e.buy(rich, "feed")
         assertEquals(4, four.active.size)
-        assertEquals(valueOf(1_000_000 - 1_250), four.wallet)
+        assertEquals(valueOf(1_000_000 - 6_000), four.wallet)
         val five = e.buy(e.buy(four, "calendar"), "music")
         assertEquals(5, five.active.size)
         val six = e.buy(five, "pay")
@@ -155,7 +155,7 @@ class CoreRulesTest {
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        assertEquals(10_000L + 90, e.rules.backupFiles(BigInteger.TEN.pow(18), 50))
+        assertEquals(10_000L + 90, e.rules.backupFiles(BigInteger.TEN.pow(21), 50))
     }
 
     @Test

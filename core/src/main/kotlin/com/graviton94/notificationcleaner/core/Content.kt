@@ -34,10 +34,10 @@ enum class EventCard(val label: String, val unlockLevel: Int, val price: Long, v
 
 /** Board assists bought with P inside a run. Backup items raise their starting values. */
 enum class Assist(val label: String, val unlockLevel: Int, val max: Int, val base: Long, val growth: Long) {
-    Overload("과부하 깊이", 8, 6, 500, 40),
-    Sandwich("샌드위치", 10, 5, 2_000, 6),
-    Board("넓은 알림창", 12, 2, 10_000, 20),
-    Wild("와일드 알림", 20, 5, 5_000, 8),
+    Overload("과부하 깊이", 8, 6, 2_000, 400),
+    Sandwich("샌드위치", 10, 5, 20_000, 15),
+    Board("넓은 알림창", 12, 2, 500_000, 200),
+    Wild("와일드 알림", 20, 5, 1_000_000, 30),
 }
 
 /** Backup shop. Bought with backup files from factory resets; never reset. */

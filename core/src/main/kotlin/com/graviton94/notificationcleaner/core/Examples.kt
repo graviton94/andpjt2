@@ -117,9 +117,9 @@ fun deckRun(seed: Long, size: Int, assists: Boolean): DeckRun {
     return DeckRun(size, engine.rowCount(s), s.swipes, bursts, overloads, s.bestChain)
 }
 
-/** 10: first factory reset: 10억 P at level 25 → 12 backup files. */
+/** 10: first factory reset: 1조 P at level 25 → 12 backup files. */
 fun firstReset(): Pair<GameState, GameState> {
-    val run = engine.newGame(NOW, 7).copy(level = 25, runEarned = BigInteger.valueOf(1_000_000_000))
+    val run = engine.newGame(NOW, 7).copy(level = 25, runEarned = BigInteger.TEN.pow(12))
     var next = engine.factoryReset(run, NOW)!!
     next = engine.buyBackup(next, BackupItem.Value)
     next = engine.buyBackup(next, BackupItem.FastBoot)
