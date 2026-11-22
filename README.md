@@ -2,6 +2,14 @@
 
 알림 한 줄을 밀어 같은 앱을 붙이고, 작은 충돌이 대기열과 상태표시줄을 집어삼키는 무한 증분 Android 게임입니다. 이 저장소의 **《알림 청소부 FX》는 손맛과 첫 연쇄를 검증하는 시연 앱**입니다. 본편의 제품 목표, 공식 가안, 개발 순서와 통과 조건은 [추가 개발계획서](docs/notification-cleaner-production-plan.md)에 있습니다.
 
+## 본편 설계 정본 (2026-11-23)
+
+본편은 시연 앱을 잇지 않고 처음부터 설계합니다. 현재 [개발 순서](docs/core-rules-v2.md#0-개발-순서)의 1단계입니다.
+
+- [코어 규칙 v2](docs/core-rules-v2.md) · 판정 규칙 정본. 기준 구현은 순수 Kotlin 모듈 [`core/`](core) (`./gradlew -p core test`)
+- [디자인 시스템 v1](docs/design/design-system.md) · 데이라이트 기본, 다크 모드 앰버 골드, 글래스모피즘. 값의 원본은 [`tokens.json`](docs/design/tokens.json)
+- [경제 설계](docs/notification-cleaner-p1-economy-design.md) · 시연 엔진 실측과 결정 사항. 기하급수 배율 모델 v0.2가 다음 단계
+
 ## 개발 인수인계
 
 | 항목 | 본편에서 지킬 것 |
