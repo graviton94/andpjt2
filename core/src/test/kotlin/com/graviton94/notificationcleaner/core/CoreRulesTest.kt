@@ -104,11 +104,33 @@ class CoreRulesTest {
 
     @Test
     fun aRisingMinimumPullsOwnedAppsIn() {
-        val s = e.newGame(now, 1).copy(level = 9, xpCenti = e.rules.xpGoalCenti(9) - 100,
+        // One P short of level 10, where the minimum deck grows from 3 to 4.
+        val s = e.newGame(now, 1).copy(level = 9, runEarned = e.rules.levelP(10) - BigInteger.ONE,
             appLevels = listOf("chat", "mail", "delivery", "feed").associateWith { 1 })
         val next = e.swipe(s, 4, now)!!.state
         assertEquals(10, next.level)
         assertEquals(listOf("chat", "mail", "delivery", "feed"), next.active)
+    }
+
+    @Test
+    fun levelIsExponentialInRunP() {
+        val r = e.rules
+        assertEquals(1, r.levelFor(BigInteger.ZERO, 0))
+        assertEquals(2, r.levelFor(valueOf(30), 0))
+        // ×2.5 per level until 25, then the ratio rises by 0.005 a level.
+        assertEquals(r.levelP(10) * valueOf(5) / valueOf(2), r.levelP(11))
+        assertTrue(r.levelP(40) * r.levelP(19) > r.levelP(39) * r.levelP(20))
+        // FastBoot 1 lowers every threshold by 10%.
+        assertEquals(10, r.levelFor(r.levelP(10) * valueOf(9) / valueOf(10) + valueOf(1), 1))
+    }
+
+    @Test
+    fun offlinePaysTheRecentRateAtLowEfficiency() {
+        val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
+        val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
+        assertEquals(valueOf(1_000L * 60 * 10 / 100), p) // capped at 1 hour, 10%
+        val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
+        assertEquals(valueOf(1_000L * 180 * 20 / 100), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -147,15 +169,16 @@ class CoreRulesTest {
     @Test
     fun factoryResetTurnsTheRunIntoBackupFiles() {
         val (run, next) = firstReset()
-        assertEquals(12, e.backupFilesNow(run))
+        assertEquals(15, e.backupFilesNow(run))
         assertEquals(1, next.level)
         assertEquals(Catalog.starter.toSet(), next.appLevels.keys)
         assertEquals(1, next.backup.resets)
-        assertEquals(3, next.backup.files)
+        assertEquals(9, next.backup.files)
+        assertEquals(15, next.backup.lifetime)
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        assertEquals(10_000L + 90, e.rules.backupFiles(BigInteger.TEN.pow(21), 50))
+        assertEquals(10_000L + 30, e.rules.backupFiles(BigInteger.TEN.pow(21), 50))
     }
 
     @Test
@@ -178,6 +201,20 @@ class CoreRulesTest {
         val s = e.newGame(now, 1).copy(energy = 0, nextChargeAt = now + 3_000)
         assertNull(e.swipe(s, 4, now))
         assertEquals(12, e.tick(s, now + 60_000).energy)
+    }
+
+    @Test
+    fun aBiggerBatteryKeepsCharging() {
+        // Battery bought after the run started: cap 14, energy 12, no charge scheduled yet.
+        val s = e.newGame(now, 1).copy(backup = Backup(items = mapOf(BackupItem.Battery to 1)))
+        val first = e.tick(s, now)
+        assertEquals(12, first.energy)
+        assertEquals(14, e.tick(first, now + 10_000).energy)
+        var t = now
+        var drained = s
+        repeat(12) { t += 100; drained = e.swipe(drained, drained.rows.last().id, t)!!.state }
+        assertEquals(0, drained.energy)
+        assertEquals(14, e.tick(drained, t + 60_000).energy)
     }
 
     @Test

@@ -103,7 +103,7 @@ private val backupOrder = listOf(
 fun spendBackup(input: GameState): GameState {
     var s = input
     while (true) {
-        val item = backupOrder.filter { s.backup.lv(it) < it.max }.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
+        val item = BackupItem.entries.filter { s.backup.lv(it) < it.max && s.backup.resets >= it.minResets }.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
         val next = e.buyBackup(s, item)
         if (next == s) break
         s = next
@@ -158,6 +158,8 @@ fun p50(xs: List<Double>) = pct(xs, .5)
 fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 60); m < 60 -> "%.0f분".format(m); else -> "%.1f시간".format(m / 60) }
 
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "debug") return debugRun()
+    if (args.firstOrNull() == "daily") return daily(args.getOrNull(1)?.toInt() ?: 56, args.getOrNull(2)?.toLong() ?: 4L)
     val cap = args.getOrNull(0)?.toDouble() ?: 6.0
     val seeds = args.getOrNull(1)?.toLong() ?: 8L
     val runs = args.getOrNull(2)?.toInt() ?: 2

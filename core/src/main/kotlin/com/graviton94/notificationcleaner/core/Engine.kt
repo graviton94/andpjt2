@@ -26,6 +26,10 @@ data class Backup(
     val files: Long = 0,
     val items: Map<BackupItem, Int> = emptyMap(),
     val resets: Int = 0,
+    /** All backup files ever earned. Each adds RuleSet.lifetimeFilePercent to every notification value. */
+    val lifetime: Long = 0,
+    /** Deepest level any run reached. */
+    val bestLevel: Int = 0,
 ) {
     fun lv(item: BackupItem): Int = items[item] ?: 0
 }
@@ -52,7 +56,6 @@ data class GameState(
     val bestSwipe: BigInteger = ZERO,
     val bestChain: Int = 0,
     val level: Int = 1,
-    val xpCenti: Long = 0,
     val swipes: Int = 0,
     val autoPausedUntil: Long = 0,
     val regionCleared: Map<Region, BigInteger> = emptyMap(),
@@ -62,6 +65,9 @@ data class GameState(
     val rng: Long,
     val nextId: Long,
     val backup: Backup = Backup(),
+    /** Recent income, for offline settlement: P per minute (moving average over swipes). */
+    val earnRate: BigInteger = ZERO,
+    val lastSwipeAt: Long = 0,
 ) {
     fun assist(a: Assist): Int = assists[a] ?: 0
 }
@@ -178,20 +184,25 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun factoryReset(s: GameState, now: Long): GameState? {
         if (s.level < rules.resetLevel) return null
         val files = backupFilesNow(s)
-        return newGame(now, s.rng, s.backup.copy(files = s.backup.files + files, resets = s.backup.resets + 1))
+        return newGame(now, s.rng, s.backup.copy(
+            files = s.backup.files + files, resets = s.backup.resets + 1,
+            lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
+        ))
     }
 
     fun buyBackup(s: GameState, item: BackupItem): GameState {
         val owned = s.backup.lv(item)
         val price = rules.backupPrice(item, owned)
-        if (owned >= item.max || s.backup.files < price) return s
+        if (owned >= item.max || s.backup.files < price || s.backup.resets < item.minResets) return s
         return s.copy(backup = s.backup.copy(files = s.backup.files - price, items = s.backup.items + (item to owned + 1)))
     }
 
     /** Battery recharge up to [now]. */
     fun tick(s: GameState, now: Long): GameState {
         val cap = energyCap(s)
-        if (s.energy >= cap || s.nextChargeAt == 0L || now < s.nextChargeAt) return s
+        if (s.energy >= cap) return s.copy(nextChargeAt = 0)
+        if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s))
+        if (now < s.nextChargeAt) return s
         val ms = chargeMs(s)
         val steps = ((now - s.nextChargeAt) / ms + 1).coerceAtMost((cap - s.energy).toLong()).toInt()
         val energy = s.energy + steps
@@ -321,37 +332,33 @@ class Engine(val rules: RuleSet = RuleSet()) {
         }
         gauge = gauge.coerceAtMost(100)
 
-        // Progress
-        // XP grows with the tiers that burst, so a run that climbs tiers also climbs levels.
-        val burstTiers = bursts.sumOf { Catalog.app(valueApp(s, it)).tier.toLong() }
-        val xpPoints = 1L + burstTiers + if (overload) 2L * depth * bursts.maxOf { Catalog.app(valueApp(s, it)).tier } else 0L
-        var xp = s.xpCenti + xpPoints * (100 + 25 * s.backup.lv(BackupItem.FastBoot))
-        var level = s.level
-        while (xp >= rules.xpGoalCenti(level)) {
-            xp -= rules.xpGoalCenti(level)
-            level++
-            beats += Beat.LevelUp(level)
-        }
+        // Progress: level follows this run's cumulative P.
+        val runEarned = s.runEarned + earned
+        val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
+        for (l in s.level + 1..level) beats += Beat.LevelUp(l)
 
         val cap = energyCap(s)
+        val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s), 60_000L)
         var next = s.copy(
             rows = rows,
             gauge = gauge,
             energy = state.energy - 1,
-            nextChargeAt = if (state.energy >= cap) now + chargeMs(s) else state.nextChargeAt,
+            // Any swipe below a full battery keeps a charge scheduled, even if the cap grew meanwhile.
+            nextChargeAt = if (state.nextChargeAt == 0L) now + chargeMs(s) else state.nextChargeAt,
             wallet = s.wallet + earned,
-            runEarned = s.runEarned + earned,
+            runEarned = runEarned,
             lastEarned = earned,
             bestSwipe = s.bestSwipe.max(earned),
             bestChain = maxOf(s.bestChain, chain),
             level = level,
-            xpCenti = xp,
             swipes = s.swipes + 1,
             autoPausedUntil = pausedUntil,
             pattern = pattern,
             regionCleared = s.regionCleared.toMutableMap().also { m -> regionAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             rng = rng.seed,
+            earnRate = (s.earnRate * BigInteger.valueOf(9) + earned * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
+            lastSwipeAt = now,
         )
         next = fillDeck(next)
         next = refill(next, now, beats)
@@ -407,6 +414,25 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val sandwich = second?.kind == RowKind.App && second.app != top?.app && second.app in options
         val app = if (sandwich && rng.next(100) < sandwichPercent(s)) second!!.app!! else options[rng.next(options.size)]
         return Row(id, RowKind.App, app, count = count(), threshold = rules.threshold)
+    }
+
+    // Offline --------------------------------------------------------------------------------
+
+    fun offlineCapMs(s: GameState): Long = (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline)) * 3_600_000L
+    fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 5 * s.backup.lv(BackupItem.Offline)
+
+    /**
+     * Returning after [awayMs]: pays the recent income rate for the capped time at the offline efficiency,
+     * in P; the level follows. The battery refills through [tick] as usual.
+     */
+    fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
+        val minutes = BigInteger.valueOf(minOf(awayMs, offlineCapMs(s)) / 60_000)
+        val pct = BigInteger.valueOf(offlinePercent(s).toLong())
+        val p = s.earnRate * minutes * pct / BigInteger.valueOf(100)
+        val runEarned = s.runEarned + p
+        val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
+        val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0))
+        return next to p
     }
 
     // Targeting ------------------------------------------------------------------------------

@@ -62,8 +62,22 @@ data class RuleSet(
     val upgradeGrowthPermille: Int = 1_300,
     // Progress
     val resetLevel: Int = 25,
+    /**
+     * Level is the run's cumulative P: reaching level L needs levelPBase × ratio^(L−2), the ratio rising by
+     * [levelRatioStepPermille] every level after [levelLateFrom]. Leveling is exponential in P, so backup-file
+     * multipliers speed it up directly.
+     */
+    val levelPBase: Long = 30,
+    val levelRatioPermille: Int = 2_500,
+    val levelLateFrom: Int = 25,
+    val levelRatioStepPermille: Int = 5,
+    /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
+    val lifetimeFilePercent: Int = 5,
+    // Offline settlement
+    val offlineEfficiencyPercent: Int = 10,
+    val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 1, 20 to 2, 40 to 4),
     /** Backup files: cube root of (run P ÷ 10^this). */
-    val backupPDigits: Int = 9,
+    val backupPDigits: Int = 12,
 ) {
     fun step(steps: List<Pair<Int, Int>>, level: Int): Int = steps.lastOrNull { level >= it.first }?.second ?: 0
 
@@ -72,7 +86,28 @@ data class RuleSet(
     fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) else 0
 
     /** XP to leave [level], in hundredths of a point. ⌈5 × L^1.4 × 1.09^(L−1)⌉ points. */
-    fun xpGoalCenti(level: Int): Long = Math.ceil(5.0 * Math.pow(level.toDouble(), 1.4) * Math.pow(1.09, (level - 1).toDouble())).toLong() * 100
+    private val levelTable: List<BigInteger> by lazy {
+        val t = mutableListOf(BigInteger.ZERO, BigInteger.ZERO) // index = level; level 1 is free
+        var q = java.math.BigDecimal(levelPBase)
+        var ratio = levelRatioPermille
+        for (l in 2..400) {
+            t += q.toBigInteger()
+            if (l >= levelLateFrom) ratio += levelRatioStepPermille
+            q = q * java.math.BigDecimal(ratio) / java.math.BigDecimal(1_000)
+        }
+        t
+    }
+
+    /** Cumulative run P needed to reach [level], before the FastBoot discount. */
+    fun levelP(level: Int): BigInteger = levelTable[level.coerceIn(1, levelTable.lastIndex)]
+
+    /** Level for [runEarned]; FastBoot lowers every threshold by 10% per step (multiplicative). */
+    fun levelFor(runEarned: BigInteger, fastBoot: Int): Int {
+        val boosted = runEarned * big(10).pow(fastBoot) / big(9).pow(fastBoot)
+        var l = 1
+        while (l + 1 < levelTable.size && boosted >= levelTable[l + 1]) l++
+        return l
+    }
 
     fun synergyPercent(count: Int, backup: Backup): Int {
         val base = step(synergySteps, count)
@@ -84,8 +119,9 @@ data class RuleSet(
         val m = levelMilestones.count { level >= it }
         val k = backup.lv(BackupItem.Milestone).toLong()
         val v = backup.lv(BackupItem.Value)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(11).pow(v)
-        val den = TEN.pow(m) * TEN.pow(v)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(11).pow(v) *
+            big(100 + lifetimeFilePercent * backup.lifetime)
+        val den = TEN.pow(m) * TEN.pow(v) * big(100)
         return num to den
     }
 
@@ -102,12 +138,10 @@ data class RuleSet(
     fun backupPrice(item: BackupItem, owned: Int): Long =
         Math.ceil(item.base * Math.pow(item.growthPermille / 1000.0, owned.toDouble())).toLong()
 
-    /** Backup files for a factory reset now: ⌊∛(run P ÷ 10⁶)⌋ + ⌊(level − 20)² ÷ 10⌋. */
+    /** Backup files for a factory reset now: ⌊10 × ∛(run P ÷ 10^backupPDigits)⌋ + (level − 20). */
     fun backupFiles(runEarned: BigInteger, level: Int): Long {
         if (level < resetLevel) return 0
-        val fromP = cubeRoot(runEarned / TEN.pow(backupPDigits)).toLong()
-        val d = (level - 20).toLong()
-        return fromP + d * d / 10
+        return cubeRoot(runEarned * big(1_000) / TEN.pow(backupPDigits)).toLong() + (level - 20)
     }
 
     companion object {
