@@ -36,4 +36,5 @@ JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 
 
 - [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)로 Compose 화면 정보 계층과 접근성을 검토합니다. [pixelfx](https://github.com/patch-gg/pixelfx) 타임라인을 참고하고 시연 앱의 Hit spark·Critical hit 스프라이트를 활용합니다.
 - [Kenney Game Icons](https://kenney.nl/assets/game-icons)는 CC0입니다. 시연판 스프라이트와 아이콘의 출처는 [APK 에셋 라이선스](app/src/main/assets/licenses)에 있습니다.
+- [UI 테마 시안 3종](docs/design/ui-theme-candidates.md) · 본편 UI의 정본 후보
 - [초기 마스터플랜](docs/notification-cleaner-master-plan.md) · [파쇄 콘셉트 보드](docs/notification-cleaner-concept-board.png) · [자동 연쇄와 배율 콘셉트 보드](docs/notification-cleaner-score-concept-board.png)
