@@ -1,17 +1,17 @@
 # 알림 청소부
 
-알림 한 줄을 밀어 같은 앱을 붙이고, 작은 충돌이 대기열과 상태표시줄을 집어삼키는 무한 증분 Android 게임입니다. 이 저장소의 **《알림 청소부 FX》는 손맛과 첫 연쇄를 검증하는 시연 앱**입니다. 본편의 제품 목표, 공식 가안, 개발 순서와 통과 조건은 [추가 개발계획서](docs/notification-cleaner-production-plan.md)에 있습니다.
+알림 한 줄을 밀어 같은 앱을 붙이고, 작은 충돌이 대기열과 상태표시줄을 집어삼키는 무한 증분 Android 게임입니다. 이 저장소의 **《알림 청소부 FX》는 손맛과 첫 연쇄를 검증하는 시연 앱**입니다. 본편의 최신 규칙과 남은 인터뷰는 [인터뷰 결정본](docs/notification-cleaner-interview-decisions.md)에서 시작합니다. 제품 목표, Android 설계, 개발 순서와 출시 검증은 [추가 개발계획서](docs/notification-cleaner-production-plan.md)를 함께 봅니다.
 
 ## 개발 인수인계
 
 | 항목 | 본편에서 지킬 것 |
 |---|---|
-| 코어 | 한 손 스와이프 → 같은 앱 묶음 → 실물 폭발 → 과부하 → 알림창 붕괴·자동 복구. 플레이어의 다음 입력은 같은 알림창에서 이어짐 |
-| 성장 | 점수는 과부하 파동에서 자릿수가 뛰고, 앱 강화·권역·카테고리·이벤트가 곱해짐. 앱 고유값은 앱별 한 번 가산. P·XP·행동력의 진행 목표는 각각 관리 |
-| 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 광고 두 배 보상은 선택형이며 완료 거래에서 P만 지급. 경쟁 기록은 동일 조건으로 분리 |
+| 코어 | 저벨류 한 줄로 같은 앱 두 줄을 붙여 폭발시킵니다. 보충된 알림과 특수 블록도 진행 중인 연쇄에 합류합니다. |
+| 성장 | 실제로 함께 터진 앱의 권역×카테고리 시너지를 계산합니다. 앱과 특수 슬롯은 초반 확장 후 상한을 두며, 번 재화로 장착하지 않은 후보도 강화해 주력 교체를 준비합니다. |
+| 특수와 방치 | 재난경보는 직접 시작한 뒤 5초간 연타하고 연쇄를 방출합니다. 엮인 특수 블록은 각각 발동합니다. 자동 정리는 가벼운 정리 위주로 보상과 경험치를 쌓습니다. |
 | UI와 손맛 | 기본 화면은 Android 알림창처럼 읽히게, 충돌과 결과는 히트스톱·셰이크·섬광·반동·파티클·SFX·햅틱을 같은 박자에 적용. 움직임 줄이기와 독립적인 소리·진동 옵션 제공 |
 
-1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다.
+1. [인터뷰 결정본](docs/notification-cleaner-interview-decisions.md)의 확정 규칙과 검증 가안을 구분해 봅니다. 이전 문서와 상충하는 게임 규칙은 인터뷰 결정본을 우선합니다. 다음 인터뷰는 첫 주력 교체 시점과 투자 비용부터 이어갑니다.
 2. [개발계획서 5~7장](docs/notification-cleaner-production-plan.md#5-화면-타격감과-활용-스킬)의 타격감 계약, Android 경계와 통과 조건을 기준으로 작업을 나눕니다. 다음 구현 순서는 P0 실기기 타격감 검증, P1 10분 분량과 P·XP 분리, P2 첫 이용자 테스트입니다.
 3. [GameEngine.kt](app/src/main/java/com/graviton94/notificationcleaner/GameEngine.kt)와 [GameSession.kt](app/src/main/java/com/graviton94/notificationcleaner/GameSession.kt)에서 판정·저장·재생을 확인합니다. 화면과 피드백은 [NotificationShade.kt](app/src/main/java/com/graviton94/notificationcleaner/NotificationShade.kt), [ImpactEffects.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactEffects.kt), [ImpactFeedback.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactFeedback.kt)에 있습니다.
 4. 변경마다 고정 시드 판정 테스트와 앱 스모크를 실행합니다. 연출 작업은 실제 기기에서 손을 뗀 순간부터 복구까지 확인하고, 샘플 전용 첫 연쇄 수치를 본편의 밸런스 목표와 구분합니다.
