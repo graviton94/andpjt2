@@ -2,6 +2,8 @@ package com.graviton94.notificationcleaner
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
@@ -119,7 +121,7 @@ internal class GameSession(
     private val scope: CoroutineScope,
     private val applyPanel: (PanelSettings) -> Unit,
 ) {
-    var now by mutableStateOf(System.currentTimeMillis())
+    var now by mutableLongStateOf(System.currentTimeMillis())
         private set
     var state by mutableStateOf(storage.read(now))
         private set
@@ -131,7 +133,7 @@ internal class GameSession(
         private set
     var busy by mutableStateOf(false)
         private set
-    var burst by mutableStateOf(0)
+    var burst by mutableIntStateOf(0)
         private set
     var merged by mutableStateOf<NoticeApp?>(null)
         private set

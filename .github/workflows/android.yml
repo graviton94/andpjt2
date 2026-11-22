@@ -18,9 +18,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Install SDK packages
-        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
       - name: Test and assemble
         run: ./gradlew testDebugUnitTest assembleDebug
       - uses: actions/upload-artifact@v4
@@ -43,6 +43,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
       - name: Enable Android emulator acceleration
         run: |
           if [ -e /dev/kvm ]; then
