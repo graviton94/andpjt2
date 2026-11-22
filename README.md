@@ -1,34 +1,39 @@
 # 알림 청소부
 
-휴대폰의 알림 센터에서 한 줄을 밀어 같은 앱을 연결하고, 연쇄와 배율을 키우는 Android 증분 게임의 테스트 빌드입니다.
+알림 한 줄을 밀어 같은 앱을 붙이고, 작은 충돌이 대기열과 상태표시줄을 집어삼키는 무한 증분 Android 게임입니다. 이 저장소의 **《알림 청소부 FX》는 손맛과 첫 연쇄를 검증하는 시연 앱**입니다. 본편의 제품 목표, 공식 가안, 개발 순서와 통과 조건은 [추가 개발계획서](docs/notification-cleaner-production-plan.md)에 있습니다.
 
-## 테스트 빌드
+## 개발 인수인계
 
-JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 8.0 이상에서 디버그 APK를 설치할 수 있습니다.
+| 항목 | 본편에서 지킬 것 |
+|---|---|
+| 코어 | 한 손 스와이프 → 같은 앱 묶음 → 실물 폭발 → 과부하 → 알림창 붕괴·자동 복구. 플레이어의 다음 입력은 같은 알림창에서 이어짐 |
+| 성장 | 점수는 과부하 파동에서 자릿수가 뛰고, 앱 강화·권역·카테고리·이벤트가 곱해짐. 앱 고유값은 앱별 한 번 가산. P·XP·행동력의 진행 목표는 각각 관리 |
+| 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 광고 두 배 보상은 선택형이며 완료 거래에서 P만 지급. 경쟁 기록은 동일 조건으로 분리 |
+| UI와 손맛 | 기본 화면은 Android 알림창처럼 읽히게, 충돌과 결과는 히트스톱·셰이크·섬광·반동·파티클·SFX·햅틱을 같은 박자에 적용. 움직임 줄이기와 독립적인 소리·진동 옵션 제공 |
+
+1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다.
+2. [개발계획서 5~7장](docs/notification-cleaner-production-plan.md#5-화면-타격감과-활용-스킬)의 타격감 계약, Android 경계와 통과 조건을 기준으로 작업을 나눕니다. 다음 구현 순서는 P0 실기기 타격감 검증, P1 10분 분량과 P·XP 분리, P2 첫 이용자 테스트입니다.
+3. [GameEngine.kt](app/src/main/java/com/graviton94/notificationcleaner/GameEngine.kt)와 [GameSession.kt](app/src/main/java/com/graviton94/notificationcleaner/GameSession.kt)에서 판정·저장·재생을 확인합니다. 화면과 피드백은 [NotificationShade.kt](app/src/main/java/com/graviton94/notificationcleaner/NotificationShade.kt), [ImpactEffects.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactEffects.kt), [ImpactFeedback.kt](app/src/main/java/com/graviton94/notificationcleaner/ImpactFeedback.kt)에 있습니다.
+4. 변경마다 고정 시드 판정 테스트와 앱 스모크를 실행합니다. 연출 작업은 실제 기기에서 손을 뗀 순간부터 복구까지 확인하고, 샘플 전용 첫 연쇄 수치를 본편의 밸런스 목표와 구분합니다.
+
+## 시연 앱 빌드와 첫 플레이
+
+JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 8.0 이상에서 기존 테스트 앱과 함께 설치할 수 있습니다. 앱 이름은 《알림 청소부 FX》입니다.
 
 ```sh
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-생성 파일은 `app/build/outputs/apk/debug/app-debug.apk`입니다. 디버그 APK는 별도 패키지로 설치되므로 기존 테스트 앱과 함께 둘 수 있습니다. GitHub Actions에 APK와 첫 스와이프 화면 녹화가 남습니다.
+생성 파일은 `app/build/outputs/apk/debug/app-debug.apk`입니다. [Android test build](https://github.com/graviton94/andpjt2/actions/workflows/android.yml)에는 APK와 에뮬레이터 스모크 결과가 남습니다.
 
-## 첫 플레이
+1. 첫 화면의 **문앞왔**을 옆으로 밀면 같은 앱 세 쌍이 충돌해 과부하가 이어집니다. 시연판 기준 **7연쇄 · 14,967개 처리 · 117,645 P**입니다.
+2. **자동 꺼짐**을 눌러 자동 정리를 켜거나, **앱 상점**에서 새 앱을 사고 강화합니다. **최고점 기록**에서 연쇄와 권역·카테고리 배율을 확인합니다.
+3. **모의 재난문자**에서는 60초 동안 탭해 배율을 올립니다. 시연판의 두 배 보상은 체험 버튼이고, 최고점은 기기에 저장됩니다.
 
-1. 처음 화면의 **문앞왔**을 옆으로 밀면 같은 앱 세 쌍이 충돌합니다. 그 충격으로 과부하가 발동해 7연쇄, 14,967개 처리, 117,645 P까지 올라갑니다.
-2. 하단의 **자동 꺼짐**을 누르면 스와이프 충전 주기에 맞춰 가능한 연쇄를 자동으로 고릅니다.
-3. 상점에서 새 앱을 구하거나 보유 앱을 강화하면 알림 종류와 보상이 늘어납니다. **정리 기록**에서 최고점과 권역·카테고리 배율을 볼 수 있습니다.
-4. 게임 속 **모의 재난문자**가 발령되면 60초 동안 탭으로 배율을 올릴 수 있습니다.
+네트워크·기기 연결·손전등은 앱 안에서 재현합니다. 밝기 슬라이더는 앱 화면 밝기를 바꿉니다. 설정에서 **움직임 줄이기**, 효과음과 진동을 각각 조절합니다.
 
-빠른 설정의 네트워크와 기기 목록, 비행기 모드 및 손전등은 게임 안의 설정입니다. 밝기 슬라이더는 이 앱의 화면 밝기를 바꾸고, 알림 관리에서는 미리보기·소리·진동을 조절할 수 있습니다. 설정의 **움직임 줄이기**는 흔들림, 섬광, 파티클을 끕니다. 보상 버튼은 광고 정산을 확인하는 체험이고, 기록은 현재 기기에 저장합니다.
+## 레퍼런스와 이전 기획
 
-## 연쇄와 에셋
-
-알림이 붙으면 묶음 수량이 합쳐지고, 임계치에 닿으면 폭발합니다. 같은 앱이 든 나머지 대기열은 과부하에서 파동마다 곱으로 커집니다. 후반부에는 한 번의 연출에 여러 파동을 묶어서 표시하며 처리량과 점수는 전부 반영합니다. 점수와 묶음 수량은 큰 정수로 저장합니다.
-
-스와이프의 발사, 카드 충돌, 과부하, 알림창 붕괴를 개별 효과음과 햅틱으로 구분합니다. 패널의 정보 위계와 조작 상태는 [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)의 Compose 가이드를 참고했습니다. [pixelfx](https://github.com/patch-gg/pixelfx)의 Hit spark와 Critical hit를 스프라이트로 탑재했습니다. 가상 앱과 게임 조작 아이콘은 [Kenney Game Icons](https://kenney.nl/assets/game-icons)의 CC0 에셋을 사용합니다. 원문 라이선스는 [APK 에셋](app/src/main/assets/licenses)에 포함됩니다.
-
-## 초기 기획 자료
-
-- [마스터플랜](docs/notification-cleaner-master-plan.md)
-- [파쇄 연출 컨셉보드](docs/notification-cleaner-concept-board.png)
-- [자동 연쇄와 배율 성장 컨셉보드](docs/notification-cleaner-score-concept-board.png)
+- [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)로 Compose 화면 정보 계층과 접근성을 검토합니다. [pixelfx](https://github.com/patch-gg/pixelfx) 타임라인을 참고하고 시연 앱의 Hit spark·Critical hit 스프라이트를 활용합니다.
+- [Kenney Game Icons](https://kenney.nl/assets/game-icons)는 CC0입니다. 시연판 스프라이트와 아이콘의 출처는 [APK 에셋 라이선스](app/src/main/assets/licenses)에 있습니다.
+- [초기 마스터플랜](docs/notification-cleaner-master-plan.md) · [파쇄 콘셉트 보드](docs/notification-cleaner-concept-board.png) · [자동 연쇄와 배율 콘셉트 보드](docs/notification-cleaner-score-concept-board.png)
