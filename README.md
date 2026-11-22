@@ -8,6 +8,7 @@
 
 - [코어 규칙 v2](docs/core-rules-v2.md) · 판정 규칙 정본. 기준 구현은 순수 Kotlin 모듈 [`core/`](core) (`./gradlew -p core test`)
 - [디자인 시스템 v1](docs/design/design-system.md) · 데이라이트 기본, 다크 모드 앰버 골드, 글래스모피즘. 값의 원본은 [`tokens.json`](docs/design/tokens.json)
+- [콘텐츠 카탈로그](docs/content/notification-catalog.html) · 알림 앱 24종·돌발 알림 12종·권역·카테고리·레벨링 곡선 (브라우저로 열기)
 - [경제 설계](docs/notification-cleaner-p1-economy-design.md) · 시연 엔진 실측과 결정 사항. 기하급수 배율 모델 v0.2가 다음 단계
 
 ## 개발 인수인계

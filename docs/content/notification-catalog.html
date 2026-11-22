@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 청소부 콘텐츠 카탈로그</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 게임 기획 데이터북. 차분한 표, 숫자는 정확하게, 결론 먼저.
+   IDEA: 게임 자체의 알림창. 모든 항목이 유리 알림 카드처럼 쌓인다.
+   PICTURE: 티어 계단. 6단의 알림 묶음이 10배씩 올라간다.
+   COLOUR and TYPE: 게임 디자인 시스템 v1. 라이트 데이라이트(블루·오렌지), 다크 앰버 골드. Noto Sans KR(앱은 Pretendard).
+   LAYOUT: 상단 계단 그림, 섹션 링크 한 줄, 레벨링 → 앱 → 이벤트 → 권역·카테고리 → 성장 곡선 → 열린 항목. */
+:root{color-scheme:light dark;
+--bg:light-dark(#eef1f7,#15120f);--top:light-dark(#e3ecff,#2a2119);
+--blobA:light-dark(#9db8ff66,#ff9f3f40);--blobB:light-dark(#ffd2ae55,#f5c45129);
+--glass:light-dark(#ffffffb8,#ffffff17);--glass2:light-dark(#ffffff8c,#ffffff12);--line:light-dark(#ffffffcc,#ffffff1f);
+--ink:light-dark(#16181d,#f6f1ea);--sub:light-dark(#5f6674,#b3a89b);--faint:light-dark(#9aa1ad,#7d746a);
+--accent:light-dark(#3867f0,#efa03f);--onaccent:light-dark(#fff,#1e1408);--chain:light-dark(#e2700a,#ffd66b);
+--int:light-dark(#d93636,#ff6b4a);--track:light-dark(#1e2a501a,#ffffff14);--shadow:light-dark(#1e2a5014,#00000055)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;color:var(--ink);font:16px/1.55 "Noto Sans KR",Pretendard,system-ui,sans-serif;overflow-x:clip;font-feature-settings:"tnum";
+background:radial-gradient(60% 40% at 95% 0%,var(--blobA),transparent 70%),radial-gradient(50% 35% at 0% 40%,var(--blobB),transparent 70%),linear-gradient(180deg,var(--top),var(--bg) 600px) var(--bg)}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.05;margin:0 0 12px;text-wrap:balance;font-weight:900;letter-spacing:-.02em}
+h2{font-size:28px;line-height:1.15;margin:0 0 8px;letter-spacing:-.015em}
+h3{font-size:17px;margin:22px 0 8px}
+p{margin:0 0 12px;max-width:70ch}.sub{color:var(--sub)}.small{font-size:13px;color:var(--sub)}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 24px var(--shadow);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px)}
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(20px,4vw,48px);align-items:center}
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.kpis div{padding:10px 14px}.kpis b{display:block;font-size:24px;line-height:1.1}.kpis span{font-size:13px;color:var(--sub)}
+.ladder{display:flex;flex-direction:column-reverse;gap:6px}
+.step{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 14px 8px 10px;margin-left:calc(var(--i)*5%)}
+.step .tv{font-weight:900;font-size:15px;color:var(--accent)}.step .ap{display:flex;gap:6px;flex-wrap:wrap}.step .val{font-size:13px;color:var(--sub);white-space:nowrap}
+.ic{width:34px;height:34px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;flex:none}
+.ic.sm{width:28px;height:28px;border-radius:9px;font-size:12px}
+nav.scroll{display:flex;gap:8px;padding:10px max(5vw,16px);max-width:1240px;margin:0 auto;white-space:nowrap}
+nav a{flex:none;padding:10px 16px;border-radius:999px;color:var(--ink);text-decoration:none;font-weight:700;font-size:14px;background:var(--glass2);border:1px solid var(--line)}
+nav a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(min-width:900px){nav.scroll{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:13px;color:var(--sub);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--track)}
+td{padding:10px;border-bottom:1px solid var(--track);vertical-align:top}td.n,th.n{text-align:right;white-space:nowrap}
+.tbl{padding:6px 8px;overflow-x:auto}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--track);white-space:nowrap}
+.chip.a{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}.chip.c{background:color-mix(in srgb,var(--chain) 20%,transparent);color:var(--chain)}.chip.i{background:color-mix(in srgb,var(--int) 16%,transparent);color:var(--int)}
+.ment{color:var(--sub);font-size:13px;margin:2px 0}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.filters button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass2);color:var(--ink);font:600 14px inherit;font-family:inherit;cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--accent);color:var(--onaccent);border-color:transparent}
+.filters input{min-height:44px;font-size:16px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass);color:var(--ink);flex:1 1 180px;font-family:inherit}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.card{padding:16px 18px}.card h3{margin:0 0 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px 14px;padding:16px 18px}.lv b{font-size:20px;color:var(--accent);white-space:nowrap}.lv div{padding:4px 0;border-bottom:1px solid var(--track)}
+.fig{position:relative;min-height:320px}.fig>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tip{position:absolute;pointer-events:none;padding:6px 10px;border-radius:10px;font-size:13px;background:var(--glass);border:1px solid var(--line);box-shadow:0 6px 18px var(--shadow);white-space:nowrap;opacity:0;transition:opacity .12s}
+code,.f{font-family:ui-monospace,Menlo,monospace;font-size:13.5px;overflow-wrap:anywhere}
+pre{overflow-x:auto;padding:14px 16px;margin:8px 0 14px;font-size:13.5px;line-height:1.6}
+.empty{padding:24px;text-align:center;color:var(--sub)}
+.scroll{overflow-x:auto}html{scroll-padding-top:72px}
+@media(max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}.step{margin-left:0}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--track)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:6.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6em;margin-inline-start:-6.5em;white-space:normal;color:var(--sub);font-size:12px}.stack td:empty{display:none}.stack td.n{text-align:start}}
+@media(prefers-reduced-motion:no-preference){.step{animation:rise .5s both;animation-delay:calc(var(--i)*70ms)}@keyframes rise{from{opacity:0;transform:translateY(10px)}}}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head>
+<body>
+<header class="band hero">
+  <div>
+    <p class="small">알림 청소부 · 콘텐츠 카탈로그 v1 · 2026-11-23 · 수치는 경제 v0.2 시뮬레이션 전 가안</p>
+    <h1>알림 24종과 돌발 12종, 레벨 60까지의 성장표</h1>
+    <p class="sub">알림 한 개의 가치는 티어마다 10배다. 레벨은 숫자를 키우지 않고 문을 연다. 숫자는 플레이어가 산 앱과 강화가 곱으로 키운다.</p>
+    <div class="kpis">
+      <div class="glass"><b>24</b><span>알림 앱 · 6티어</span></div>
+      <div class="glass"><b>12</b><span>돌발 알림 · 5유형</span></div>
+      <div class="glass"><b>5 × 5</b><span>권역 × 카테고리</span></div>
+      <div class="glass"><b>Lv 60</b><span>콘텐츠 v1 · 이후 무한</span></div>
+    </div>
+  </div>
+  <div class="ladder" id="ladder" aria-label="티어 계단: 1티어 가치 1에서 6티어 가치 100,000까지"></div>
+</header>
+
+<nav class="scroll" aria-label="섹션"><a href="#leveling">레벨링</a><a href="#apps">알림 앱 24</a><a href="#events">돌발 알림 12</a><a href="#regions">권역·카테고리</a><a href="#curves">성장 곡선</a><a href="#open">열린 항목</a></nav>
+
+<section class="band" id="leveling">
+  <h2>레벨링 · 30분 안에 Lv10, 첫날 Lv25, 이후 주 단위</h2>
+  <p>플레이어 레벨은 계정 레벨이다. 공장 초기화로도 내려가지 않는다. 새 앱·돌발 알림·기능을 여는 역할만 하고 알림 가치에는 곱해지지 않는다.</p>
+  <pre class="glass">XP 획득      = 스와이프 +1 · 폭발 +1 · 과부하 파동 +2 · 오프라인 정산(효율 50%)
+다음 레벨까지 = ⌈5 × 레벨^1.4 × 1.09^(레벨 − 1)⌉
+가정 XP 속도  = 분당 30 × (1 + 레벨/10)   ← 그레이박스·시뮬레이터에서 실측으로 교체</pre>
+  <div class="grid2">
+    <div class="glass" style="padding:14px 10px 8px"><h3 style="margin:4px 8px 0">레벨 도달까지 누적 플레이 시간</h3><p class="small" style="margin:0 8px">세로축 로그. 점에 올리면 값.</p><div class="fig" id="xpfig"><svg id="xpsvg" role="img" aria-label="레벨별 누적 플레이 시간 곡선"></svg><div class="tip" id="xptip"></div></div></div>
+    <div class="glass tbl"><table class="stack" id="lvtable"><thead><tr><th>레벨</th><th class="n">다음까지 XP</th><th class="n">누적 XP</th><th class="n">누적 시간</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <h3>레벨별 해금</h3>
+  <div class="glass lv" id="unlocks"></div>
+</section>
+
+<section class="band" id="apps">
+  <h2>알림 앱 24종</h2>
+  <p>판에 줄로 나오는 일반 알림이다. 같은 앱끼리 맞닿으면 합쳐지고 4개에서 터진다. 시작 앱 3종 외에는 레벨로 열리고 P로 산다. 고유 효과는 허용 중일 때만 적용된다.</p>
+  <div class="filters" role="group" aria-label="알림 앱 필터">
+    <input id="q" type="search" placeholder="이름·멘트·효과 검색" aria-label="검색">
+    <span id="tierBtns"></span><span id="catBtns"></span>
+  </div>
+  <div class="glass tbl"><table class="stack" id="apptable"><thead><tr><th>아이콘</th><th>앱 · 아이콘 콘셉트</th><th>티어</th><th>권역</th><th>카테고리</th><th class="n">해금</th><th class="n">가격</th><th class="n">알림 가치</th><th>고유 효과</th><th>멘트</th></tr></thead><tbody></tbody></table><div class="empty" id="noapp" hidden>조건에 맞는 앱이 없다. 필터를 풀어 보세요.</div></div>
+</section>
+
+<section class="band" id="events">
+  <h2>돌발 알림 12종</h2>
+  <p>합쳐지지 않는 특별 줄이다. 판을 막거나(방해), 자동을 멈추거나(정지), 시간을 주거나(시간), 보상을 주거나(보상·광고) 진행을 안내한다(메타). 등장 빈도는 해금 이후 기준이다.</p>
+  <div class="grid2" id="eventgrid"></div>
+</section>
+
+<section class="band" id="regions">
+  <h2>권역과 카테고리 · 많이 터뜨린 곳이 더 커진다</h2>
+  <pre class="glass">권역 배율      = 1 + 0.10 × (그 권역 누적 처리량의 자릿수 − 1)     전부 보유 시 ×2
+카테고리 배율  = 1 + 0.12 × (그 카테고리 누적 처리량의 자릿수 − 1)  전부 보유 시 ×2
+알림 1개 가치  = 10^(티어−1) × 강화 레벨 × 2^마일스톤 × 권역 배율 × 카테고리 배율 × 영구 배율</pre>
+  <p>자릿수 기반이라 한 번의 과부하가 두 배율을 무한정 밀어 올리지 못한다. 대신 한 권역·카테고리의 앱을 모두 모으면 두 배가 된다. 수집 목표가 된다.</p>
+  <div class="grid2"><div class="glass tbl"><table id="regtable"><thead><tr><th>권역</th><th>앱</th><th class="n">수</th></tr></thead><tbody></tbody></table></div>
+  <div class="glass tbl"><table id="cattable"><thead><tr><th>카테고리</th><th>앱</th><th class="n">수</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<section class="band" id="curves">
+  <h2>성장 곡선 · 마일스톤 직전이 가장 싸다</h2>
+  <pre class="glass">앱 가격         = 50 × 25^(티어−1) × (1, 1.6, 2.5, 4)[티어 안 순서]
+강화 가격 L→L+1 = 5 × 25^(티어−1) × 1.15^(L−1)
+마일스톤        = 강화 10 · 25 · 50 · 100 · 200 · 300 · 400 · 500 단계마다 가치 ×2
+과부하 깊이 d   = 시작 1, 상점 '과부하' 탭에서 d→d+1 가격 500 × 40^(d−1) · Lv8 해금 · 파동 배수 ×3</pre>
+  <div class="glass" style="padding:14px 10px 8px"><h3 style="margin:4px 8px 0">1티어 앱 강화의 본전 회수량</h3><p class="small" style="margin:0 8px">강화 가격 ÷ 늘어나는 알림 1개 가치. 알림 몇 개를 터뜨려야 강화 값을 되찾는지다. 낮을수록 이득. 마일스톤 직전에 뚝 떨어지는 톱니가 "조금만 더"를 만든다.</p><div class="fig" id="payfig"><svg id="paysvg" role="img" aria-label="강화 단계별 본전 회수량"></svg><div class="tip" id="paytip"></div></div></div>
+  <h3>티어 한눈에</h3>
+  <div class="glass tbl scroll"><table id="tiertable"><thead><tr><th>티어</th><th class="n">알림 가치</th><th class="n">앱 가격 (첫 앱)</th><th class="n">첫 강화</th><th class="n">해금 레벨</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section class="band" id="open">
+  <h2>열린 항목</h2>
+  <div class="glass card">
+    <p><b>코드와의 차이.</b> <code>core/</code> 규칙 v2는 앱 12종·권역 3·카테고리 4다. 이 카탈로그(24종·5·5)가 정본이며, 경제 v0.2 작업에서 <code>RuleSet.DEFAULT_APPS</code>와 enum을 이 표로 바꾼다.</p>
+    <p><b>시뮬레이터로 확정할 수치.</b> 레벨 곡선의 XP 속도 가정, 앱·강화·과부하 깊이 가격, 권역·카테고리 계수, 돌발 알림 빈도, 고유 효과의 세기.</p>
+    <p><b>고유 효과 중 규칙 추가가 필요한 것.</b> 즉시 폭발(매칭됨), 판 8줄(용량부족), 폭발 기준 3(숏츠한편), 무작위 P(떡상알림), 시간대 보너스(장마감). 각각 규칙 v2.1 후보로 테스트를 먼저 쓴다.</p>
+    <p style="margin:0"><b>아이콘.</b> 표의 글자 아이콘은 자리표시다. 발주 기준은 "아이콘 콘셉트" 열의 실루엣과 색이며, 실제 서비스의 로고·이름을 닮지 않게 한다.</p>
+  </div>
+</section>
+
+<script>
+{
+const T=[null,'1티어','2티어','3티어','4티어','5티어','6티어'];
+const R={KR:'국내권',GL:'글로벌',NA:'북미권',EU:'유럽권',AS:'아시아권'};
+const C={social:'소통',work:'업무',daily:'생활',media:'미디어',money:'금융'};
+// id, name, glyph, color, tier, region, category, unlock, icon concept, effect, ments
+const A=[
+['chat','톡탁톡','톡','#7c5cff',1,'KR','social',1,'말풍선 두 개가 겹친 실루엣, 보라','폭발하면 바로 위 톡탁톡 줄 수량 +1. 단톡은 또 온다',['조용한 단톡방에 메시지가 쌓였어요','“ㅋㅋㅋ” 외 99+','누가 나를 초대했어요: 동창회(37)']],
+['mail','메일소포','@','#3b9bff',1,'GL','work',1,'봉투에 소포 끈, 파랑','2연쇄 이상에 포함되면 그 폭발 가치 +50%',['중요 표시한 메일이 더 왔어요','회신: 회신: 회신: 확인 부탁드립니다','뉴스레터 구독 감사합니다(구독한 적 없음)']],
+['delivery','문앞왔','◆','#2fbf71',1,'KR','daily',1,'상자와 위치 핀, 초록','직접 밀어서 지우면 가치 ×3. 시작판 가운데 줄',['도착 2분 전이라고 한 지 8분 됐어요','문 앞에 두고 갑니다(옆집 문 앞)','배송 기사님이 사진을 보냈어요']],
+['steps','만보기왕','걸','#1fb5a8',1,'AS','daily',2,'운동화 밑창 발자국, 청록','10스와이프마다 다음 새 줄의 수량을 3으로 고정',['오늘 312걸음 걸었어요. 분발하세요','친구가 당신을 추월했습니다','물 마실 시간이에요(세 번째 알림)']],
+['feed','피드또봐','✿','#ff5fa2',2,'GL','media',3,'꽃잎 모양 무한 스크롤, 분홍','이 앱이 새 줄일 때 샌드위치 확률 +10%p',['이미 본 피드를 다시 추천합니다','회원님이 좋아할 만한 게시물 48개','3년 전 오늘의 추억을 확인하세요']],
+['calendar','일정찍','22','#f2a71b',2,'GL','work',4,'달력 한 장에 큰 날짜, 노랑','폭발에 포함되면 과부하 파동 1회 추가',['끝나는 시간이 또 미정이에요','10분 뒤 회의(15분째 진행 중)','일정 충돌: 점심과 점심']],
+['pay','페이한칸','₩','#22a06b',2,'NA','money',5,'카드 한 장이 반쯤 빠진 지갑, 짙은 초록','폭발하면 배터리 +1. 결제 완료는 곧 충전',['결제 기억은 나중에 떠오릅니다','정기결제가 갱신되었습니다(뭐였지)','포인트 3원이 적립됐어요']],
+['shorts','숏츠한편','▶','#ff3b5c',2,'AS','media',7,'세로로 긴 재생 버튼, 빨강','이 앱 줄의 폭발 기준 4 → 3',['딱 한 편만 더 보세요','당신을 위한 15초','방금 본 영상의 2부가 올라왔어요']],
+['music','비트서랍','♪','#14b8c4',3,'NA','media',8,'음표가 꽂힌 서랍, 청록','폭발에 포함되면 연쇄 배율 +1 (×(2+n))',['한 곡만 더 듣는 중이에요','올해 가장 많이 들은 곡: 알림음','플레이리스트가 업데이트됐어요']],
+['inbox','밀린메일','99','#5a6cf0',3,'KR','work',10,'편지함 위 숫자 뱃지 탑, 남색','새 줄 수량이 1~3 대신 2~4',['전부 읽기까지 1,024통 남았어요','읽지 않은 메일이 늘었습니다','스팸함에 중요한 메일이 있을 수도']],
+['map','길막지도','⌖','#3fa34d',3,'KR','daily',12,'접힌 지도에 막힌 화살표, 초록','자동 정리가 이 앱이 만드는 합치기를 먼저 노림',['더 빠른 길이 있어요(방금 지나침)','전방 500m 정체','목적지 주변 주차장이 만차예요']],
+['point','적립했냥','냥','#f08a24',3,'KR','money',14,'동전을 든 고양이 발, 주황','금융 앱 강화 가격 −10%',['적립금이 곧 소멸돼요(12원)','출석 체크하고 1원 받으세요','룰렛 기회가 1번 남았어요']],
+['reward','접속보상','★','#9b5de5',4,'GL','media',15,'선물 상자에 별 리본, 보라','복귀 정산 때 이 앱 줄 3개를 함께 내려보냄',['접속 보상을 받지 않았어요','오늘만 무료 뽑기 1회','길드원이 당신을 찾고 있어요']],
+['bank','잔액알림','￦','#0f8b8d',4,'KR','money',17,'금고 문에 동전 슬롯, 청록','폭발마다 과부하 게이지 +6 추가',['출금 3건, 입금 0건','이번 달 소비가 지난달보다 많아요','자동이체가 곧 출금됩니다']],
+['cloud','용량부족','☁','#6a7f99',4,'GL','work',19,'꽉 찬 구름에 막대, 회청','허용 중이면 판이 8줄',['저장공간이 1%도 남지 않았어요','사진 12,408장을 백업할까요?','요금제를 올리면 해결됩니다']],
+['translate','번역해줘','文','#4361ee',4,'EU','social',22,'두 글자가 교차하는 말풍선, 파랑','모든 권역 배율 +0.1',['이 페이지를 번역할까요?(이미 한국어)','새 단어 연습 시간이에요','연속 학습 0일째']],
+['meet','카메라켜요','◉','#2d6cdf',5,'NA','work',24,'렌즈와 음소거 마이크, 파랑','전화 돌발을 밀면 거절 대신 회의 참석: P = 최근 1분 수입',['회의가 시작됐어요(마이크 켜짐)','호스트가 카메라를 켜 달래요','회의록이 공유됐습니다']],
+['coin','떡상알림','↗','#e0a100',5,'AS','money',27,'위로 꺾인 화살표와 동전, 금색','폭발 P가 ×0.5~×4 무작위 (기댓값 ×1.5)',['지금 사면 늦었습니다','관심 종목이 3% 움직였어요','전문가: 오를 수도 내릴 수도']],
+['match','매칭됨','♥','#ff4d8d',5,'EU','social',30,'겹친 하트 두 개, 분홍','이 앱 두 줄이 맞닿으면 기준과 상관없이 즉시 폭발',['새로운 매칭이 있어요','누군가 당신의 프로필을 봤어요','대화가 3일째 멈춰 있어요']],
+['home','문열림','⌂','#7a8b3a',5,'EU','daily',34,'집 모양 자물쇠, 올리브','스팸 복제를 막는다',['현관문이 열렸어요(나 맞음)','로봇청소기가 갇혔어요','세탁이 끝났습니다(어제)']],
+['live','지금방송중','●','#ff2e2e',6,'AS','media',36,'빨간 원과 전파 세 줄','과부하 파동 배수 3 → 4',['구독한 채널이 방송 중이에요','시청자 2명이 기다리고 있어요','다시보기가 올라왔어요']],
+['stock','장마감','▤','#1b998b',6,'NA','money',40,'캔들 차트 세 개와 종, 청록','하루 한 번 15:30 이후 첫 폭발 ×10',['장 마감까지 10분','보유 종목 리포트가 도착했어요','배당금이 입금됐어요(0.3원)']],
+['comment','댓글폭탄','💬','#c2410c',6,'KR','social',45,'말풍선 더미가 쏟아지는 모양, 진주황','폭발하면 판의 다른 소통 앱 줄 수량 +1',['내 글에 댓글 999+','누가 당신을 언급했어요','베스트 댓글에 선정됐어요']],
+['minutes','회의록봇','≡','#4b5563',6,'EU','work',50,'클립보드 위 로봇 눈, 짙은 회색','허용 중이면 자동 정리가 한 수 앞을 본다',['회의 요약: 다음 회의를 잡기로 함','액션 아이템 14개가 배정됐어요','당신이 말한 내용을 정리했어요']]];
+A[22][2]='댓';
+const TIERP=[0,50,1250,31250,781250,19531250,488281250];
+const FAC=[1,1.6,2.5,4];
+const fmt=n=>n>=1e8?(n/1e8).toLocaleString('ko-KR',{maximumFractionDigits:1})+'억':n>=1e4?(n/1e4).toLocaleString('ko-KR',{maximumFractionDigits:1})+'만':Math.round(n).toLocaleString('ko-KR');
+const apps=A.map((a,i)=>{const t=a[4];const idx=A.filter((b,j)=>b[4]===t&&j<i).length;const starter=i<3;return{id:a[0],name:a[1],g:a[2],col:a[3],tier:t,reg:a[5],cat:a[6],lv:a[7],concept:a[8],eff:a[9],ments:a[10],price:starter?0:Math.round(TIERP[t]*FAC[idx]),value:10**(t-1)}});
+const ic=(a,cls='')=>`<span class="ic ${cls}" style="background:${a.col}" aria-hidden="true">${a.g}</span>`;
+
+// Ladder
+document.getElementById('ladder').innerHTML=[1,2,3,4,5,6].map(t=>`<div class="step glass" style="--i:${t-1}"><span class="tv">${T[t]}</span><span class="ap">${apps.filter(a=>a.tier===t).map(a=>ic(a,'sm')).join('')}</span><span class="val">가치 ${(10**(t-1)).toLocaleString('ko-KR')}</span></div>`).join('');
+
+// Leveling
+const goal=L=>Math.ceil(5*L**1.4*1.09**(L-1));const rate=L=>30*(1+L/10);
+const lv=[];let cx=0,ct=0;for(let L=1;L<=60;L++){lv.push({L,goal:goal(L),cumXp:cx,cumMin:ct});cx+=goal(L);ct+=goal(L)/rate(L)}
+const tfmt=m=>m<=0?'시작':m<1?'1분 미만':m<60?Math.round(m)+'분':m<60*48?(m/60).toFixed(1)+'시간':(m/60).toFixed(0)+'시간';
+document.querySelector('#lvtable tbody').innerHTML=[1,2,3,5,8,10,12,15,20,25,30,35,40,45,50,55,60].map(L=>{const r=lv[L-1];return`<tr><td>Lv ${L}</td><td class="n">${r.goal.toLocaleString('ko-KR')}</td><td class="n">${r.cumXp.toLocaleString('ko-KR')}</td><td class="n">${tfmt(r.cumMin)}</td></tr>`}).join('');
+const U={1:'직접 스와이프 · 과부하 게이지(깊이 1) · 시작 앱 톡탁톡·메일소포·문앞왔 · 스팸',2:'자동 정리(4.5초) · 전화 · 만보기왕',3:'상점 · 2배 보상(선택형 광고) · 피드또봐',4:'업데이트 알림 · 일정찍',5:'생일 축하(하루 1회) · 페이한칸',6:'알림 허용 직접 선택 · 알림훈련',7:'숏츠한편',8:'과부하 깊이 강화 · 비트서랍',9:'배터리 부족',10:'일일 도전 · 밀린메일',12:'방해 금지 · 길막지도',14:'@모두 공지 · 적립했냥',15:'오프라인 정산 2 → 4시간 · 접속보상',16:'인증번호',17:'잔액알림',19:'용량부족',20:'알림 허용 슬롯 4 → 5 · 저장공간 부족',22:'번역해줘',24:'카메라켜요',25:'공장 초기화 · 초기화 권장 알림',27:'떡상알림',30:'꾸미기(테마·파쇄 효과) · 오프라인 정산 8시간 · 매칭됨',34:'문열림',36:'지금방송중',40:'알림 허용 슬롯 6 · 장마감',45:'댓글폭탄',50:'회의록봇',60:'콘텐츠 v1 끝. 이후 레벨은 같은 공식으로 무한, 5레벨마다 영구 배율 +1%'};
+document.getElementById('unlocks').innerHTML=Object.entries(U).map(([k,v])=>`<b>Lv ${k}</b><div>${v} <span class="small">· ${tfmt(lv[k-1].cumMin)}</span></div>`).join('');
+
+// Apps table + filters
+const st={tier:0,cat:'',q:''};
+const btn=(grp,val,label)=>`<button type="button" data-g="${grp}" data-v="${val}" aria-pressed="${st[grp]==val}">${label}</button>`;
+const renderBtns=()=>{document.getElementById('tierBtns').innerHTML=btn('tier',0,'전체 티어')+[1,2,3,4,5,6].map(t=>btn('tier',t,t+'티어')).join(' ');document.getElementById('catBtns').innerHTML=btn('cat','','전체 카테고리')+Object.entries(C).map(([k,v])=>btn('cat',k,v)).join(' ')};
+const renderApps=()=>{const q=st.q.trim();const rows=apps.filter(a=>(!st.tier||a.tier===st.tier)&&(!st.cat||a.cat===st.cat)&&(!q||[a.name,a.eff,a.concept,...a.ments].join(' ').includes(q)));
+document.querySelector('#apptable tbody').innerHTML=rows.map(a=>`<tr><td>${ic(a)}</td><td><b>${a.name}</b><div class="small">${a.concept}</div></td><td><span class="chip a">${T[a.tier]}</span></td><td>${R[a.reg]}</td><td>${C[a.cat]}</td><td class="n">Lv ${a.lv}</td><td class="n">${a.price?fmt(a.price)+' P':'시작'}</td><td class="n">${a.value.toLocaleString('ko-KR')}</td><td>${a.eff}</td><td>${a.ments.map(m=>`<div class="ment">“${m}”</div>`).join('')}</td></tr>`).join('');
+document.getElementById('noapp').hidden=rows.length>0};
+renderBtns();renderApps();
+document.querySelector('.filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st[b.dataset.g]=b.dataset.g==='tier'?+b.dataset.v:b.dataset.v;renderBtns();renderApps()});
+document.getElementById('q').addEventListener('input',e=>{st.q=e.target.value;renderApps()});
+
+// Events
+const E=[
+['스팸','!','#ef4444','방해',1,'11스와이프마다 맨 위','합쳐지지 않는 벽. 3스와이프 안에 지우지 않으면 다음 새 줄 자리에 복제. 밀면 배터리 1칸, P 없음','“(광고) 무료 체험이 곧 유료로 바뀝니다” · “지금 안 보면 후회할 혜택”'],
+['전화','☎','#ef4444','정지',2,'23스와이프마다 맨 위','5초 동안 자동 정리 정지. 밀면(거절) 즉시 재개. 카메라켜요 허용 시 참석 보상','“발신번호 표시 제한” · “고객님 한도 조회 결과 안내”'],
+['2배 보상','2×','#3867f0','광고',3,'3연쇄 이상 직후, 선택형','시청 완료 시 그 스와이프의 P를 한 번 더. 점수·XP·기록은 그대로. 거래 ID로 한 번만 지급','“방금 정리한 만큼 한 번 더 받을까요?”'],
+['업데이트','↻','#3867f0','보상',4,'평균 40스와이프에 1번','밀면 허용 중인 앱 하나 강화 +1 무료','“새 버전이 있습니다. 지금 재시작할까요?”'],
+['생일 축하','생','#f2a71b','보상',5,'하루 첫 접속','밀면 P = 최근 10분 평균 수입 × 10','“오늘 생일인 친구가 3명 있어요”'],
+['알림훈련','⚠','#e2700a','시간',6,'평균 60스와이프에 1번','30초 동안 패널 탭. 탭당 이벤트 배율 +1%, 최대 ×2.0. 그동안의 모든 스와이프에 적용','“[훈련] 이 알림은 훈련용입니다. 30초 동안 탭하세요”'],
+['배터리 부족','▁','#ef4444','방해',9,'배터리 3칸 이하일 때','방치하면 충전 속도 −30%. 밀면(절전 모드) 배터리 +4','“배터리 15% 남음. 절전 모드를 켤까요?”'],
+['방해 금지','☾','#3867f0','시간',12,'하루 3회, 직접 켬','20초 동안 돌발 없음, 자동 간격 4.5 → 2.25초','“방해 금지 모드가 켜졌습니다”'],
+['@모두 공지','@','#e2700a','보상',14,'평균 60스와이프에 1번','다음 새 줄 5개를 A·B·A·B·A로 내려보내 이중 샌드위치를 만든다','“@모두 내일 회의 10시로 변경됐습니다”'],
+['인증번호','#','#e2700a','시간',16,'평균 50스와이프에 1번','10초 안에 밀면 P = 최근 1분 수입. 지나면 사라짐','“인증번호 [482913]을 10초 안에 입력하세요”'],
+['저장공간 부족','▦','#ef4444','방해',20,'평균 70스와이프에 1번','방치하면 10스와이프 동안 판이 6줄. 밀면 즉시 해제','“저장공간이 거의 찼습니다. 정리할까요?”'],
+['초기화 권장','⟲','#7d746a','메타',25,'최근 30분 최고점 갱신이 없을 때','공장 초기화 화면으로 안내. 지금 초기화하면 얻을 영구 배율을 미리 보여 줌','“기기가 느려졌나요? 초기화로 새 출발하세요”']];
+const kc={방해:'i',정지:'i',광고:'a',보상:'c',시간:'c',메타:''};
+document.getElementById('eventgrid').innerHTML=E.map(e=>`<article class="glass card"><h3><span class="ic sm" style="background:${e[2]}" aria-hidden="true">${e[1]}</span>${e[0]} <span class="chip ${kc[e[3]]}">${e[3]}</span><span class="chip">Lv ${e[4]}</span></h3><p class="small" style="margin:0 0 6px">${e[5]}</p><p style="margin:0 0 6px">${e[6]}</p><p class="ment" style="margin:0">${e[7]}</p></article>`).join('');
+
+// Regions / categories
+const grp=(key,map,id)=>{document.querySelector(`#${id} tbody`).innerHTML=Object.entries(map).map(([k,v])=>{const xs=apps.filter(a=>a[key]===k);return`<tr><td><b>${v}</b></td><td>${xs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0">${ic(a,'sm')}${a.name}</span>`).join('')}</td><td class="n">${xs.length}</td></tr>`}).join('')};
+grp('reg',R,'regtable');grp('cat',C,'cattable');
+
+// Tier table
+document.querySelector('#tiertable tbody').innerHTML=[1,2,3,4,5,6].map(t=>{const xs=apps.filter(a=>a.tier===t);return`<tr><td>${T[t]}</td><td class="n">${(10**(t-1)).toLocaleString('ko-KR')}</td><td class="n">${t===1?'시작 · 50 P':fmt(TIERP[t])+' P'}</td><td class="n">${fmt(5*25**(t-1))} P</td><td class="n">Lv ${Math.min(...xs.map(a=>a.lv))}~${Math.max(...xs.map(a=>a.lv))}</td></tr>`}).join('');
+
+// Charts
+const MS=[10,25,50,100,200,300,400,500];
+const val=L=>L*2**MS.filter(m=>L>=m).length;
+const pay=[];for(let L=1;L<=120;L++){const p=5*1.15**(L-1);pay.push({x:L,y:p/(val(L+1)-val(L)),p,v:val(L+1)})}
+const xpPts=lv.slice(1).map(r=>({x:r.L,y:Math.max(r.cumMin,0.3)}));
+function chart(svg,tip,pts,opt){const draw=()=>{const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;const m={l:narrow?40:56,r:14,t:14,b:34};
+const xs=pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs);const ly=opt.log;const yv=p=>ly?Math.log10(p.y):p.y;
+const y0=ly?Math.floor(Math.min(...pts.map(yv))):0,y1=ly?Math.ceil(Math.max(...pts.map(yv))):Math.max(...pts.map(yv))*1.08;
+const X=x=>m.l+(x-x0)/(x1-x0)*(W-m.l-m.r),Y=v=>H-m.b-(v-y0)/(y1-y0)*(H-m.t-m.b);
+const ticks=opt.ticks?opt.ticks.filter(t=>t>=y0&&t<=y1):ly?Array.from({length:y1-y0+1},(_,i)=>y0+i):[0,.25,.5,.75,1].map(f=>f*y1);
+const xt=opt.xticks.filter(t=>!narrow||t%20===0||t===opt.xticks[0]);
+let s=ticks.map(t=>`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--track)"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="12" style="fill:var(--sub)">${opt.yfmt(t)}</text>`).join('');
+s+=xt.map(t=>`<text x="${X(t)}" y="${H-10}" text-anchor="middle" font-size="12" style="fill:var(--sub)">${opt.xfmt(t)}</text>`).join('');
+(opt.marks||[]).forEach(mk=>{if(mk>=x0&&mk<=x1)s+=`<line x1="${X(mk)}" x2="${X(mk)}" y1="${m.t}" y2="${H-m.b}" style="stroke:var(--chain)" stroke-dasharray="3 4" opacity=".6"/>`});
+s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(yv(p)).toFixed(1)).join('')}" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+s+=`<circle id="${svg.id}-dot" r="5" style="fill:var(--accent);stroke:var(--bg)" stroke-width="2" opacity="0"/><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="transparent"/>`;
+svg.innerHTML=s;const dot=svg.querySelector('circle');
+svg.onpointermove=e=>{const r=svg.getBoundingClientRect();const xv=x0+(e.clientX-r.left-m.l)/(W-m.l-m.r)*(x1-x0);const p=pts.reduce((a,b)=>Math.abs(b.x-xv)<Math.abs(a.x-xv)?b:a);
+dot.setAttribute('cx',X(p.x));dot.setAttribute('cy',Y(yv(p)));dot.setAttribute('opacity',1);tip.innerHTML=opt.tip(p);tip.style.opacity=1;const tx=Math.min(X(p.x)+12,W-tip.offsetWidth-4);tip.style.left=Math.max(4,tx)+'px';tip.style.top=Math.max(0,Y(yv(p))-44)+'px'};
+svg.onpointerleave=()=>{dot.setAttribute('opacity',0);tip.style.opacity=0}};
+const ro=new ResizeObserver(draw);ro.observe(svg);}
+chart(document.getElementById('xpsvg'),document.getElementById('xptip'),xpPts,{log:true,ticks:[0,1,Math.log10(60),Math.log10(600),Math.log10(6000),Math.log10(60000)],xticks:[2,10,20,30,40,50,60],xfmt:t=>'Lv'+t,yfmt:t=>{const m=Math.round(10**t);return m<60?m+'분':Math.round(m/60)+'시간'},tip:p=>`<b>Lv ${p.x}</b> · ${tfmt(p.y)}`});
+chart(document.getElementById('paysvg'),document.getElementById('paytip'),pay,{log:true,marks:[10,25,50,100],xticks:[1,10,25,50,75,100,120],xfmt:t=>'Lv'+t,yfmt:t=>fmt(10**t)+'개',tip:p=>`<b>강화 ${p.x} → ${p.x+1}</b> · 가격 ${fmt(p.p)} P · 가치 ${fmt(p.v)} · 회수 ${fmt(p.y)}개`});
+}
+</script>
+</body>
+</html>
