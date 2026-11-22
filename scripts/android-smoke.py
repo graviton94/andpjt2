@@ -47,16 +47,17 @@ def swipe_and_record():
     ) as recording:
         time.sleep(.9)
         adb("shell", "input", "swipe", str(width * 2 // 3), y, str(width // 6), y, "320")
-        wait_node("11.7만 P")
-        wait_node("레벨 2")
-        screenshot("after-first-chain.png")
         if recording.wait(timeout=25) != 0:
             raise RuntimeError("Android screen recording failed")
+    wait_node("11.7만 P")
+    wait_node("레벨 2")
+    screenshot("after-first-chain.png")
     adb("pull", REMOTE_RECORDING, str(OUTPUT / "first-chain.mp4"))
 
 
 def main(apk):
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    adb("shell", "settings", "put", "global", "animator_duration_scale", "1")
     adb("install", "-r", apk)
     start()
     wait_node("알림 센터")

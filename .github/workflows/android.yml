@@ -59,6 +59,7 @@ jobs:
           target: google_apis
           profile: pixel_4
           disable-linux-hw-accel: auto
+          disable-animations: false
           script: python3 scripts/android-smoke.py build/apk/app-debug.apk
       - uses: actions/upload-artifact@v4
         if: always()

@@ -236,7 +236,7 @@ internal class GameSession(
                 val reduced = panel.reduceMotion || !ValueAnimator.areAnimatorsEnabled()
                 val hold = if (reduced) 16L else hit.freezeMs + if (hit.kind == ImpactKind.Swipe) 52L else 0L
                 delay(hold)
-                shownRows = frame.rows
+                shownRows = if (hit.kind == ImpactKind.Overflow) state.rows else frame.rows
                 displayedPoints = previous.points + frame.earned
                 delay(if (reduced) 22L else hit.durationMs - hold)
             }
