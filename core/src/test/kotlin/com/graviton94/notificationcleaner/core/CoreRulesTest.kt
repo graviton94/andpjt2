@@ -129,9 +129,9 @@ class CoreRulesTest {
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 180 * 4 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 4%
+        assertEquals(valueOf(1_000L * 180 * 3 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 3%
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 8 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(1_000L * 180 * 7 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test

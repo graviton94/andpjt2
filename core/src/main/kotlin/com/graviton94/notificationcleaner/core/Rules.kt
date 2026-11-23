@@ -85,7 +85,7 @@ data class RuleSet(
     // Offline settlement
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
-    val offlineEfficiencyPercent: Int = 4,
+    val offlineEfficiencyPercent: Int = 3,
     val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
     val proPricePermille: Int = 1_000,
