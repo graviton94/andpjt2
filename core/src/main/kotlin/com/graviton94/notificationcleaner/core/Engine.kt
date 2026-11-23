@@ -629,7 +629,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             regionCleared = s.regionCleared.toMutableMap().also { m -> regionAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             rng = rng.seed,
-            earnRate = (s.earnRate * BigInteger.valueOf(9) + earned * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
+            // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
+            earnRate = (s.earnRate * BigInteger.valueOf(9) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
             lastSwipeAt = now,
             freeSwipes = freeSwipes,
             boostNext = boostNext,

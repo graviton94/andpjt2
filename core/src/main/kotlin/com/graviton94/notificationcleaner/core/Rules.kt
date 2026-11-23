@@ -56,6 +56,10 @@ data class RuleSet(
     val warpMinutes: Int = 120,
     val batteryOvercharge: Int = 6,
     val backupBoostPercent: Int = 25,
+    /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
+    val adLevelCap: Int = 1,
+    /** 최고 기록 ×2 is offered from this level. */
+    val bestDoubleFrom: Int = 20,
     // Battery and auto
     val energyCap: Int = 12,
     val chargeMs: Long = 3_000,

@@ -115,7 +115,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 val o = engine.swipe(s, target, t) ?: continue
                 s = o.state
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
-                if (payer != Payer.Free && s.level >= 10 && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
+                if (payer != Payer.Free && s.level >= engine.rules.bestDoubleFrom && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
                 if (payer != Payer.Free && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
                 if (payer == Payer.Whale && s.energy == 0) shop.buyItem(s, CreditItem.Battery, t)?.let { s = it }
                 // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
@@ -209,11 +209,11 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
 
 private fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
 
-fun monetization(days: Int, seeds: Long) {
+fun monetization(days: Int, seeds: Long, only: List<Payer> = Payer.entries) {
     val plan = DayPlan()
     println("=== 과금 프로필 ${days}일 · 시드 $seeds")
     fun d(x: Double?) = if (x == null || x.isNaN()) "-" else "%.1f일".format(x)
-    for (payer in Payer.entries) {
+    for (payer in only) {
         val runs = (1L..seeds).map { playDays(it, days, plan, true, payer = payer) }
         val off = p50(runs.map { val tot = it.offlineP + it.activeP; if (tot.signum() == 0) 0.0 else it.offlineP.toBigDecimal().divide(tot.toBigDecimal(), java.math.MathContext.DECIMAL64).toDouble() * 100 })
         println("[${payer.label}] 마지막 앱 ${d(p50(runs.mapNotNull { it.lastAppDay }))} (${runs.count { it.lastAppDay != null }}/$seeds) · 오프라인 ${"%.0f%%".format(off)}" +

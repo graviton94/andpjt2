@@ -182,7 +182,7 @@ fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 6
 
 fun main(args: Array<String>) {
     if (args.firstOrNull() == "debug") return debugRun()
-    if (args.firstOrNull() == "money") return monetization(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toLong() ?: 4L)
+    if (args.firstOrNull() == "money") return monetization(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toLong() ?: 4L, args.getOrNull(3)?.split(",")?.map { Payer.valueOf(it) } ?: Payer.entries)
     if (args.firstOrNull() == "daily") return daily(args.getOrNull(1)?.toInt() ?: 56, args.getOrNull(2)?.toLong() ?: 4L)
     if (args.firstOrNull() == "update") return updateCheck(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toInt() ?: 56,
         args.getOrNull(3)?.toLong() ?: 4L, com.graviton94.notificationcleaner.core.ContentPack.valueOf(args.getOrNull(4) ?: "AiTier"))

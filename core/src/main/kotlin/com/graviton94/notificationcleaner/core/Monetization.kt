@@ -148,8 +148,8 @@ class Shop(private val engine: Engine) {
             a.copy(adDay = dayOf(now), adUses = uses + (slot to (uses[slot] ?: 0) + 1))
         }
         return when (slot) {
-            AdSlot.BestDouble -> grantP(counted, offerP, rules.swipeLevelCap)
-            AdSlot.OfflineDouble -> grantP(counted, offerP, rules.offlineLevelCap)
+            AdSlot.BestDouble -> grantP(counted, offerP, rules.adLevelCap)
+            AdSlot.OfflineDouble -> grantP(counted, offerP, rules.adLevelCap)
             AdSlot.Boost -> boost(counted, now)
             AdSlot.Warp -> warp(counted)
             AdSlot.Battery -> battery(counted)
@@ -183,8 +183,8 @@ class Shop(private val engine: Engine) {
 
     private fun boost(s: GameState, now: Long) = s.withAccount { it.copy(boostUntil = maxOf(now, it.boostUntil) + rules.boostMinutes * 60_000L) }
 
-    /** 시간 도약: [RuleSet.warpMinutes] of the recent income rate now, at full (not offline) efficiency. */
-    private fun warp(s: GameState) = grantP(s, s.earnRate * BigInteger.valueOf(rules.warpMinutes.toLong()), rules.offlineLevelCap)
+    /** 시간 도약: [RuleSet.warpMinutes] of auto-clean income now (the recent rate at the auto share, no offline penalty). */
+    private fun warp(s: GameState) = grantP(s, s.earnRate * BigInteger.valueOf(rules.warpMinutes.toLong() * rules.offlineAutoPermille) / BigInteger.valueOf(1_000), rules.adLevelCap)
 
     /** 보조배터리: full battery plus an overcharge above the cap. */
     private fun battery(s: GameState) = s.copy(energy = engine.energyCap(s) + rules.batteryOvercharge, nextChargeAt = 0)
