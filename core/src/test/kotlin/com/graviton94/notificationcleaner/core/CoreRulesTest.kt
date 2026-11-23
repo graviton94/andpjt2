@@ -44,8 +44,8 @@ class CoreRulesTest {
     fun lowTiersIgniteHighTiers() {
         val (s, o) = igniter()
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
-        assertEquals(listOf("alarm", "live"), bursts.map { it.row.app })
-        assertEquals(valueOf(93_312), bursts[1].earned)
+        assertEquals(listOf("alarm", "reward"), bursts.map { it.row.app })
+        assertEquals(valueOf(111_974), bursts[1].earned)
         // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(24L, 30L, 46L, 61L, 96L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(144L, 180L, 281L, 540L, 576L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -96,10 +96,10 @@ class CoreRulesTest {
         assertEquals(3, e.maxSlots(s))
         assertEquals(5 to 6, e.rules.minSlots(20) to e.rules.maxSlots(20, Backup()))
         assertEquals(7 to 8, e.rules.minSlots(40) to e.rules.maxSlots(40, Backup()))
-        val owned = s.copy(level = 20, appLevels = listOf("alarm", "memo", "weather", "steps", "feed", "calendar").associateWith { 1 })
-        assertNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "steps")), "below the minimum of 5")
-        assertNotNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "steps", "feed")))
-        assertNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "steps", "feed", "calendar", "pay")), "not owned / above max")
+        val owned = s.copy(level = 20, appLevels = listOf("alarm", "memo", "weather", "recorder", "feed", "calendar").associateWith { 1 })
+        assertNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "recorder")), "below the minimum of 5")
+        assertNotNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "recorder", "feed")))
+        assertNull(e.setDeck(owned, listOf("alarm", "memo", "weather", "recorder", "feed", "calendar", "pay")), "not owned / above max")
     }
 
     @Test
@@ -137,14 +137,14 @@ class CoreRulesTest {
     @Test
     fun boughtAppsJoinTheDeckOnlyWhenASlotIsFree() {
         val rich = e.newGame(now, 1).copy(wallet = valueOf(1_000_000), level = 8)
-        val four = e.buy(rich, "calendar")
+        val four = e.buy(rich, "phone")
         assertEquals(4, four.active.size)
         assertEquals(valueOf(1_000_000 - 6_000), four.wallet)
-        val five = e.buy(e.buy(four, "mail"), "delivery")
+        val five = e.buy(e.buy(four, "sms"), "camera")
         assertEquals(5, five.active.size)
-        val six = e.buy(five, "point")
+        val six = e.buy(five, "gallery")
         assertEquals(5, six.active.size)
-        assertTrue("point" in six.appLevels)
+        assertTrue("gallery" in six.appLevels)
     }
 
     @Test
@@ -203,7 +203,7 @@ class CoreRulesTest {
     @Test
     fun unlocksArePermanentAndPriceSetsTheOrder() {
         // A fresh run after a Lv40 best: 카메라켜요 is unlocked but its price keeps it out of reach.
-        val veteran = e.newGame(now, 1, Backup(bestLevel = 40, resets = 5))
+        val veteran = e.newGame(now, 1, Backup(bestLevel = Catalog.app("meet").unlockLevel + 4, resets = 5))
         assertTrue(e.unlocked(veteran, "meet"))
         assertEquals(veteran, e.buy(veteran, "meet"))
         val price = e.rules.appPrice(Catalog.app("meet"))
@@ -244,17 +244,18 @@ class CoreRulesTest {
         val pro = e.buyPro(s, "alarm")
         assertTrue("alarm" in pro.pro)
         assertEquals(BigInteger.ZERO, pro.wallet)
-        assertEquals(before * valueOf(2), e.earn(pro, "alarm", valueOf(1_000), 0))
+        assertTrue((before * valueOf(2) - e.earn(pro, "alarm", valueOf(1_000), 0)).abs() <= BigInteger.ONE, "×2 up to rounding")
         val early = s.copy(level = at - 1)
         assertEquals(early, e.buyPro(early, "alarm"), "opens at its pro level")
     }
 
     @Test
     fun lateAppsOpenByBestLevelEver() {
-        val rich = e.newGame(now, 1).copy(level = 30, wallet = BigInteger.TEN.pow(60))
-        assertEquals(rich, e.buy(rich, "live"), "지금방송중 opens at Lv67")
-        val veteran = rich.copy(backup = Backup(bestLevel = 67))
-        assertTrue("live" in e.buy(veteran, "live").appLevels)
+        val late = Catalog.app("reward")
+        val rich = e.newGame(now, 1).copy(level = late.unlockLevel - 1, wallet = BigInteger.TEN.pow(60))
+        assertEquals(rich, e.buy(rich, "reward"), "원신신 opens at its level")
+        val veteran = rich.copy(backup = Backup(bestLevel = late.unlockLevel))
+        assertTrue("reward" in e.buy(veteran, "reward").appLevels)
     }
 
     @Test
@@ -262,7 +263,7 @@ class CoreRulesTest {
         fun withCard(c: EventCard) = e.newGame(now, 2).let { it.copy(level = 70, rows = it.rows.toMutableList().also { r -> r[0] = Row(50, RowKind.Event, event = c) }) }
         // 앱스토어 세일: the next app costs half.
         val sale = e.swipe(withCard(EventCard.Sale), 50, now)!!.state.copy(wallet = valueOf(3_000))
-        assertTrue("calendar" in e.buy(sale, "calendar").appLevels)
+        assertTrue("phone" in e.buy(sale, "phone").appLevels)
         // 단체 문자: every app row on the board +1 (rows below the swiped one are untouched by refill).
         val group = withCard(EventCard.GroupText)
         val after = e.swipe(group, 50, now)!!.state
@@ -318,7 +319,7 @@ class CoreRulesTest {
     @Test
     fun luckySynergyStaysBelowOneTierStep() {
         // Six 생활 apps from three regions cannot out-earn the same app one tier up with no synergy at all.
-        val ids = listOf("weather", "steps", "map", "home", "alarm", "memo")
+        val ids = listOf("weather", "flash", "taxi", "food", "home", "carpool")
         val base = e.newGame(now, 1).copy(appLevels = ids.associateWith { 1 }, active = listOf("weather"))
         val alone = e.earn(base, "weather", valueOf(1_000_000), 0)
         val stacked = e.earn(base.copy(active = ids), "weather", valueOf(1_000_000), 0)

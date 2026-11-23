@@ -1,13 +1,14 @@
 package com.graviton94.notificationcleaner.core
 
-/** Virtual market. Region synergy counts apps of the same region in the deck. */
-enum class Region(val label: String) { Domestic("국내권"), Global("글로벌"), NorthAmerica("북미권"), Europe("유럽권"), Asia("아시아권") }
+/** Home market. Region synergy counts apps of the same region in the deck; Global (stock apps) gets none. */
+enum class Region(val label: String) { Domestic("국내권"), Global("기본 앱"), NorthAmerica("북미권"), Europe("유럽권"), Asia("아시아권") }
 
 /** App category. Category synergy counts apps of the same category in the deck. */
 enum class Category(val label: String) { Social("소통"), Work("업무"), Daily("생활"), Media("미디어"), Money("금융") }
 
 /**
- * One fictional app (docs/content/notification-catalog.html). [order] is its place inside the tier and
+ * One parody app (docs/content/notification-catalog.html). Tiers follow real-world reach: Android's stock apps at
+ * tiers 1-2, the world's biggest platforms at tier 10. Names and icons parody the real app; never identical. [order] is its place inside the tier and
  * sets its price step. Unique effects are catalogued but not part of rules v3 (planned for v3.1).
  */
 data class AppDef(
@@ -112,90 +113,90 @@ object Catalog {
 
     val apps = listOf(
         // 1티어
-        app("alarm", "오분만", 1, 0, EU, Category.Work, 1), // 알람·스누즈
-        app("weather", "맑음예보", 1, 1, GL, Category.Daily, 1), // 날씨
-        app("memo", "메모장끝", 1, 2, NA, Category.Work, 1), // 메모
-        app("flash", "번쩍등", 1, 3, AS, Category.Daily, 2), // 손전등
-        app("calc", "계산했산", 1, 4, EU, Category.Money, 3), // 계산기
-        app("steps", "만보기왕", 1, 5, AS, Category.Social, 4), // 만보기·걷기 랭킹
+        app("alarm", "오분만", 1, 0, GL, Category.Work, 1), // 기본 시계·알람 패러디
+        app("weather", "맑음예보", 1, 1, GL, Category.Daily, 1), // 기본 날씨 패러디
+        app("memo", "메모장끝", 1, 2, GL, Category.Work, 1), // 기본 메모 패러디
+        app("flash", "번쩍등", 1, 3, GL, Category.Daily, 2), // 기본 손전등 패러디
+        app("calc", "계산했산", 1, 4, GL, Category.Money, 3), // 기본 계산기 패러디
+        app("recorder", "녹음했음", 1, 5, GL, Category.Media, 4), // 기본 녹음기 패러디
         // 2티어
-        app("calendar", "일정찍", 2, 0, AS, Category.Work, 5), // 캘린더
-        app("mail", "메일소포", 2, 1, GL, Category.Work, 6), // 메일
-        app("delivery", "문앞왔", 2, 2, KR, Category.Daily, 7), // 택배 조회
-        app("point", "적립했냥", 2, 3, EU, Category.Money, 8), // 포인트·적립
-        app("gallery", "추억소환", 2, 4, AS, Category.Media, 9), // 사진첩·추억
-        app("podcast", "듣다잠듦", 2, 5, EU, Category.Media, 11), // 팟캐스트
+        app("phone", "전화왔숑", 2, 0, GL, Category.Social, 5), // 기본 전화 패러디
+        app("sms", "문자왔숑", 2, 1, GL, Category.Social, 6), // 기본 메시지 패러디
+        app("camera", "찰칵찰칵", 2, 2, GL, Category.Media, 7), // 기본 카메라 패러디
+        app("gallery", "추억소환", 2, 3, GL, Category.Media, 8), // 기본 갤러리 패러디
+        app("contacts", "누구세요", 2, 4, GL, Category.Social, 9), // 기본 연락처 패러디
+        app("settings", "설정했셈", 2, 5, GL, Category.Daily, 11), // 기본 설정 패러디
         // 3티어
-        app("map", "길막지도", 3, 0, KR, Category.Daily, 12), // 지도·내비
-        app("pay", "페이한칸", 3, 1, NA, Category.Money, 13), // 간편결제
-        app("inbox", "밀린메일", 3, 2, NA, Category.Work, 14), // 업무 메일함
-        app("translate", "번역해줘", 3, 3, EU, Category.Social, 16), // 번역·언어학습
-        app("cloud", "용량부족", 3, 4, GL, Category.Work, 17), // 클라우드 저장
-        app("taxi", "지금잡혀", 3, 5, AS, Category.Daily, 19), // 택시 호출
+        app("mail", "쥐메일", 3, 0, NA, Category.Work, 12), // Gmail 패러디
+        app("translate", "딥에루", 3, 1, EU, Category.Work, 13), // DeepL 패러디
+        app("transfer", "위트랜스뻐", 3, 2, EU, Category.Work, 14), // WeTransfer 패러디
+        app("shopee", "쇼피피", 3, 3, AS, Category.Money, 16), // Shopee 패러디
+        app("cloud", "드랍박스", 3, 4, NA, Category.Work, 17), // Dropbox 패러디
+        app("calendar", "타임트리리", 3, 5, AS, Category.Daily, 19), // TimeTree 패러디
         // 4티어
-        app("food", "배달왔쪄", 4, 0, KR, Category.Daily, 20), // 음식 배달
-        app("bank", "잔액알림", 4, 1, KR, Category.Money, 22), // 은행
-        app("music", "비트서랍", 4, 2, NA, Category.Media, 23), // 음악 스트리밍
-        app("reward", "접속보상", 4, 3, GL, Category.Media, 26), // 모바일 게임
-        app("home", "문열림", 4, 4, EU, Category.Daily, 28), // 스마트홈
-        app("fit", "운동하셈", 4, 5, NA, Category.Social, 29), // 운동 기록·챌린지
+        app("pay", "토스트", 4, 0, KR, Category.Money, 20), // Toss 패러디
+        app("taxi", "코코아T", 4, 1, KR, Category.Daily, 22), // Kakao T 패러디
+        app("music", "메롱", 4, 2, KR, Category.Media, 23), // Melon 패러디
+        app("caller", "트루콜라", 4, 3, EU, Category.Social, 26), // Truecaller 패러디
+        app("bolt", "볼트볼트", 4, 4, EU, Category.Daily, 28), // Bolt 패러디
+        app("browser", "오페라라", 4, 5, EU, Category.Work, 29), // Opera 패러디
         // 5티어
-        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 32), // 화상회의
-        app("coin", "떡상알림", 5, 1, AS, Category.Money, 35), // 코인 거래
-        app("match", "매칭됨", 5, 2, EU, Category.Social, 38), // 데이팅
-        app("cafe", "맘카페짱", 5, 3, KR, Category.Social, 42), // 지역 커뮤니티
-        app("webtoon", "다음화보기", 5, 4, KR, Category.Media, 45), // 웹툰
-        app("stay", "숙소특가", 5, 5, EU, Category.Daily, 48), // 여행·숙소
+        app("food", "배다른민족", 5, 0, KR, Category.Daily, 32), // 배달의민족 패러디
+        app("webtoon", "나베르웹툰", 5, 1, KR, Category.Media, 35), // 네이버웹툰 패러디
+        app("cafe", "맘카페짱", 5, 2, KR, Category.Social, 38), // 지역 맘카페 패러디
+        app("wise", "와이저", 5, 3, EU, Category.Money, 42), // Wise 패러디
+        app("carpool", "블라블라카풀", 5, 4, EU, Category.Daily, 45), // BlaBlaCar 패러디
+        app("home", "샤오미미", 5, 5, AS, Category.Daily, 48), // Xiaomi Home 패러디
         // 6티어
-        app("stock", "장마감", 6, 0, NA, Category.Money, 51), // 주식
-        app("comment", "댓글폭탄", 6, 1, KR, Category.Social, 54), // 댓글 커뮤니티
-        app("minutes", "회의록봇", 6, 2, EU, Category.Work, 57), // AI 회의록
-        app("live", "지금방송중", 6, 3, AS, Category.Media, 60), // 라이브 방송
-        app("used", "중고줄게", 6, 4, KR, Category.Money, 64), // 중고거래
-        app("workchat", "업무톡방", 6, 5, GL, Category.Work, 67), // 업무 메신저
+        app("meet", "주움", 6, 0, NA, Category.Work, 51), // Zoom 패러디
+        app("match", "바두두", 6, 1, EU, Category.Social, 54), // Badoo 패러디
+        app("coin", "업빝", 6, 2, KR, Category.Money, 57), // Upbit 패러디
+        app("used", "양파마켓", 6, 3, KR, Category.Money, 60), // 당근마켓 패러디
+        app("booking", "북킹닷콤", 6, 4, EU, Category.Daily, 64), // Booking.com 패러디
+        app("reward", "원신신", 6, 5, AS, Category.Media, 67), // 원신 패러디
         // 7티어
-        app("ott", "정주행각", 7, 0, NA, Category.Media, 70), // OTT
-        app("cheap", "직구특가", 7, 1, AS, Category.Money, 74), // 초저가 직구 쇼핑
-        app("career", "경력직구함", 7, 2, NA, Category.Social, 78), // 구인·인맥
-        app("edit", "컷편집기", 7, 3, AS, Category.Media, 82), // 영상 편집
-        app("portal", "실검왔다", 7, 4, KR, Category.Daily, 86), // 국내 포털
-        app("ride", "같이타요", 7, 5, EU, Category.Social, 90), // 차량 공유
+        app("ott", "넷플러그", 7, 0, NA, Category.Media, 70), // Netflix 패러디
+        app("comment", "디스인사이드", 7, 1, KR, Category.Social, 74), // 디시인사이드 패러디
+        app("beat", "스팟티파이", 7, 2, EU, Category.Media, 78), // Spotify 패러디
+        app("revolut", "레볼루투", 7, 3, EU, Category.Money, 82), // Revolut 패러디
+        app("line", "라잉", 7, 4, AS, Category.Social, 86), // LINE 패러디
+        app("grab", "그래브", 7, 5, AS, Category.Daily, 90), // Grab 패러디
         // 8티어
-        app("mall", "새벽도착", 8, 0, KR, Category.Money, 94), // 새벽배송 쇼핑
-        app("secret", "비밀말풍선", 8, 1, EU, Category.Social, 98), // 보안 메신저
-        app("photo", "사진한장", 8, 2, NA, Category.Media, 102), // 사진 SNS
-        app("feed", "피드또봐", 8, 3, GL, Category.Social, 106), // 페이스형 SNS
-        app("ai", "물어봐봇", 8, 4, NA, Category.Work, 110), // AI 챗봇
-        app("superpay", "전국페이", 8, 5, KR, Category.Money, 114), // 국민 간편결제
+        app("portal", "나베르", 8, 0, KR, Category.Work, 94), // Naver 패러디
+        app("mall", "쿠빵", 8, 1, KR, Category.Money, 98), // 쿠팡 패러디
+        app("career", "링크드아웃", 8, 2, NA, Category.Work, 102), // LinkedIn 패러디
+        app("ride", "우바", 8, 3, NA, Category.Daily, 106), // Uber 패러디
+        app("cheap", "태무", 8, 4, AS, Category.Money, 110), // Temu 패러디
+        app("edit", "컵컷", 8, 5, AS, Category.Media, 114), // CapCut 패러디
         // 9티어
-        app("shorts", "숏츠한편", 9, 0, AS, Category.Media, 118), // 숏폼 영상
-        app("chat", "톡탁톡", 9, 1, KR, Category.Social, 122), // 국민 메신저
-        app("search", "검색해봐", 9, 2, GL, Category.Work, 126), // 검색 엔진
-        app("superapp", "다되는앱", 9, 3, AS, Category.Money, 130), // 슈퍼앱
-        app("store", "앱깔아", 9, 4, GL, Category.Daily, 134), // 앱 마켓
-        app("navi", "길안내양", 9, 5, GL, Category.Daily, 138), // 글로벌 지도
+        app("secret", "텔레그림", 9, 0, EU, Category.Social, 118), // Telegram 패러디
+        app("photo", "인싸그램", 9, 1, NA, Category.Media, 122), // Instagram 패러디
+        app("ai", "챗GTP", 9, 2, NA, Category.Work, 126), // ChatGPT 패러디
+        app("search", "구굴", 9, 3, NA, Category.Work, 130), // Google 패러디
+        app("mega", "아마좀", 9, 4, NA, Category.Money, 134), // Amazon 패러디
+        app("superapp", "위잿", 9, 5, AS, Category.Money, 138), // WeChat 패러디
         // 10티어
-        app("tube", "영상한바다", 10, 0, GL, Category.Media, 142), // 세계 최대 동영상
-        app("green", "세계말풍선", 10, 1, GL, Category.Social, 146), // 세계 1위 메신저
-        app("os", "시스템업뎃", 10, 2, GL, Category.Work, 150), // OS 시스템 알림
-        app("mega", "전세계쇼핑", 10, 3, NA, Category.Money, 155), // 세계 최대 쇼핑몰
-        app("dance", "춤추는영상", 10, 4, AS, Category.Media, 160), // 글로벌 숏폼 1위
-        app("assist", "만능비서", 10, 5, EU, Category.Daily, 166), // AI 비서
+        app("chat", "코코아톡", 10, 0, KR, Category.Social, 142), // 카카오톡 패러디
+        app("tube", "너튜브", 10, 1, NA, Category.Media, 146), // YouTube 패러디
+        app("feed", "테이크북", 10, 2, NA, Category.Social, 150), // Facebook 패러디
+        app("green", "왔썹", 10, 3, AS, Category.Social, 155), // WhatsApp 패러디
+        app("dance", "틱특", 10, 4, AS, Category.Media, 160), // TikTok 패러디
+        app("shop", "알리바바바", 10, 5, AS, Category.Money, 166), // AliExpress 패러디
     )
     val starter = listOf("alarm", "memo", "weather")
 
     /** Level at which each app's pro version (×2 value) opens: 25 levels after the app itself. */
     val proLevel: Map<String, Int> = mapOf(
-        "alarm" to 26, "weather" to 26, "memo" to 26, "flash" to 27, "calc" to 28, "steps" to 29,
-        "calendar" to 30, "mail" to 31, "delivery" to 32, "point" to 33, "gallery" to 34, "podcast" to 36,
-        "map" to 37, "pay" to 38, "inbox" to 39, "translate" to 41, "cloud" to 42, "taxi" to 44,
-        "food" to 45, "bank" to 47, "music" to 48, "reward" to 51, "home" to 53, "fit" to 54,
-        "meet" to 57, "coin" to 60, "match" to 63, "cafe" to 67, "webtoon" to 70, "stay" to 73,
-        "stock" to 76, "comment" to 79, "minutes" to 82, "live" to 85, "used" to 89, "workchat" to 92,
-        "ott" to 95, "cheap" to 99, "career" to 103, "edit" to 107, "portal" to 111, "ride" to 115,
-        "mall" to 119, "secret" to 123, "photo" to 127, "feed" to 131, "ai" to 135, "superpay" to 139,
-        "shorts" to 143, "chat" to 147, "search" to 151, "superapp" to 155, "store" to 159, "navi" to 163,
-        "tube" to 167, "green" to 171, "os" to 175, "mega" to 180, "dance" to 185, "assist" to 191,
+        "alarm" to 26, "weather" to 26, "memo" to 26, "flash" to 27, "calc" to 28, "recorder" to 29,
+        "phone" to 30, "sms" to 31, "camera" to 32, "gallery" to 33, "contacts" to 34, "settings" to 36,
+        "mail" to 37, "translate" to 38, "transfer" to 39, "shopee" to 41, "cloud" to 42, "calendar" to 44,
+        "pay" to 45, "taxi" to 47, "music" to 48, "caller" to 51, "bolt" to 53, "browser" to 54,
+        "food" to 57, "webtoon" to 60, "cafe" to 63, "wise" to 67, "carpool" to 70, "home" to 73,
+        "meet" to 76, "match" to 79, "coin" to 82, "used" to 85, "booking" to 89, "reward" to 92,
+        "ott" to 95, "comment" to 99, "beat" to 103, "revolut" to 107, "line" to 111, "grab" to 115,
+        "portal" to 119, "mall" to 123, "career" to 127, "ride" to 131, "cheap" to 135, "edit" to 139,
+        "secret" to 143, "photo" to 147, "ai" to 151, "search" to 155, "mega" to 159, "superapp" to 163,
+        "chat" to 167, "tube" to 171, "feed" to 175, "green" to 180, "dance" to 185, "shop" to 191,
     )
     fun app(id: String): AppDef = apps.first { it.id == id }
 }

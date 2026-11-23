@@ -60,25 +60,25 @@ fun upgraded(): Pair<GameState, SwipeOutcome> =
     overload().first.let { it.copy(appLevels = it.appLevels + ("alarm" to 10) + ("memo" to 4)) }.let { it to engine.swipe(it, 103, NOW)!! }
 
 /**
- * 5: igniter. Deck 오분만(1티어) · 길막지도(3티어) · 지금방송중(6티어). A 오분만 burst under a 6-tier deck adds
+ * 5: igniter. Deck 오분만(1티어) · 쇼피피(3티어) · 원신신(6티어). A 오분만 burst under a 6-tier deck adds
  * 12 + 4×5 = 32 gauge and raises the chain number, so the 6-tier burst after it pays ×3.
  */
 fun igniter(): Pair<GameState, SwipeOutcome> = with(
-    rows("live" to 2, "alarm" to 2, "map" to 1, "alarm" to 2, "live" to 2, "map" to 2, "alarm" to 1),
-) { it.copy(appLevels = mapOf("alarm" to 1, "map" to 1, "live" to 1), active = listOf("alarm", "map", "live"), level = 40, gauge = 60) }
+    rows("reward" to 2, "alarm" to 2, "shopee" to 1, "alarm" to 2, "reward" to 2, "shopee" to 2, "alarm" to 1),
+) { it.copy(appLevels = mapOf("alarm" to 1, "shopee" to 1, "reward" to 1), active = listOf("alarm", "shopee", "reward"), level = 40, gauge = 60) }
     .let { it to engine.swipe(it, 102, NOW)!! }
 
-/** 6: the same 4 notifications of 일정찍 under different decks. Synergy only. */
+/** 6: the same 4 notifications of 쥐메일 under different decks. Synergy only. */
 fun synergyTable(): List<Pair<String, BigInteger>> {
     val base = engine.newGame(NOW, 7).copy(level = 40)
     fun deck(vararg ids: String) = base.copy(appLevels = ids.associateWith { 1 }, active = ids.toList())
     return listOf(
-        "일정찍 혼자 (업무 1)" to deck("calendar", "calc", "delivery"),
-        "업무 2 (+메일소포)" to deck("calendar", "mail", "delivery"),
-        "업무 3 (+용량부족)" to deck("calendar", "mail", "cloud"),
-        "업무 4 (+밀린메일)" to deck("calendar", "mail", "cloud", "inbox"),
-        "업무 5 (+카메라켜요)" to deck("calendar", "mail", "cloud", "inbox", "meet"),
-    ).map { (label, s) -> label to engine.earn(s, "calendar", BigInteger.valueOf(4), 0) }
+        "쥐메일 혼자 (업무 1)" to deck("mail", "calc", "weather"),
+        "업무 2 (+딥에루)" to deck("mail", "translate", "weather"),
+        "업무 3 (+위트랜스뻐)" to deck("mail", "translate", "transfer"),
+        "업무 4 (+드랍박스)" to deck("mail", "translate", "transfer", "cloud"),
+        "업무 5 (+오페라라)" to deck("mail", "translate", "transfer", "cloud", "browser"),
+    ).map { (label, s) -> label to engine.earn(s, "mail", BigInteger.valueOf(4), 0) }
 }
 
 /** 7: a wild row merges with anything. */
@@ -98,7 +98,7 @@ data class DeckRun(val apps: Int, val rows: Int, val swipes: Int, val bursts: In
  * apps tier 1 so only the deck size differs. [assists] adds Sandwich 5 and Wild 5.
  */
 fun deckRun(seed: Long, size: Int, assists: Boolean): DeckRun {
-    val ids = listOf("alarm", "memo", "weather", "flash", "calc", "steps", "calendar", "mail").take(size)
+    val ids = listOf("alarm", "memo", "weather", "flash", "calc", "recorder", "phone", "sms").take(size)
     var s = engine.newGame(NOW, seed).copy(
         level = 45, appLevels = ids.associateWith { 1 }, active = ids,
         assists = if (assists) mapOf(Assist.Sandwich to 5, Assist.Wild to 5) else emptyMap(),
