@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '../..'), here = 'file://' + __dirname + '/
   const b = await chromium.launch();
   const shot = async (url, w, h, out, scale = 1) => {
     const p = await b.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: scale });
-    await p.goto(here + url); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(200);
+    await p.goto(here + url); await p.evaluate(() => document.fonts.ready); await p.waitForFunction(() => window.__ready !== false); await p.waitForTimeout(200);
     await p.screenshot({ path: out }); await p.close();
   };
   const brand = path.join(root, 'docs/design/brand');

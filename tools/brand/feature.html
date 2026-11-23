@@ -39,7 +39,9 @@ body.en,body.es{--f:'Luckiest Guy'} body.ja{--f:'Dela Gothic One'} body.zh-TW{--
 <div id="fx"></div>
 <div class="title ink" id="title" style="--s:14px;--d:10px"></div>
 <div id="tags"></div>
+<script src="bubbles.js"></script>
 <script>
+window.__ready=false;
 const L=new URLSearchParams(location.search).get('lang')||'ko';
 document.body.classList.add(L);document.documentElement.lang=L;
 const T={
@@ -58,6 +60,7 @@ const T={
  ja:{title:['通知','おそうじ'],ts:'92px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
    list:[['チャット','新着メッセージ3件','#F5C400','C'],['メール','新着メール12件','#2F7BF5','M'],['ショップ','発送しました','#FF5A36','S'],['バンク','入金のお知らせ','#1BA784','¥'],['動画','新着動画','#E0262B','▶'],['天気','雨のお知らせ','#3AA0FF','☂']],
    fly:[['迷惑','当選しました?!','#FF3B30','!','99+'],['チャット','www','#F5C400','C','12'],['メール','本日限定セール','#2F7BF5','M','5']]}}[L];
+const FAM={ko:'Black Han Sans',ja:'Dela Gothic One','zh-TW':'Noto Sans TC'}[L]||'Luckiest Guy', WT=L==='zh-TW'?900:400;
 document.body.style.setProperty('--ts',T.ts);document.body.style.setProperty('--gs',T.gs);
 title.innerHTML=T.title.map((w,li)=>'<div>'+[...w].map((ch,i)=>`<span class="w" style="transform:translateY(${[0,-9,6,-6,8,-4][i%6]}px) rotate(${[-6,5,-3,7,-5,4][(i+li)%6]}deg)">${ch}</span>`).join('')+'</div>').join('');
 list.innerHTML=T.list.map((c,i)=>`<div class="card ${i===2?'hot':''}"><i style="background:${c[2]}">${c[3]}</i><div><b>${c[0]}</b><span>${c[1]}</span></div></div>`).join('');
@@ -65,12 +68,12 @@ list.innerHTML=T.list.map((c,i)=>`<div class="card ${i===2?'hot':''}"><i style="
 const cx=770, cy=250;
 const boom=(w,c,r)=>`<div class="boom" style="left:${cx-w/2}px;top:${cy-w/2}px;width:${w}px;height:${w}px;background:${c};transform:rotate(${r}deg)"></div>`;
 const img=(n,x,y,w,r,o='')=>`<img src="../../docs/design/ui-assets/comic-fx/${n}.png" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;transform:rotate(${r}deg) ${o}">`;
-fx.innerHTML=img('impact-flash',cx-230,cy-230,460,0)+img('burst-big',cx-235,cy-225,470,-8)+img('shards',cx-330,cy-170,170,30)+img('shards',cx-260,cy+40,170,-60)
- +`<div class="ink" style="position:absolute;left:${cx-150}px;top:${cy-80}px;width:300px;text-align:center;font-size:${T.pf};line-height:1;color:#ff3b30;transform:rotate(-10deg);--s:12px">${T.pang}</div>`
+fx.innerHTML=img('impact-flash',cx-230,cy-230,460,0)+''+img('shards',cx-330,cy-170,170,30)+img('shards',cx-260,cy+40,170,-60)
+ +bubble({name:'burst-big',x:cx-235,y:cy-225,w:470,rot:-8,tilt:-4,text:T.pang,family:FAM,weight:WT,stroke:12,shadow:9,fillW:1.3,fillH:1.05})
  +T.fly.map((c,i)=>{const[x,y,r]=[[520,118,-16],[860,380,12],[540,330,-8]][i];return `<div class="fly" style="left:${x}px;top:${y}px;transform:rotate(${r}deg)"><i style="background:${c[2]}">${c[3]}</i><div><b>${c[0]}</b><span>${c[1]}</span></div><em>${c[4]}</em></div>`}).join('')
  
- +img('burst-small',858,268,170,14)+`<div class="ink" style="position:absolute;left:858px;top:318px;width:170px;text-align:center;font-size:${L==='ko'?44:34}px;color:#ff3b30;transform:rotate(14deg);--s:8px;--d:5px">${T.kwang}</div>`
- +img('bubble-round',852,52,160,6)+`<div class="ink" style="position:absolute;left:852px;top:96px;width:160px;text-align:center;font:40px 'Luckiest Guy';color:#ff8a1f;transform:rotate(6deg);--s:7px;--d:4px">+1.2M</div>`
+ +bubble({name:'burst-small',x:850,y:262,w:180,rot:14,text:T.kwang,family:FAM,weight:WT,stroke:6,shadow:4,fillW:1.25,fillH:1.1})
+ +bubble({name:'bubble-round',x:850,y:46,w:165,rot:6,text:'+1.2M',family:'Luckiest Guy',color:'#ff8a1f',stroke:6,shadow:4,fill:.9})
  +`<div class="ink" style="position:absolute;left:600px;top:400px;font-size:${L==='ko'?40:32}px;color:#fff;transform:rotate(-6deg);--s:8px;--d:6px">${T.chain}</div>`
  +`<div class="ink" style="position:absolute;left:910px;top:440px;font:40px 'Luckiest Guy';color:#ffe14a;transform:rotate(-14deg);--s:8px;--d:6px">×9</div>`
  +[[520,26,38],[980,250,40],[500,460,26],[700,30,22]].map(([x,y,s])=>`<div class="spark" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px"></div>`).join('');
@@ -82,5 +85,5 @@ tags.innerHTML=
  +`<svg class="arrow" id="arr" width="64" height="44" viewBox="0 0 64 44" style="top:286px;transform:rotate(-6deg)"><path d="M4 16h30V4l26 18-26 18V28H4z" fill="#fff6d8" stroke="#2a0c02" stroke-width="5" stroke-linejoin="round"/></svg>`
  +`<div class="tag" style="left:${L==='ja'?120:110}px;top:372px;background:#7ee0ff;transform:rotate(4deg)">${T.verbs[1]}</div>`
  +`<div class="tag ink" style="left:${L==='es'?330:300}px;top:384px;background:#ff3b30;color:#ffe14a;transform:rotate(-7deg) scale(1.12);--s:6px;--d:0px">${T.verbs[2]}</div>`;
-document.fonts.ready.then(()=>{const pr=push.getBoundingClientRect();arr.style.left=(pr.right+12)+'px'});const pr=push.getBoundingClientRect();arr.style.left=(pr.right+12)+"px";
+Promise.all([document.fonts.load(WT+' 80px "'+FAM+'"',T.pang+T.kwang),document.fonts.load('80px "Luckiest Guy"','+1.2M')]).then(()=>document.fonts.ready).then(()=>{const pr=push.getBoundingClientRect();arr.style.left=(pr.right+12)+'px';fitBubbles();window.__ready=true});const pr=push.getBoundingClientRect();arr.style.left=(pr.right+12)+"px";
 </script></body></html>

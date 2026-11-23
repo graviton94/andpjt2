@@ -28,13 +28,14 @@ body{width:512px;height:512px;overflow:hidden;position:relative;
 </div>
 <!-- the blast is bigger than the icon: cut by the right and bottom edges on purpose -->
 <img class="fx" src="../../docs/design/ui-assets/comic-fx/impact-flash.png" style="left:150px;top:150px;width:420px;opacity:.9">
-<img class="fx" src="../../docs/design/ui-assets/comic-fx/burst-big.png" style="left:70px;top:66px;width:560px;transform:rotate(-8deg)">
+<div id="boom"></div>
 <img class="fx" src="../../docs/design/ui-assets/comic-fx/shards.png" style="left:250px;top:-40px;width:230px;transform:rotate(20deg)">
-<div class="word"><span id="w"></span></div>
 <div class="badge">99+</div>
+<script src="bubbles.js"></script>
 <script>
 const L=new URLSearchParams(location.search).get('lang')||'ko';
-const W={ko:['팡!',"178px 'Black Han Sans'"],en:['POP!',"132px 'Luckiest Guy'"],ja:['パン!',"116px 'Dela Gothic One'"],
- 'zh-TW':['砰!',"176px 'Noto Sans TC'"],es:['¡PUM!',"118px 'Luckiest Guy'"]}[L];
-w.textContent=W[0];w.style.font=W[1];if(L==='zh-TW')w.style.fontWeight=900;
+const W={ko:['팡!','Black Han Sans'],en:['POP!','Luckiest Guy'],ja:['パン!','Dela Gothic One'],'zh-TW':['砰!','Noto Sans TC'],es:['¡PUM!','Luckiest Guy']}[L];
+window.__ready=false;
+boom.innerHTML=bubble({name:'burst-big',x:70,y:66,w:560,rot:-8,tilt:-4,text:W[0],family:W[1],weight:L==='zh-TW'?900:400,stroke:12,shadow:9,fillW:1.3,fillH:1.05});
+document.fonts.load('80px "'+W[1]+'"',W[0]).then(()=>{fitBubbles();window.__ready=true});
 </script></body></html>
