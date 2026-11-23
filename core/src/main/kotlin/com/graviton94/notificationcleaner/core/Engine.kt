@@ -47,6 +47,8 @@ data class Cloud(
     val lifetime: Long = 0,
     /** Most backup files one cycle earned: GB pay only for beating it. */
     val bestCycleFiles: Long = 0,
+    /** Syncs completed while a content pack was on: pack items open one level per such sync. */
+    val packSyncs: Int = 0,
 ) {
     fun lv(item: CloudItem): Int = items[item] ?: 0
 }
@@ -332,16 +334,26 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val c = s.backup.cloud
         val cloud = c.copy(
             gb = c.gb + gb, syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
+            packSyncs = c.packSyncs + if (gb > 0 && Catalog.packs.isNotEmpty()) 1 else 0,
             bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
         )
         return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
+    }
+
+    /** A cloud item can be bought now: below max, enough syncs; pack items open one level per sync after the update. */
+    fun cloudOpen(s: GameState, item: CloudItem): Boolean {
+        val c = s.backup.cloud
+        val owned = c.lv(item)
+        if (owned >= item.max || c.syncs < item.minSyncs) return false
+        if (item.pack != null) return item.pack in Catalog.packs && owned < c.packSyncs
+        return true
     }
 
     fun buyCloud(s: GameState, item: CloudItem): GameState {
         val c = s.backup.cloud
         val owned = c.lv(item)
         val price = rules.cloudPrice(item, owned)
-        if (owned >= item.max || c.gb < price || c.syncs < item.minSyncs || (item.pack != null && item.pack !in Catalog.packs)) return s
+        if (!cloudOpen(s, item) || c.gb < price) return s
         return s.copy(backup = s.backup.copy(cloud = c.copy(gb = c.gb - price, items = c.items + (item to owned + 1))))
     }
 

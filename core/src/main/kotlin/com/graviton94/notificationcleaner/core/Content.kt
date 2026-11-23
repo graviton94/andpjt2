@@ -104,7 +104,7 @@ enum class CloudItem(val label: String, val max: Int, val base: Long, val growth
     CloudEventSlot("이벤트 슬롯 +1", 1, 20, 1_000, 5),
     CloudAuto("자동 정리 −0.5초", 3, 8, 2_000, 6),
     CloudChain("연쇄 증폭 +0.2", 5, 10, 2_000, 8),
-    /** Ships with update 1: a fresh growth axis for veterans (value ×3 per level). */
+    /** Ships with update 1: a fresh growth axis for veterans (value ×3 per level), one level per sync after the update. */
     AiBoost("AI 가속 · 알림 가치 ×3", 10, 5, 2_400, 0, ContentPack.AiTier),
 }
 

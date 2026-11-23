@@ -382,4 +382,89 @@ class CoreRulesTest {
         }
         assertEquals(60, Catalog.apps.size)
     }
+
+    // Unique effects (docs/bible/15-unique-effects.md) -------------------------------------------
+
+    private fun deckOf(vararg ids: String) = e.newGame(now, 1).copy(appLevels = ids.associateWith { 1 }, active = ids.toList(), level = 60)
+
+    @Test
+    fun valueEffectsFollowTheirConditions() {
+        val s = deckOf("memo", "calc", "contacts", "phone", "sms")
+        val n = valueOf(4)
+        assertEquals(e.earn(s, "memo", n, 0) * valueOf(2), e.earn(s, "memo", n, 0, EarnCtx(direct = true)), "메모 direct ×2")
+        assertEquals(e.earn(s, "calc", valueOf(3), 0) * valueOf(4) / valueOf(3) * valueOf(3) / valueOf(2), e.earn(s, "calc", n, 0), "계산기 multiple of 4 ×1.5")
+        // 연락처: two other social apps in the deck -> +30%.
+        val alone = deckOf("contacts", "memo", "calc")
+        assertEquals(e.earn(alone, "contacts", n, 0).toDouble() * 1.3 * (e.earn(s, "contacts", n, 0).toDouble() / (e.earn(alone, "contacts", n, 0).toDouble() * 1.3)),
+            e.earn(s, "contacts", n, 0).toDouble(), 1.0)
+        assertEquals(1_300L, e.effectPermille(s, Catalog.app("contacts"), n, 0, EarnCtx()))
+    }
+
+    @Test
+    fun effectsOnlyWorkInTheDeck() {
+        val s = deckOf("alarm", "memo", "weather")
+        assertEquals(1_000L, e.effectPermille(s, Catalog.app("photo"), valueOf(4), 0, EarnCtx()))
+        assertEquals(e.energyCap(s), e.energyCap(deckOf("alarm", "memo", "weather")))
+        assertEquals(e.energyCap(s) + 2, e.energyCap(deckOf("alarm", "memo", "grab")), "그래브 battery +2")
+    }
+
+    @Test
+    fun thresholdEffectsBurstEarly() {
+        assertEquals(3, e.thresholdOf("green"))
+        assertEquals(e.rules.threshold, e.thresholdOf("memo"))
+        // 튄더: two rows of 1 touching burst at once.
+        val s = deckOf("match", "memo", "alarm").copy(rows = rows("memo" to 1, "match" to 1, "alarm" to 1, "match" to 1, "memo" to 2, "alarm" to 1, "memo" to 1))
+        val o = e.swipe(s, 102, now)!!
+        assertTrue(o.beats.any { it is Beat.Burst && it.row.app == "match" })
+    }
+
+    @Test
+    fun economyEffectsChangePrices() {
+        val plain = deckOf("alarm", "memo", "weather").copy(level = 130, wallet = BigInteger.TEN.pow(60))
+        val shop = plain.copy(active = plain.active + "shopee", appLevels = plain.appLevels + ("shopee" to 1))
+        assertEquals(e.appPrice(plain, "pin") * valueOf(9) / valueOf(10), e.appPrice(shop, "pin"), "쇼피피 −10% on cheaper apps")
+        val work = plain.copy(active = plain.active + "glints", appLevels = plain.appLevels + ("glints" to 1))
+        assertEquals(e.upgradePrice(plain, "memo") * valueOf(9) / valueOf(10), e.upgradePrice(work, "memo"), "글린츠츠 −10% on work upgrades")
+        val store = plain.copy(active = plain.active + "store", appLevels = plain.appLevels + ("store" to 1))
+        assertEquals(2, e.buy(store, "pin").appLevels["pin"], "큐글플레이: bought apps start upgraded")
+        assertTrue(e.buy(plain.copy(active = plain.active + "travel", appLevels = plain.appLevels + ("travel" to 1)), "pin").boostNext, "트래블로까 arms the next burst")
+    }
+
+    @Test
+    fun timeEffectsPayOncePerDayAndAfterReturning() {
+        val s = deckOf("momo", "memo", "alarm")
+        val (back, _) = e.settleOffline(s, 3_600_000L, now + 3_600_000L)
+        assertTrue(back.returnBurst)
+        assertEquals(3, back.returnSwipes)
+        // 모모모: the first burst of a day pays ×3, the second does not.
+        val board = s.copy(rows = rows("memo" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1))
+        val first = e.swipe(board, 102, now)!!
+        assertEquals(now / 86_400_000L, first.state.dailyBonusDay["momo"])
+        val again = e.swipe(board.copy(dailyBonusDay = first.state.dailyBonusDay), 102, now)!!
+        assertEquals(first.earned, again.earned * valueOf(3))
+    }
+
+    @Test
+    fun defenceEffectsHandleInterruptions() {
+        val base = deckOf("phone", "memo", "alarm").copy(energy = 5, rows = rows("memo" to 1, "alarm" to 1, "memo" to 1, "alarm" to 1, "memo" to 1, "alarm" to 1, "memo" to 1)
+            .toMutableList().also { it[0] = Row(90, RowKind.Call) })
+        val o = e.swipe(base, 90, now)!!
+        assertEquals(5 - 1 + 2, o.state.energy, "전화: answering a spam call recharges 2")
+    }
+
+    @Test
+    fun packCloudItemsOpenOneLevelPerSyncAfterTheUpdate() {
+        val rich = e.newGame(now, 1, Backup(cloud = Cloud(gb = 1_000_000, syncs = 20)))
+        assertEquals(rich, e.buyCloud(rich, CloudItem.AiBoost), "no pack, no item")
+        try {
+            Catalog.packs = setOf(ContentPack.AiTier)
+            assertEquals(rich, e.buyCloud(rich, CloudItem.AiBoost), "banked GB alone does not open it")
+            val oneSync = rich.copy(backup = rich.backup.copy(cloud = rich.backup.cloud.copy(packSyncs = 1)))
+            val bought = e.buyCloud(oneSync, CloudItem.AiBoost)
+            assertEquals(1, bought.backup.cloud.lv(CloudItem.AiBoost))
+            assertEquals(bought, e.buyCloud(bought, CloudItem.AiBoost), "one level per sync")
+        } finally {
+            Catalog.packs = emptySet()
+        }
+    }
 }
