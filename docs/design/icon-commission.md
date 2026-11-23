@@ -1,6 +1,6 @@
-# 앱 아이콘 발주서 · 패러디 마스코트 7종
+# 앱 아이콘 발주서 · 패러디 아이콘 10종
 
-알림 청소부의 알림 앱 60종 중 53종은 코드(SVG)로 그린다(`tools/icons/build_icons.py` → `docs/design/app-icons/`). 아래 7종은 마스코트·일러스트가 정체성이라 이미지로 발주한다. 납품 전까지는 점선 테두리 자리표시 아이콘이 쓰인다.
+알림 청소부의 알림 앱 60종 중 50종은 코드(SVG)로 그린다(`tools/icons/build_icons.py` → `docs/design/app-icons/`). 아래 10종은 마스코트·일러스트가 정체성이거나(7종), 코드로는 실제 안드로이드 아이콘과 싱크로가 낮아(3종: 메롱·글린츠츠·잡스트리트) 이미지로 발주한다. 납품 전까지는 점선 테두리 자리표시 아이콘이 쓰인다.
 
 ## 0. 원칙
 
@@ -13,9 +13,9 @@
 | 구분 | 기준 | 예 | 수 |
 |---|---|---|---|
 | 코드 · 픽토그램 | 기본 앱처럼 픽토그램 자체가 정본 | 전화 수화기, 메시지 말풍선, 시계 | 12 |
-| 코드 · 글자 마크 | 1~5글자와 브랜드풍 색으로 알아봄 | 테이크북 t, 나베르 N, 와이 Y, 링크드아웃 out | 19 |
-| 코드 · 단순 도형 | 원·말풍선·삼각형 등 몇 개 도형 | 너튜브, 스팟티파이 호, 텔레그림 비행기, 틱특 어긋난 음표 | 22 |
-| **발주** | 마스코트·캐릭터·복잡한 기하 마크 | 아래 7종 | **7** |
+| 코드 · 글자 마크 | 1~7글자와 브랜드풍 색. 글자는 OFL 폰트(Do Hyeon·Nunito·Inter)에서 뽑은 윤곽선 | 테이크북 t, 나베르 N, 배다민, kubbang, 링크드아웃 out | 17 |
+| 코드 · 단순 도형 | 원·말풍선·삼각형 등 몇 개 도형 | 너튜브, 스팟티파이 호, 텔레그림 비행기, 틱특 어긋난 음표 | 21 |
+| **발주** | 마스코트·캐릭터·복잡한 기하 마크, 또는 코드 싱크로가 낮은 것 | 아래 10종 | **10** |
 
 ## 2. 공통 사양 (모든 프롬프트 앞에 붙인다)
 
@@ -61,6 +61,22 @@
 
 > Flat vector app icon foreground, transparent background. A symmetrical knot of six rounded interlocking loops forming a hexagonal flower, white strokes of even thickness, **with one loop deliberately tied in a small bow (the typo "GTP" — slightly off)**. Clean geometric construction, rounded joins, centered within a circle of 66% width, no text.
 > Background layer: solid #10A37F teal.
+
+### 3.8 메롱 (`music`) · 3티어 · 아시아권 · 미디어 · 국내 음원 앱 패러디
+
+> Flat vector app icon foreground, transparent background. A white rounded melon-fruit silhouette with a small two-leaf sprout on top, matching the real Korean music app's simple white-on-green mark in proportions, **with a little cartoon tongue poking out of the fruit's side ("메롱" = sticking one's tongue out)**. No text, bold flat shapes, centered within a circle of 66% width. Palette: #FFFFFF fruit, #00CD3C cut-outs, #FF6B8B tongue.
+> Background layer: solid #00CD3C.
+> 참고: 원작 앱 아이콘의 비율·여백을 따라 그리되 똑같이 따라 그리지는 않는다.
+
+### 3.9 글린츠츠 (`glints`) · 4티어 · 동남아권 · 업무 · 구직 앱 패러디
+
+> Flat vector app icon foreground, transparent background. A bold rounded lowercase "g" mark in the style of the real Southeast-Asian job app's logo, **with a small four-point sparkle ("glint") doubled at its top right (the "츠츠" repeat pun)**. Match the original app icon's brand colour family (designer checks the current Play Store icon); default coral #FF5C35 on white if unclear. Outlined lettering, no other text, centered within a circle of 66% width.
+> Background layer: solid #FFFFFF (or the original's background colour).
+
+### 3.10 잡스트리트 (`jobs`) · 7티어 · 동남아권 · 업무 · 구직 앱 패러디
+
+> Flat vector app icon foreground, transparent background. A bold white letterform "J" whose descender turns into a small street with a dashed centre line, **with a tiny briefcase standing at the end of the street**. Match the real Southeast-Asian job app's brand colours (designer checks the current Play Store icon); default navy #0D3880 background with white and a #E60278 accent. Centered within a circle of 66% width, no other text.
+> Background layer: solid brand colour (default #0D3880).
 
 ## 4. 검수 체크리스트
 

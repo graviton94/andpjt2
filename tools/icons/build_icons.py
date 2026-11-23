@@ -33,6 +33,24 @@ def text(t, color=W, size=22, weight=800, y=None, x=24, spacing=0, family=FONT):
     return f'<text x="{x}" y="{y:.1f}" text-anchor="middle" font-family="{family}" font-size="{size}" font-weight="{weight}" fill="{color}"{ls}>{t}</text>'
 
 
+GLYPHS = json.loads((pathlib.Path(__file__).with_name("glyphs.json")).read_text())
+
+
+def gtext(t, font, size, x=24, baseline=30, fill=W, anchor="middle", colors=None, tracking=0.0):
+    """Outlined text from tools/icons/glyphs.json (no font needed at runtime)."""
+    f = GLYPHS[font]
+    k = size / f["upm"]
+    advs = [f["glyphs"][c]["adv"] * k for c in t]
+    width = sum(advs) + tracking * (len(t) - 1)
+    cx = x - width / 2 if anchor == "middle" else x - width if anchor == "end" else x
+    out = ""
+    for i, c in enumerate(t):
+        col = colors[i] if colors else fill
+        out += f'<path d="{f["glyphs"][c]["d"]}" fill="{col}" transform="translate({cx:.2f} {baseline}) scale({k:.5f} {-k:.5f})"/>'
+        cx += advs[i] + tracking
+    return out
+
+
 def lg(gid, stops, x1=0, y1=1, x2=1, y2=0):
     st = "".join(f'<stop offset="{o}" stop-color="{c}"/>' for o, c in stops)
     return f'<linearGradient id="{gid}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">{st}</linearGradient>'
@@ -218,10 +236,59 @@ ICONS.update({
     "food": bg("#2ac1bc") + text("배다른", size=12.5, weight=900, y=22) + text("민족", size=12.5, weight=900, y=36),
 })
 
+# Second pass (user review): closer to each real Android icon.
+WA_BUBBLE = "M24 9.5A14.5 14.5 0 0 0 11.4 31.2L9.5 38.5l7.5-1.9A14.5 14.5 0 1 0 24 9.5z"
+ICONS.update({
+    # MoMo: #a50064 tile, rounded "mo" over "mo", a third small "mo" (모모모)
+    "momo": bg("#a50064") + gtext("mo", "nunito900", 16, baseline=22.5) + gtext("mo", "nunito900", 16, baseline=36) + gtext("mo", "nunito900", 7, x=41, baseline=42, anchor="end"),
+    # Pinterest: white tile, #e60023 disc, drawn P with the pin tail
+    "pin": WHITE_TILE + '<circle cx="24" cy="24" r="16.5" fill="#e60023"/>'
+        '<path d="M24.6 11.5c-7.1 0-11.2 4.7-11.2 9.7 0 2.5 1 4.6 3 5.4.3.1.6 0 .7-.4l.3-1.2c.1-.4 0-.5-.2-.8-.6-.7-1-1.6-1-2.9 0-3.8 2.8-7.1 7.4-7.1 4 0 6.3 2.5 6.3 5.8 0 4.3-1.9 8-4.8 8-1.6 0-2.7-1.3-2.4-2.9.5-1.9 1.3-3.9 1.3-5.3 0-1.2-.7-2.3-2.1-2.3-1.7 0-3 1.7-3 4 0 1.5.5 2.4.5 2.4l-2 8.6c-.6 2.5-.1 5.6 0 5.9 0 .2.3.2.4.1.1-.2 1.6-2 2.1-3.8l.8-3.2c.4.8 1.7 1.5 3 1.5 4 0 6.7-3.6 6.7-8.5 0-3.7-3.1-7.2-7.9-7.2z" fill="#fff"/><circle cx="18.9" cy="39.2" r="2.1" fill="#fff"/>',  # 핀 머리
+    # 배달의민족: #2ac1bc tile, BM Hanna-lineage lettering, parody 배다민
+    "food": bg("#2ac1bc") + gtext("배다민", "dohyeon", 15.5, baseline=30.5),
+    # LinkedIn: #0a66c2 tile, white lowercase wordmark bottom-left like the real "in"
+    "career": bg("#0a66c2") + gtext("out", "inter700", 17, x=8, baseline=38, anchor="start", tracking=-.4),
+    # Coupang: white tile, per-letter colours of the real wordmark, parody kubbang
+    "mall": WHITE_TILE + gtext("kubbang", "nunito900", 10.6, baseline=28.5, tracking=-.25,
+        colors=["#7b3f1d", "#e52528", "#f4a21b", "#b8c82b", "#45b649", "#00a6d6", "#2b6fb6"]),
+    # WeChat: #07c160 tile, two white bubbles, front one separated by a green ring, eyes in the tile green
+    "superapp": bg("#07c160") +
+        '<path d="M19.5 11C12.6 11 7 15.6 7 21.3c0 3.2 1.8 6.1 4.6 8l-1.1 3.6 4.2-2.3c1.5.4 3.1.7 4.8.7z" fill="#fff"/>'
+        '<path d="M19.5 11c6.9 0 12.5 4.6 12.5 10.3 0 .4 0 .7-.1 1.1" fill="#fff"/>'
+        '<ellipse cx="19.5" cy="21.3" rx="12.5" ry="10.3" fill="#fff"/>'
+        '<path d="M30.8 22.5c-5.9 0-10.6 3.9-10.6 8.7s4.7 8.7 10.6 8.7c1.3 0 2.6-.2 3.8-.6l3.5 1.9-.9-3c2.5-1.6 4.2-4.1 4.2-7 0-4.8-4.7-8.7-10.6-8.7z" fill="#fff" stroke="#07c160" stroke-width="1.8"/>'
+        '<circle cx="15" cy="18.5" r="1.6" fill="#07c160"/><circle cx="23.5" cy="18.5" r="1.6" fill="#07c160"/><circle cx="27.3" cy="29" r="1.3" fill="#07c160"/><circle cx="34.3" cy="29" r="1.3" fill="#07c160"/>',
+    # Gmail 2020 M with small mouse ears behind the top corners
+    "mail": WHITE_TILE + '<circle cx="10.5" cy="11.5" r="3.4" fill="#9aa0a6"/><circle cx="37.5" cy="11.5" r="3.4" fill="#9aa0a6"/><circle cx="10.5" cy="11.5" r="1.6" fill="#f9a8d4"/><circle cx="37.5" cy="11.5" r="1.6" fill="#f9a8d4"/>'
+        '<path d="M8 17v16a2 2 0 0 0 2 2h5V21.2z" fill="#4285f4"/><path d="M40 17v16a2 2 0 0 1-2 2h-5V21.2z" fill="#34a853"/>'
+        '<path d="M15 21.2 24 28l9-6.8v-7.6L24 20.4l-9-6.8z" fill="#ea4335"/>'
+        '<path d="M8 15.6V17l7 4.2v-7.6l-2.6-2c-1.9-1.4-4.4-.1-4.4 2.2z" fill="#c5221f"/><path d="M40 15.6V17l-7 4.2v-7.6l2.6-2c1.9-1.4 4.4-.1 4.4 2.2z" fill="#fbbc04"/>',
+    # Google Play 2022: rounded four-colour triangle
+    "store": WHITE_TILE +
+        '<path d="M13.6 10.8c-.4.5-.6 1.1-.6 1.8v22.8c0 .7.2 1.3.6 1.8L26.4 24z" fill="#00d7fe"/>'
+        '<path d="M31 28.6 26.4 24 13.6 37.2c.7.7 1.9.8 2.8.3z" fill="#ff3a44"/>'
+        '<path d="M31 19.4 16.4 10.5c-.9-.5-2.1-.4-2.8.3L26.4 24z" fill="#00f076"/>'
+        '<path d="m31 19.4-4.6 4.6 4.6 4.6 5.4-3.1c1.5-.9 1.5-2.9 0-3.8z" fill="#ffd109"/>',
+    # YouTube: white tile, real-ratio red tube, white play triangle carrying a small red 너
+    "tube": WHITE_TILE + '<rect x="6" y="13.5" width="36" height="25.2" rx="7.6" fill="#ff0000" transform="translate(0 -2)"/>'
+        '<path d="M19.5 16.4v15.2L32.5 24z" fill="#fff"/>' + text("너", "#ff0000", size=6, weight=900, y=26.2, x=23.8),
+    # WhatsApp: #25d366 tile, white OUTLINED bubble (tail mirrored) with a white handset inside
+    "green": bg("#25d366") + f'<g transform="matrix(-1 0 0 1 48 0)"><path d="{WA_BUBBLE}" fill="none" stroke="#fff" stroke-width="2.8" stroke-linejoin="round"/></g>' +
+        f'<path d="{HANDSET}" fill="#fff" transform="translate(7.6 7.6) scale(.68)"/>',
+    # Google G: even-thickness four-colour G; the bar ends in a small ㄱ hook (구굴)
+    "search": WHITE_TILE + '<g transform="translate(9 9) scale(.625)">'
+        '<path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.6 13.2l8 6.2C12.4 13.7 17.7 9.5 24 9.5z"/>'
+        '<path fill="#4285F4" d="M47 24.6c0-1.6-.2-3.1-.4-4.6H24v9h12.9c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 7.2-10.4 7.2-17.6z"/>'
+        '<path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8z"/>'
+        '<path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-4.9 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9l-8 6.2C6.5 42.6 14.6 48 24 48z"/>'
+        '<path fill="#4285F4" d="M24 20h7v9h-4z"/></g>',
+})
+
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
 COMMISSION = {
     "papago": ("#03c75a", "마"), "duo": ("#58cc02", "듀"), "edit": ("#111111", "컷"), "travel": ("#0194f3", "트"),
     "reddit": ("#ff4500", "래"), "robin": ("#0b0b0b", "로"), "ai": ("#000000", "챗"),
+    "music": ("#00cd3c", "메"), "glints": ("#ff5c35", "글"), "jobs": ("#0d3880", "잡"),
 }
 for k, (c, ch) in COMMISSION.items():
     ICONS[k] = bg(c) + text(ch, size=20, weight=900, y=31) + '<rect x="3" y="3" width="42" height="42" rx="9" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3" opacity=".7"/>'
