@@ -614,7 +614,7 @@ class CoreRulesTest {
         var s = e.newGame(0, 1)
         assertEquals(3_000L, e.chargeMs(s, 0))
         s = shop.buySpeedPass(s, 0, SpeedPass.Ultra)
-        assertEquals(6_000L, e.speedPermille(s, day))
+        assertEquals(8_000L, e.speedPermille(s, day))
         assertEquals(1_000L, e.chargeMs(s, day))
         assertTrue(shop.passActive(s, day))
         assertEquals(1_000L, e.speedPermille(s, 31 * day))
@@ -628,7 +628,7 @@ class CoreRulesTest {
         val plain = e.backupFilesNow(s)
         assertTrue(plain > 10_000_000_000_000_000L, "late game pays $plain files")
         val after = e.factoryReset(s, 1)!!
-        assertEquals(plain / 1_000 * 3_000 + plain % 1_000 * 3, after.backup.files)
+        assertEquals(plain / 1_000 * 4_000 + plain % 1_000 * 4, after.backup.files)
     }
 
     @Test

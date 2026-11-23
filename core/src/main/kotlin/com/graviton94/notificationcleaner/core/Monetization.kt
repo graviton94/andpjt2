@@ -33,8 +33,8 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
 
 /** Speed subscriptions, each including the month pass. */
 enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long, val prestigePermille: Int) {
-    Turbo("터보 패스", 33_000, 3_000, 0, 1_500),
-    Ultra("울트라 패스", 99_000, 6_000, 200, 3_000),
+    Turbo("터보 패스", 33_000, 3_500, 0, 1_750),
+    Ultra("울트라 패스", 99_000, 8_000, 200, 4_000),
 }
 
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */

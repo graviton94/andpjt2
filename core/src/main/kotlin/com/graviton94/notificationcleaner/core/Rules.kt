@@ -74,7 +74,7 @@ data class RuleSet(
     val overclockPermille: Int = 3_000,
     /** Fastest battery charge under any speed-up: direct swipes stay humanly possible. */
     val minChargeMs: Long = 1_000,
-    val passOverclockMinutes: Int = 120,
+    val passOverclockMinutes: Int = 180,
     /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
     val adLevelCap: Int = 1,
     /** 오프라인 광고: the settlement once more at this percent. */
@@ -137,7 +137,7 @@ data class RuleSet(
      * multipliers speed it up directly.
      */
     val levelPBase: Long = 30,
-    val levelRatioPermille: Int = 2_300,
+    val levelRatioPermille: Int = 2_330,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 5,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
