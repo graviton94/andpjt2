@@ -453,16 +453,16 @@ class CoreRulesTest {
     }
 
     @Test
-    fun packCloudItemsOpenOneLevelPerSyncAfterTheUpdate() {
+    fun packCloudItemsOpenOneLevelPerThreeResetsAfterTheUpdate() {
         val rich = e.newGame(now, 1, Backup(cloud = Cloud(gb = 1_000_000, syncs = 20)))
         assertEquals(rich, e.buyCloud(rich, CloudItem.AiBoost), "no pack, no item")
         try {
             Catalog.packs = setOf(ContentPack.AiTier)
             assertEquals(rich, e.buyCloud(rich, CloudItem.AiBoost), "banked GB alone does not open it")
-            val oneSync = rich.copy(backup = rich.backup.copy(cloud = rich.backup.cloud.copy(packSyncs = 1)))
+            val oneSync = rich.copy(backup = rich.backup.copy(cloud = rich.backup.cloud.copy(packResets = 3)))
             val bought = e.buyCloud(oneSync, CloudItem.AiBoost)
             assertEquals(1, bought.backup.cloud.lv(CloudItem.AiBoost))
-            assertEquals(bought, e.buyCloud(bought, CloudItem.AiBoost), "one level per sync")
+            assertEquals(bought, e.buyCloud(bought, CloudItem.AiBoost), "one level per 3 resets")
         } finally {
             Catalog.packs = emptySet()
         }

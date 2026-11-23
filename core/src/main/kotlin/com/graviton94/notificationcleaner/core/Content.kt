@@ -104,7 +104,7 @@ enum class CloudItem(val label: String, val max: Int, val base: Long, val growth
     CloudEventSlot("이벤트 슬롯 +1", 1, 20, 1_000, 5),
     CloudAuto("자동 정리 −0.5초", 3, 8, 2_000, 6),
     CloudChain("연쇄 증폭 +0.2", 5, 10, 2_000, 8),
-    /** Ships with update 1: a fresh growth axis for veterans (value ×3 per level), one level per sync after the update. */
+    /** Ships with update 1: a fresh growth axis for veterans (value ×3 per level), one level per 3 factory resets after the update. */
     AiBoost("AI 가속 · 알림 가치 ×3", 10, 5, 2_400, 0, ContentPack.AiTier),
 }
 
@@ -177,19 +177,19 @@ object Catalog {
         app("beat", "스팟티파이", 8, 4, WE, Category.Media, 75), // Spotify 패러디
         app("why", "와이", 8, 5, WE, Category.Social, 77), // X 패러디
         // 9티어
-        app("mega", "아마좀", 9, 0, GL, Category.Money, 82), // Amazon 패러디
-        app("ott", "넷플러그", 9, 1, GL, Category.Media, 85), // Netflix 패러디
-        app("secret", "텔레그림", 9, 2, GL, Category.Money, 88), // Telegram 패러디
-        app("mail", "쥐메일", 9, 3, GL, Category.Work, 91), // Gmail 패러디
-        app("maps", "큐글맵스", 9, 4, GL, Category.Daily, 94), // Google Maps 패러디
-        app("store", "큐글플레이", 9, 5, GL, Category.Money, 97), // Google Play 패러디
+        app("mega", "아마좀", 9, 0, GL, Category.Money, 86), // Amazon 패러디
+        app("ott", "넷플러그", 9, 1, GL, Category.Media, 89), // Netflix 패러디
+        app("secret", "텔레그림", 9, 2, GL, Category.Money, 92), // Telegram 패러디
+        app("mail", "쥐메일", 9, 3, GL, Category.Work, 95), // Gmail 패러디
+        app("maps", "큐글맵스", 9, 4, GL, Category.Daily, 98), // Google Maps 패러디
+        app("store", "큐글플레이", 9, 5, GL, Category.Money, 101), // Google Play 패러디
         // 10티어
-        app("tube", "너튜브", 10, 0, GL, Category.Media, 100), // YouTube 패러디
-        app("photo", "인싸그램", 10, 1, GL, Category.Media, 104), // Instagram 패러디
-        app("feed", "테이크북", 10, 2, GL, Category.Social, 108), // Facebook 패러디
-        app("green", "왔썹", 10, 3, GL, Category.Social, 112), // WhatsApp 패러디
-        app("search", "큐글", 10, 4, GL, Category.Work, 116), // Google 패러디 · 영문명 Qoogle
-        app("ai", "챗GTP", 10, 5, GL, Category.Work, 120), // ChatGPT 패러디
+        app("tube", "너튜브", 10, 0, GL, Category.Media, 104), // YouTube 패러디
+        app("photo", "인싸그램", 10, 1, GL, Category.Media, 108), // Instagram 패러디
+        app("feed", "테이크북", 10, 2, GL, Category.Social, 112), // Facebook 패러디
+        app("green", "왔썹", 10, 3, GL, Category.Social, 116), // WhatsApp 패러디
+        app("search", "큐글", 10, 4, GL, Category.Work, 120), // Google 패러디 · 영문명 Qoogle
+        app("ai", "챗GTP", 10, 5, GL, Category.Work, 124), // ChatGPT 패러디
     )
     val starter = listOf("alarm", "memo", "weather")
 
@@ -203,8 +203,8 @@ object Catalog {
         "mall" to 68, "portal" to 70, "michat" to 72, "agoda" to 74, "paypal" to 76, "match" to 78,
         "superapp" to 80, "line" to 82, "jobs" to 84, "lazada" to 86, "ride" to 88, "robin" to 90,
         "dance" to 92, "chat" to 94, "grab" to 96, "shopee" to 98, "beat" to 100, "why" to 102,
-        "mega" to 107, "ott" to 110, "secret" to 113, "mail" to 116, "maps" to 119, "store" to 122,
-        "tube" to 125, "photo" to 129, "feed" to 133, "green" to 137, "search" to 141, "ai" to 145,
+        "mega" to 111, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,
+        "tube" to 129, "photo" to 133, "feed" to 137, "green" to 141, "search" to 145, "ai" to 149,
     )
     // Live updates ---------------------------------------------------------------------------
 
@@ -215,12 +215,12 @@ object Catalog {
      */
     private val packApps: Map<ContentPack, List<AppDef>> = mapOf(
         ContentPack.AiTier to listOf(
-            app("gemini", "재미나이", 11, 0, GL, Category.Work, 122), // Gemini 패러디
-            app("claude", "클로디", 11, 1, GL, Category.Social, 124), // Claude 패러디
-            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 126), // Copilot 패러디
-            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 128), // Perplexity 패러디
-            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 130), // DeepSeek 패러디
-            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 132), // Midjourney 패러디
+            app("gemini", "재미나이", 11, 0, GL, Category.Work, 126), // Gemini 패러디
+            app("claude", "클로디", 11, 1, GL, Category.Social, 130), // Claude 패러디
+            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 134), // Copilot 패러디
+            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 138), // Perplexity 패러디
+            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 142), // DeepSeek 패러디
+            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 146), // Midjourney 패러디
         ),
     )
 
