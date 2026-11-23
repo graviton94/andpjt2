@@ -152,7 +152,7 @@ object Catalog {
         app("career", "링크드아웃", 5, 5, WE, Category.Work, 41), // LinkedIn 패러디
         // 6티어
         app("mall", "쿠빵", 6, 0, AS, Category.Money, 43), // 쿠팡 패러디
-        app("portal", "나베르", 6, 1, AS, Category.Work, 45), // Naver 패러디
+        app("portal", "마베르", 6, 1, AS, Category.Work, 45), // Naver 패러디
         app("michat", "미챗챗", 6, 2, SE, Category.Social, 47), // MiChat 패러디
         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 49), // Agoda 패러디
         app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 51), // PayPal 패러디
@@ -176,14 +176,14 @@ object Catalog {
         app("ott", "넷플러그", 9, 1, GL, Category.Media, 85), // Netflix 패러디
         app("secret", "텔레그림", 9, 2, GL, Category.Money, 88), // Telegram 패러디
         app("mail", "쥐메일", 9, 3, GL, Category.Work, 91), // Gmail 패러디
-        app("maps", "구굴맵스", 9, 4, GL, Category.Daily, 94), // Google Maps 패러디
-        app("store", "구굴플레이", 9, 5, GL, Category.Money, 97), // Google Play 패러디
+        app("maps", "큐글맵스", 9, 4, GL, Category.Daily, 94), // Google Maps 패러디
+        app("store", "큐글플레이", 9, 5, GL, Category.Money, 97), // Google Play 패러디
         // 10티어
         app("tube", "너튜브", 10, 0, GL, Category.Media, 100), // YouTube 패러디
         app("photo", "인싸그램", 10, 1, GL, Category.Media, 104), // Instagram 패러디
         app("feed", "테이크북", 10, 2, GL, Category.Social, 108), // Facebook 패러디
         app("green", "왔썹", 10, 3, GL, Category.Social, 112), // WhatsApp 패러디
-        app("search", "구굴", 10, 4, GL, Category.Work, 116), // Google 패러디
+        app("search", "큐글", 10, 4, GL, Category.Work, 116), // Google 패러디
         app("ai", "챗GTP", 10, 5, GL, Category.Work, 120), // ChatGPT 패러디
     )
     val starter = listOf("alarm", "memo", "weather")

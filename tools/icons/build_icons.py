@@ -284,6 +284,39 @@ ICONS.update({
         '<path fill="#4285F4" d="M36 20h9.5v9H36z"/></g>',  # 막대가 원 밖으로 살짝
 })
 
+# Third pass (user review): eighth note instead of the TikTok note, Q for 큐글, swapped colours for the
+# Google family (opposite positions), M for 마베르, Facebook as a rounded-square tile.
+EIGHTH = ('<ellipse cx="18.5" cy="33" rx="6.6" ry="4.9" transform="rotate(-22 18.5 33)"/>'
+          '<path d="M23 31.5V9h3.6v22.5z"/>'
+          '<path d="M26.6 9c.6 4.4 3.4 6.4 6 8.6 2.4 2 3.4 5 2 9.4-.4-3-1.8-5-4.2-6.4-1.3-.8-2.6-1.4-3.8-1.9z"/>')
+ICONS.update({
+    "dance": bg("#000000") + f'<g fill="#25f4ee" transform="translate(-1.6 -1.2)">{EIGHTH}</g><g fill="#fe2c55" transform="translate(1.6 1.2)">{EIGHTH}</g><g fill="#fff">{EIGHTH}</g>',
+    # 큐글: four-colour Q ring, colours in the G's order, tail in blue
+    "search": WHITE_TILE + "".join(
+        f'<circle cx="23" cy="23" r="11" fill="none" stroke="{c}" stroke-width="5.2" pathLength="100" stroke-dasharray="{d} 100" stroke-dashoffset="{o}" transform="rotate(-90 23 23)"/>'
+        for c, d, o in [("#ea4335", 26, 0), ("#fbbc05", 24, -26), ("#34a853", 26, -50), ("#4285f4", 24.5, -76)]) +
+        '<path d="M28.5 28.5 37 37" stroke="#4285f4" stroke-width="5.2" stroke-linecap="round"/>',
+    # Gmail M with the colours in opposite positions (blue<->green posts, red<->yellow), no ears
+    "mail": WHITE_TILE +
+        '<path d="M8 17v16a2 2 0 0 0 2 2h5V21.2z" fill="#34a853"/><path d="M40 17v16a2 2 0 0 1-2 2h-5V21.2z" fill="#4285f4"/>'
+        '<path d="M15 21.2 24 28l9-6.8v-7.6L24 20.4l-9-6.8z" fill="#fbbc04"/>'
+        '<path d="M8 15.6V17l7 4.2v-7.6l-2.6-2c-1.9-1.4-4.4-.1-4.4 2.2z" fill="#ea4335"/><path d="M40 15.6V17l-7 4.2v-7.6l2.6-2c1.9-1.4 4.4-.1 4.4 2.2z" fill="#c5221f"/>',
+    # Maps pin with colours swapped (green<->blue body, red<->yellow)
+    "maps": WHITE_TILE + f'<path d="{PIN}" fill="#4285f4"/>'
+        '<path d="M24 9c-3.3 0-6.3 1.4-8.3 3.7L24 21z" fill="#34a853"/><path d="M15.7 12.7A10.7 10.7 0 0 0 13 19.8c0 2.2.6 4.2 1.6 6.2L24 21z" fill="#fbbc04"/>'
+        '<path d="M24 9c3.5 0 6.6 1.6 8.6 4.1L24 21z" fill="#1a73e8"/><path d="M14.6 26c1.4 2.8 3.5 5.6 5.3 7.7L24 21z" fill="#ea4335"/><circle cx="24" cy="19.5" r="3.6" fill="#fff"/>',
+    # Play triangle with opposite colours (blue<->yellow, green<->red)
+    "store": WHITE_TILE +
+        '<path d="M13.6 10.8c-.4.5-.6 1.1-.6 1.8v22.8c0 .7.2 1.3.6 1.8L26.4 24z" fill="#ffd109"/>'
+        '<path d="M31 28.6 26.4 24 13.6 37.2c.7.7 1.9.8 2.8.3z" fill="#00f076"/>'
+        '<path d="M31 19.4 16.4 10.5c-.9-.5-2.1-.4-2.8.3L26.4 24z" fill="#ff3a44"/>'
+        '<path d="m31 19.4-4.6 4.6 4.6 4.6 5.4-3.1c1.5-.9 1.5-2.9 0-3.8z" fill="#00d7fe"/>',
+    # 마베르: Naver green tile, block M in the N's construction
+    "portal": bg("#03c75a") + '<path d="M11.5 13h6.5l6 9 6-9h6.5v22h-6.5V23.5l-6 8.5-6-8.5V35h-6.5z" fill="#fff"/>',
+    # Facebook as a rounded-square tile, lowercase t sitting low-right like the classic f
+    "feed": bg("#0866ff") + text("t", size=36, weight=900, y=46, x=30, family="Arial Black, Arial, sans-serif"),
+})
+
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
 COMMISSION = {
     "papago": ("#03c75a", "마"), "duo": ("#58cc02", "듀"), "edit": ("#111111", "컷"), "travel": ("#0194f3", "트"),
@@ -294,15 +327,37 @@ for k, (c, ch) in COMMISSION.items():
     ICONS[k] = bg(c) + text(ch, size=20, weight=900, y=31) + '<rect x="3" y="3" width="42" height="42" rx="9" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3" opacity=".7"/>'
 
 
+def delivered():
+    """Commissioned art that has arrived (tools/icons/import_assets.py): solid background + embedded foreground."""
+    import base64, io, importlib.util
+    from PIL import Image
+    spec = importlib.util.spec_from_file_location("ia", pathlib.Path(__file__).with_name("import_assets.py"))
+    ia = importlib.util.module_from_spec(spec); spec.loader.exec_module(ia)
+    out = {}
+    for k, colour in ia.BG.items():
+        f = OUT / f"{k}-fg.png"
+        if not f.exists():
+            continue
+        buf = io.BytesIO()
+        Image.open(f).resize((192, 192), Image.LANCZOS).save(buf, "PNG", optimize=True)
+        uri = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+        out[k] = bg(colour) + f'<image href="{uri}" x="0" y="0" width="48" height="48"/>'
+    return out
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     index = {}
+    arrived = delivered()
+    ICONS.update(arrived)
+    for k in arrived:
+        COMMISSION.pop(k, None)
     for k, body in ICONS.items():
         svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">{body}</svg>'
         (OUT / f"{k}.svg").write_text(svg + "\n")
-        index[k] = {"kind": "placeholder" if k in COMMISSION else "code"}
+        index[k] = {"kind": "placeholder" if k in COMMISSION else "asset" if k in arrived else "code"}
     (OUT / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n")
-    print(len(ICONS), "icons,", len(COMMISSION), "placeholders")
+    print(len(ICONS), "icons,", len(arrived), "delivered,", len(COMMISSION), "placeholders")
 
 
 if __name__ == "__main__":

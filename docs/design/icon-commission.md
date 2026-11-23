@@ -79,6 +79,19 @@
 > Flat vector app icon foreground, transparent background. A bold white letterform "J" whose descender turns into a small street with a dashed centre line, **with a tiny briefcase standing at the end of the street**. Match the real Southeast-Asian job app's brand colours (designer checks the current Play Store icon); default navy #0D3880 background with white and a #E60278 accent. Centered within a circle of 66% width, no other text.
 > Background layer: solid brand colour (default #0D3880).
 
+## 3-1. 1차 납품 검수 (2026-11-23)
+
+| 앱 | 판정 | 처리 |
+|---|---|---|
+| 듀오링구 · 래딧 · 챗GTP · 메롱 · 글린츠츠 · 잡스트리트 | 채택 | `tools/icons/import_assets.py`로 안전 영역 맞춤 |
+| 로빈훗훗 | 채택 | 깃털 끝이 안전 영역 밖(83%) → 축소 |
+| 마마고 | 채택 | 반투명 헤일로·색 노이즈 → 알파 정리, 말풍선 오른쪽 넘침 → 축소 |
+| **컵컷** | **재발주** | 그냥 가위로 읽힘. 원작의 각진 마크와 연결 약함 |
+| **트래블로까** | **재발주** | 트위터 옛 파랑새 실루엣과 너무 비슷 → 다른 브랜드 패러디로 오인 |
+| (신규) **수화기 부품** | 발주 | 전화·왔썹 아이콘 안에 넣을 부품. 코드 수화기가 허술함 |
+
+원본은 `docs/design/app-icons/raw/`, 가공본은 `<id>-fg.png`(432px, 안전 원 66% 안).
+
 ## 4. 검수 체크리스트
 
 - [ ] 48px로 줄였을 때 실루엣으로 무슨 앱인지 알아본다.

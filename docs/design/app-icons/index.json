@@ -36,7 +36,7 @@
   "kind": "code"
  },
  "music": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "pay": {
   "kind": "code"
@@ -72,7 +72,7 @@
   "kind": "code"
  },
  "glints": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "bigo": {
   "kind": "code"
@@ -90,7 +90,7 @@
   "kind": "code"
  },
  "jobs": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "grab": {
   "kind": "code"
@@ -159,10 +159,10 @@
   "kind": "code"
  },
  "papago": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "duo": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "edit": {
   "kind": "placeholder"
@@ -171,12 +171,12 @@
   "kind": "placeholder"
  },
  "reddit": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "robin": {
-  "kind": "placeholder"
+  "kind": "asset"
  },
  "ai": {
-  "kind": "placeholder"
+  "kind": "asset"
  }
 }
