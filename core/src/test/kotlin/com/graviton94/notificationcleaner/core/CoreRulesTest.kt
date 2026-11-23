@@ -576,6 +576,7 @@ class CoreRulesTest {
         assertEquals(10, s.account.streak)
         assertEquals(RuleSet().attendanceBoard.take(10).sumOf { it.data }, s.account.credits)
         assertEquals(1, s.account.tickets[CreditItem.BackupBoost])
+        assertEquals(3 + 1, s.account.tickets[CreditItem.Overclock])
         // a missed day restarts the board
         s = shop.claimAttendance(s, 12 * day)
         assertEquals(1, s.account.streak)

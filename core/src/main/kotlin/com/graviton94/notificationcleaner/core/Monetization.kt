@@ -29,8 +29,8 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Overclock("오버클럭 1시간", 40, 24),
 }
 
-/** One day of the 30-day attendance board: data, and optionally a ticket for a credit item. */
-data class AttendReward(val data: Long, val ticket: CreditItem? = null, val tickets: Int = 0)
+/** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
+data class AttendReward(val data: Long, val tickets: Map<CreditItem, Int> = emptyMap(), val starVouchers: Int = 0, val title: String? = null)
 
 data class Account(
     val credits: Long = 0,
@@ -41,6 +41,9 @@ data class Account(
     val streak: Int = 0,
     /** Free uses of credit items (from attendance), spent like a purchase without data. */
     val tickets: Map<CreditItem, Int> = emptyMap(),
+    /** 프리미엄 ★ 선택권: +1 star on any unlocked app, up to [RuleSet.voucherMaxStars]. */
+    val starVouchers: Int = 0,
+    val titles: Set<String> = emptySet(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
@@ -107,9 +110,15 @@ class Shop(private val engine: Engine) {
         val day = attendanceDay(s, now)
         val r = rules.attendanceBoard[day - 1]
         return credit(s, r.data).withAccount { a ->
-            val t = if (r.ticket == null) a.tickets else a.tickets + (r.ticket to (a.tickets[r.ticket] ?: 0) + r.tickets)
-            a.copy(attendDay = dayOf(now), streak = day, tickets = t)
+            val t = a.tickets.toMutableMap().also { m -> r.tickets.forEach { (k, n) -> m.merge(k, n, Int::plus) } }
+            a.copy(attendDay = dayOf(now), streak = day, tickets = t, starVouchers = a.starVouchers + r.starVouchers, titles = a.titles + listOfNotNull(r.title))
         }
+    }
+
+    /** Spend a 프리미엄 ★ 선택권 on [appId]. */
+    fun useStarVoucher(s: GameState, appId: String): GameState? {
+        if (s.account.starVouchers <= 0 || !premiumOpen(s, appId) || s.account.stars(appId) >= rules.voucherMaxStars) return null
+        return s.withAccount { it.copy(starVouchers = it.starVouchers - 1, premium = it.premium + (appId to it.stars(appId) + 1)) }
     }
 
     /** Spend a ticket: the item's effect, no data, no daily limit. */

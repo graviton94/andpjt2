@@ -49,16 +49,18 @@ data class RuleSet(
      * 30-day consecutive attendance board (missed day → day 1). Currencies alternate; days 10, 20, 30 are big.
      * About 1,300 data a board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
      */
-    val attendanceBoard: List<AttendReward> = (1..30).map { d ->
-        val band = (d - 1) / 10
-        when {
-            d % 10 == 0 -> AttendReward(listOf(150L, 250L, 400L)[band], if (band == 1) CreditItem.Warp else CreditItem.BackupBoost, if (band == 2) 2 else 1)
-            d % 10 in listOf(2, 6) -> AttendReward(0, CreditItem.Battery, 2)
-            d % 10 == 4 -> AttendReward(0, CreditItem.Boost, 1)
-            d % 10 == 8 -> AttendReward(0, CreditItem.Warp, 1)
-            else -> AttendReward(listOf(listOf(20L, 20, 30, 30, 30), listOf(20L, 20, 40, 40, 40), listOf(30L, 30, 50, 50, 50))[band][listOf(1, 3, 5, 7, 9).indexOf(d % 10)])
-        }
+    val attendanceBoard: List<AttendReward> = run {
+        val B = CreditItem.Battery; val Bo = CreditItem.Boost; val W = CreditItem.Warp; val O = CreditItem.Overclock; val BB = CreditItem.BackupBoost
+        fun d(n: Long) = AttendReward(n)
+        fun tk(vararg p: Pair<CreditItem, Int>) = AttendReward(0, mapOf(*p))
+        // Weekdays alternate currencies and let everyone taste the paid speed-ups (오버클럭 on days 3, 13, 23).
+        fun band(a: Long, b: Long, c: Long) = listOf(d(a), tk(B to 2), tk(O to 1), tk(Bo to 1), d(b), tk(B to 2), tk(W to 1), d(c), tk(Bo to 1))
+        band(30, 40, 40) + AttendReward(200, mapOf(O to 3, BB to 1)) +
+            band(40, 50, 50) + AttendReward(300, mapOf(W to 2), starVouchers = 1) +
+            band(50, 60, 60) + AttendReward(600, mapOf(O to 12, BB to 2), starVouchers = 2, title = "알림 개근왕")
     },
+    /** 프리미엄 ★ 선택권 raise an app up to this many stars. */
+    val voucherMaxStars: Int = 3,
     val missionCredits: Long = 35,
     val adCredits: Long = 10,
     val passInstantCredits: Long = 300,

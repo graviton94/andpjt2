@@ -252,6 +252,12 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
         repeat((hours + session) / 4) { shop.buyItem(s, CreditItem.Overclock, t)?.let { s = it } }
         if (session == 0) shop.buyItem(s, CreditItem.Warp, t)?.let { s = it }
     }
+    while (true) s = shop.useTicket(s, CreditItem.Overclock, t) ?: break
+    // Star vouchers go to the deck's best app first.
+    while (s.account.starVouchers > 0) {
+        val id = s.active.filter { s.account.stars(it) < engine.rules.voucherMaxStars && shop.premiumOpen(s, it) }.maxByOrNull { Catalog.app(it).tier } ?: break
+        s = shop.useStarVoucher(s, id) ?: break
+    }
     // Premium: the next star of the deck's best app, as soon as it is affordable.
     while (true) {
         val id = s.active.filter { shop.premiumOpen(s, it) }.maxByOrNull { Catalog.app(it).tier * 10 - s.account.stars(it) } ?: break
