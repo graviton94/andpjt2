@@ -4,7 +4,7 @@ import java.math.BigInteger
 
 /**
  * Monetization layer (docs/bible/17-monetization.md). Four currencies:
- * P (run gold) · 크레딧 (paid, permanent) · 백업파일/GB (prestige) · 배터리 (energy).
+ * P (run gold) · 데이터 (paid, permanent; `credits` in code) · 백업파일/GB (prestige) · 배터리 (energy).
  * Everything here is permanent and lives in [Account], which survives resets and syncs.
  */
 
@@ -15,11 +15,11 @@ enum class AdSlot(val label: String, val daily: Int) {
     Boost("수입 부스트 30분", 3),
     Warp("시간 도약 2시간", 2),
     Battery("보조배터리", 3),
-    CreditBox("크레딧 상자", 3),
+    CreditBox("데이터 상자", 3),
     FreeUpgrade("무료 강화 +5", 1),
 }
 
-/** What credits buy besides premium stars. */
+/** What 데이터 (credits) buys besides premium stars. */
 enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Boost("수입 부스트 30분", 40, 6),
     Warp("시간 도약 2시간", 60, 5),
