@@ -19,7 +19,7 @@ import com.graviton94.notificationcleaner.core.account
  */
 
 /** SIM_RULES="overclockPermille=3000,premiumStepPermille=2000": try rule values without touching the engine. */
-private fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
+internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
     var r = com.graviton94.notificationcleaner.core.RuleSet()
     System.getenv("SIM_RULES")?.split(",")?.filter { "=" in it }?.forEach { kv ->
         val (k, v) = kv.split("=")

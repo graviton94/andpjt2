@@ -19,7 +19,7 @@ import java.math.BigInteger.ZERO
 
 enum class DeckPolicy(val label: String) { Min("최소 덱"), Max("최대 덱 (가치순)"), Synergy("최대 덱 (시너지)") }
 
-private val e = Engine()
+private val e = Engine(simRules())  // same rules as Daily.kt, so SIM_RULES reaches prices too
 private const val T0 = 1_000_000L
 
 class RunLog {
