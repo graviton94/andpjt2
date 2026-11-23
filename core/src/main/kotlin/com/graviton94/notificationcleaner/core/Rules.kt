@@ -75,7 +75,7 @@ data class RuleSet(
      * multipliers speed it up directly.
      */
     val levelPBase: Long = 30,
-    val levelRatioPermille: Int = 2_100,
+    val levelRatioPermille: Int = 2_500,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 5,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
@@ -99,10 +99,26 @@ data class RuleSet(
      */
     val backupExponentPermille: Int = 500,
     val backupSoftcapDigits: Int = 8,
+    // Jackpot limits: luck jumps a few steps, never the whole run.
+    /** One swipe (chains, waves, 로또, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
+    val swipeLevelCap: Int = 3,
+    /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
+    val jackpotCapFrom: Int = 10,
+    /** One offline settlement raises the level by at most this many steps. */
+    val offlineLevelCap: Int = 3,
+    /** Region × category × diversity synergy together multiply a value by at most this ‰: below one tier step (×[tierBase]). */
+    val synergyCapPermille: Int = 4_000,
+    // 2nd prestige: 클라우드 동기화
+    val syncLevel: Int = 70,
+    /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
+    val cloudBase: Long = 3,
+    val cloudExponentPermille: Int = 500,
+    /** Every GB ever synced adds this % to backup files paid by factory resets. */
+    val cloudFilePercent: Int = 10,
 ) {
     fun step(steps: List<Pair<Int, Int>>, level: Int): Int = steps.lastOrNull { level >= it.first }?.second ?: 0
 
-    fun maxSlots(level: Int, backup: Backup) = step(maxSlotSteps, level) + backup.lv(BackupItem.ExtraSlot)
+    fun maxSlots(level: Int, backup: Backup) = step(maxSlotSteps, level) + backup.lv(BackupItem.ExtraSlot) + backup.cloud.lv(CloudItem.CloudSlot)
     fun minSlots(level: Int) = step(minSlotSteps, level)
     fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) else 0
 
@@ -130,6 +146,10 @@ data class RuleSet(
         return l
     }
 
+    /** Run P at which [level] is reached with [fastBoot] (the raw threshold the player must earn). */
+    fun levelCeil(level: Int, fastBoot: Int): BigInteger =
+        (levelP(level) * big(9).pow(fastBoot) + big(10).pow(fastBoot) - ONE) / big(10).pow(fastBoot)
+
     fun synergyPercent(count: Int, backup: Backup, steps: List<Pair<Int, Int>>): Int {
         val base = step(steps, count)
         return base * (100 + 10 * backup.lv(BackupItem.Synergy)) / 100
@@ -141,7 +161,8 @@ data class RuleSet(
         val k = backup.lv(BackupItem.Milestone).toLong()
         val v = backup.lv(BackupItem.Value)
         val passive = Math.round(Math.pow(1.0 + lifetimeFilePercent / 100.0 * backup.lifetime, lifetimeExponentPermille / 1000.0) * 1e6)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive)
+        val sync = backup.cloud.lv(CloudItem.SyncValue)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive) * big(2).pow(sync)
         val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
         return num to den
     }
@@ -182,11 +203,26 @@ data class RuleSet(
         return Math.floor(10 * Math.pow(10.0, logB)).toLong()
     }
 
+    /** Cloud multiplier on backup files: 압축 백업 ×1.5 per level and +[cloudFilePercent]% per GB ever synced. */
+    fun fileMultiplier(cloud: Cloud): Double =
+        Math.pow(1.5, cloud.lv(CloudItem.Compression).toDouble()) * (1.0 + cloudFilePercent / 100.0 * cloud.lifetime)
+
     /** Backup files a factory reset pays now: only what beating the best run adds (no farming of easy resets). */
     fun backupFiles(runEarned: BigInteger, level: Int, backup: Backup): Long {
         if (level < resetLevel) return 0
-        return maxOf(0L, backupTotal(runEarned.max(backup.bestRunP)) - backup.lifetime)
+        val total = Math.floor(backupTotal(runEarned.max(backup.bestRunP)) * fileMultiplier(backup.cloud)).toLong()
+        return maxOf(0L, total - backup.lifetime)
     }
+
+    /** Total GB ever earnable from a cycle that earned [cycleFiles] backup files. */
+    fun cloudTotal(cycleFiles: Long): Long {
+        val anchor = backupTotal(levelP(syncLevel))
+        if (cycleFiles < anchor || anchor <= 0) return 0
+        return Math.floor(cloudBase * Math.pow(cycleFiles.toDouble() / anchor, cloudExponentPermille / 1000.0)).toLong()
+    }
+
+    fun cloudPrice(item: CloudItem, owned: Int): Long =
+        Math.ceil(item.base * Math.pow(item.growthPermille / 1000.0, owned.toDouble())).toLong()
 
     companion object {
         fun log10(n: BigInteger): Double {

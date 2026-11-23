@@ -107,12 +107,27 @@ private val backupOrder = listOf(
 fun spendBackup(input: GameState): GameState {
     var s = input
     while (true) {
-        val open = BackupItem.entries.filter { s.backup.lv(it) < it.max && s.backup.resets >= it.minResets }
+        val open = BackupItem.entries.filter { e.backupOpen(s, it) }
         // The infinite value sink first whenever it costs no more than twice the cheapest other item.
-        val cheapest = open.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
+        val cheapest = open.minByOrNull { e.backupPrice(s, it) } ?: break
         val value = open.firstOrNull { it == BackupItem.Value }
-        val item = if (value != null && e.rules.backupPrice(value, s.backup.lv(value)) <= 2 * e.rules.backupPrice(cheapest, s.backup.lv(cheapest))) value else cheapest
+        val item = if (value != null && e.backupPrice(s, value) <= 2 * e.backupPrice(s, cheapest)) value else cheapest
         val next = e.buyBackup(s, item)
+        if (next == s) break
+        s = next
+    }
+    return s
+}
+
+/** Cloud shop: cheapest open item first. */
+fun spendCloud(input: GameState): GameState {
+    var s = input
+    while (true) {
+        val c = s.backup.cloud
+        val item = com.graviton94.notificationcleaner.core.CloudItem.entries
+            .filter { c.lv(it) < it.max && c.syncs >= it.minSyncs }
+            .minByOrNull { e.rules.cloudPrice(it, c.lv(it)) } ?: break
+        val next = e.buyCloud(s, item)
         if (next == s) break
         s = next
     }

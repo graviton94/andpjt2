@@ -26,6 +26,7 @@ class Timeline {
     val tierDay = sortedMapOf<Int, Double>()
     var lastAppDay: Double? = null
     val resetDays = mutableListOf<Double>()
+    val syncDays = mutableListOf<Double>()
     val bestLevelByWeek = sortedMapOf<Int, Int>()
     val digitsByWeek = sortedMapOf<Int, Int>()
     var activeMin = 0.0
@@ -62,6 +63,8 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     var everLevel = 1
     var everResets = 0
     var stallSessions = 0
+    var sinceReset = 0
+    var everSyncs = 0
     val gap = (16 * 60 / plan.sessions) * 60_000L
     fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
@@ -107,14 +110,29 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             val offer = engine.backupFilesNow(s)
             val pct = engine.rules.lifetimeFilePercent
             val gain = (100.0 + pct * (s.backup.lifetime + offer)) / (100.0 + pct * s.backup.lifetime)
+            sinceReset++
+            // 2nd prestige: sync at the wall, when resets have stopped paying for a while.
+            val gb = engine.cloudGbNow(s)
+            if (resets && gb > 0 && sinceReset >= 4 && stallSessions >= 2) {
+                if (System.getenv("SIM_RESETS") != null && seed == 1L) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
+                s = engine.sync(s, t)!!
+                tl.syncDays += dayOf(t)
+                everSyncs++
+                com.graviton94.notificationcleaner.core.CloudItem.entries.filter { it.minSyncs == everSyncs }.forEach { note("클라우드 ${it.label}") }
+                s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
+                stallSessions = 0
+                sinceReset = 0
+                continue
+            }
             if (resets && s.level >= engine.rules.resetLevel && offer > 0 && (gain >= 1.6 || stallSessions >= 3)) {
                 if (System.getenv("SIM_RESETS") != null && seed == 1L) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
                 s = engine.factoryReset(s, t)!!
                 tl.resetDays += dayOf(t)
                 everResets++
-                BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
-                s = chooseDeck(spendBackup(s), DeckPolicy.Synergy)
+                if (s.backup.cloud.syncs == 0) BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
+                s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
                 stallSessions = 0
+                sinceReset = 0
             }
         }
         tl.runDigitsByDay[day + 1] = s.runEarned.toString().length
@@ -154,4 +172,5 @@ fun daily(days: Int, seeds: Long) {
     val tl = withReset[0]
     println("  시드1 해금 순서: " + tl.unlocks.joinToString(" | ") { "${d(it.second)} ${it.third}" })
     println("  시드1 초기화: " + tl.resetDays.joinToString(" ") { d(it) })
+    println("[동기화] 첫 동기화 ${d(p50(withReset.mapNotNull { it.syncDays.firstOrNull() }))} · 횟수 ${p50(withReset.map { it.syncDays.size.toDouble() }).toInt()} · 시드1 " + tl.syncDays.joinToString(" ") { d(it) })
 }

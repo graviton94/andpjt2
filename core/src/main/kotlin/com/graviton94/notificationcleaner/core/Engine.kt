@@ -32,8 +32,23 @@ data class Backup(
     val bestLevel: Int = 0,
     /** Best run P ever: backup files pay only for beating it. */
     val bestRunP: BigInteger = BigInteger.ZERO,
+    /** 2nd prestige: survives a sync, which wipes everything else here except [bestLevel]. */
+    val cloud: Cloud = Cloud(),
 ) {
     fun lv(item: BackupItem): Int = items[item] ?: 0
+}
+
+/** What survives a 클라우드 동기화: GB and what they bought. */
+data class Cloud(
+    val gb: Long = 0,
+    val items: Map<CloudItem, Int> = emptyMap(),
+    /** Syncs that paid GB. */
+    val syncs: Int = 0,
+    val lifetime: Long = 0,
+    /** Most backup files one cycle earned: GB pay only for beating it. */
+    val bestCycleFiles: Long = 0,
+) {
+    fun lv(item: CloudItem): Int = items[item] ?: 0
 }
 
 data class GameState(
@@ -87,6 +102,8 @@ sealed interface Beat {
     data class Spawned(val row: Row) : Beat
     data class FreeUpgrade(val app: String, val level: Int) : Beat
     data class LevelUp(val level: Int) : Beat
+    /** 과열 보호: P past the per-swipe level cap was lost. */
+    data class Capped(val lost: BigInteger) : Beat
 }
 
 data class SwipeOutcome(
@@ -97,6 +114,8 @@ data class SwipeOutcome(
     val chain: Int,
     val cleared: BigInteger,
     val overload: Boolean,
+    /** P lost to the jackpot cap (RuleSet.swipeLevelCap). */
+    val capped: BigInteger = ZERO,
 )
 
 enum class Actor { Player, Auto }
@@ -165,14 +184,21 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val (rs, cs) = synergy(s, appId)
         val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
         val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
-        val pct = BigInteger.valueOf((100L + rs) * (100L + cs) * (100L + rd) * (100L + cd))
+        val digitPct = BigInteger.valueOf((100L + rd) * (100L + cd))
         val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost)))
         val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
+        // Deck synergy (region × category × diversity) is capped below one tier step.
         val sets = maxOf(0, activeSets(s) - 1)
-        val div = BigInteger.valueOf(rules.diversityPermille.toLong()).pow(sets)
-        val divDen = BigInteger.valueOf(1_000).pow(sets)
-        return count * num * pct * chainNum * pro * div / (den * hundred.pow(4) * BigInteger.TEN * divDen)
+        var comboNum = BigInteger.valueOf((100L + rs) * (100L + cs)) * BigInteger.valueOf(rules.diversityPermille.toLong()).pow(sets)
+        var comboDen = hundred.pow(2) * BigInteger.valueOf(1_000).pow(sets)
+        val cap = BigInteger.valueOf(rules.synergyCapPermille.toLong())
+        if (comboNum * BigInteger.valueOf(1_000) > cap * comboDen) { comboNum = cap; comboDen = BigInteger.valueOf(1_000) }
+        return count * num * comboNum * digitPct * chainNum * pro / (den * comboDen * hundred.pow(2) * BigInteger.TEN)
     }
+
+    /** Most P this run can still gain in one go without rising more than [steps] levels. */
+    fun jackpotRoom(s: GameState, steps: Int): BigInteger =
+        if (s.level < rules.jackpotCapFrom) BigInteger.TEN.pow(400) else (rules.levelCeil(s.level + steps + 1, s.backup.lv(BackupItem.FastBoot)) - BigInteger.ONE - s.runEarned).max(ZERO)
 
     private fun valueApp(s: GameState, row: Row): String = if (row.kind == RowKind.Wild) bestApp(s) else row.app!!
 
@@ -208,11 +234,50 @@ class Engine(val rules: RuleSet = RuleSet()) {
         ))
     }
 
+    /** Backup shop price after 클라우드 할인. */
+    fun backupPrice(s: GameState, item: BackupItem): Long =
+        maxOf(1L, rules.backupPrice(item, s.backup.lv(item)) * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
+
+    /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
+    fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
+
+    fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < item.max && shopStage(s) >= item.minResets
+
     fun buyBackup(s: GameState, item: BackupItem): GameState {
         val owned = s.backup.lv(item)
-        val price = rules.backupPrice(item, owned)
-        if (owned >= item.max || s.backup.files < price || s.backup.resets < item.minResets) return s
+        val price = backupPrice(s, item)
+        if (!backupOpen(s, item) || s.backup.files < price) return s
         return s.copy(backup = s.backup.copy(files = s.backup.files - price, items = s.backup.items + (item to owned + 1)))
+    }
+
+    /** GB a sync pays now: only what beating the best cycle adds. Includes this run's pending backup files. */
+    fun cloudGbNow(s: GameState): Long {
+        if (s.level < rules.syncLevel) return 0
+        val cycle = s.backup.lifetime + backupFilesNow(s)
+        return maxOf(0L, rules.cloudTotal(maxOf(cycle, s.backup.cloud.bestCycleFiles)) - s.backup.cloud.lifetime)
+    }
+
+    /**
+     * 클라우드 동기화 (2nd prestige): the run and the whole backup layer (files, shop, resets, best run) restart;
+     * GB, the cloud shop and app unlocks (best level) stay. Null below [RuleSet.syncLevel].
+     */
+    fun sync(s: GameState, now: Long): GameState? {
+        if (s.level < rules.syncLevel) return null
+        val gb = cloudGbNow(s)
+        val c = s.backup.cloud
+        val cloud = c.copy(
+            gb = c.gb + gb, syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
+            bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
+        )
+        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
+    }
+
+    fun buyCloud(s: GameState, item: CloudItem): GameState {
+        val c = s.backup.cloud
+        val owned = c.lv(item)
+        val price = rules.cloudPrice(item, owned)
+        if (owned >= item.max || c.gb < price || c.syncs < item.minSyncs) return s
+        return s.copy(backup = s.backup.copy(cloud = c.copy(gb = c.gb - price, items = c.items + (item to owned + 1))))
     }
 
     /** Battery recharge up to [now]. */
@@ -354,6 +419,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
         }
         gauge = gauge.coerceAtMost(100)
 
+        // Jackpot cap: luck may jump a few levels, never the whole run.
+        val room = jackpotRoom(s, rules.swipeLevelCap)
+        val capped = (earned - room).max(ZERO)
+        if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
+
         // Progress: level follows this run's cumulative P.
         val runEarned = s.runEarned + earned
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
@@ -384,7 +454,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         )
         next = fillDeck(next)
         next = refill(next, now, beats)
-        return SwipeOutcome(next, beats, earned, chain, cleared, overload)
+        return SwipeOutcome(next, beats, earned, chain, cleared, overload, capped)
     }
 
     /** A rising minimum slot count pulls the best owned apps into the deck. */
@@ -440,7 +510,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     // Offline --------------------------------------------------------------------------------
 
-    fun offlineCapMs(s: GameState): Long = (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline)) * 3_600_000L
+    fun offlineCapMs(s: GameState): Long =
+        (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L
     fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 2 * s.backup.lv(BackupItem.Offline)
 
     /**
@@ -450,7 +521,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
         val minutes = BigInteger.valueOf(minOf(awayMs, offlineCapMs(s)) / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
-        val p = s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000)
+        val p = (s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000))
+            .min(jackpotRoom(s, rules.offlineLevelCap))
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0))

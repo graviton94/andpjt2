@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(24L, 43L, 70L, 92L, 122L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(24L, 43L, 70L, 92L, 96L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -298,5 +298,54 @@ class CoreRulesTest {
         val s = e.newGame(now, 1).copy(autoPausedUntil = now + 5_000)
         assertNull(e.swipe(s, 4, now, Actor.Auto))
         assertEquals(0L, e.swipe(s.copy(rows = s.rows + Row(99, RowKind.Call)), 99, now)!!.state.autoPausedUntil)
+    }
+
+    @Test
+    fun aJackpotJumpsAFewLevelsNotTheWholeRun() {
+        // A 로또-sized swipe at Lv30: the level rises by at most swipeLevelCap and the rest is reported as lost.
+        val s = e.newGame(now, 1).copy(level = 30, runEarned = e.rules.levelP(30), lastEarned = e.rules.levelP(60))
+        val room = e.jackpotRoom(s, e.rules.swipeLevelCap)
+        assertEquals(30 + e.rules.swipeLevelCap, e.rules.levelFor(s.runEarned + room, 0))
+        assertEquals(30 + e.rules.swipeLevelCap, e.rules.levelFor(s.runEarned + room + valueOf(1), 0) - 1)
+        // Offline settlement obeys the same kind of cap.
+        val away = s.copy(earnRate = e.rules.levelP(80))
+        val (back, _) = e.settleOffline(away, 8 * 3_600_000L, now + 8 * 3_600_000L)
+        assertEquals(30 + e.rules.offlineLevelCap, back.level)
+    }
+
+    @Test
+    fun luckySynergyStaysBelowOneTierStep() {
+        // Six 생활 apps from three regions cannot out-earn the same app one tier up with no synergy at all.
+        val ids = listOf("delivery", "steps", "map", "home", "chat", "mail")
+        val base = e.newGame(now, 1).copy(appLevels = ids.associateWith { 1 }, active = listOf("delivery"))
+        val alone = e.earn(base, "delivery", valueOf(1_000_000), 0)
+        val stacked = e.earn(base.copy(active = ids), "delivery", valueOf(1_000_000), 0)
+        assertTrue(stacked > alone, "synergy still pays")
+        assertTrue(stacked <= alone * valueOf(e.rules.synergyCapPermille.toLong()) / valueOf(1_000), "capped at ×4")
+        assertTrue(stacked < alone * valueOf(e.rules.tierBase), "below one tier step")
+    }
+
+    @Test
+    fun cloudSyncRestartsTheBackupLayerButKeepsUnlocksAndGb() {
+        val r = e.rules
+        assertNull(e.sync(e.newGame(now, 1).copy(level = r.syncLevel - 1), now))
+        val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
+            bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
+        val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
+        // Four times the anchor's files → 3 × √4 = 6 GB.
+        assertEquals(6L, e.cloudGbNow(run))
+        val after = e.sync(run, now)!!
+        assertEquals(0L, after.backup.files)
+        assertEquals(0, after.backup.resets)
+        assertEquals(0, after.backup.lv(BackupItem.Value))
+        assertEquals(75, after.backup.bestLevel)
+        assertTrue(e.unlocked(after, "home"), "app unlocks survive")
+        assertEquals(6L, after.backup.cloud.gb)
+        assertEquals(1, after.backup.cloud.syncs)
+        // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
+        val bought = e.buyCloud(after, CloudItem.Compression)
+        assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
+        val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
+        assertEquals(Math.floor(10 * 1.5 * 1.6).toLong(), e.backupFilesNow(firstReset))
     }
 }

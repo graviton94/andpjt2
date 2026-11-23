@@ -84,6 +84,19 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
     EventSlot("이벤트 슬롯 +1", 1, 25, 1_000, 15),
 }
 
+/**
+ * Cloud shop (2nd prestige, 클라우드 동기화). Bought with GB from syncs; survives everything. [minSyncs] spreads it
+ * over the first syncs so every sync opens something new.
+ */
+enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int) {
+    Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 1_600, 1),
+    SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 1_700, 1),
+    Discount("백업 상점 −10%", 5, 3, 2_000, 2),
+    KeepShop("백업 상점 단계 유지 +3", 5, 2, 2_500, 2),
+    CloudSlot("앱 슬롯 +1", 1, 10, 1_000, 3),
+    CloudOffline("오프라인 상한 +1시간", 4, 3, 2_000, 4),
+}
+
 object Catalog {
     private fun app(id: String, name: String, tier: Int, order: Int, r: Region, c: Category, lv: Int, resets: Int = 0) = AppDef(id, name, tier, order, r, c, lv, resets)
     private val KR = Region.Domestic
