@@ -715,4 +715,16 @@ class CoreRulesTest {
         assertEquals(b.runEarned.toString(), s.account.challengeBest)
         assertNotNull(meta.startChallenge(s, now + 86_400_000L))
     }
+
+    @Test
+    fun awayTimeResistsClockTricks() {
+        val h = 3_600_000L
+        // same boot: moving the date forward a week changes nothing, only real elapsed time counts
+        assertEquals(2 * h, AwayClock.awayMs(0, 7 * 24 * h, 1_000, 1_000 + 2 * h, sameBoot = true))
+        // new boot: wall clock trusted up to the cap
+        assertEquals(3 * h, AwayClock.awayMs(0, 3 * h, 5_000, 10, sameBoot = false))
+        assertEquals(AwayClock.rebootCapMs, AwayClock.awayMs(0, 48 * h, 5_000, 10, sameBoot = false))
+        // clock set back: nothing
+        assertEquals(0, AwayClock.awayMs(10 * h, 5 * h, 5_000, 10, sameBoot = false))
+    }
 }
