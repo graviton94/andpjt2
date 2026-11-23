@@ -152,7 +152,7 @@ object Catalog {
         app("career", "링크드아웃", 5, 5, WE, Category.Work, 41), // LinkedIn 패러디
         // 6티어
         app("mall", "쿠빵", 6, 0, AS, Category.Money, 43), // 쿠팡 패러디
-        app("portal", "마베르", 6, 1, AS, Category.Work, 45), // Naver 패러디
+        app("portal", "메이버", 6, 1, AS, Category.Work, 45), // Naver 패러디
         app("michat", "미챗챗", 6, 2, SE, Category.Social, 47), // MiChat 패러디
         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 49), // Agoda 패러디
         app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 51), // PayPal 패러디
@@ -183,7 +183,7 @@ object Catalog {
         app("photo", "인싸그램", 10, 1, GL, Category.Media, 104), // Instagram 패러디
         app("feed", "테이크북", 10, 2, GL, Category.Social, 108), // Facebook 패러디
         app("green", "왔썹", 10, 3, GL, Category.Social, 112), // WhatsApp 패러디
-        app("search", "큐글", 10, 4, GL, Category.Work, 116), // Google 패러디
+        app("search", "큐글", 10, 4, GL, Category.Work, 116), // Google 패러디 · 영문명 Qoogle
         app("ai", "챗GTP", 10, 5, GL, Category.Work, 120), // ChatGPT 패러디
     )
     val starter = listOf("alarm", "memo", "weather")

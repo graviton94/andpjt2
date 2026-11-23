@@ -11,9 +11,11 @@ from PIL import Image
 DIR = pathlib.Path(__file__).resolve().parents[2] / "docs/design/app-icons"
 SIZE, SAFE = 432, 0.66
 BG = {"papago": "#E9FBEF", "duo": "#FFFFFF", "reddit": "#FF4500", "robin": "#0B0B0B", "ai": "#000000",
-      "music": "#00CD3C", "jobs": "#0D3880", "glints": "#FF5C35", "edit": "#000000", "travel": "#EAF5FE"}
+      "jobs": "#0D3880", "glints": "#FF5C35", "edit": "#000000", "travel": "#EAF5FE"}
 # Delivered with a noisy semi-transparent halo: keep only near-opaque pixels, then soften one pixel.
 CLEAN = {"papago": 200}
+# Centre on the art's mass (the character's head) instead of its bounding box: antenna and props stick out.
+MASS_CENTRE = {"reddit"}
 
 
 def process(key):
@@ -27,6 +29,8 @@ def process(key):
         a = np.array(im)
     ys, xs = np.where(a[..., 3] > 40)
     cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2
+    if key in MASS_CENTRE:
+        cx, cy = xs.mean(), ys.mean()
     r = (((xs - cx) ** 2 + (ys - cy) ** 2) ** .5).max()
     scale = (SAFE * SIZE / 2) / r
     big = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)

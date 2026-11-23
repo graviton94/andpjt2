@@ -317,11 +317,45 @@ ICONS.update({
     "feed": bg("#0866ff") + text("t", size=36, weight=900, y=46, x=30, family="Arial Black, Arial, sans-serif"),
 })
 
+# Fourth pass (user review): speech-bubble logos centre the bubble body on the tile, LinkedIn-true
+# lettering, Qoogle Q, Melon ring parody.
+B2 = "M24 13c-7.7 0-14 4.9-14 11 0 3.8 2.5 7.2 6.3 9.2L15 39l6.2-3.9c.9.1 1.8.2 2.8.2 7.7 0 14-4.9 14-11s-6.3-11.3-14-11.3z"  # body centred at (24, 24)
+
+
+def ring_arc(r, a0, a1, colour, w=5.6, cx=24, cy=24):
+    import math
+    p0 = (cx + r * math.cos(math.radians(a0)), cy + r * math.sin(math.radians(a0)))
+    p1 = (cx + r * math.cos(math.radians(a1)), cy + r * math.sin(math.radians(a1)))
+    large = 1 if (a1 - a0) % 360 > 180 else 0
+    return f'<path d="M{p0[0]:.2f} {p0[1]:.2f}A{r} {r} 0 {large} 1 {p1[0]:.2f} {p1[1]:.2f}" fill="none" stroke="{colour}" stroke-width="{w}"/>'
+
+
+ICONS.update({
+    "sms": bg("#2f80ed") + f'<path d="{B2}" fill="#fff"/><circle cx="18" cy="24" r="2" fill="#2f80ed"/><circle cx="24" cy="24" r="2" fill="#2f80ed"/><circle cx="30" cy="24" r="2" fill="#2f80ed"/>',
+    "chat": bg("#fee500") + f'<path d="{B2}" fill="#3a1d1d"/>' + text("TOK", "#fee500", size=9, weight=900, y=27.3, family="Arial Black, Arial, sans-serif"),
+    "line": bg("#06c755") + f'<path d="{B2}" fill="#fff"/>' + text("LAING", "#06c755", size=7.6, weight=900, y=26.7, family="Arial Black, Arial, sans-serif"),
+    "zalo": bg("#0068ff") + f'<path d="{B2}" fill="#fff"/>' + text("Zolo", "#0068ff", size=9.5, weight=900, y=27.4, family="Arial Black, Arial, sans-serif"),
+    "michat": bg("#ff6f61") + f'<path d="{B2}" fill="#fff"/>' + text("m", "#ff6f61", size=17, weight=900, y=29.5),
+    "superapp": bg("#07c160") +
+        '<g transform="translate(1.2 2)"><ellipse cx="19.5" cy="21.3" rx="12.5" ry="10.3" fill="#fff"/><path d="M11.6 29.3l-1.1 3.6 4.2-2.3z" fill="#fff"/>'
+        '<path d="M30.8 22.5c-5.9 0-10.6 3.9-10.6 8.7s4.7 8.7 10.6 8.7c1.3 0 2.6-.2 3.8-.6l3.5 1.9-.9-3c2.5-1.6 4.2-4.1 4.2-7 0-4.8-4.7-8.7-10.6-8.7z" fill="#fff" stroke="#07c160" stroke-width="1.8"/>'
+        '<circle cx="15" cy="18.5" r="1.6" fill="#07c160"/><circle cx="23.5" cy="18.5" r="1.6" fill="#07c160"/><circle cx="27.3" cy="29" r="1.3" fill="#07c160"/><circle cx="34.3" cy="29" r="1.3" fill="#07c160"/></g>',
+    # LinkedIn: #0a66c2 tile, big white lowercase wordmark filling the lower left like the real "in"
+    "career": bg("#0a66c2") + gtext("out", "inter700", 23, x=5.2, baseline=41, anchor="start", tracking=-.9),
+    # Qoogle: even four-colour ring in the G's colour order, closed into a Q; blue tail cut by a white gap
+    "search": WHITE_TILE + ring_arc(12, -40, 40, "#4285f4") + ring_arc(12, 40, 150, "#34a853") + ring_arc(12, 150, 215, "#fbbc05") + ring_arc(12, 215, 320, "#ea4335") +
+        '<path d="M27.8 27.8 37.5 37.5" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M28.6 28.6 36.8 36.8" stroke="#4285f4" stroke-width="5.6" stroke-linecap="round"/>',
+    # Melon: white tile, #00cd3c ring + dot; the dot becomes a melon leaf and a small tongue pokes out of the ring
+    "music": WHITE_TILE + '<circle cx="22.3" cy="26.6" r="7.9" fill="none" stroke="#04e22e" stroke-width="6"/>'
+        '<path d="M29.6 15.8c-.4-4.6 2.4-7.6 7.4-7.6.4 4.6-2.6 7.6-7.4 7.6z" fill="#04e22e"/><path d="M30.8 14.6l4.8-5" stroke="#fff" stroke-width="1" stroke-linecap="round"/>'
+        '<path d="M27.8 31.8c1.9.6 3.1 2 3 3.7-.1 1.4-1.4 2.2-2.7 1.7-1.1-.5-1.8-2.1-1.8-3.6z" fill="#ff6b8b"/>',
+})
+
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
 COMMISSION = {
     "papago": ("#03c75a", "마"), "duo": ("#58cc02", "듀"), "edit": ("#111111", "컷"), "travel": ("#0194f3", "트"),
     "reddit": ("#ff4500", "래"), "robin": ("#0b0b0b", "로"), "ai": ("#000000", "챗"),
-    "music": ("#00cd3c", "메"), "glints": ("#ff5c35", "글"), "jobs": ("#0d3880", "잡"),
+    "glints": ("#ff5c35", "글"), "jobs": ("#0d3880", "잡"),
 }
 for k, (c, ch) in COMMISSION.items():
     ICONS[k] = bg(c) + text(ch, size=20, weight=900, y=31) + '<rect x="3" y="3" width="42" height="42" rx="9" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3" opacity=".7"/>'
