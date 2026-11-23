@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0}
+body{width:1024px;height:500px;overflow:hidden;font-family:"Noto Sans CJK KR","Noto Sans KR",system-ui,sans-serif;
+ background:radial-gradient(circle at 72% 50%,#5a3418 0,#2A1A10 45%,#120b07 100%);color:#F6F1EA;position:relative}
+.logo{position:absolute;left:56px;top:96px;width:430px}
+.logo img{width:112px;height:112px;border-radius:26px;box-shadow:0 10px 30px #0008}
+.logo h1{font-size:62px;font-weight:900;line-height:1.05;margin-top:22px;letter-spacing:-1px;
+ color:#fff;text-shadow:0 4px 0 #8a3a0c,0 8px 18px #000a}
+.logo p{font-size:24px;color:#FFD66B;margin-top:14px;font-weight:700}
+.phone{position:absolute;right:60px;top:-10px;width:420px;height:540px;border-radius:44px;background:#1b120c;
+ border:10px solid #0b0705;box-shadow:0 20px 60px #000c;transform:rotate(-6deg);padding:22px 18px}
+.sb{display:flex;justify-content:space-between;font-size:15px;color:#B3A89B;font-weight:700;padding:0 10px 14px}
+.card{height:62px;border-radius:18px;background:#ffffff1a;border:1px solid #ffffff2e;margin-bottom:10px;display:flex;align-items:center;padding:0 12px;gap:10px}
+.ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-weight:900;color:#fff}
+.t b{display:block;font-size:15px}.t span{font-size:12px;color:#B3A89B}
+.gone{transform:translateX(120px);opacity:.35}
+.pop{position:absolute;right:170px;top:150px;transform:rotate(-8deg);text-align:center;z-index:3}
+.pop .c{font-size:46px;font-weight:900;color:#FFD66B;text-shadow:0 4px 0 #8a3a0c,0 0 30px #ff8a1f}
+.pop .p{font-size:70px;font-weight:900;color:#fff;text-shadow:0 5px 0 #8a3a0c,0 0 40px #ff8a1faa}
+.burst{position:absolute;right:150px;top:110px;width:330px;height:330px;border-radius:50%;
+ background:radial-gradient(circle,#ffb14a66 0,#ff8a1f22 40%,transparent 70%);z-index:2}
+.spark{position:absolute;color:#FFD66B;font-size:30px;z-index:3}
+</style></head><body>
+<div class="logo"><img src="../../docs/design/brand/icon.svg"><h1 id="h"></h1><p id="s"></p></div>
+<div class="phone"><div class="sb"><span>9:41</span><span>▂▄▆ 100%</span></div><div id="cards"></div></div>
+<div class="burst"></div>
+<div class="pop"><div class="c" id="c"></div><div class="p">+12.4M</div></div>
+<div class="spark" style="right:120px;top:120px">✦</div><div class="spark" style="right:420px;top:360px;font-size:22px">✦</div>
+<script>
+const L=new URLSearchParams(location.search).get('lang')||'ko';
+const T={ko:{h:'알림 청소부',s:'쓸어서 터뜨려라! 연쇄 폭발 정리 퍼즐',c:'9연쇄 대폭발!',rows:[['톡','새 메시지 3개','#F5C400'],['메일','새 메일 3개','#2F7BF5'],['쇼핑','배송 알림 3개','#FF5A36'],['스팸 문자','밀어서 치워요','#FF3B30'],['영상','새 동영상 2개','#E0262B'],['뱅킹','입금 알림 3개','#1BA784']]},
+ en:{h:'Notification Sweeper',s:'Swipe. Merge. Pop the whole chain!',c:'9-CHAIN BLAST!',rows:[['Chat','3 new messages','#F5C400'],['Mail','3 new emails','#2F7BF5'],['Shop','3 delivery updates','#FF5A36'],['Spam text','Swipe to clear','#FF3B30'],['Video','2 new videos','#E0262B'],['Bank','3 deposits','#1BA784']]}}[L];
+h.textContent=T.h;s.textContent=T.s;c.textContent=T.c;
+cards.innerHTML=T.rows.map((r,i)=>`<div class="card ${i<2?'gone':''}"><div class="ic" style="background:${r[2]}">${r[0][0]}</div><div class="t"><b>${r[0]}</b><span>${r[1]}</span></div></div>`).join('');
+</script></body></html>

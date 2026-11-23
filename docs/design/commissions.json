@@ -1,426 +1,380 @@
 {
- "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
- "pending": [
-  {
-   "id": "launcher",
-   "title": "게임 앱 아이콘",
-   "priority": 1,
-   "cols": 2,
-   "rows": 1,
-   "cell": [
-    1024,
-    1024
-   ],
-   "intro": "Launcher icon for a mobile game called Notification Sweeper (swipe notifications away and pop them in chains). Same sticker style. The icon must read at 48 px and must not resemble any real app's logo.",
-   "items": [
+  "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
+  "pending": [],
+  "delivered": [
     {
-     "id": "icon-fg",
-     "note": "전경 (투명, 적응형 아이콘)",
-     "out": [
-      1024,
-      1024
-     ],
-     "desc": "FOREGROUND ONLY on transparent background, centred inside the middle 66% circle: a chubby notification bell tilted 15 degrees, with three small notification cards bursting out of it like confetti, and a short broom sweeping across the bottom right; bell gold #FFE27A to #F0A000, cards white with coloured stripes (#3867F0, #FF6B5A, #6BE38A), broom handle #EFA03F"
+      "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
+      "date": "11-23"
     },
     {
-     "id": "icon-full",
-     "note": "완성본 (배경 포함, 스토어 512)",
-     "out": [
-      1024,
-      1024
-     ],
-     "desc": "the same bell, cards and broom on a full-bleed rounded-square background with a deep amber-to-plum diagonal gradient (#2A1A10 to #5B1F4A) and a soft glow behind the bell; no text"
+      "title": "메타 아이콘 8종 (시트 1장 → 8개, ui-assets/meta/)",
+      "date": "11-23"
+    },
+    {
+      "title": "프리미엄 · 등급 배지 (시트 1장 → 9개, ui-assets/badge/)",
+      "date": "11-23"
+    },
+    {
+      "title": "부스트 · 광고 보상 8종 (시트 1장 → 8개, ui-assets/boost/)",
+      "date": "11-23"
+    },
+    {
+      "title": "재화 5종 (시트 1장 → 5개, ui-assets/currency/)",
+      "date": "11-23"
+    },
+    {
+      "title": "앱 아이콘 발주 10종 (마마고·듀오링구·컵컷·트래블로까·래딧·로빈훗훗·챗GTP·메롱·글린츠츠·잡스트리트)",
+      "date": "11-23"
+    },
+    {
+      "title": "수화기 부품 (전화·왔썹)",
+      "date": "11-23"
+    },
+    {
+      "id": "launcher",
+      "title": "게임 앱 아이콘 (직접 제작)",
+      "date": "11-23"
+    },
+    {
+      "id": "feature",
+      "title": "스토어 그래픽 이미지 (직접 제작)",
+      "date": "11-23"
     }
-   ]
-  },
-  {
-   "id": "feature",
-   "title": "스토어 그래픽 이미지",
-   "priority": 2,
-   "cols": 1,
-   "rows": 1,
-   "cell": [
-    1024,
-    500
-   ],
-   "intro": "Google Play feature graphic, 1024x500, same sticker style, bold and readable at small size. No text (the title is added by the game).",
-   "items": [
+  ],
+  "sheetRules": "ONE image only: a sprite sheet. Draw every item in its own grid cell, in the exact order listed (left to right, top to bottom). Each item is centred in its cell with at least 12% empty margin on every side; items never touch, overlap or cross cell borders. Same scale, outline weight and lighting for all items. Transparent background; if transparency is impossible, fill everything outside the items with flat solid #FF00FF magenta. No grid lines, no cell borders, no labels, no numbers, no text anywhere.",
+  "deliveredSheets": [
     {
-     "id": "feature-graphic",
-     "note": "1024×500 그래픽 이미지",
-     "out": [
-      1024,
-      500
-     ],
-     "desc": "a smartphone seen slightly from the side on the left third, its screen exploding with glossy notification cards that shatter into glass shards and gold coins flying to the right; a big glowing x9 chain burst in the middle; warm amber and purple background with light rays; leave the right third calmer for a title overlay"
+      "id": "currency",
+      "title": "재화 5종",
+      "priority": 1,
+      "cols": 3,
+      "rows": 2,
+      "cell": [
+        512,
+        512
+      ],
+      "intro": "Game currency icon set in one consistent sticker style.",
+      "items": [
+        {
+          "id": "p",
+          "note": "P (포인트, 회차 금화)",
+          "out": 512,
+          "desc": "a thick round gold coin seen slightly from the front, raised rim, the face embossed with a simple bell-shaped notification glyph (no letters), gold #FFE27A to #F0A000"
+        },
+        {
+          "id": "data",
+          "note": "데이터 (유료재화)",
+          "out": 512,
+          "desc": "a chunky faceted gem shaped like four rising signal bars fused into one crystal, green #6BE38A to #12A150, small sparkle on the tallest bar"
+        },
+        {
+          "id": "backup",
+          "note": "백업파일 (초기화 환생)",
+          "out": 512,
+          "desc": "a plump document file with a folded corner and a circular arrow wrapped around it (restore), blue #8CC4FF to #2F6FE0"
+        },
+        {
+          "id": "gb",
+          "note": "GB (동기화 환생)",
+          "out": 512,
+          "desc": "a puffy cloud with a tiny stacked-disk (database) shape tucked in front, sky blue #BDF1FF to #38B8E8"
+        },
+        {
+          "id": "battery",
+          "note": "배터리 (에너지)",
+          "out": 512,
+          "desc": "a rounded battery standing upright, filled three-quarters with a lightning bolt cut into the fill, green #9BEA6B to #34A853, white terminal cap"
+        },
+        null
+      ]
+    },
+    {
+      "id": "boost",
+      "title": "부스트 · 광고 보상 8종",
+      "priority": 1,
+      "cols": 4,
+      "rows": 2,
+      "cell": [
+        512,
+        512
+      ],
+      "intro": "Game boost and reward icon set, same sticker style as the currency set.",
+      "items": [
+        {
+          "id": "income-boost",
+          "note": "수입 부스트 30분",
+          "out": 512,
+          "desc": "a gold coin rocketing upward with three bold speed lines and a small flame under it; gold #FFE27A to #F0A000, flame #FF8A1F"
+        },
+        {
+          "id": "time-warp",
+          "note": "시간 도약 2시간",
+          "out": 512,
+          "desc": "an hourglass tilted 15 degrees, sand mid-flow, with a bold double fast-forward chevron overlapping its lower right; glass pale blue #DDF3FF, frame amber #EFA03F, chevron #3867F0"
+        },
+        {
+          "id": "power-bank",
+          "note": "보조배터리",
+          "out": 512,
+          "desc": "a chunky rectangular power bank with four charge dots, a short coiled cable and a lightning bolt badge; body graphite #4A4F5C to #2A2D35, bolt #FFD43B"
+        },
+        {
+          "id": "backup-boost",
+          "note": "백업 부스트",
+          "out": 512,
+          "desc": "a blue document file with a folded corner and a big upward arrow bursting from behind it; file #8CC4FF to #2F6FE0, arrow #34C759"
+        },
+        {
+          "id": "free-upgrade",
+          "note": "무료 강화 +5",
+          "out": 512,
+          "desc": "a stubby wrench crossing a thick upward arrow; wrench silver #E6EAF0 to #9AA3B2, arrow #34C759"
+        },
+        {
+          "id": "data-box",
+          "note": "데이터 상자",
+          "out": 512,
+          "desc": "a sturdy loot crate, lid slightly open with light spilling out, the front embossed with signal bars; body #8CC4FF, trim #2F6FE0, glow #6BE38A"
+        },
+        {
+          "id": "best-double",
+          "note": "최고 기록 ×2",
+          "out": 512,
+          "desc": "two gold trophies, one slightly behind and offset, sparkles at the rims; gold #FFE27A to #F0A000"
+        },
+        {
+          "id": "offline-double",
+          "note": "오프라인 ×2",
+          "out": 512,
+          "desc": "a sleepy crescent moon with closed eyes and two gold coins resting in its curve; moon #FFF3C4 to #F5C842"
+        }
+      ]
+    },
+    {
+      "id": "badge",
+      "title": "프리미엄 · 등급 배지",
+      "priority": 2,
+      "cols": 5,
+      "rows": 2,
+      "cell": [
+        512,
+        512
+      ],
+      "intro": "Rank badge set for app icons, same sticker style. Row 1 is five rounded-square ring frames (squircle rings with a transparent centre 78% of the width) that wrap an app icon, getting richer left to right.",
+      "items": [
+        {
+          "id": "frame-1",
+          "note": "★1 등급 테두리",
+          "out": 512,
+          "desc": "bronze ring #E0A070"
+        },
+        {
+          "id": "frame-2",
+          "note": "★2 등급 테두리",
+          "out": 512,
+          "desc": "bronze ring with small rivets"
+        },
+        {
+          "id": "frame-3",
+          "note": "★3 등급 테두리",
+          "out": 512,
+          "desc": "silver ring #E6EAF0 with one gem at the top"
+        },
+        {
+          "id": "frame-4",
+          "note": "★4 등급 테두리",
+          "out": 512,
+          "desc": "gold ring #FFD66B with two gems"
+        },
+        {
+          "id": "frame-5",
+          "note": "★5 등급 테두리",
+          "out": 512,
+          "desc": "gold ring with an iridescent rainbow sheen and tiny wings at the top corners"
+        },
+        {
+          "id": "star-on",
+          "note": "★ 켜짐",
+          "out": 128,
+          "desc": "a chubby five-point star, gold #FFE27A to #F0A000, glossy"
+        },
+        {
+          "id": "star-off",
+          "note": "★ 꺼짐",
+          "out": 128,
+          "desc": "the same star in flat grey #5A5550 with a darker outline, no gloss"
+        },
+        {
+          "id": "pro",
+          "note": "프로 버전 리본",
+          "out": 256,
+          "desc": "a short ribbon banner folded at both ends with a lightning bolt in the middle, purple #7A3CFF to #4B1FB8, bolt #FFD43B"
+        },
+        {
+          "id": "upgrade-arrow",
+          "note": "강화 가능 화살표",
+          "out": 96,
+          "desc": "a fat rounded up-arrow, green #6BE38A to #12A150"
+        },
+        null
+      ]
+    },
+    {
+      "id": "meta",
+      "title": "메타 아이콘 8종",
+      "priority": 3,
+      "cols": 4,
+      "rows": 2,
+      "cell": [
+        512,
+        512
+      ],
+      "intro": "Meta-system icon set, same sticker style.",
+      "items": [
+        {
+          "id": "attendance",
+          "note": "출석",
+          "out": 256,
+          "desc": "a desk calendar page with a round red stamp mark on today"
+        },
+        {
+          "id": "attendance-day7",
+          "note": "출석 7일째 큰 보상",
+          "out": 256,
+          "desc": "a big ribbon gift box with light rays, the weekly jackpot"
+        },
+        {
+          "id": "missions",
+          "note": "일일 미션",
+          "out": 256,
+          "desc": "a clipboard with three check boxes, two ticked green"
+        },
+        {
+          "id": "achievements",
+          "note": "업적",
+          "out": 256,
+          "desc": "a round gold medal on a ribbon"
+        },
+        {
+          "id": "daily-challenge",
+          "note": "일일 도전",
+          "out": 256,
+          "desc": "a stopwatch with a small checkered flag"
+        },
+        {
+          "id": "pass",
+          "note": "시즌 패스",
+          "out": 256,
+          "desc": "a ticket stub topped by a small crown, purple and gold"
+        },
+        {
+          "id": "shop",
+          "note": "상점 탭",
+          "out": 256,
+          "desc": "a paper shopping bag with a green signal-bar gem peeking out"
+        },
+        {
+          "id": "ad",
+          "note": "광고 보기",
+          "out": 256,
+          "desc": "a small retro TV with a play triangle on the screen"
+        }
+      ]
+    },
+    {
+      "id": "shop",
+      "title": "상점 상품 아트",
+      "priority": 4,
+      "cols": 3,
+      "rows": 3,
+      "cell": [
+        768,
+        512
+      ],
+      "intro": "Shop product illustrations, same sticker style but richer (more objects, still bold). The data gem is a green faceted crystal shaped like four rising signal bars. Row 1 and row 2 are data packs that must escalate clearly from small to huge.",
+      "items": [
+        {
+          "id": "data-1",
+          "note": "데이터 팩 1단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "one data gem with a small sparkle"
+        },
+        {
+          "id": "data-2",
+          "note": "데이터 팩 2단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a small handful of three data gems"
+        },
+        {
+          "id": "data-3",
+          "note": "데이터 팩 3단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a cloth pouch spilling about eight data gems"
+        },
+        {
+          "id": "data-4",
+          "note": "데이터 팩 4단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "an open treasure chest full of data gems, green glow"
+        },
+        {
+          "id": "data-5",
+          "note": "데이터 팩 5단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a heavy round vault door ajar, piles of data gems inside"
+        },
+        {
+          "id": "data-6",
+          "note": "데이터 팩 6단계",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a glowing server rack whose drive bays are filled with data gems, green light streaks, the most impressive of the six"
+        },
+        {
+          "id": "month-pass",
+          "note": "월간 패스 (광고 제거 포함)",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a premium gold-rimmed membership card, a small calendar page with 30 squares and a crossed-out play-button TV badge (ad-free), confetti"
+        },
+        {
+          "id": "starter",
+          "note": "스타터 팩",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a ribbon-tied gift box with a data gem and a single gold star popping out"
+        },
+        {
+          "id": "growth",
+          "note": "성장 지원 팩",
+          "out": [
+            768,
+            512
+          ],
+          "desc": "a small rocket lifting off with a blue document file and green data gems trailing behind"
+        }
+      ]
     }
-   ]
-  }
- ],
- "delivered": [
-  {
-   "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
-   "date": "11-23"
-  },
-  {
-   "title": "메타 아이콘 8종 (시트 1장 → 8개, ui-assets/meta/)",
-   "date": "11-23"
-  },
-  {
-   "title": "프리미엄 · 등급 배지 (시트 1장 → 9개, ui-assets/badge/)",
-   "date": "11-23"
-  },
-  {
-   "title": "부스트 · 광고 보상 8종 (시트 1장 → 8개, ui-assets/boost/)",
-   "date": "11-23"
-  },
-  {
-   "title": "재화 5종 (시트 1장 → 5개, ui-assets/currency/)",
-   "date": "11-23"
-  },
-  {
-   "title": "앱 아이콘 발주 10종 (마마고·듀오링구·컵컷·트래블로까·래딧·로빈훗훗·챗GTP·메롱·글린츠츠·잡스트리트)",
-   "date": "11-23"
-  },
-  {
-   "title": "수화기 부품 (전화·왔썹)",
-   "date": "11-23"
-  }
- ],
- "sheetRules": "ONE image only: a sprite sheet. Draw every item in its own grid cell, in the exact order listed (left to right, top to bottom). Each item is centred in its cell with at least 12% empty margin on every side; items never touch, overlap or cross cell borders. Same scale, outline weight and lighting for all items. Transparent background; if transparency is impossible, fill everything outside the items with flat solid #FF00FF magenta. No grid lines, no cell borders, no labels, no numbers, no text anywhere.",
- "deliveredSheets": [
-  {
-   "id": "currency",
-   "title": "재화 5종",
-   "priority": 1,
-   "cols": 3,
-   "rows": 2,
-   "cell": [
-    512,
-    512
-   ],
-   "intro": "Game currency icon set in one consistent sticker style.",
-   "items": [
-    {
-     "id": "p",
-     "note": "P (포인트, 회차 금화)",
-     "out": 512,
-     "desc": "a thick round gold coin seen slightly from the front, raised rim, the face embossed with a simple bell-shaped notification glyph (no letters), gold #FFE27A to #F0A000"
-    },
-    {
-     "id": "data",
-     "note": "데이터 (유료재화)",
-     "out": 512,
-     "desc": "a chunky faceted gem shaped like four rising signal bars fused into one crystal, green #6BE38A to #12A150, small sparkle on the tallest bar"
-    },
-    {
-     "id": "backup",
-     "note": "백업파일 (초기화 환생)",
-     "out": 512,
-     "desc": "a plump document file with a folded corner and a circular arrow wrapped around it (restore), blue #8CC4FF to #2F6FE0"
-    },
-    {
-     "id": "gb",
-     "note": "GB (동기화 환생)",
-     "out": 512,
-     "desc": "a puffy cloud with a tiny stacked-disk (database) shape tucked in front, sky blue #BDF1FF to #38B8E8"
-    },
-    {
-     "id": "battery",
-     "note": "배터리 (에너지)",
-     "out": 512,
-     "desc": "a rounded battery standing upright, filled three-quarters with a lightning bolt cut into the fill, green #9BEA6B to #34A853, white terminal cap"
-    },
-    null
-   ]
-  },
-  {
-   "id": "boost",
-   "title": "부스트 · 광고 보상 8종",
-   "priority": 1,
-   "cols": 4,
-   "rows": 2,
-   "cell": [
-    512,
-    512
-   ],
-   "intro": "Game boost and reward icon set, same sticker style as the currency set.",
-   "items": [
-    {
-     "id": "income-boost",
-     "note": "수입 부스트 30분",
-     "out": 512,
-     "desc": "a gold coin rocketing upward with three bold speed lines and a small flame under it; gold #FFE27A to #F0A000, flame #FF8A1F"
-    },
-    {
-     "id": "time-warp",
-     "note": "시간 도약 2시간",
-     "out": 512,
-     "desc": "an hourglass tilted 15 degrees, sand mid-flow, with a bold double fast-forward chevron overlapping its lower right; glass pale blue #DDF3FF, frame amber #EFA03F, chevron #3867F0"
-    },
-    {
-     "id": "power-bank",
-     "note": "보조배터리",
-     "out": 512,
-     "desc": "a chunky rectangular power bank with four charge dots, a short coiled cable and a lightning bolt badge; body graphite #4A4F5C to #2A2D35, bolt #FFD43B"
-    },
-    {
-     "id": "backup-boost",
-     "note": "백업 부스트",
-     "out": 512,
-     "desc": "a blue document file with a folded corner and a big upward arrow bursting from behind it; file #8CC4FF to #2F6FE0, arrow #34C759"
-    },
-    {
-     "id": "free-upgrade",
-     "note": "무료 강화 +5",
-     "out": 512,
-     "desc": "a stubby wrench crossing a thick upward arrow; wrench silver #E6EAF0 to #9AA3B2, arrow #34C759"
-    },
-    {
-     "id": "data-box",
-     "note": "데이터 상자",
-     "out": 512,
-     "desc": "a sturdy loot crate, lid slightly open with light spilling out, the front embossed with signal bars; body #8CC4FF, trim #2F6FE0, glow #6BE38A"
-    },
-    {
-     "id": "best-double",
-     "note": "최고 기록 ×2",
-     "out": 512,
-     "desc": "two gold trophies, one slightly behind and offset, sparkles at the rims; gold #FFE27A to #F0A000"
-    },
-    {
-     "id": "offline-double",
-     "note": "오프라인 ×2",
-     "out": 512,
-     "desc": "a sleepy crescent moon with closed eyes and two gold coins resting in its curve; moon #FFF3C4 to #F5C842"
-    }
-   ]
-  },
-  {
-   "id": "badge",
-   "title": "프리미엄 · 등급 배지",
-   "priority": 2,
-   "cols": 5,
-   "rows": 2,
-   "cell": [
-    512,
-    512
-   ],
-   "intro": "Rank badge set for app icons, same sticker style. Row 1 is five rounded-square ring frames (squircle rings with a transparent centre 78% of the width) that wrap an app icon, getting richer left to right.",
-   "items": [
-    {
-     "id": "frame-1",
-     "note": "★1 등급 테두리",
-     "out": 512,
-     "desc": "bronze ring #E0A070"
-    },
-    {
-     "id": "frame-2",
-     "note": "★2 등급 테두리",
-     "out": 512,
-     "desc": "bronze ring with small rivets"
-    },
-    {
-     "id": "frame-3",
-     "note": "★3 등급 테두리",
-     "out": 512,
-     "desc": "silver ring #E6EAF0 with one gem at the top"
-    },
-    {
-     "id": "frame-4",
-     "note": "★4 등급 테두리",
-     "out": 512,
-     "desc": "gold ring #FFD66B with two gems"
-    },
-    {
-     "id": "frame-5",
-     "note": "★5 등급 테두리",
-     "out": 512,
-     "desc": "gold ring with an iridescent rainbow sheen and tiny wings at the top corners"
-    },
-    {
-     "id": "star-on",
-     "note": "★ 켜짐",
-     "out": 128,
-     "desc": "a chubby five-point star, gold #FFE27A to #F0A000, glossy"
-    },
-    {
-     "id": "star-off",
-     "note": "★ 꺼짐",
-     "out": 128,
-     "desc": "the same star in flat grey #5A5550 with a darker outline, no gloss"
-    },
-    {
-     "id": "pro",
-     "note": "프로 버전 리본",
-     "out": 256,
-     "desc": "a short ribbon banner folded at both ends with a lightning bolt in the middle, purple #7A3CFF to #4B1FB8, bolt #FFD43B"
-    },
-    {
-     "id": "upgrade-arrow",
-     "note": "강화 가능 화살표",
-     "out": 96,
-     "desc": "a fat rounded up-arrow, green #6BE38A to #12A150"
-    },
-    null
-   ]
-  },
-  {
-   "id": "meta",
-   "title": "메타 아이콘 8종",
-   "priority": 3,
-   "cols": 4,
-   "rows": 2,
-   "cell": [
-    512,
-    512
-   ],
-   "intro": "Meta-system icon set, same sticker style.",
-   "items": [
-    {
-     "id": "attendance",
-     "note": "출석",
-     "out": 256,
-     "desc": "a desk calendar page with a round red stamp mark on today"
-    },
-    {
-     "id": "attendance-day7",
-     "note": "출석 7일째 큰 보상",
-     "out": 256,
-     "desc": "a big ribbon gift box with light rays, the weekly jackpot"
-    },
-    {
-     "id": "missions",
-     "note": "일일 미션",
-     "out": 256,
-     "desc": "a clipboard with three check boxes, two ticked green"
-    },
-    {
-     "id": "achievements",
-     "note": "업적",
-     "out": 256,
-     "desc": "a round gold medal on a ribbon"
-    },
-    {
-     "id": "daily-challenge",
-     "note": "일일 도전",
-     "out": 256,
-     "desc": "a stopwatch with a small checkered flag"
-    },
-    {
-     "id": "pass",
-     "note": "시즌 패스",
-     "out": 256,
-     "desc": "a ticket stub topped by a small crown, purple and gold"
-    },
-    {
-     "id": "shop",
-     "note": "상점 탭",
-     "out": 256,
-     "desc": "a paper shopping bag with a green signal-bar gem peeking out"
-    },
-    {
-     "id": "ad",
-     "note": "광고 보기",
-     "out": 256,
-     "desc": "a small retro TV with a play triangle on the screen"
-    }
-   ]
-  },
-  {
-   "id": "shop",
-   "title": "상점 상품 아트",
-   "priority": 4,
-   "cols": 3,
-   "rows": 3,
-   "cell": [
-    768,
-    512
-   ],
-   "intro": "Shop product illustrations, same sticker style but richer (more objects, still bold). The data gem is a green faceted crystal shaped like four rising signal bars. Row 1 and row 2 are data packs that must escalate clearly from small to huge.",
-   "items": [
-    {
-     "id": "data-1",
-     "note": "데이터 팩 1단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "one data gem with a small sparkle"
-    },
-    {
-     "id": "data-2",
-     "note": "데이터 팩 2단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a small handful of three data gems"
-    },
-    {
-     "id": "data-3",
-     "note": "데이터 팩 3단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a cloth pouch spilling about eight data gems"
-    },
-    {
-     "id": "data-4",
-     "note": "데이터 팩 4단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "an open treasure chest full of data gems, green glow"
-    },
-    {
-     "id": "data-5",
-     "note": "데이터 팩 5단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a heavy round vault door ajar, piles of data gems inside"
-    },
-    {
-     "id": "data-6",
-     "note": "데이터 팩 6단계",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a glowing server rack whose drive bays are filled with data gems, green light streaks, the most impressive of the six"
-    },
-    {
-     "id": "month-pass",
-     "note": "월간 패스 (광고 제거 포함)",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a premium gold-rimmed membership card, a small calendar page with 30 squares and a crossed-out play-button TV badge (ad-free), confetti"
-    },
-    {
-     "id": "starter",
-     "note": "스타터 팩",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a ribbon-tied gift box with a data gem and a single gold star popping out"
-    },
-    {
-     "id": "growth",
-     "note": "성장 지원 팩",
-     "out": [
-      768,
-      512
-     ],
-     "desc": "a small rocket lifting off with a blue document file and green data gems trailing behind"
-    }
-   ]
-  }
- ]
+  ]
 }
