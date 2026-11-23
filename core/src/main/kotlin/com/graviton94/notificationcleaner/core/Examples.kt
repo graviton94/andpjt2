@@ -14,9 +14,10 @@ const val NOW = 1_000_000L
 fun name(r: Row): String = when (r.kind) {
     RowKind.App -> "${Catalog.app(r.app!!).name}${r.count}"
     RowKind.Wild -> "와일드${r.count}"
-    RowKind.Spam -> "스팸"
-    RowKind.Call -> "전화"
+    RowKind.Spam -> "스팸 문자"
+    RowKind.Call -> "스팸 전화"
     RowKind.Event -> r.event!!.label
+    RowKind.Alert -> r.alert!!.label
 }
 
 fun board(s: GameState): String = s.rows.joinToString(" · ") { name(it) }

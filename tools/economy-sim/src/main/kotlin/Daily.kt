@@ -90,6 +90,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 tl.offlineP += got
                 t = begin
             }
+            s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
@@ -99,6 +100,8 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 val target = engine.bestTarget(s, t) ?: continue
                 val o = engine.swipe(s, target, t) ?: continue
                 s = o.state
+                // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
+                if (o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
                 tl.activeP += o.earned
                 val (spent, bought) = spend(s, DeckPolicy.Synergy)
                 s = spent

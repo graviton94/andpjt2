@@ -57,7 +57,7 @@ fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
         }
         else -> owned.sortedByDescending { perNotification(s.copy(active = listOf(it)), it) }.take(size)
     }
-    val cards = listOf(EventCard.AllHands, EventCard.Lotto, EventCard.Otp, EventCard.Firmware, EventCard.GroupText, EventCard.Update, EventCard.Sale)
+    val cards = listOf(EventCard.AllHands, EventCard.Drill, EventCard.Lotto, EventCard.Otp, EventCard.Birthday, EventCard.Firmware, EventCard.GroupText, EventCard.Update, EventCard.Sale, EventCard.Dnd)
         .filter { it in s.events }.take(e.eventSlots(s))
     return e.setDeck(s, deck, cards) ?: s
 }

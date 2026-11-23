@@ -56,6 +56,16 @@ data class RuleSet(
     val callUnlockLevel: Int = 2,
     val callPauseMs: Long = 5_000,
     val otpLifeSwipes: Int = 3,
+    // Interruptions added in rules v3.1 and timed cards
+    val lowBatteryLevel: Int = 9,
+    val lowBatteryAt: Int = 3,
+    val storageLevel: Int = 20,
+    val storageEverySwipes: Int = 70,
+    val crashLevel: Int = 51,
+    val crashEverySwipes: Int = 90,
+    val drillMs: Long = 30_000,
+    val dndMs: Long = 20_000,
+    val dndPerDay: Int = 3,
     // Value
     val tierBase: Long = 6,
     val levelMilestones: List<Int> = listOf(10, 25, 50, 100, 200, 300, 400, 500),

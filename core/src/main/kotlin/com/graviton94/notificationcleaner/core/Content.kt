@@ -48,6 +48,15 @@ enum class EventCard(val label: String, val unlockLevel: Int, val price: Long, v
 
     /** Pays the previous swipe × 0 to 60 (half the time nothing): a gamble. */
     Lotto("로또 알림", 61, 0, 45),
+
+    /** Arrives once a day on the first visit; swiping it pays ten minutes of recent income. */
+    Birthday("생일 축하", 5, 0, 0),
+
+    /** A 30-second drill: every tap on the panel raises all income by 1%, up to ×2, while it runs. */
+    Drill("알림훈련", 15, 0, 60),
+
+    /** Not a row: switched on up to 3 times a day for 20 s without interruptions and with auto twice as fast. */
+    Dnd("방해 금지", 13, 0, 0),
 }
 
 /**

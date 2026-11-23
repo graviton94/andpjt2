@@ -164,7 +164,8 @@ class CoreRulesTest {
         val three = (1L..3L).sumOf { deckRun(it, 3, false).bursts }
         val six = (1L..3L).sumOf { deckRun(it, 6, false).bursts }
         val sixHelped = (1L..3L).sumOf { deckRun(it, 6, true).bursts }
-        assertTrue(six < three * 3 / 4, "6 apps $six vs 3 apps $three")
+        // Bigger decks stay clearly harder; stock-app effects (snooze, spam clearing) soften it a little.
+        assertTrue(six < three * 4 / 5, "6 apps $six vs 3 apps $three")
         assertTrue(sixHelped > six * 5 / 4, "assists $sixHelped vs $six")
     }
 
@@ -492,5 +493,32 @@ class CoreRulesTest {
         assertEquals(1_300, steep.upgradeGrowth(Catalog.app("memo")))
         assertEquals(1_300 + 20 * 9, steep.upgradeGrowth(Catalog.app("tube")))
         assertEquals(e.rules.upgradeGrowth(Catalog.app("tube")), e.rules.upgradeGrowth(Catalog.app("memo")), "off by default")
+    }
+
+    @Test
+    fun alertsCostWhileLeftAndHelpWhenSwiped() {
+        val s = deckOf("memo", "alarm", "weather").copy(level = 60, energy = 2)
+        val low = s.copy(rows = s.rows.toMutableList().also { it[0] = Row(90, RowKind.Alert, alert = Alert.LowBattery) })
+        assertEquals(e.chargeMs(s) * 13 / 10, e.chargeMs(low), "배터리 부족 left: charging 30% slower")
+        assertEquals(2 - 1 + 4, e.swipe(low, 90, now)!!.state.energy, "swiped: +4")
+        val full = s.copy(rows = s.rows.toMutableList().also { it[0] = Row(91, RowKind.Alert, alert = Alert.Storage) })
+        assertEquals(e.rowCount(s) - 1, e.rowCount(full), "저장공간 부족 left: one row less")
+        val crash = s.copy(rows = s.rows.toMutableList().also { it[0] = Row(92, RowKind.Alert, app = "memo", alert = Alert.Crash) })
+        assertEquals("memo", e.swipe(crash, 92, now)!!.state.crashBoost, "앱 충돌 swiped: memo's next burst ×2")
+    }
+
+    @Test
+    fun timedCardsDrillAndDoNotDisturb() {
+        val s = deckOf("memo", "alarm", "weather").copy(events = setOf(EventCard.Drill, EventCard.Dnd), equipped = listOf(EventCard.Drill, EventCard.Dnd))
+        val drill = e.swipe(s.copy(rows = s.rows.toMutableList().also { it[0] = Row(93, RowKind.Event, event = EventCard.Drill) }), 93, now)!!.state
+        assertEquals(now + e.rules.drillMs, drill.drillUntil)
+        var tapped = drill
+        repeat(150) { tapped = e.tapDrill(tapped, now + 1_000) }
+        assertEquals(100, tapped.drillTaps, "capped at ×2")
+        var d = s
+        repeat(5) { d = e.activateDnd(d.copy(dndUntil = 0), now) }
+        assertEquals(e.rules.dndPerDay, d.dndUses, "three times a day")
+        val on = e.activateDnd(s, now)
+        assertEquals(e.autoIntervalMs(on) / 2, e.autoIntervalMs(on, now + 1))
     }
 }

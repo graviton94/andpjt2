@@ -31,6 +31,9 @@ private val cardText = mapOf(
     EventCard.GroupText to "판의 모든 앱 줄 수량 +1",
     EventCard.Firmware to "덱의 모든 앱 강화 +1",
     EventCard.Lotto to "절반 확률로 직전 스와이프 P × 1~60",
+    EventCard.Birthday to "하루 첫 접속에 나옴. 밀면 최근 10분 수입",
+    EventCard.Drill to "30초 훈련: 패널을 탭할 때마다 모든 수입 +1%, 최대 ×2",
+    EventCard.Dnd to "하루 3회 직접 켬: 20초 동안 돌발 없음, 자동 정리 2배 빠르게",
 )
 
 private val assistText = mapOf(

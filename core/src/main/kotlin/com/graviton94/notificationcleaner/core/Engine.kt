@@ -3,7 +3,10 @@ package com.graviton94.notificationcleaner.core
 import java.math.BigInteger
 import java.math.BigInteger.ZERO
 
-enum class RowKind { App, Wild, Spam, Call, Event }
+enum class RowKind { App, Wild, Spam, Call, Event, Alert }
+
+/** System alerts (rules v3.1): they never merge; leaving them costs something, swiping them helps. */
+enum class Alert(val label: String) { LowBattery("배터리 부족"), Storage("저장공간 부족"), Crash("앱 충돌") }
 
 /** One notification row on the board. Board counts stay small; value multipliers make P large. */
 data class Row(
@@ -17,6 +20,8 @@ data class Row(
     val copyAt: Int = 0,
     /** Event rows: swipe number at which they leave the board (0 = stays). */
     val expireAt: Int = 0,
+    /** Alert rows: which alert. For 앱 충돌, [app] is the app that stopped. */
+    val alert: Alert? = null,
 ) {
     val merges: Boolean get() = kind == RowKind.App || kind == RowKind.Wild
 }
@@ -104,6 +109,18 @@ data class GameState(
     val dailyBonusDay: Map<String, Long> = emptyMap(),
     /** 메이버: the trending category (×2) for the current 10 swipes. */
     val trend: Category? = null,
+    // Timed cards and alerts (rules v3.1)
+    /** 생일 축하: day number it last arrived. */
+    val birthdayDay: Long = -1,
+    /** 알림훈련: running until this time; taps so far (1% each, up to 100). */
+    val drillUntil: Long = 0,
+    val drillTaps: Int = 0,
+    /** 방해 금지: active until this time; uses today. */
+    val dndUntil: Long = 0,
+    val dndDay: Long = -1,
+    val dndUses: Int = 0,
+    /** 앱 충돌: the restarted app's next burst pays ×2. */
+    val crashBoost: String? = null,
 ) {
     fun assist(a: Assist): Int = assists[a] ?: 0
 }
@@ -181,14 +198,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun on(s: GameState, appId: String) = appId in s.active
 
     fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery) + if (on(s, "grab")) 2 else 0
-    fun chargeMs(s: GameState) = rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)
+    fun chargeMs(s: GameState) = (rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)).let {
+        if (s.rows.any { r -> r.alert == Alert.LowBattery }) it * 13 / 10 else it  // 배터리 부족 left on the board
+    }
     fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
         (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
     fun rowCount(s: GameState) = minOf(
         rules.maxRows,
         rules.baseRows + maxOf(0, s.active.size - 4) / rules.appsPerExtraRow + s.assist(Assist.Board) + s.backup.lv(BackupItem.Board),
-    )
+    ) - if (s.rows.any { it.alert == Alert.Storage }) 1 else 0  // 저장공간 부족 left on the board
+
+    /** 방해 금지 doubles auto speed while it runs. */
+    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (now < s.dndUntil) it / 2 else it }
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
@@ -395,6 +417,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val regionAdd = mutableMapOf<Region, BigInteger>()
         val categoryAdd = mutableMapOf<Category, BigInteger>()
         var energyGain = 0
+        var crashBoost = state.crashBoost
+        var drillUntil = state.drillUntil
+        var drillTaps = state.drillTaps
         var freeSwipes = maxOf(0, state.freeSwipes - if (state.freeSwipes > 0) 1 else 0)
         val usesBattery = state.freeSwipes <= 0
         // 로빈훗훗: one gamble roll per swipe, ×0.5 to ×3 (mean about ×1.4). Hashed from the state so effects never
@@ -429,6 +454,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 beats += Beat.Swiped(removed, e)
             }
             RowKind.Spam -> beats += Beat.Swiped(removed, ZERO)
+            RowKind.Alert -> {
+                when (removed.alert!!) {
+                    Alert.LowBattery -> energyGain += 4  // 절전 모드
+                    Alert.Storage -> {}
+                    Alert.Crash -> crashBoost = removed.app
+                }
+                beats += Beat.Swiped(removed, ZERO)
+            }
             RowKind.Event -> {
                 var e = ZERO
                 when (removed.event!!) {
@@ -449,6 +482,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
                     EventCard.GroupText -> for (i in rows.indices) if (rows[i].kind == RowKind.App) rows[i] = rows[i].copy(count = rows[i].count + 1)
                     EventCard.Firmware -> s = s.copy(appLevels = s.appLevels.mapValues { (id, lv) -> if (id in s.active) lv + 1 else lv })
                     EventCard.Lotto -> if (rng.next(2) == 1) e = state.lastEarned * BigInteger.valueOf(1L + rng.next(60))
+                    EventCard.Birthday -> e = state.earnRate * BigInteger.TEN
+                    EventCard.Drill -> { drillUntil = now + rules.drillMs; drillTaps = 0 }
+                    EventCard.Dnd -> {}
                 }
                 earned += e
                 beats += Beat.Swiped(removed, e)
@@ -551,6 +587,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
             returnBurst = false
         }
         if (returnSwipes > 0) { if (on(s, "ott")) earned *= BigInteger.TWO; returnSwipes-- }
+        // 앱 충돌 restarted: that app's next burst ×2. 알림훈련: taps raise income while the drill runs.
+        if (crashBoost != null && bursts.any { valueApp(s, it) == crashBoost }) { earned *= BigInteger.TWO; crashBoost = null }
+        if (now < state.drillUntil) earned = earned * BigInteger.valueOf(100L + minOf(100, state.drillTaps)) / hundred
         // 메이버: a new trending category every 10 swipes.
         val trend = if (on(s, "portal") && s.swipes % 10 == 0) Category.entries[Math.floorMod(mix(roll), Category.entries.size.toLong()).toInt()] else s.trend
 
@@ -592,6 +631,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
             returnSwipes = returnSwipes,
             dailyBonusDay = dailyBonusDay,
             trend = trend,
+            crashBoost = crashBoost,
+            drillUntil = drillUntil,
+            drillTaps = drillTaps,
         )
         next = fillDeck(next)
         next = refill(next, now, beats)
@@ -617,14 +659,27 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
         val overdue = if (on(state, "secret")) -1 else rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }  // 텔레그림
         if (overdue >= 0) rows[overdue] = rows[overdue].copy(copyAt = 0)
-        var spam = overdue >= 0 || n % rules.spamEverySwipes == 0
-        var call = state.level >= rules.callUnlockLevel && n % rules.callEverySwipes == 0 && rows.none { it.kind == RowKind.Call }
-        val cards = state.equipped.filter { c -> n % c.everySwipes == 0 && rows.none { it.event == c } }.toMutableList()
+        val quiet = now < state.dndUntil  // 방해 금지: no interruptions
+        var spam = !quiet && (overdue >= 0 || n % rules.spamEverySwipes == 0)
+        var call = !quiet && state.level >= rules.callUnlockLevel && n % rules.callEverySwipes == 0 && rows.none { it.kind == RowKind.Call }
+        val cards = state.equipped.filter { c -> c.everySwipes > 0 && n % c.everySwipes == 0 && rows.none { it.event == c } }.toMutableList()
+        val today = now / 86_400_000L
+        var birthdayDay = state.birthdayDay
+        if (EventCard.Birthday in state.equipped && today > birthdayDay && rows.none { it.event == EventCard.Birthday }) { cards += EventCard.Birthday; birthdayDay = today }
+        fun noAlert(a: Alert) = rows.none { it.alert == a }
+        val alerts = mutableListOf<Row>()
+        if (!quiet) {
+            if (state.level >= rules.lowBatteryLevel && state.energy <= rules.lowBatteryAt && noAlert(Alert.LowBattery)) alerts += Row(0, RowKind.Alert, alert = Alert.LowBattery)
+            if (state.level >= rules.storageLevel && n % rules.storageEverySwipes == rules.storageEverySwipes / 2 && noAlert(Alert.Storage)) alerts += Row(0, RowKind.Alert, alert = Alert.Storage)
+            if (state.level >= rules.crashLevel && n % rules.crashEverySwipes == rules.crashEverySwipes / 2 && noAlert(Alert.Crash) && state.active.size >= 2)
+                alerts += Row(0, RowKind.Alert, app = state.active[rng.next(state.active.size)], alert = Alert.Crash)
+        }
 
         while (rows.size < rowCount(state)) {
             val row = when {
                 call -> { call = false; pausedUntil = now + rules.callPauseMs / (if (on(state, "secret")) 2 else 1); Row(id++, RowKind.Call) }
                 spam -> { spam = false; Row(id++, RowKind.Spam, copyAt = n + rules.spamCopyAfterSwipes) }
+                alerts.isNotEmpty() -> alerts.removeAt(0).copy(id = id++)
                 cards.isNotEmpty() -> {
                     val c = cards.removeAt(0)
                     Row(id++, RowKind.Event, event = c, expireAt = if (c == EventCard.Otp) n + rules.otpLifeSwipes else 0)
@@ -635,7 +690,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             rows.add(0, row)
             beats += Beat.Spawned(row)
         }
-        return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern)
+        return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay)
     }
 
     private fun spawnApp(s: GameState, rows: List<Row>, rng: Rng, id: Long): Row {
@@ -643,7 +698,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (rng.next(100) < wildPercent(s)) return Row(id, RowKind.Wild, count = count(), threshold = rules.threshold)
         val top = rows.firstOrNull()
         val second = rows.getOrNull(1)
-        val options = s.active.filter { top?.kind != RowKind.App || it != top.app }
+        val crashed = rows.filter { it.alert == Alert.Crash }.mapNotNull { it.app }  // 앱 충돌: that app posts nothing until restarted
+        val options = s.active.filter { (top?.kind != RowKind.App || it != top.app) && it !in crashed }.ifEmpty { s.active }
         val sandwich = second?.kind == RowKind.App && second.app != top?.app && second.app in options
         val app = if (sandwich && rng.next(100) < sandwichPercent(s)) second!!.app!! else options[rng.next(options.size)]
         return Row(id, RowKind.App, app, count = count(), threshold = thresholdOf(app))
@@ -804,6 +860,18 @@ class Engine(val rules: RuleSet = RuleSet()) {
             cur = next; n++
         }
         return cur to n
+    }
+
+    /** 알림훈련: one tap on the drill panel while it runs (+1% income, up to +100%). */
+    fun tapDrill(s: GameState, now: Long): GameState =
+        if (now < s.drillUntil && s.drillTaps < 100) s.copy(drillTaps = s.drillTaps + 1) else s
+
+    /** 방해 금지: switch on if equipped and used fewer than [RuleSet.dndPerDay] times today. */
+    fun activateDnd(s: GameState, now: Long): GameState {
+        val today = now / 86_400_000L
+        val uses = if (s.dndDay == today) s.dndUses else 0
+        if (EventCard.Dnd !in s.equipped || uses >= rules.dndPerDay || now < s.dndUntil) return s
+        return s.copy(dndUntil = now + rules.dndMs, dndDay = today, dndUses = uses + 1)
     }
 
     fun buyEvent(s: GameState, card: EventCard): GameState {
