@@ -12,8 +12,8 @@ android {
         applicationId = "com.graviton94.notificationcleaner"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0-greybox"
     }
 
     buildTypes {
@@ -45,5 +45,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("com.graviton94.notificationcleaner:notification-cleaner-core")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     testImplementation("junit:junit:4.13.2")
 }

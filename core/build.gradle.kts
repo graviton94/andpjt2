@@ -5,6 +5,9 @@ plugins {
     application
 }
 
+group = "com.graviton94.notificationcleaner"
+version = "0.3"
+
 kotlin {
     compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
 }
