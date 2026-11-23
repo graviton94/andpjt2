@@ -99,6 +99,8 @@ data class RuleSet(
      */
     val backupExponentPermille: Int = 500,
     val backupSoftcapDigits: Int = 8,
+    /** Backup files paid by a run that just reaches the reset level. */
+    val backupBase: Long = 10,
     // Jackpot limits: luck jumps a few steps, never the whole run.
     /** One swipe (chains, waves, 로또, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
     val swipeLevelCap: Int = 3,
@@ -200,7 +202,7 @@ data class RuleSet(
         if (lx < 0) return 0
         val e = backupExponentPermille / 1000.0
         val logB = if (lx <= backupSoftcapDigits) e * lx else e * backupSoftcapDigits + e / 2 * (lx - backupSoftcapDigits)
-        return Math.floor(10 * Math.pow(10.0, logB)).toLong()
+        return Math.floor(backupBase * Math.pow(10.0, logB)).toLong()
     }
 
     /** Cloud multiplier on backup files: 압축 백업 ×1.5 per level and +[cloudFilePercent]% per GB ever synced. */
