@@ -4,46 +4,40 @@
 
 ```text
 andpjt2/
-├── README.md                         저장소 입구: 바이블 링크, 시연 앱 빌드 방법
-├── build.gradle.kts · settings.gradle.kts · gradle/ · gradlew   Android 빌드 (app 모듈)
+├── README.md                         저장소 입구: 바이블 링크, 빌드 방법
+├── build.gradle.kts · settings.gradle.kts · gradle/ · gradlew   Android 빌드 (app 모듈, 시연 앱)
 ├── .github/workflows/android.yml     CI: core 테스트 → 시연 앱 테스트·린트·APK → 에뮬레이터 스모크
 │
-├── core/                             ★ 본편 판정 엔진 (순수 Kotlin, 독립 Gradle 빌드)
-│   ├── build.gradle.kts              JVM 17, `run` = 예시 출력 / `run --args=content` = 참조표 생성
-│   └── src/
-│       ├── main/kotlin/com/graviton94/notificationcleaner/core/
-│       │   ├── Content.kt            권역·카테고리, 앱 24종, 이벤트 카드, 판 강화, 백업 상점, 프로 레벨
-│       │   ├── Rules.kt              RuleSet: 모든 계수·공식 (레벨 P, 가격, 시너지, 백업파일)
-│       │   ├── Engine.kt             상태·박자·스와이프·충전·오프라인·상점·덱·초기화
-│       │   ├── Examples.kt           문서 예시 출력 (고정 시드)
-│       │   └── ContentDoc.kt         바이블 05 참조표 생성기
-│       └── test/kotlin/.../CoreRulesTest.kt   예시 고정 테스트
+├── core/                             ★ 본편 판정 엔진 (순수 Kotlin, 독립 Gradle 빌드, 테스트 53개)
+│   └── src/main/kotlin/com/graviton94/notificationcleaner/core/
+│       ├── Content.kt                권역·카테고리, 앱 60종 + 업데이트 팩, 카드, 백업·클라우드 상점
+│       ├── Rules.kt                  RuleSet: 모든 계수 (레벨 곡선, 가격, 시너지, 환생, 수익화, 출석판)
+│       ├── Engine.kt                 상태·박자·스와이프·고유 효과 58종·돌발·오프라인·초기화·동기화
+│       ├── Monetization.kt           데이터(유료재화)·프리미엄 ★·광고 지면·데이터 상점·월간/터보/울트라 패스·30일 출석판
+│       ├── ContentDoc.kt · Examples.kt   참조표 생성, K/M/B 숫자 표기(short)
 │
 ├── tools/
-│   └── economy-sim/                  경제 시뮬레이터 (core 소스를 그대로 컴파일)
-│       ├── build.gradle.kts
-│       └── src/main/kotlin/
-│           ├── EconomySim.kt         회차 시뮬레이션, 구매·덱·백업 정책
-│           ├── Daily.kt              8주 일상 플레이(하루 4×15분 + 오프라인), 해금 밀도
-│           └── Debug.kt              세션 추적
+│   ├── economy-sim/                  경제 시뮬레이터 (core 소스 그대로 컴파일, 4코어 병렬)
+│   │   └── src/main/kotlin/Daily.kt  일상 플레이 · 과금 프로필 5종 · 광고 분리 실험 · SIM_RULES 덮어쓰기
+│   ├── icons/                        앱 아이콘 코드 SVG · 발주 PNG 반입
+│   ├── catalog/                      콘텐츠 카탈로그 생성
+│   ├── commissions/                  에셋 발주 보드 생성 · 시트 칸별 자르기(slice_sheet.py)
+│   └── sound/                        시연 합성음 → OGG 렌더러
+│
+├── assets-src/sfx/                   효과음 1차본 59개 (OGG, 시연 합성음 렌더)
 │
 ├── docs/
-│   ├── bible/                        ★ 게임 바이블 (이 폴더)
-│   ├── core-rules-v3.md              판정 규칙 정본
-│   ├── core-direction-decisions.md   핵심 로직 인터뷰 결정
-│   ├── economy-v0.2.md · economy-v0.3.md   경제 설계 기록
-│   ├── notification-cleaner-*.md / *.png   시연 앱 시절 기획 (기록용)
-│   ├── content/notification-catalog.html   콘텐츠 카탈로그 (아티팩트 원본)
+│   ├── bible/                        ★ 게임 바이블 00~20
+│   ├── content/                      app-texts.json, l10n/(en.json, store-listing.md), 카탈로그
 │   └── design/
-│       ├── design-system.md · tokens.json · design-system-{light,dark}.png
-│       ├── ui-theme-candidates.md · ui-theme-{amber,mint,day}.png
-│       └── theme-source/             시안·시트 렌더러 (Node + Playwright)
+│       ├── tokens.json · design-system.md
+│       ├── app-icons/                앱 아이콘 66종
+│       ├── ui-assets/                재화·부스트·등급 배지·메타·상점 아트 39개 (+ _sheets 원본)
+│       ├── commissions.json · ui-commission.md   에셋 발주 정본
+│       ├── fx-demo/                  타격감 시연 페이지 소스
+│       └── screens-v1/               화면 시안
 │
 ├── app/                              시연 앱 《알림 청소부 FX》 (그레이박스에서 교체 예정)
-│   └── src/main/java/com/graviton94/notificationcleaner/
-│       ├── GameEngine.kt · GameSession.kt         시연 엔진·세션 (폐기 예정)
-│       ├── NotificationShade.kt · ShadeSheets.kt  시연 화면
-│       └── ImpactEffects.kt · ImpactFeedback.kt   연출·햅틱 (참고용으로 이관 검토)
 └── scripts/                          시연 앱 스모크·오디오 합성
 ```
 
@@ -64,8 +58,8 @@ andpjt2/
 │       ├── ui/shade/       PullDownShade, Sliders, MediaCard
 │       ├── ui/sheets/      Shop, Upgrade(Bulk), DeckEditor, Assists, FactoryReset, BackupShop, Records, Daily
 │       ├── fx/             Timeline(Beat 재생), HitStop, Shake, Particles, Haptics, Sfx
-│       ├── platform/       Ads(보상형), Billing, Analytics, RemoteRules
-│       └── format/         KoreanNumber, Notation
+│       ├── platform/       Ads(보상형), Billing(데이터 팩·구독), Analytics, RemoteRules
+│       └── format/         Notation (K/M/B/T·aa, core short() 사용)
 ├── tools/economy-sim/
 └── docs/bible/
 ```
