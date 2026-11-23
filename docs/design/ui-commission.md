@@ -1,5 +1,7 @@
 # UI 에셋 발주서 · 상점 · 강화 · 재화 · 부스트
 
+> **발주 관리**: 대기 목록의 정본은 `docs/design/commissions.json`, 복사용 화면은 [에셋 발주 보드](https://claude.ai/artifact/Pd9VzPTkmJ6fEQsSFh5uqk)(`python3 tools/commissions/build_board.py OUT.html`로 생성). 반입하면 JSON의 `pending`에서 `delivered`로 옮기고 보드를 다시 발행한다. 이 문서는 설계 배경 기록용.
+
 화면 뼈대(카드·패널·버튼·탭·상태표시줄)는 폰 UI를 흉내 낸 **코드**로 그린다(글래스·디자인 토큰). 아래는 게임 퀄리티를 위해 **이미지로 발주**하는 아이템 아이콘과 상품 아트다. 숫자·글자는 모두 코드가 위에 얹는다.
 
 ## 0. 공통 사양 (모든 프롬프트 앞에 붙인다)
