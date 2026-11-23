@@ -10,19 +10,19 @@ import java.math.BigInteger
 
 /** Rewarded ad placements and their daily caps. A month pass gives the same rewards without the ad. */
 enum class AdSlot(val label: String, val daily: Int) {
-    BestDouble("최고 기록 ×2", 5),
-    OfflineDouble("오프라인 ×2", 3),
+    BestDouble("최고 기록 ×2", 3),
+    OfflineDouble("오프라인 +50%", 2),
     Boost("수입 부스트 30분", 3),
-    Warp("시간 도약 2시간", 2),
+    Warp("시간 도약 1시간", 1),
     Battery("보조배터리", 3),
     CreditBox("데이터 상자", 3),
-    FreeUpgrade("무료 강화 +5", 1),
+    FreeUpgrade("무료 강화 +3", 1),
 }
 
 /** What 데이터 (credits) buys besides premium stars. */
 enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Boost("수입 부스트 30분", 40, 6),
-    Warp("시간 도약 2시간", 60, 5),
+    Warp("시간 도약 1시간", 60, 5),
     Battery("보조배터리", 10, 20),
     BackupBoost("백업 부스트 (다음 초기화 파일 +25%)", 100, 1),
 }
@@ -149,12 +149,12 @@ class Shop(private val engine: Engine) {
         }
         return when (slot) {
             AdSlot.BestDouble -> grantP(counted, offerP, rules.adLevelCap)
-            AdSlot.OfflineDouble -> grantP(counted, offerP, rules.adLevelCap)
+            AdSlot.OfflineDouble -> grantP(counted, offerP * BigInteger.valueOf(rules.offlineAdPercent.toLong()) / BigInteger.valueOf(100), rules.adLevelCap)
             AdSlot.Boost -> boost(counted, now)
             AdSlot.Warp -> warp(counted)
             AdSlot.Battery -> battery(counted)
             AdSlot.CreditBox -> credit(counted, rules.adCredits)
-            AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + 5)) }
+            AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + rules.freeUpgradeLevels)) }
         }
     }
 

@@ -52,12 +52,15 @@ data class RuleSet(
     val passInstantCredits: Long = 300,
     val passDailyCredits: Long = 60,
     val boostMinutes: Int = 30,
-    val boostPermille: Int = 2_000,
-    val warpMinutes: Int = 120,
+    val boostPermille: Int = 1_500,
+    val warpMinutes: Int = 60,
     val batteryOvercharge: Int = 6,
     val backupBoostPercent: Int = 25,
     /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
     val adLevelCap: Int = 1,
+    /** 오프라인 광고: the settlement once more at this percent. */
+    val offlineAdPercent: Int = 50,
+    val freeUpgradeLevels: Int = 3,
     /** 최고 기록 ×2 is offered from this level. */
     val bestDoubleFrom: Int = 20,
     // Battery and auto
