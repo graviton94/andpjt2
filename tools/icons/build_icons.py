@@ -351,6 +351,9 @@ ICONS.update({
         '<path d="M27.8 31.8c1.9.6 3.1 2 3 3.7-.1 1.4-1.4 2.2-2.7 1.7-1.1-.5-1.8-2.1-1.8-3.6z" fill="#ff6b8b"/>',
 })
 
+# Voice recorder: red recording dot + REC, like a camera's recording indicator.
+ICONS["recorder"] = WHITE_TILE + '<circle cx="12.6" cy="24" r="5.6" fill="#ef2b2d"/>' + gtext("REC", "inter700", 12.5, x=20.4, baseline=28.5, anchor="start", fill="#ef2b2d", tracking=-.2)
+
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
 COMMISSION = {
     "papago": ("#03c75a", "마"), "duo": ("#58cc02", "듀"), "edit": ("#111111", "컷"), "travel": ("#0194f3", "트"),

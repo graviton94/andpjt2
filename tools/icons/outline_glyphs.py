@@ -4,7 +4,7 @@
 Fonts (all SIL Open Font License 1.1, from the @fontsource npm packages):
   dohyeon   Do Hyeon (Woowahan Brothers' BM Hanna lineage, Google Fonts)  -> 배다른민족 lettering
   nunito900 Nunito Black                                                  -> 쿠빵, 모모모 rounded wordmarks
-  inter700  Inter Bold                                                    -> 링크드아웃 'out'
+  inter700  Inter Bold                                                    -> 링크드아웃 'out', 음성 녹음 'REC'
 Usage: python3 tools/icons/outline_glyphs.py <dir with unpacked @fontsource packages>
 Writes tools/icons/glyphs.json: {font: {"upm": n, "glyphs": {char: {"d": path in font units (y up), "adv": n}}}}
 """
@@ -15,7 +15,7 @@ from fontTools.pens.svgPathPen import SVGPathPen
 WANT = {
     "dohyeon": ("fontsource-do-hyeon-*/package/files/do-hyeon-*-400-normal.woff2", "배다민"),
     "nunito900": ("fontsource-nunito-*/package/files/nunito-latin-900-normal.woff2", "kubangmo"),
-    "inter700": ("fontsource-inter-*/package/files/inter-latin-700-normal.woff2", "out"),
+    "inter700": ("fontsource-inter-*/package/files/inter-latin-700-normal.woff2", "outREC"),
 }
 
 
