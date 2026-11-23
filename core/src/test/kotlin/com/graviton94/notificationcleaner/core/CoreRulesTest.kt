@@ -727,4 +727,22 @@ class CoreRulesTest {
         // clock set back: nothing
         assertEquals(0, AwayClock.awayMs(10 * h, 5 * h, 5_000, 10, sameBoot = false))
     }
+
+    @Test
+    fun fxPlanFollowsTheLadderAndRespectsReducedMotion() {
+        val e = Engine()
+        var s = e.newGame(0, 4)
+        var t = 0L
+        var best: SwipeOutcome? = null
+        repeat(300) { t += 3_000; s = e.tick(s, t); e.bestTarget(s, t)?.let { id -> e.swipe(s, id, t)?.let { o -> s = o.state; if (o.chain > (best?.chain ?: 0)) best = o } } }
+        val o = best!!
+        val plan = FxPlan.plan(o)
+        assertEquals(o.beats.count { it is Beat.Burst }, plan.count { it.kind == CueKind.Shatter })
+        assertTrue(plan.zipWithNext().all { (a, b) -> a.atMs <= b.atMs })
+        assertTrue(plan.any { it.kind == CueKind.Payoff })
+        assertTrue(plan.filter { it.kind == CueKind.Sound }.all { it.sound != null })
+        val calm = FxPlan.plan(o, reducedMotion = true)
+        assertTrue(calm.none { it.kind == CueKind.Shake || it.kind == CueKind.ScreenCrack || it.kind == CueKind.Flash })
+        assertEquals(80, FxPlan.step(12).hitStopMs)
+    }
 }
