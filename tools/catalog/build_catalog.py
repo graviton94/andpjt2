@@ -79,7 +79,9 @@ def main():
     for a in apps:
         f = ICONS / f"{a['id']}.svg"
         if f.exists():  # gradient ids made unique per icon: many inline SVGs share one page
-            icons[a["id"]] = f.read_text().strip().replace('id="g"', f'id="g-{a["id"]}"').replace("url(#g)", f"url(#g-{a['id']})")
+            svg = f.read_text().strip()
+            svg = re.sub(r'id="(g\w*)"', lambda m: f'id="{m.group(1)}-{a["id"]}"', svg)
+            icons[a["id"]] = re.sub(r"url\(#(g\w*)\)", lambda m: f"url(#{m.group(1)}-{a['id']})", svg)
     html = gen(html, "icons", "const ICON=" + json.dumps(icons, ensure_ascii=False) + ";")
     HTML.write_text(html)
     top = max(unlock)
