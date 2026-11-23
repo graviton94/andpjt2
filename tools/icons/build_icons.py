@@ -352,7 +352,33 @@ ICONS.update({
 })
 
 # Voice recorder: red recording dot + REC, like a camera's recording indicator.
-ICONS["recorder"] = WHITE_TILE + '<circle cx="12.6" cy="24" r="5.6" fill="#ef2b2d"/>' + gtext("REC", "inter700", 12.5, x=20.4, baseline=28.5, anchor="start", fill="#ef2b2d", tracking=-.2)
+def ink_width(t, font, size, tracking=0.0):
+    """Ink extent of outlined text from the path coordinates: (left bearing, right edge) in icon units."""
+    import re as _re
+    f = GLYPHS[font]
+    k = size / f["upm"]
+    x, lo, hi = 0.0, None, None
+    for i, c in enumerate(t):
+        xs = [float(v) for v in _re.findall(r"-?\d+\.?\d*", f["glyphs"][c]["d"])][0::2]
+        lo = x + min(xs) * k if lo is None else lo
+        hi = x + max(xs) * k
+        x += f["glyphs"][c]["adv"] * k + tracking
+    return lo, hi
+
+
+# Voice recorder: red recording dot + REC, the whole group centred on its real ink extent.
+REC_SIZE, REC_GAP, REC_R = 12.5, 2.4, 5.4
+_lo, _hi = ink_width("REC", "inter700", REC_SIZE, -.2)
+_w = 2 * REC_R + REC_GAP + (_hi - _lo)
+_left = 24 - _w / 2
+ICONS["recorder"] = WHITE_TILE + f'<circle cx="{_left + REC_R:.2f}" cy="24" r="{REC_R}" fill="#ef2b2d"/>' + \
+    gtext("REC", "inter700", REC_SIZE, x=_left + 2 * REC_R + REC_GAP - _lo, baseline=28.5, anchor="start", fill="#ef2b2d", tracking=-.2)
+
+# 와이: X-logo construction carried into a Y - hollow thick arm top-left, thin solid arm top-right, solid stem.
+ICONS["why"] = bg("#000000") + (
+    '<path fill="#fff" fill-rule="evenodd" d="M10 10h7.6l10.2 15.2h-7.6z M12.9 11.6l8.1 12h3.2l-8.1-12z"/>'
+    '<path fill="#fff" d="M34.6 10h3.6L26 25.2h-3.6z"/>'
+    '<path fill="#fff" d="M21.8 24.4h4.4V38h-4.4z"/>')
 
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
 COMMISSION = {
