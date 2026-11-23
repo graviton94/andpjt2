@@ -7,7 +7,7 @@
 | 항목 | 값 |
 |---|---|
 | 패키지명 | `com.graviton94.notificationcleaner` (이미 앱에 쓰는 값, 바꾸지 않음) |
-| 기본 언어 | English (United States) en-US, 번역 추가: 한국어 ko-KR |
+| 기본 언어 | English (United States) en-US, 번역 추가: 한국어 ko-KR · 일본어 ja-JP · 번체 중국어 zh-TW · 스페인어 es-419(+es-ES) — 검토 `docs/content/l10n/launch-languages.md` |
 | 웹 (GitHub Pages) | **작성 완료(graviton94.github.io 저장소 `ccr-9efafd3c-bh5fdz` 브랜치, main에 합쳐야 공개)** — 소개 `/notificationcleaner/` · 개인정보처리방침 `/notificationcleaner/privacy/` · 데이터 삭제 `/notificationcleaner/privacy/#delete` · 이용약관 `/notificationcleaner/terms/` · 루트 `app-ads.txt` |
 | 문의 | 페이지는 사이트의 개발자 소개(`/about/`)로 연결. Play 등록용 공개 이메일은 출시 전 확정 |
 | AAB 서명 | CI 업로드 키(비밀값), versionCode = 1000 + 실행 번호 |
@@ -58,8 +58,8 @@
 
 | 항목 | 메모 |
 |---|---|
-| 앱 아이콘 512×512 | 언어별 효과음: `docs/design/brand/icon-512-ko.png`(팡!) · `-en`(POP!) · `-ja`(パン!) — 기본 등록정보엔 en, 번역 등록정보에 언어별 그래픽을 넣는다. 앱 런처도 `mipmap-ko`·`mipmap-ja` 리소스로 기기 언어 따라 바뀜. 원본 `tools/brand/icon.html`, `node tools/brand/render.js` |
-| 그래픽 이미지 1024×500 | `docs/design/brand/feature-ko/en/ja.png` — 오른쪽 폰 화면에서 팡! 터지며 카드·파편이 튀어나오고, 왼쪽에 제목 + 밀고!(장갑 스와이프)·합치고!·터뜨려라! 스티커 3개. 글꼴 Black Han Sans · Luckiest Guy · Dela Gothic One (OFL, `tools/brand/fonts`). 만화 효과 에셋(발주 `comic-fx`)이 오면 CSS 말풍선을 교체 |
+| 앱 아이콘 512×512 | 언어별 효과음 `docs/design/brand/icon-512-<언어>.png` (팡!/POP!/パン!/砰!/¡PUM!), 폭발 말풍선은 일부러 가장자리에서 잘림. 원본 `tools/brand/icon.html` + 발주 에셋 `ui-assets/comic-fx`, `node tools/brand/render.js` |
+| 그래픽 이미지 1024×500 | `docs/design/brand/feature-<언어>.png` 5종 — 오른쪽 폰(상태표시줄 포함) 화면에서 터지는 장면 + 왼쪽 제목·동사 스티커 3개. 글꼴 Black Han Sans · Luckiest Guy · Dela Gothic One · Noto Sans TC (OFL). 중국어 글꼴은 `tools/brand/subset_tc.py`로 쓴 글자만 |
 | 스크린샷 9:16 4~8장 | ① 9연쇄 정산 쾅 ② 화면 유리 깨짐 ③ 앱 60종 컬렉션 ④ 프리미엄 ★ ⑤ 30일 출석판 ⑥ 스팸 전화 차단. 언어별로 글자 섞이지 않게 |
 | 카테고리 · 태그 | 게임 › 퍼즐(또는 캐주얼) · 태그: 증분 게임, 퍼즐, 캐주얼, 병합 퍼즐, 아케이드 |
 
