@@ -274,7 +274,8 @@ class CoreRulesTest {
     @Test
     fun assistCapsAndSlotsGrowWithLevel() {
         assertEquals(6, Assist.Overload.max(8))
-        assertEquals(9, Assist.Overload.max(82))
+        assertEquals(8, Assist.Overload.max(82))
+        assertEquals(9, Assist.Overload.max(83))
         assertEquals(10, e.rules.maxSlots(73, Backup()))
         assertEquals(4, e.rules.eventSlots(63, Backup()))
     }

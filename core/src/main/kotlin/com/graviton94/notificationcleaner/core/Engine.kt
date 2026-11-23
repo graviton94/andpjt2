@@ -145,7 +145,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery)
     fun chargeMs(s: GameState) = rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)
-    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean)
+    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto)
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
     fun rowCount(s: GameState) = minOf(
         rules.maxRows,
@@ -185,7 +185,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
         val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
         val digitPct = BigInteger.valueOf((100L + rd) * (100L + cd))
-        val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost)))
+        val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost) + 2 * s.backup.cloud.lv(CloudItem.CloudChain)))
         val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
         // Deck synergy (region × category × diversity) is capped below one tier step.
         val sets = maxOf(0, activeSets(s) - 1)

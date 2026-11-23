@@ -51,7 +51,7 @@ enum class EventCard(val label: String, val unlockLevel: Int, val price: Long, v
  * higher caps as content. Backup items raise their starting values.
  */
 enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<Int, Int>>, val base: Long, val growth: Long) {
-    Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 82 to 9), 2_000, 400),
+    Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 83 to 9), 2_000, 400),
     Sandwich("샌드위치", 10, listOf(10 to 5, 24 to 6, 47 to 8), 20_000, 15),
     Board("넓은 알림창", 12, listOf(12 to 2, 39 to 3), 500_000, 200),
     Wild("와일드 알림", 20, listOf(20 to 5, 69 to 8), 1_000_000, 30),
@@ -97,6 +97,9 @@ enum class CloudItem(val label: String, val max: Int, val base: Long, val growth
     KeepShop("백업 상점 단계 유지 +3", 5, 2, 2_500, 2),
     CloudSlot("앱 슬롯 +1", 1, 10, 1_000, 3),
     CloudOffline("오프라인 상한 +1시간", 4, 3, 2_000, 4),
+    CloudEventSlot("이벤트 슬롯 +1", 1, 20, 1_000, 5),
+    CloudAuto("자동 정리 −0.5초", 3, 8, 2_000, 6),
+    CloudChain("연쇄 증폭 +0.2", 5, 10, 2_000, 8),
 }
 
 object Catalog {
@@ -135,14 +138,14 @@ object Catalog {
     )
     val starter = listOf("chat", "mail", "delivery")
 
-    /** Level at which each app's pro version (×3 value) opens: tier by tier, Lv31-89. */
+    /** Level at which each app's pro version (×2 value) opens: tier by tier, Lv31-86. */
     val proLevel: Map<String, Int> = mapOf(
         "chat" to 31, "mail" to 32, "delivery" to 33, "steps" to 34,
         "feed" to 43, "calendar" to 44, "pay" to 45, "shorts" to 46,
         "music" to 56, "inbox" to 57, "map" to 58, "point" to 59,
         "reward" to 65, "bank" to 66, "cloud" to 67, "translate" to 68,
         "meet" to 76, "coin" to 77, "match" to 78, "home" to 79,
-        "live" to 85, "stock" to 86, "comment" to 87, "minutes" to 89,
+        "live" to 81, "stock" to 82, "comment" to 84, "minutes" to 86,
     )
     fun app(id: String): AppDef = apps.first { it.id == id }
 }

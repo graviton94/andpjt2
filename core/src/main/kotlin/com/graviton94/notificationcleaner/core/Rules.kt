@@ -122,7 +122,7 @@ data class RuleSet(
 
     fun maxSlots(level: Int, backup: Backup) = step(maxSlotSteps, level) + backup.lv(BackupItem.ExtraSlot) + backup.cloud.lv(CloudItem.CloudSlot)
     fun minSlots(level: Int) = step(minSlotSteps, level)
-    fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) else 0
+    fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) + backup.cloud.lv(CloudItem.CloudEventSlot) else 0
 
     /** XP to leave [level], in hundredths of a point. ⌈5 × L^1.4 × 1.09^(L−1)⌉ points. */
     private val levelTable: List<BigInteger> by lazy {
