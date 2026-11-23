@@ -9,20 +9,36 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 d = json.loads((ROOT / "docs/design/commissions.json").read_text())
 PRI = {1: "1순위 · 그레이박스 상점", 2: "2순위 · 프리미엄 화면", 3: "3순위 · 메타", 4: "4순위 · 소프트런치 전"}
 
+def prompt(g):
+    cw, ch = g["cell"]
+    lines = [d["spec"], "", g["intro"], "",
+             f'Sprite sheet: {g["cols"]} columns x {g["rows"]} rows of equal cells, each cell {cw}x{ch} px, whole sheet {cw * g["cols"]}x{ch * g["rows"]} px.']
+    for i, it in enumerate(g["items"]):
+        r, c = divmod(i, g["cols"])
+        lines.append(f"Row {r + 1}, column {c + 1}: " + ("leave this cell EMPTY." if it is None else it["desc"] + "."))
+    lines += ["", d["sheetRules"]]
+    return "\n".join(lines)
+
+def grid(g):
+    cells = "".join(
+        '<div class="cell empty">비움</div>' if it is None else f'<div class="cell"><b>{html.escape(it["id"])}</b><span>{html.escape(it["note"])}</span></div>'
+        for it in g["items"])
+    return f'<div class="grid" style="grid-template-columns:repeat({g["cols"]},minmax(0,1fr));aspect-ratio:{g["cell"][0] * g["cols"]}/{g["cell"][1] * g["rows"]}">{cells}</div>'
+
 def card(g):
-    full = d["spec"] + "\n\n" + g["prompt"]
-    files = "".join(f'<li><code>{html.escape(g["id"])}/{html.escape(f["id"])}.png</code><span>{html.escape(f["note"])}</span></li>' for f in g["files"])
+    full = prompt(g)
+    n = sum(1 for it in g["items"] if it)
     return f'''<article class="card">
   <header><div><p class="pri">{PRI[g["priority"]]}</p><h2>{html.escape(g["title"])}</h2></div>
   <button type="button" class="copy" data-copy="{html.escape(full, quote=True)}">프롬프트 복사</button></header>
-  <p class="meta">파일 {len(g["files"])}개 · {html.escape(g.get("size",""))} 투명 PNG · 폴더 <code>docs/design/ui-assets/{html.escape(g["id"])}/</code></p>
-  <ul class="files">{files}</ul>
+  <p class="meta">시트 1장 · {g["cols"]}×{g["rows"]}칸 · 요소 {n}개 · 받으면 칸별로 잘라 <code>docs/design/ui-assets/{html.escape(g["id"])}/</code>에 저장</p>
+  {grid(g)}
   <details><summary>프롬프트 보기</summary><pre>{html.escape(full)}</pre></details>
 </article>'''
 
 cards = "\n".join(card(g) for g in d["pending"]) or '<p class="empty">대기 중인 발주가 없습니다.</p>'
 done = "".join(f'<li><span>{html.escape(x["date"])}</span>{html.escape(x["title"])}</li>' for x in d["delivered"])
-total = sum(len(g["files"]) for g in d["pending"])
+total = sum(1 for g in d["pending"] for it in g["items"] if it)
 page = f'''<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>알림 청소부 에셋 발주 보드</title>
@@ -41,6 +57,8 @@ h2{{margin:0;font-size:19px}} .pri{{margin:0 0 2px;font-size:12.5px;font-weight:
 .meta{{margin:8px 0;color:var(--sub);font-size:14px}}
 button{{font:inherit;font-weight:700;font-size:14px;min-height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--acc);color:var(--onacc);cursor:pointer}}
 button:focus-visible{{outline:3px solid var(--acc);outline-offset:2px}}
+
+.grid{{display:grid;gap:6px;margin:10px 0;max-width:460px}} .cell{{border:1.5px dashed var(--line);border-radius:10px;padding:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-size:12.5px;line-height:1.3}} .cell b{{font-size:12px;font-family:ui-monospace,monospace}} .cell span{{color:var(--sub);font-size:11.5px}} .cell.empty{{color:var(--sub);opacity:.6}}
 .files{{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 16px;font-size:14px}}
 .files li{{display:flex;gap:8px;align-items:baseline}} .files span{{color:var(--sub)}}
 code{{font-size:12.5px;background:var(--code);padding:1px 5px;border-radius:5px}}
@@ -51,7 +69,7 @@ pre{{white-space:pre-wrap;background:var(--code);border-radius:12px;padding:12px
 .toast.on{{opacity:1}}
 </style></head><body><main>
 <h1>에셋 발주 보드</h1>
-<p class="lead">대기 중인 발주 {len(d["pending"])}묶음 · 파일 {total}개. "프롬프트 복사"는 공통 사양과 묶음 프롬프트를 한 번에 복사합니다. 납품 파일을 대화에 올리면 반입 후 이 목록에서 지웁니다.</p>
+<p class="lead">대기 중인 발주 {len(d["pending"])}장 · 요소 {total}개. 한 프롬프트 = <b>시트 한 장</b>(요소를 격자 칸에 정위치). "프롬프트 복사"는 공통 사양까지 한 번에 복사합니다. 시트를 대화에 올리면 칸별로 잘라 반입하고 이 목록에서 지웁니다.</p>
 {cards}
 <h2 style="margin-top:28px">반입 완료</h2>
 <ul class="done">{done}</ul>
