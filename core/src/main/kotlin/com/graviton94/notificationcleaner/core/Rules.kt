@@ -164,7 +164,7 @@ data class RuleSet(
     /** Backup files paid by a run that just reaches the reset level. */
     val backupBase: Long = 10,
     // Jackpot limits: luck jumps a few steps, never the whole run.
-    /** One swipe (chains, waves, 로또, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
+    /** One swipe (chains, waves, 행운 알림, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
     val swipeLevelCap: Int = 3,
     /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
     val jackpotCapFrom: Int = 10,

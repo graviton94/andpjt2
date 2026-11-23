@@ -47,7 +47,7 @@ enum class EventCard(val label: String, val unlockLevel: Int, val price: Long, v
     Firmware("펌웨어 업데이트", 37, 0, 60),
 
     /** Pays the previous swipe × 0 to 60 (half the time nothing): a gamble. */
-    Lotto("로또 알림", 61, 0, 45),
+    Lotto("행운 알림", 61, 0, 45),
 
     /** Arrives once a day on the first visit; swiping it pays ten minutes of recent income. */
     Birthday("생일 축하", 5, 0, 0),

@@ -139,7 +139,7 @@ fun contentDoc(): String = buildString {
     appendLine()
     appendLine("클라우드 동기화는 Lv${rules.syncLevel}부터. 회차·백업파일·백업 상점·초기화 횟수·최고 기록을 초기화하고, 앱 해금(역대 최고 레벨)·GB·클라우드 상점은 유지. GB 총량 = `⌊${rules.cloudBase} × (이번 주기 백업파일 ÷ Lv${rules.syncLevel} 회차의 백업파일)^${rules.cloudExponentPermille / 1000.0}⌋`, 지난 최고 주기를 넘긴 만큼만 지급. 백업파일 배율 = `1.5^압축 백업 × √(1 + ${rules.cloudFilePercent}% × 평생 GB)`.")
     appendLine()
-    appendLine("**한 방 상한** · Lv${rules.jackpotCapFrom}부터 스와이프 한 번(연쇄·과부하·로또·인증번호 포함)은 레벨을 최대 ${rules.swipeLevelCap}단계, 오프라인 정산 한 번은 ${rules.offlineLevelCap}단계까지만 올린다. 넘친 P는 '과열 보호'로 사라진다. 권역 × 카테고리 × 다양성 시너지 합계는 ×${rules.synergyCapPermille / 1000.0}까지(티어 한 칸 ×${rules.tierBase}보다 낮게).")
+    appendLine("**한 방 상한** · Lv${rules.jackpotCapFrom}부터 스와이프 한 번(연쇄·과부하·행운 알림·인증번호 포함)은 레벨을 최대 ${rules.swipeLevelCap}단계, 오프라인 정산 한 번은 ${rules.offlineLevelCap}단계까지만 올린다. 넘친 P는 '과열 보호'로 사라진다. 권역 × 카테고리 × 다양성 시너지 합계는 ×${rules.synergyCapPermille / 1000.0}까지(티어 한 칸 ×${rules.tierBase}보다 낮게).")
     appendLine()
     appendLine("## 9. 레벨 기준 누적 P")
     appendLine()

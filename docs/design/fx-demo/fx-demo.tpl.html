@@ -63,7 +63,7 @@ tr.on td{color:var(--acc);font-weight:700}
           <button type="button" data-ev="crash">앱 충돌</button>
           <button type="button" data-ev="call">스팸 전화</button>
           <button type="button" data-ev="battery">배터리 부족</button>
-          <button type="button" data-ev="lotto">복권</button>
+          <button type="button" data-ev="lotto">행운 알림</button>
           <button type="button" data-ev="dnd">방해 금지</button>
         </div>
         <p class="note">알림 훈련은 시연용으로 탭당 +2%(본편 +1%), 10초. 다른 돌발은 탭하지 않으면 3초 뒤 저절로 넘어갑니다.</p>
@@ -743,7 +743,7 @@ const EVENTS = {
     world(e) { ctx.fillStyle = `rgba(8,5,3,${.55 * Math.min(1, e.t * 5)})`; ctx.fillRect(-20, ROW0 - 8, W + 40, H); },
     ui(e, t) {
       const d = e.d, s = d.bs.x;
-      gtext('복권', 195, 304, 26, { top: '#FFFFFF', bot: '#FFD66B', alpha: Math.min(1, s) });
+      gtext('행운 알림', 195, 304, 26, { top: '#FFFFFF', bot: '#FFD66B', alpha: Math.min(1, s) });
       ctx.fillStyle = '#E8DCCB'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('절반 확률로 직전 스와이프 × 1~60', 195, 336);
       const miss = d.phase === 'res' && d.res === 0;
       box(195, 400, 200, 86, miss ? '#9A9A9A' : '#FFE27A', miss ? '#5A5A5A' : '#E09A00', s);
