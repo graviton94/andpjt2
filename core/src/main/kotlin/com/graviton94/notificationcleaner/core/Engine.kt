@@ -763,6 +763,49 @@ class Engine(val rules: RuleSet = RuleSet()) {
         return s.copy(wallet = s.wallet - price, appLevels = s.appLevels + (appId to level + 1))
     }
 
+    /** Bulk upgrade: up to [times] levels (x10 button), stopping when the wallet runs out. Returns the state and levels bought. */
+    fun upgradeMany(s: GameState, appId: String, times: Int): Pair<GameState, Int> {
+        var cur = s
+        var n = 0
+        while (n < times) {
+            val next = upgrade(cur, appId)
+            if (next === cur || next == cur) break
+            cur = next; n++
+        }
+        return cur to n
+    }
+
+    /** Max button: as many levels of one app as the wallet allows. */
+    fun upgradeMax(s: GameState, appId: String): Pair<GameState, Int> = upgradeMany(s, appId, Int.MAX_VALUE)
+
+    /** Total price of the next [times] levels of an app (what the x10 button shows). */
+    fun upgradeCost(s: GameState, appId: String, times: Int): BigInteger {
+        var total = ZERO
+        var cur = s
+        repeat(times) {
+            val p = upgradePrice(cur, appId)
+            total += p
+            cur = cur.copy(appLevels = cur.appLevels + (appId to (cur.appLevels[appId] ?: 1) + 1))
+        }
+        return total
+    }
+
+    /**
+     * 모두 강화: spends the wallet on the deck, always buying the cheapest next level among deck apps, so low
+     * tiers catch up first. Returns the state and how many levels were bought.
+     */
+    fun upgradeAll(s: GameState): Pair<GameState, Int> {
+        var cur = s
+        var n = 0
+        while (true) {
+            val id = cur.active.minByOrNull { upgradePrice(cur, it) } ?: break
+            val next = upgrade(cur, id)
+            if (next == cur) break
+            cur = next; n++
+        }
+        return cur to n
+    }
+
     fun buyEvent(s: GameState, card: EventCard): GameState {
         val price = rules.cardPrice(card)
         if (card in s.events || s.level < card.unlockLevel || s.wallet < price) return s

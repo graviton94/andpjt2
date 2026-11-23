@@ -1,6 +1,7 @@
 package com.graviton94.notificationcleaner.core
 
 import java.math.BigInteger
+import java.math.BigInteger.ZERO
 import java.math.BigInteger.valueOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -466,5 +467,30 @@ class CoreRulesTest {
         } finally {
             Catalog.packs = emptySet()
         }
+    }
+
+    @Test
+    fun bulkUpgradesSpendLikeSingleOnes() {
+        val s = e.newGame(now, 1).copy(wallet = valueOf(10_000))
+        val cost = e.upgradeCost(s, "memo", 10)
+        val (ten, n) = e.upgradeMany(s.copy(wallet = cost), "memo", 10)
+        assertEquals(10, n)
+        assertEquals(ZERO, ten.wallet)
+        assertEquals(11, ten.appLevels["memo"])
+        val (max, m) = e.upgradeMax(s, "memo")
+        assertTrue(m > 0 && e.upgradePrice(max, "memo") > max.wallet, "Max stops only when the next level is unaffordable")
+        // 모두 강화 buys the cheapest next level first: the deck ends up levelled evenly.
+        val (all, k) = e.upgradeAll(s)
+        assertTrue(k > 0)
+        val levels = s.active.map { all.appLevels.getValue(it) }
+        assertTrue(levels.max() - levels.min() <= 3, "even levels $levels")
+    }
+
+    @Test
+    fun upgradeGrowthCanRiseByTier() {
+        val steep = RuleSet(upgradeGrowthPerTierPermille = 20)
+        assertEquals(1_300, steep.upgradeGrowth(Catalog.app("memo")))
+        assertEquals(1_300 + 20 * 9, steep.upgradeGrowth(Catalog.app("tube")))
+        assertEquals(e.rules.upgradeGrowth(Catalog.app("tube")), e.rules.upgradeGrowth(Catalog.app("memo")), "off by default")
     }
 }

@@ -67,6 +67,11 @@ data class RuleSet(
     val upgradeSharePermille: Int = 250,
     val upgradeBase: Long = 25,
     val upgradeGrowthPermille: Int = 1_300,
+    /**
+     * Extra upgrade growth per tier above 1, in ‰ (research: low tiers cheap to catch up, high tiers steep).
+     * 0 keeps one growth for every tier; turning it on is an economy change and needs a simulator pass.
+     */
+    val upgradeGrowthPerTierPermille: Int = 0,
     // Progress
     val resetLevel: Int = 25,
     /**
@@ -180,9 +185,12 @@ data class RuleSet(
         return ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
     }
 
+    fun upgradeGrowth(app: AppDef): Int = upgradeGrowthPermille + upgradeGrowthPerTierPermille * (app.tier - 1)
+
     fun upgradePrice(app: AppDef, level: Int): BigInteger {
         val base = appPrice(app) * big(upgradeSharePermille.toLong()) / big(1_000)
-        return (base * big(upgradeGrowthPermille.toLong()).pow(level - 1) / big(1_000).pow(level - 1)).max(ONE)
+        val g = upgradeGrowth(app).toLong()
+        return (base * big(g).pow(level - 1) / big(1_000).pow(level - 1)).max(ONE)
     }
 
 
