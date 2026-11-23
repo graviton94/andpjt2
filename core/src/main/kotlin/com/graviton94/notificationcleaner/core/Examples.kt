@@ -132,6 +132,7 @@ fun firstReset(): Pair<GameState, GameState> {
 
 fun main(args: Array<String> = emptyArray()) {
     if (args.firstOrNull() == "content") return print(contentDoc())
+    if (args.firstOrNull() == "bench") return bench()
     for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (게이지 80, 깊이 3)" to overload(),
         "4 강화 후 같은 스와이프" to upgraded(), "5 점화제" to igniter(), "7 와일드" to wildMerge(), "8 @모두 공지" to allHands())) {
         val (s, o) = pair
@@ -153,4 +154,32 @@ fun main(args: Array<String> = emptyArray()) {
     val (run, next) = firstReset()
     println("### 예시 10 첫 공장 초기화")
     println("- 백업파일 ${engine.backupFilesNow(run)} · 구매 후 남은 ${next.backup.files} · ${next.backup.items}")
+}
+
+/** Swipe and save cost on the JVM (22 greybox budget: a swipe ≤ 2 ms). `./gradlew -p core run --args=bench` */
+fun bench() {
+    val e = Engine()
+    var s = e.newGame(0, 11)
+    var t = 0L
+    val swipeNs = mutableListOf<Long>(); val planNs = mutableListOf<Long>(); val saveNs = mutableListOf<Long>()
+    repeat(3_000) { i ->
+        t += 3_000
+        s = e.tick(s, t)
+        val target = s.rows.last().id
+        val a = System.nanoTime()
+        val o = e.swipe(s, target, t) ?: return@repeat
+        val b = System.nanoTime()
+        FxPlan.plan(o)
+        val c = System.nanoTime()
+        val text = SaveCodec.encode(o.state)
+        val d = System.nanoTime()
+        s = o.state
+        if (i > 500) { swipeNs += b - a; planNs += c - b; saveNs += d - c }
+        if (i % 200 == 0) s = s.copy(level = s.level + 4, appLevels = s.appLevels.mapValues { it.value + 20 })
+        if (i == 2_999) println("save size ${text.length} chars")
+    }
+    fun p(xs: List<Long>, q: Double) = xs.sorted()[((xs.size - 1) * q).toInt()] / 1_000.0
+    println("swipe  p50 ${p(swipeNs, .5)} µs  p99 ${p(swipeNs, .99)} µs")
+    println("fxplan p50 ${p(planNs, .5)} µs  p99 ${p(planNs, .99)} µs")
+    println("save   p50 ${p(saveNs, .5)} µs  p99 ${p(saveNs, .99)} µs")
 }

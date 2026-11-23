@@ -65,6 +65,6 @@
 
 ## 6. 성능 · 품질 예산
 
-- 판 계산(스와이프 1회) ≤ 2ms (core는 JVM에서 측정, BigInteger는 표시 직전에만 문자열).
+- 판 계산(스와이프 1회) ≤ 2ms. **JVM 실측(11-23, `gradle -p core run --args=bench`)**: 스와이프 p50 34µs·p99 166µs, 연출 계획 p50 1µs, 저장 인코딩 p50 23µs·p99 83µs. 폰(대략 5~10배 느림)에서도 예산 안. BigInteger는 표시 직전에만 문자열.
 - 프레임 16ms 중 FX ≤ 2ms(Pixel 6a), 저사양 자동 강등.
 - 저장 ≤ 20KB JSON, 스와이프마다 비동기 원자적 쓰기(DataStore).
