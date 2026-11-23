@@ -58,7 +58,7 @@ fun contentDoc(): String = buildString {
     appendLine()
     appendLine("> 이 문서는 `./gradlew -p core run --args=\"content\"`가 엔진 데이터(`Content.kt`, `Rules.kt`)에서 만든다. 손으로 고치지 말고 코드를 고친 뒤 다시 생성한다. 규칙 버전 ${rules.version}.")
     appendLine()
-    appendLine("## 1. 알림 앱 24종")
+    appendLine("## 1. 알림 앱 ${Catalog.apps.size}종")
     appendLine()
     appendLine("| # | ID | 이름 | 티어 | 권역 | 카테고리 | 해금 | 초기화 조건 | 가격 | 알림 1개 가치 | 프로 해금 | 프로 가격 |")
     appendLine("|---:|---|---|---:|---|---|---:|---:|---:|---:|---:|---:|")
@@ -149,4 +149,34 @@ fun contentDoc(): String = buildString {
     ls.chunked(3).forEach { row -> appendLine("| " + row.joinToString(" | ") { "Lv$it | ${short(rules.levelP(it))}" } + " |") }
     appendLine()
     appendLine("`Lv L = ${rules.levelPBase} × ${rules.levelRatioPermille / 1000.0}^(L−2)`, Lv${rules.levelLateFrom}부터 배수가 레벨마다 +${rules.levelRatioStepPermille / 1000.0}. 오프라인: 자동 정리 기준 속도(직접의 ${rules.offlineAutoPermille / 10}%) × 효율 ${rules.offlineEfficiencyPercent}%, 상한 ${steps(rules.offlineCapSteps, "시간")}.")
+    appendLine()
+    appendLine("## 10. 수익화 (17장)")
+    appendLine()
+    appendLine("**프리미엄 ★** · ★마다 그 앱 가치 ×${rules.premiumStepPermille / 1000.0}, 해금했던 앱이면 언제든, 영구.")
+    appendLine()
+    appendLine("| 티어 | ★1 | ★2 | ★3 | ★4 | ★5 | 합계 |")
+    appendLine("|---:|---:|---:|---:|---:|---:|---:|")
+    (1..10).forEach { tier -> Catalog.apps.firstOrNull { it.tier == tier }?.let { a -> val c = (1..5).map { rules.premiumCost(a, it) }; appendLine("| $tier | " + c.joinToString(" | ") + " | ${c.sum()} |") } }
+    appendLine()
+    appendLine("**보상형 광고 지면** (하루 상한, 패스는 광고 없이)")
+    appendLine()
+    appendLine("| 지면 | 하루 |"); appendLine("|---|---:|")
+    AdSlot.entries.forEach { appendLine("| ${it.label} | ${it.daily} |") }
+    appendLine()
+    appendLine("**데이터 상점**")
+    appendLine()
+    appendLine("| 항목 | 데이터 | 하루 |"); appendLine("|---|---:|---:|")
+    CreditItem.entries.forEach { appendLine("| ${it.label} | ${it.price} | ${it.daily} |") }
+    appendLine()
+    appendLine("**속도 구독** (월간 패스 포함) · 월간 패스: 즉시 ${rules.passInstantCredits} + 매일 ${rules.passDailyCredits} 데이터 + 오버클럭 ${rules.passOverclockMinutes}분")
+    appendLine()
+    appendLine("| 구독 | 가격 | 속도 | 환생 재화 | 매일 데이터 추가 |"); appendLine("|---|---:|---:|---:|---:|")
+    SpeedPass.entries.forEach { appendLine("| ${it.label} | ₩${"%,d".format(it.won)} | ×${it.speedPermille / 1000} | ×${it.prestigePermille / 1000.0} | ${it.dailyData} |") }
+    appendLine()
+    appendLine("**30일 연속 출석판** (끊기면 1일차)")
+    appendLine()
+    appendLine("| 일 | 데이터 | 티켓 | ★ 선택권 | 칭호 |"); appendLine("|---:|---:|---|---:|---|")
+    rules.attendanceBoard.forEachIndexed { i, r -> appendLine("| ${i + 1} | ${r.data} | ${r.tickets.entries.joinToString(" ") { "${it.key.label} ×${it.value}" }} | ${r.starVouchers.takeIf { it > 0 } ?: ""} | ${r.title ?: ""} |") }
+    appendLine()
+    appendLine("한 판 데이터 ${rules.attendanceBoard.sumOf { it.data }}, 일일 미션 ${rules.missionCredits}/일, 광고 데이터 상자 ${rules.adCredits}.")
 }
