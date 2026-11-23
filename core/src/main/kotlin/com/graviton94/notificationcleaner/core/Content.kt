@@ -89,8 +89,8 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
  * over the first syncs so every sync opens something new.
  */
 enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int) {
-    Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 1_600, 1),
-    SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 1_700, 1),
+    Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 2_500, 1),
+    SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 3_000, 1),
     /** Raises the 알림 가치 backup item's max by 10: each sync moves the first layer's ceiling up. */
     ValueCap("알림 가치 한도 +10", 20, 2, 1_600, 1),
     Discount("백업 상점 −10%", 5, 3, 2_000, 2),
