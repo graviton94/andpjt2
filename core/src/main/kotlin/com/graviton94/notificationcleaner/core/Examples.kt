@@ -60,7 +60,7 @@ fun upgraded(): Pair<GameState, SwipeOutcome> =
     overload().first.let { it.copy(appLevels = it.appLevels + ("alarm" to 10) + ("memo" to 4)) }.let { it to engine.swipe(it, 103, NOW)!! }
 
 /**
- * 5: igniter. Deck 오분만(1티어) · 메롱(3티어) · 아고다다(6티어). A 오분만 burst under a 6-tier deck adds
+ * 5: igniter. Deck 시계(1티어) · 메롱(3티어) · 아고다다(6티어). A 시계 burst under a 6-tier deck adds
  * 12 + 4×5 = 32 gauge and raises the chain number, so the 6-tier burst after it pays ×3.
  */
 fun igniter(): Pair<GameState, SwipeOutcome> = with(

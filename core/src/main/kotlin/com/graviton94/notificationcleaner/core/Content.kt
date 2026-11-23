@@ -116,19 +116,19 @@ object Catalog {
 
     val apps = listOf(
         // 1티어
-        app("alarm", "오분만", 1, 0, ST, Category.Work, 1), // 기본 시계
-        app("weather", "맑음예보", 1, 1, ST, Category.Daily, 1), // 기본 날씨
-        app("memo", "메모장끝", 1, 2, ST, Category.Work, 1), // 기본 메모
-        app("flash", "번쩍등", 1, 3, ST, Category.Daily, 2), // 기본 손전등
-        app("calc", "계산했산", 1, 4, ST, Category.Money, 3), // 기본 계산기
-        app("recorder", "녹음했음", 1, 5, ST, Category.Daily, 4), // 기본 녹음기
+        app("alarm", "시계", 1, 0, ST, Category.Work, 1), // 기본 시계
+        app("weather", "날씨", 1, 1, ST, Category.Daily, 1), // 기본 날씨
+        app("memo", "메모", 1, 2, ST, Category.Work, 1), // 기본 메모
+        app("flash", "손전등", 1, 3, ST, Category.Daily, 2), // 기본 손전등
+        app("calc", "계산기", 1, 4, ST, Category.Money, 3), // 기본 계산기
+        app("recorder", "음성 녹음", 1, 5, ST, Category.Daily, 4), // 기본 녹음기
         // 2티어
-        app("phone", "전화왔숑", 2, 0, ST, Category.Social, 5), // 기본 전화
-        app("sms", "문자왔숑", 2, 1, ST, Category.Social, 6), // 기본 메시지
-        app("camera", "찰칵찰칵", 2, 2, ST, Category.Media, 7), // 기본 카메라
-        app("gallery", "추억소환", 2, 3, ST, Category.Media, 8), // 기본 갤러리
-        app("contacts", "누구세요", 2, 4, ST, Category.Social, 9), // 기본 연락처
-        app("settings", "설정했셈", 2, 5, ST, Category.Daily, 11), // 기본 설정
+        app("phone", "전화", 2, 0, ST, Category.Social, 5), // 기본 전화
+        app("sms", "메시지", 2, 1, ST, Category.Social, 6), // 기본 메시지
+        app("camera", "카메라", 2, 2, ST, Category.Media, 7), // 기본 카메라
+        app("gallery", "갤러리", 2, 3, ST, Category.Media, 8), // 기본 갤러리
+        app("contacts", "연락처", 2, 4, ST, Category.Social, 9), // 기본 연락처
+        app("settings", "설정", 2, 5, ST, Category.Daily, 11), // 기본 설정
         // 3티어
         app("music", "메롱", 3, 0, AS, Category.Media, 12), // Melon 패러디
         app("papago", "마마고", 3, 1, AS, Category.Work, 13), // Papago 패러디

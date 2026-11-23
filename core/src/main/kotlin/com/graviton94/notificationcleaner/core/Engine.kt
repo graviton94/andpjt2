@@ -207,8 +207,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
     // Game lifecycle --------------------------------------------------------------------------
 
     /**
-     * First board of a run. Fixed so the first ten seconds teach one thing: the middle row (맑음예보) sits
-     * between two 메모장끝 rows of 2; removing it makes them touch, reach 4 and burst.
+     * First board of a run. Fixed so the first ten seconds teach one thing: the middle row (날씨) sits
+     * between two 메모 rows of 2; removing it makes them touch, reach 4 and burst.
      */
     fun newGame(now: Long, seed: Long, backup: Backup = Backup()): GameState {
         val layout = listOf("alarm" to 1, "weather" to 2, "memo" to 2, "weather" to 1, "memo" to 2, "alarm" to 1, "weather" to 2)

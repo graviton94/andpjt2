@@ -16,7 +16,7 @@ HTML = ROOT / "docs/content/notification-catalog.html"
 REGION = {"ST": "ST", "AS": "AS", "SE": "SE", "WE": "WE", "GL": "GL"}
 # Non-app unlocks by level (cards, slots, caps, docs-only content in <b>). Apps and pro versions are added from the engine.
 EXTRA = {
-    1: "덱 3 · 스팸 · 오프라인 8시간", 2: "전화", 3: "덱 최대 4 · 상점", 4: "업데이트 카드", 5: "<b>생일 축하 카드</b>",
+    1: "덱 3 · 스팸 · 오프라인 8시간", 2: "전화 돌발", 3: "덱 최대 4 · 상점", 4: "업데이트 카드", 5: "<b>생일 축하 카드</b>",
     6: "이벤트 슬롯 1", 7: "오프라인 10시간", 8: "과부하 깊이 · 덱 최대 5", 9: "<b>배터리 부족(돌발)</b>",
     10: "샌드위치 · 덱 최소 4", 11: "<b>일일 도전</b>", 12: "넓은 알림창", 13: "<b>방해 금지 카드</b>",
     14: "@모두 공지 · 이벤트 슬롯 2", 15: "<b>알림훈련 카드</b>", 16: "인증번호 카드", 18: "<b>꾸미기: 테마 1</b>",
