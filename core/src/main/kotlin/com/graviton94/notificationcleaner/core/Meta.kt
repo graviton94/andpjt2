@@ -91,5 +91,35 @@ class Meta(private val engine: Engine) {
 
     /** 꾸미기 조각 → one free-line cosmetic. */
     fun redeemPieces(s: GameState): GameState? = if (s.account.pieces < 10) null else s.withAccount { it.copy(pieces = it.pieces - 10) }
-}
 
+    // 일일 도전 (18 meta-and-ops §1) ------------------------------------------------------------
+
+    /** Keys a day: 2, 3 from Lv52 (best level ever). Never sold. */
+    fun challengeKeys(s: GameState, now: Long): Int {
+        val cap = if (maxOf(s.backup.bestLevel, s.level) >= 52) 3 else 2
+        return if (s.account.challengeDay != dayOf(now)) cap else cap - s.account.challengeKeys
+    }
+
+    /** Today's board: the same seed and the same six-app deck for everyone, fixed levels, no account bonuses. */
+    fun challengeBoard(now: Long): GameState {
+        val day = dayOf(now)
+        val pool = Catalog.apps.filter { it.tier in 3..8 }
+        val deck = (0 until pool.size).map { pool[Math.floorMod(day * 31 + it * 17, pool.size.toLong()).toInt()].id }.distinct().take(6)
+        val g = engine.newGame(now, 0x5EED0000L + day)
+        return g.copy(level = 40, appLevels = deck.associateWith { 30 }, active = deck, energy = 60)
+    }
+
+    /** Uses a key: returns the board to play for 60 seconds, or null with no keys left. */
+    fun startChallenge(s: GameState, now: Long): Pair<GameState, GameState>? {
+        if (challengeKeys(s, now) <= 0) return null
+        val used = s.withAccount { a -> a.copy(challengeDay = dayOf(now), challengeKeys = if (a.challengeDay == dayOf(now)) a.challengeKeys + 1 else 1) }
+        return used to challengeBoard(now)
+    }
+
+    /** Finishes a run: score = P earned in the window; a new best pays 2 pieces, a finish 1. */
+    fun finishChallenge(s: GameState, board: GameState): GameState {
+        val score = board.runEarned
+        val best = java.math.BigInteger(s.account.challengeBest)
+        return s.withAccount { a -> a.copy(pieces = a.pieces + if (score > best) 2 else 1, challengeBest = score.max(best).toString()) }
+    }
+}

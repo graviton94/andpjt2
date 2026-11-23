@@ -698,4 +698,21 @@ class CoreRulesTest {
         assertNull(shop.claimOnce(once, "gpa.1234") { shop.credit(it, 550, bought = true) })
         assertEquals(once, SaveCodec.decode(SaveCodec.encode(once)))
     }
+
+    @Test
+    fun dailyChallengeIsTheSameBoardForEveryoneWithTwoKeys() {
+        val e = Engine(); val meta = Meta(e); val now = 10 * 86_400_000L
+        assertEquals(meta.challengeBoard(now), meta.challengeBoard(now + 3_600_000))
+        assertEquals(6, meta.challengeBoard(now).active.size)
+        var s = e.newGame(0, 1)
+        var board: GameState? = null
+        repeat(2) { val (a, b) = meta.startChallenge(s, now)!!; s = a; board = b }
+        assertNull(meta.startChallenge(s, now))
+        var b = board!!; var t = now
+        while (t < now + 60_000) { t += 1_000; b = e.tick(b, t); e.bestTarget(b, t)?.let { id -> e.swipe(b, id, t)?.let { b = it.state } } }
+        s = meta.finishChallenge(s, b)
+        assertEquals(2, s.account.pieces)
+        assertEquals(b.runEarned.toString(), s.account.challengeBest)
+        assertNotNull(meta.startChallenge(s, now + 86_400_000L))
+    }
 }

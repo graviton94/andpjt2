@@ -60,6 +60,10 @@ data class Account(
     val missionProgressDay: Long = -1,
     /** 꾸미기 조각 from achievements and the daily challenge: 10 = one free cosmetic. */
     val pieces: Int = 0,
+    /** 일일 도전: day of the last key use, keys used that day, personal best score. */
+    val challengeDay: Long = -1,
+    val challengeKeys: Int = 0,
+    val challengeBest: String = "0",
     /** Recently granted claim ids (purchase tokens, ad rewards): a claim is paid once (21 platform). */
     val processedClaims: List<String> = emptyList(),
     val missionDay: Long = -1,
