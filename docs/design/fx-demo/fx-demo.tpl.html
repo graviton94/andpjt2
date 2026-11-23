@@ -39,14 +39,14 @@ tr.on td{color:var(--acc);font-weight:700}
 <body>
 <main class="band">
   <h1>탭하면 터진다: 알림 청소부 타격감 시연</h1>
-  <p class="lead">알림을 탭하면 연쇄가 위로 번집니다. 터질 때마다 파란 <b>칩</b>에 점수가, 빨간 <b>배율</b>에 연쇄 번호가 한 박자씩 쌓이고, 연쇄가 끝나면 둘이 곱해져 한 방에 지갑으로 꽂힙니다. 소리를 켜고 들어 보세요.</p>
+  <p class="lead">알림을 탭하면 연쇄가 위로 번집니다. 터질 때마다 파란 <b>칩</b>에 점수가, 빨간 <b>배율</b>에 연쇄 번호가 한 박자씩 쌓이고, 연쇄가 끝나면 판 가운데에서 합계가 촤르륵 올라가다 쾅 찍히고, 지갑으로 꽂힙니다. 판은 시연용이라 아무 데나 눌러도 고른 길이만큼 터집니다. 소리를 켜고 들어 보세요.</p>
   <div class="wrap">
     <div class="phone"><canvas id="stage" aria-label="알림 판. 탭하면 연쇄 폭발" role="img"></canvas></div>
     <div class="panel">
       <section class="group">
         <h2>연쇄 길이</h2>
         <div class="row" id="chains"></div>
-        <p class="note">판의 아무 알림이나 탭하세요. 단위가 바뀌는 순간(억 → 조)을 노려 보세요.</p>
+        <p class="note">판의 아무 알림이나 탭하세요. 지갑 단위가 바뀌는 순간(M → B → T)을 노려 보세요.</p>
       </section>
       <section class="group">
         <h2>특수 연출</h2>
@@ -110,13 +110,15 @@ const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 const ramp = h => { const c = hex(h); return [mixc(c, [0, 0, 0], .45), c, mixc(c, [255, 255, 255], .35), mixc(c, [255, 255, 255], .7), [255, 255, 255]]; };
 
 // Korean big-number format, no trailing .0
-const UNITS = [[1e20, '해'], [1e16, '경'], [1e12, '조'], [1e8, '억'], [1e4, '만']];
+// global idle notation: 999 · 1.23K · 12.3K · 123K · M · B · T · aa, ab …
+const SUF = g => g === 0 ? '' : g < 5 ? ['K', 'M', 'B', 'T'][g - 1] : String.fromCharCode(97 + Math.floor((g - 5) / 26)) + String.fromCharCode(97 + (g - 5) % 26);
 const split = n => {
-  for (const [v, u] of UNITS) if (n >= v) { const x = n / v; return { num: x >= 1000 ? Math.round(x).toLocaleString('ko-KR') : x >= 100 ? String(Math.round(x)) : String(Math.round(x * 10) / 10), unit: u }; }
-  return { num: Math.round(n).toLocaleString('ko-KR'), unit: '' };
+  if (n < 1000) return { num: String(Math.floor(n)), unit: '' };
+  const g = Math.floor(Math.log10(n) / 3), x = n / Math.pow(1000, g), d = x >= 100 ? 0 : x >= 10 ? 1 : 2, f = Math.pow(10, d);
+  return { num: String(Math.floor(x * f) / f), unit: SUF(g) };
 };
 const fmt = n => { const s = split(n); return s.num + s.unit; };
-const fmtMult = m => m >= 100 ? Math.round(m).toLocaleString('ko-KR') : String(Math.round(m * 10) / 10);
+const fmtMult = m => m >= 1000 ? fmt(m) : String(Math.round(m * 10) / 10);
 const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; };
 
 // ---------- sound: layered synth through compressor + short echo ----------
@@ -193,9 +195,9 @@ const ROW0 = 168, ROWH = 72, CH = 60;
 const rowY = i => ROW0 + i * ROWH;
 const rows = Array.from({ length: 7 }, (_, i) => ({ app: (i * 3) % APPS.length, n: 1 + (i * 5) % 3, msg: MSG[i % MSG.length], dy: spring(0), sc: spring(1), a: 1, charge: 0 }));
 const VAL = [1.2e5, 3.4e5, 8.8e5, 2.1e6];
-const wallet = { v: 8.2e7, shown: 8.2e7, from: 8.2e7, to: 8.2e7, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '만', tick: 0, note: null };
+const wallet = { v: 8.2e7, shown: 8.2e7, from: 8.2e7, to: 8.2e7, t: 1, dur: .6, s: spring(1), us: spring(1), unit: 'M', tick: 0, note: null };
 const CHIPX = 118, MULTX = 272, BOXY = 129;
-const plate = { on: 0, chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, cap: 0, capMode: false, capT: 9 };
+const plate = { on: 0, chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, cap: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '' };
 const mult = () => plate.base * plate.syn * plate.wmul;
 const parts = [], tokens = [], pops = [], timeline = [];
 let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [];
@@ -233,8 +235,9 @@ function burst(idx, k) {
   if (k >= 6) spawn('RING', 195, y, 0, 0, .5, pal[2], 20);
   // value: pop at the card, then an orb carries it into the chip box
   const val = nice(VAL[r.app % 4] * r.n * (1 + rnd() * .4));
-  pops.push({ x: 318, y: y + 8, text: '+' + fmt(val), t: 0, life: .55, col: pal[3] });
-  while (pops.length > 3) pops.shift();
+  pops.push({ x: 220 + rnd() * 110, y: y - 2, text: '+' + fmt(val), t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
+  pops.push({ x: 120 + rnd() * 60, y: y + 22, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
+  while (pops.length > 8) pops.shift();
   tokens.push({ x0: 318, y0: y, cx: 60 + rnd() * 60, cy: y - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: pal[2], r: 7, done: () => { plate.chips += val; kick(plate.cs, 14); sfx.chip(k); for (let i = 0; i < 8; i++) spawn('SPARK', CHIPX, BOXY, (rnd() - .5) * 500, (rnd() - .5) * 300, .2, [140, 200, 255], 2); } });
   plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); sfx.mult(k);
   if (k === 3 || k === 7) after(.12, () => tokens.push({ x0: 340, y0: 200, cx: 360, cy: 150, x1: MULTX, y1: BOXY, t: 0, dur: .32, col: [255, 214, 107], text: '시너지 ×1.22', r: 0, done: () => { plate.syn *= 1.22; kick(plate.ms, 16); sfx.badge(); } }));
@@ -259,26 +262,33 @@ function waveHit(w) {
   stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1;
   sfx.wave(w); buzz([20, 30, 40]);
 }
+const REVEAL_Y = 360;
 function payoff() {
   plate.phase = 'merge'; plate.merge = 0; sfx.whoosh();
   after(.16, () => {
-    plate.total = plate.chips * mult();
-    plate.phase = 'show'; plate.showT = 0; plate.ts.x = .2; kick(plate.ts, 30);
-    sfx.payoff(plate.k); buzz([30, 40, 60]);
-    for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 240; spawn('STAR', 195, BOXY, Math.cos(a) * sp, Math.sin(a) * sp, .6 + rnd() * .4, [255, 230, 150], 5 + rnd() * 6); }
-    spawn('CORE', 195, BOXY, 0, 0, .2, [255, 220, 140], 200);
-    if (!reduce) shake = Math.max(shake, 3.5);
-    if (plate.capMode) after(.32, overheat);
+    plate.total = plate.chips * mult(); plate.eq = `${fmt(plate.chips)} × ${fmtMult(mult())}`;
+    plate.phase = 'show'; plate.showT = 0; plate.count = 0; plate.landed = false; plate.ts.x = .6; kick(plate.ts, 12);
+    plate.record = plate.total > plate.best; if (plate.record) plate.best = plate.total;
   });
-  after(plate.capMode ? 1.25 : .85, () => {
+  const hold = .16 + .62 + (plate.capMode ? .85 : .5);
+  after(hold, () => {
     plate.phase = 'fly';
-    tokens.push({ x0: 195, y0: BOXY, cx: 360, cy: 70, x1: 195, y1: 36, t: 0, dur: .38, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; const p = pending.shift(); if (p) after(.15, () => runChain(...p)); } });
+    tokens.push({ x0: 195, y0: REVEAL_Y, cx: 380, cy: 160, x1: 195, y1: 36, t: 0, dur: .4, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; const p = pending.shift(); if (p) after(.15, () => runChain(...p)); } });
   });
+}
+function slam() { // end of the count-up: the hit
+  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
+  for (let i = 0; i < (reduce ? 12 : 46); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('STAR', 195, REVEAL_Y - 14, Math.cos(a) * sp, Math.sin(a) * sp * .7, .7 + rnd() * .5, [255, 225, 140], 5 + rnd() * 7); }
+  for (let i = 0; i < (reduce ? 10 : 40); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 400; spawn('SPARK', 195, REVEAL_Y - 14, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 190, 90], 2.6); }
+  spawn('CORE', 195, REVEAL_Y - 14, 0, 0, .25, [255, 210, 120], 240); spawn('RING', 195, REVEAL_Y - 14, 0, 0, .5, [255, 200, 110], 20);
+  if (!reduce) shake = Math.max(shake, 4);
+  if (plate.record) after(.08, () => sfx.badge());
+  if (plate.capMode) after(.25, overheat);
 }
 function overheat() {
   plate.total *= .4; plate.capT = 0; kick(plate.ts, -8);
-  for (let i = 0; i < (reduce ? 12 : 44); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 220, BOXY + 10, (rnd() - .5) * 120, -60 - rnd() * 120, 1.2 + rnd() * .5, [235, 235, 235], 12 + rnd() * 14);
-  if (!reduce) shake = 5; sfx.stamp(); buzz(60);
+  for (let i = 0; i < (reduce ? 12 : 44); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 220, REVEAL_Y, (rnd() - .5) * 120, -60 - rnd() * 120, 1.2 + rnd() * .5, [235, 235, 235], 12 + rnd() * 14);
+  if (!reduce) shake = 5; sfx.stamp(); buzz(60); plate.totalShown = plate.total;
 }
 function addWallet(x) {
   wallet.from = wallet.shown; wallet.to = wallet.v + x; wallet.v = wallet.to; wallet.t = 0; wallet.dur = x > wallet.from ? .7 : .4; wallet.tick = 0;
@@ -338,10 +348,10 @@ function box(cx, cy, w, h, c0, c1, s) {
   ctx.fillStyle = 'rgba(255,255,255,.25)'; rr(-w / 2 + 6, -h / 2 + 4, w - 12, 6, 3); ctx.fill();
   ctx.restore();
 }
-function flames(cx, cy, w, h, t, amt) {
+function flames(cx, cy, w, h, t, amt, hm = 1) {
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 9; i++) {
-    const x = cx - w / 2 + 8 + i * (w - 16) / 8, fh = (10 + 12 * amt) * (.6 + .4 * Math.sin(t * 23 + i * 2.1)) + 6 * Math.sin(t * 13 + i);
+    const x = cx - w / 2 + 8 + i * (w - 16) / 8, fh = hm * ((10 + 12 * amt) * (.6 + .4 * Math.sin(t * 23 + i * 2.1)) + 6 * Math.sin(t * 13 + i));
     const g = ctx.createLinearGradient(0, cy - h / 2 - fh, 0, cy - h / 2 + 4);
     g.addColorStop(0, 'rgba(255,220,120,0)'); g.addColorStop(.5, `rgba(255,140,40,${.55 * amt})`); g.addColorStop(1, `rgba(255,70,20,${.8 * amt})`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 9, cy - h / 2 + 4); ctx.quadraticCurveTo(x - 4, cy - h / 2 - fh * .5, x + Math.sin(t * 17 + i) * 3, cy - h / 2 - fh); ctx.quadraticCurveTo(x + 4, cy - h / 2 - fh * .5, x + 9, cy - h / 2 + 4); ctx.fill();
@@ -362,9 +372,9 @@ function draw(t) {
   ctx.fillStyle = sub; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'left'; ctx.fillText('Lv 42', 24, 32); ctx.textAlign = 'right'; ctx.fillText('덱 9/12', 366, 32);
   const ws = split(wallet.shown);
   ctx.font = `30px ${FD}`; const nw = ctx.measureText(ws.num).width; ctx.font = `24px ${FD}`; const uw = ctx.measureText(ws.unit + ' P').width;
-  const wx = 195 - (nw + uw + 4) / 2;
+  const wx = 195 - (nw + uw + 1) / 2;
   gtext(ws.num, wx, 46, 30, { align: 'left', scale: wallet.s.x, top: '#FFFFFF', bot: '#FFE2A0' });
-  ctx.save(); ctx.translate(wx + nw + 4 + uw / 2, 40); ctx.scale(wallet.us.x, wallet.us.x); gtext(ws.unit + ' P', 0, 6, 24, { top: '#FFF3C4', bot: '#FFB020' }); ctx.restore();
+  ctx.save(); ctx.translate(wx + nw + 1 + uw / 2, 40); ctx.scale(wallet.us.x, wallet.us.x); gtext(ws.unit + ' P', 0, 6, 24, { top: '#FFF3C4', bot: '#FFB020' }); ctx.restore();
   if (wallet.note) { const f = clamp(1 - wallet.note.t / 1.1, 0, 1); gtext(wallet.note.text, 322, 74, 20, { rot: -.12, appear: wallet.note.t * 5, alpha: Math.min(1, f * 3), top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t }); }
 
   // shaken world: plate + cards + particles
@@ -428,12 +438,19 @@ function draw(t) {
     ctx.globalAlpha = 1;
     if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
-  if (plate.phase === 'show' || plate.phase === 'merge' && plate.merge > .9) {
-    const s = plate.ts.x;
-    gtext(fmt(plate.total), 195, BOXY + 14, 40, { scale: s, top: '#FFFFFF', bot: '#FFC23D', wob: 1.6, t, appear: plate.showT * 7 });
+  if (plate.phase === 'show') {
+    const a = Math.min(1, plate.showT * 6), big = clamp(Math.log10(Math.max(1, plate.total / 1e6)) / 3, 0, 1);
+    ctx.fillStyle = `rgba(8,5,3,${.62 * a})`; ctx.fillRect(0, ROW0 - 8, W, H - ROW0);
+    gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
+    gtext('합계', 195, REVEAL_Y - 104, 16, { top: '#FFE7B0', bot: '#FFB020', alpha: a });
+    const num = fmt(plate.totalShown), size = 58 + big * 14;
+    ctx.font = `${size}px ${FD}`; const tw = Math.min(340, ctx.measureText(num).width), sc = Math.min(1, 340 / ctx.measureText(num).width);
+    if (plate.landed && !reduce) flames(195, REVEAL_Y - size * .3, tw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
+    gtext(num, 195, REVEAL_Y, size * sc, { scale: plate.ts.x, top: '#FFFFFF', bot: plate.landed ? '#FF9A1F' : '#FFD66B', wob: plate.landed ? 2.2 : .6, t });
+    if (plate.record && plate.landed) gtext('최고 기록!', 195, REVEAL_Y + 46, 24, { appear: (plate.showT - .62) * 6, rot: -.06, top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t });
     if (plate.capT < 9) {
-      const p = clamp(plate.capT / .12, 0, 1), sc = 2.4 - 1.4 * (1 - Math.pow(1 - p, 3));
-      ctx.save(); ctx.translate(195, BOXY - 30); ctx.rotate(-.14); ctx.scale(sc, sc); ctx.globalAlpha = p;
+      const p = clamp(plate.capT / .12, 0, 1), sc2 = 2.4 - 1.4 * (1 - Math.pow(1 - p, 3));
+      ctx.save(); ctx.translate(195, REVEAL_Y + 54); ctx.rotate(-.14); ctx.scale(sc2, sc2); ctx.globalAlpha = p;
       ctx.lineWidth = 4; ctx.strokeStyle = '#FF3B30'; rr(-78, -20, 156, 40, 8); ctx.stroke();
       gtext('과열 보호', 0, 11, 26, { top: '#FFB4AA', bot: '#FF3B30' }); ctx.restore();
     }
@@ -453,7 +470,7 @@ function draw(t) {
   }
   for (const p of pops) {
     const f = p.t / p.life;
-    gtext(p.text, p.x, p.y - f * 22, 19, { appear: p.t * 9, alpha: Math.min(1, (1 - f) * 3), top: '#FFFFFF', bot: rgb(p.col) });
+    if (p.t > 0) gtext(p.text, p.x, p.y - Math.pow(f, .5) * 34, p.size, { appear: p.t * 9, rot: p.rot, alpha: Math.min(1, (1 - f) * 3), top: '#FFFFFF', bot: p.red ? '#FF6B5A' : '#6FB6FF', wob: 1.2, t });
   }
   if (flash > 0) { ctx.fillStyle = `rgba(255,246,220,${flash})`; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = day ? 'rgba(22,24,29,.5)' : 'rgba(246,241,234,.5)'; rr(135, H - 16, 120, 5, 3); ctx.fill();
@@ -482,6 +499,12 @@ function frame(now) {
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .7);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
+  if (plate.phase === 'show' && !plate.landed) {
+    plate.count = Math.min(1, plate.showT / .62); const e = 1 - Math.pow(1 - plate.count, 2.2);
+    plate.totalShown = plate.total * e; kick(plate.ts, .25);
+    plate.tick = (plate.tick || 0) - dt; if (plate.tick <= 0) { sfx.coin(plate.count * .9); plate.tick = .04; }
+    if (plate.count >= 1) { plate.totalShown = plate.total; slam(); }
+  }
   plate.chipsShown += (plate.chips - plate.chipsShown) * Math.min(1, dt * 16);
   plate.multShown += (mult() - plate.multShown) * Math.min(1, dt * 16);
   for (let i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t >= pops[i].life) pops.splice(i, 1); }
@@ -492,7 +515,7 @@ function frame(now) {
     wallet.tick -= dt; if (wallet.tick <= 0) { sfx.coin(e); wallet.tick = .045; kick(wallet.s, 1.5); }
     if (wallet.t >= 1) {
       wallet.shown = wallet.to; const u = split(wallet.to).unit;
-      if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); buzz([40, 30, 80]); wallet.note = { text: `${u} 돌파!`, t: 0 }; for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('STAR', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .7, [255, 230, 150], 5 + rnd() * 5); } }
+      if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); buzz([40, 30, 80]); wallet.note = { text: `1${u} 돌파!`, t: 0 }; for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('STAR', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .7, [255, 230, 150], 5 + rnd() * 5); } }
       else kick(wallet.s, 5);
     }
   }

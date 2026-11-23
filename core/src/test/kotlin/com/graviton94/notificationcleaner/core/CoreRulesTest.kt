@@ -521,4 +521,20 @@ class CoreRulesTest {
         val on = e.activateDnd(s, now)
         assertEquals(e.autoIntervalMs(on) / 2, e.autoIntervalMs(on, now + 1))
     }
+
+    @Test
+    fun numbersUseGlobalShortNotation() {
+        fun s(x: String) = short(BigInteger(x))
+        assertEquals("999", s("999"))
+        assertEquals("1K", s("1000"))
+        assertEquals("1.23K", s("1234"))
+        assertEquals("12.3K", s("12345"))
+        assertEquals("123K", s("123456"))
+        assertEquals("82M", s("82000000"))
+        assertEquals("1.99B", s("1999999999"))
+        assertEquals("4.5T", s("4500000000000"))
+        assertEquals("1aa", s("1" + "0".repeat(15)))
+        assertEquals("1az", s("1" + "0".repeat(15 + 25 * 3)))
+        assertEquals("1ba", s("1" + "0".repeat(15 + 26 * 3)))
+    }
 }

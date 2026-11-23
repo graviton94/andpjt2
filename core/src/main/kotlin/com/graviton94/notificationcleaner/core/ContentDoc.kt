@@ -10,17 +10,25 @@ import java.math.BigInteger
 
 private val rules = RuleSet()
 
-/** 12,345 · 1.2만 · 3.4억 · 5.6조 · 7.8경 · 9.1해 · beyond: 1.2×10^30. */
-fun kor(n: BigInteger): String {
-    if (n < BigInteger.valueOf(10_000)) return "%,d".format(n)
-    val digits = n.toString().length
-    if (digits > 24) return "%s×10^%d".format(n.toString().let { "${it[0]}.${it[1]}" }, digits - 1)
-    val units = listOf(20 to "해", 16 to "경", 12 to "조", 8 to "억", 4 to "만")
-    val (exp, unit) = units.first { digits > it.first }
-    val scaled = n.toBigDecimal().movePointLeft(exp)
-    val text = if (scaled >= java.math.BigDecimal(1_000)) "%,d".format(scaled.toBigInteger())
-        else scaled.setScale(if (scaled < java.math.BigDecimal(100)) 1 else 0, java.math.RoundingMode.DOWN).stripTrailingZeros().toPlainString()
-    return "$text$unit"
+/**
+ * Global idle-game notation, used for every currency (P, backup files, GB) and score.
+ * 999 · 1.23K · 12.3K · 123K · 1.23M · B · T · then aa, ab … zz (3 significant digits, trailing zeros dropped,
+ * truncated so a shown value is never more than the player has).
+ */
+fun short(n: BigInteger): String {
+    if (n.signum() < 0) return "-" + short(n.negate())
+    if (n < BigInteger.valueOf(1_000)) return n.toString()
+    val group = (n.toString().length - 1) / 3
+    val scaled = n.toBigDecimal().movePointLeft(group * 3)
+    val decimals = when { scaled >= java.math.BigDecimal(100) -> 0; scaled >= java.math.BigDecimal(10) -> 1; else -> 2 }
+    val text = scaled.setScale(decimals, java.math.RoundingMode.DOWN).stripTrailingZeros().toPlainString()
+    return text + suffix(group)
+}
+
+/** 1 K · 2 M · 3 B · 4 T · 5 aa · 6 ab … 30 az · 31 ba … */
+fun suffix(group: Int): String = when (group) {
+    0 -> ""; 1 -> "K"; 2 -> "M"; 3 -> "B"; 4 -> "T"
+    else -> { val i = group - 5; "${'a' + i / 26}${'a' + i % 26}" }
 }
 
 private val cardText = mapOf(
@@ -57,8 +65,8 @@ fun contentDoc(): String = buildString {
     Catalog.apps.forEachIndexed { i, a ->
         val start = a.id in Catalog.starter
         appendLine("| ${i + 1} | `${a.id}` | ${a.name} | ${a.tier} | ${a.region.label} | ${a.category.label} | Lv${a.unlockLevel} | " +
-            "${if (a.minResets > 0) "${a.minResets}회" else "—"} | ${if (start) "시작" else kor(rules.appPrice(a)) + " P"} | ${kor(BigInteger.TEN.pow(a.tier - 1))} | " +
-            "Lv${Catalog.proLevel.getValue(a.id)} | ${kor(rules.proPrice(a.id))} P |")
+            "${if (a.minResets > 0) "${a.minResets}회" else "—"} | ${if (start) "시작" else short(rules.appPrice(a)) + " P"} | ${short(BigInteger.TEN.pow(a.tier - 1))} | " +
+            "Lv${Catalog.proLevel.getValue(a.id)} | ${short(rules.proPrice(a.id))} P |")
     }
     appendLine()
     appendLine("- 프로 버전: 그 앱의 알림 가치 ×${rules.proMultiplier}. 가격 = 프로 해금 레벨에 필요한 누적 P × ${rules.proPricePermille / 10.0}%.")
@@ -83,7 +91,7 @@ fun contentDoc(): String = buildString {
     appendLine("| 카드 | 해금 | 가격 | 등장 주기 | 효과 |")
     appendLine("|---|---:|---:|---:|---|")
     EventCard.entries.forEach { c ->
-        appendLine("| ${c.label} | Lv${c.unlockLevel} | ${kor(rules.cardPrice(c))} P | ${c.everySwipes}스와이프 | ${cardText.getValue(c)} |")
+        appendLine("| ${c.label} | Lv${c.unlockLevel} | ${short(rules.cardPrice(c))} P | ${c.everySwipes}스와이프 | ${cardText.getValue(c)} |")
     }
     appendLine()
     appendLine("이벤트 슬롯: ${steps(rules.eventSlotSteps, "칸")}, 백업 상점 +1.")
@@ -100,7 +108,7 @@ fun contentDoc(): String = buildString {
     appendLine("| 강화 | 해금 | 최대 단계 (레벨별) | 가격 | 효과 |")
     appendLine("|---|---:|---|---|---|")
     Assist.entries.forEach { a ->
-        appendLine("| ${a.label} | Lv${a.unlockLevel} | ${steps(a.caps)} | `${kor(BigInteger.valueOf(a.base))} × ${a.growth}ⁿ` | ${assistText.getValue(a)} |")
+        appendLine("| ${a.label} | Lv${a.unlockLevel} | ${steps(a.caps)} | `${short(BigInteger.valueOf(a.base))} × ${a.growth}ⁿ` | ${assistText.getValue(a)} |")
     }
     appendLine()
     appendLine("## 6. 덱")
@@ -138,7 +146,7 @@ fun contentDoc(): String = buildString {
     appendLine("| 레벨 | 필요 누적 P | 레벨 | 필요 누적 P | 레벨 | 필요 누적 P |")
     appendLine("|---:|---:|---:|---:|---:|---:|")
     val ls = listOf(2, 5, 10, 15, 20, 25, 30, 36, 42, 48, 55, 64, 72, 80, 88)
-    ls.chunked(3).forEach { row -> appendLine("| " + row.joinToString(" | ") { "Lv$it | ${kor(rules.levelP(it))}" } + " |") }
+    ls.chunked(3).forEach { row -> appendLine("| " + row.joinToString(" | ") { "Lv$it | ${short(rules.levelP(it))}" } + " |") }
     appendLine()
     appendLine("`Lv L = ${rules.levelPBase} × ${rules.levelRatioPermille / 1000.0}^(L−2)`, Lv${rules.levelLateFrom}부터 배수가 레벨마다 +${rules.levelRatioStepPermille / 1000.0}. 오프라인: 자동 정리 기준 속도(직접의 ${rules.offlineAutoPermille / 10}%) × 효율 ${rules.offlineEfficiencyPercent}%, 상한 ${steps(rules.offlineCapSteps, "시간")}.")
 }
