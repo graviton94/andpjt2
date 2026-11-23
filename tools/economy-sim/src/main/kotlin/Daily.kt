@@ -17,7 +17,23 @@ import com.graviton94.notificationcleaner.core.account
  *   ./gradlew -p tools/economy-sim run --args="daily 56 4"   # days, seeds
  */
 
-private val engine = Engine()
+/** SIM_RULES="overclockPermille=3000,premiumStepPermille=2000": try rule values without touching the engine. */
+private fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
+    var r = com.graviton94.notificationcleaner.core.RuleSet()
+    System.getenv("SIM_RULES")?.split(",")?.filter { "=" in it }?.forEach { kv ->
+        val (k, v) = kv.split("=")
+        r = when (k.trim()) {
+            "overclockPermille" -> r.copy(overclockPermille = v.toInt())
+            "premiumStepPermille" -> r.copy(premiumStepPermille = v.toInt())
+            "passOverclockMinutes" -> r.copy(passOverclockMinutes = v.toInt())
+            "boostPermille" -> r.copy(boostPermille = v.toInt())
+            "warpMinutes" -> r.copy(warpMinutes = v.toInt())
+            else -> error("unknown rule $k")
+        }
+    }
+    return r
+}
+private val engine = Engine(simRules())
 private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
 
 /** Spending profiles (docs/bible/17-monetization.md). */
@@ -231,7 +247,9 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
         if (!shop.boostActive(s, t)) shop.buyItem(s, CreditItem.Boost, t)?.let { s = it }
         // Data budget per day goes to 오버클럭 hours (time is what the curve needs), a warp or two with the rest.
         val perDay = payer.monthlyData / 30
-        repeat((perDay / 4 / CreditItem.Overclock.price).toInt().coerceAtLeast(if (session == 0) 1 else 0)) { shop.buyItem(s, CreditItem.Overclock, t)?.let { s = it } }
+        val hours = (perDay * 6 / 10 / shop.price(CreditItem.Overclock)).toInt()
+        // Cover the day: buy this session's share of overclock hours, keeping it running into the offline gap.
+        repeat((hours + session) / 4) { shop.buyItem(s, CreditItem.Overclock, t)?.let { s = it } }
         if (session == 0) shop.buyItem(s, CreditItem.Warp, t)?.let { s = it }
     }
     // Premium: the next star of the deck's best app, as soon as it is affordable.

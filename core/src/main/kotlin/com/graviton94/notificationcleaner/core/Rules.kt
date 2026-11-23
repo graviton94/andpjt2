@@ -69,8 +69,8 @@ data class RuleSet(
     val batteryOvercharge: Int = 6,
     val backupBoostPercent: Int = 100,
     /** 오버클럭: game speed while on (battery, auto-clean, offline time). */
-    val overclockPermille: Int = 2_000,
-    val passOverclockMinutes: Int = 60,
+    val overclockPermille: Int = 3_000,
+    val passOverclockMinutes: Int = 120,
     /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
     val adLevelCap: Int = 1,
     /** 오프라인 광고: the settlement once more at this percent. */

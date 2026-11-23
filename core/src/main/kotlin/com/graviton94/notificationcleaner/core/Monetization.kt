@@ -26,7 +26,7 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Warp("시간 도약", 80, 12),
     Battery("보조배터리", 10, 20),
     BackupBoost("백업 부스트 (다음 초기화 파일 ×2)", 150, 1),
-    Overclock("오버클럭 1시간", 60, 24),
+    Overclock("오버클럭 1시간", 40, 24),
 }
 
 /** One day of the 30-day attendance board: data, and optionally a ticket for a credit item. */
@@ -183,6 +183,8 @@ class Shop(private val engine: Engine) {
             AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + rules.freeUpgradeLevels)) }
         }
     }
+
+    fun price(item: CreditItem): Long = item.price
 
     fun shopLeft(s: GameState, item: CreditItem, now: Long): Int {
         val a = s.account
