@@ -10,11 +10,14 @@ const root = path.resolve(__dirname, '../..'), here = 'file://' + __dirname + '/
     await p.screenshot({ path: out }); await p.close();
   };
   const brand = path.join(root, 'docs/design/brand');
-  await shot('icon.html', 512, 512, path.join(brand, 'icon-512.png'));
-  for (const [d, px] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) {
-    const dir = path.join(root, 'app/src/main/res/mipmap-' + d); fs.mkdirSync(dir, { recursive: true });
-    await shot('icon.html', 512, 512, path.join(dir, 'ic_launcher.png'), px / 512);
+  // Store icon per language, and launcher mipmaps: default = English, plus -ko and -ja resource qualifiers.
+  for (const [lang, q] of [['en', ''], ['ko', '-ko'], ['ja', '-ja']]) {
+    await shot('icon.html?lang=' + lang, 512, 512, path.join(brand, 'icon-512-' + lang + '.png'));
+    for (const [d, px] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) {
+      const dir = path.join(root, 'app/src/main/res/mipmap' + q + '-' + d); fs.mkdirSync(dir, { recursive: true });
+      await shot('icon.html?lang=' + lang, 512, 512, path.join(dir, 'ic_launcher.png'), px / 512);
+    }
   }
-  for (const l of ['ko', 'en']) await shot('feature.html?lang=' + l, 1024, 500, path.join(brand, 'feature-' + l + '.png'));
+  for (const l of ['ko', 'en', 'ja']) await shot('feature.html?lang=' + l, 1024, 500, path.join(brand, 'feature-' + l + '.png'));
   await b.close();
 })();

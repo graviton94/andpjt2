@@ -58,8 +58,8 @@
 
 | 항목 | 메모 |
 |---|---|
-| 앱 아이콘 512×512 | `docs/design/brand/icon-512.png` — 밀려나며 깨지는 알림 카드 + 99+ 배지 + 팡! 폭발. 원본 `tools/brand/icon.html`, `node tools/brand/render.js`가 앱 런처 mipmap 5종도 같이 만든다. 글꼴 Black Han Sans · Luckiest Guy (OFL, `tools/brand/fonts`) |
-| 그래픽 이미지 1024×500 | `docs/design/brand/feature-ko.png` · `feature-en.png` — `tools/brand/feature.html?lang=` 렌더(만화풍, 같은 글꼴) |
+| 앱 아이콘 512×512 | 언어별 효과음: `docs/design/brand/icon-512-ko.png`(팡!) · `-en`(POP!) · `-ja`(パン!) — 기본 등록정보엔 en, 번역 등록정보에 언어별 그래픽을 넣는다. 앱 런처도 `mipmap-ko`·`mipmap-ja` 리소스로 기기 언어 따라 바뀜. 원본 `tools/brand/icon.html`, `node tools/brand/render.js` |
+| 그래픽 이미지 1024×500 | `docs/design/brand/feature-ko/en/ja.png` — 오른쪽 폰 화면에서 팡! 터지며 카드·파편이 튀어나오고, 왼쪽에 제목 + 밀고!(장갑 스와이프)·합치고!·터뜨려라! 스티커 3개. 글꼴 Black Han Sans · Luckiest Guy · Dela Gothic One (OFL, `tools/brand/fonts`). 만화 효과 에셋(발주 `comic-fx`)이 오면 CSS 말풍선을 교체 |
 | 스크린샷 9:16 4~8장 | ① 9연쇄 정산 쾅 ② 화면 유리 깨짐 ③ 앱 60종 컬렉션 ④ 프리미엄 ★ ⑤ 30일 출석판 ⑥ 스팸 전화 차단. 언어별로 글자 섞이지 않게 |
 | 카테고리 · 태그 | 게임 › 퍼즐(또는 캐주얼) · 태그: 증분 게임, 퍼즐, 캐주얼, 병합 퍼즐, 아케이드 |
 

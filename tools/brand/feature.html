@@ -1,64 +1,79 @@
 <!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="fonts/black-han-sans/index.css"><link rel="stylesheet" href="fonts/luckiest-guy/index.css">
+<link rel="stylesheet" href="fonts/black-han-sans/index.css"><link rel="stylesheet" href="fonts/luckiest-guy/index.css"><link rel="stylesheet" href="fonts/dela-gothic-one/index.css">
 <style>
 *{margin:0;box-sizing:border-box}
-body{width:1024px;height:500px;overflow:hidden;position:relative;font-family:'Black Han Sans','Luckiest Guy',sans-serif;
- background:radial-gradient(circle at 70% 46%,#ffc45a 0,#ff7a1a 18%,#c2410c 42%,#4a1a08 75%,#1e0c05 100%)}
-.en{font-family:'Luckiest Guy','Black Han Sans',sans-serif}
-.rays{position:absolute;inset:-400px;background:repeating-conic-gradient(from 0deg at 70% 46%,#ffffff1a 0 6deg,transparent 6deg 15deg)}
-.crack{position:absolute;inset:0}
-.card{position:absolute;width:250px;height:70px;border-radius:22px;background:#f8efe2;box-shadow:0 8px 0 #0005;display:flex;align-items:center;gap:12px;padding:0 14px;font-family:system-ui,'Noto Sans CJK KR',sans-serif}
-.card i{width:46px;height:46px;border-radius:13px;flex:none;display:grid;place-items:center;font:22px 'Black Han Sans','Luckiest Guy';color:#fff;font-style:normal}
-.card b{display:block;font-size:17px;color:#3a2618}.card span{font-size:13px;color:#7b6656}
-.card em{position:absolute;right:-12px;top:-14px;background:#ff2d2d;color:#fff;font:20px/1 'Luckiest Guy';font-style:normal;padding:7px 9px 3px;border-radius:20px;border:3px solid #fff}
-.title{position:absolute;left:34px;top:64px;width:520px;transform:rotate(-6deg)}
-.title .w{display:inline-block;font-size:104px;line-height:1;color:#ffe14a;-webkit-text-stroke:14px #2a0c02;paint-order:stroke fill;text-shadow:0 10px 0 #2a0c02}
-.en .title .w{font-size:80px;-webkit-text-stroke:12px #2a0c02}
-.ribbon{position:absolute;left:58px;top:330px;transform:rotate(-4deg);background:#fff;color:#2a0c02;padding:14px 24px 10px;font-size:34px;border-radius:12px;box-shadow:6px 8px 0 #2a0c02;border:4px solid #2a0c02}
-.ribbon b{color:#ff3b30;font-weight:400}
-.boom{position:absolute;display:grid;place-items:center;
- clip-path:polygon(50% 0,58% 28%,80% 6%,72% 36%,100% 26%,82% 50%,100% 72%,70% 66%,82% 96%,56% 74%,46% 100%,40% 72%,14% 92%,26% 62%,0 58%,24% 44%,6% 18%,34% 30%)}
-.word{position:absolute;color:#ff3b30;-webkit-text-stroke:9px #2a0c02;paint-order:stroke fill;text-shadow:0 7px 0 #2a0c02;white-space:nowrap}
-.num{position:absolute;color:#fff;-webkit-text-stroke:8px #2a0c02;paint-order:stroke fill;text-shadow:0 6px 0 #2a0c02;font-family:'Luckiest Guy';white-space:nowrap}
-.shard{position:absolute;background:#f8efe2;box-shadow:0 5px 0 #0004}
+body{width:1024px;height:500px;overflow:hidden;position:relative;font-family:var(--f);--f:'Black Han Sans';
+ background:radial-gradient(circle at 74% 44%,#ffc45a 0,#ff7a1a 16%,#c2410c 40%,#4a1a08 74%,#1e0c05 100%)}
+body.en{--f:'Luckiest Guy'} body.ja{--f:'Dela Gothic One'}
+.rays{position:absolute;inset:-400px;background:repeating-conic-gradient(from 0deg at 74% 44%,#ffffff1c 0 6deg,transparent 6deg 15deg)}
+.ink{-webkit-text-stroke:var(--s,10px) #2a0c02;paint-order:stroke fill;text-shadow:0 var(--d,8px) 0 #2a0c02;white-space:nowrap}
+/* phone */
+.phone{position:absolute;left:640px;top:-40px;width:330px;height:600px;border-radius:52px;background:#120a06;border:12px solid #050302;
+ box-shadow:-14px 18px 0 #2a0c02aa;transform:rotate(9deg);overflow:hidden}
+.screen{position:absolute;inset:0;background:linear-gradient(#2c1d14,#140c08);padding:58px 14px 0}
+.sb{position:absolute;top:18px;left:28px;right:28px;display:flex;justify-content:space-between;color:#d9c9b8;font:600 15px system-ui}
+.island{position:absolute;top:14px;left:50%;width:90px;height:26px;margin-left:-45px;border-radius:14px;background:#000}
+.card{height:64px;border-radius:18px;background:#fff2;border:1px solid #fff3;margin-bottom:9px;display:flex;align-items:center;gap:10px;padding:0 12px;font-family:system-ui,'Noto Sans CJK KR',sans-serif;position:relative}
+.card i{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;font:20px var(--f);color:#fff;font-style:normal}
+.card b{display:block;font-size:15px;color:#f6efe6}.card span{font-size:12px;color:#c3b2a2}
+.card.hot{background:#fff;border-color:#fff;transform:translateX(26px) rotate(-4deg)}
+.card.hot b{color:#3a2618}.card.hot span{color:#7b6656}
+/* flying cards outside the phone */
+.fly{position:absolute;width:210px;height:62px;border-radius:18px;background:#f8efe2;box-shadow:0 7px 0 #0005;display:flex;align-items:center;gap:10px;padding:0 12px;font-family:system-ui,'Noto Sans CJK KR',sans-serif}
+.fly i{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;font:19px var(--f);color:#fff;font-style:normal}
+.fly b{display:block;font-size:15px;color:#3a2618}.fly span{font-size:12px;color:#7b6656}
+.fly em{position:absolute;right:-12px;top:-14px;background:#ff2d2d;color:#fff;font:19px/1 'Luckiest Guy';font-style:normal;padding:7px 9px 3px;border-radius:20px;border:3px solid #fff}
+.boom{position:absolute;clip-path:polygon(50% 0,58% 28%,80% 6%,72% 36%,100% 26%,82% 50%,100% 72%,70% 66%,82% 96%,56% 74%,46% 100%,40% 72%,14% 92%,26% 62%,0 58%,24% 44%,6% 18%,34% 30%)}
+.shard{position:absolute;background:#f8efe2;box-shadow:0 5px 0 #0004;clip-path:polygon(0 0,100% 25%,65% 100%,8% 70%)}
 .spark{position:absolute;background:#fff6c8;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
-.streak{position:absolute;height:10px;border-radius:5px;background:#fff6d8}
+.title{position:absolute;left:30px;top:26px;transform:rotate(-6deg)}
+.title .w{display:inline-block;font-size:var(--ts,96px);line-height:1.02;color:#ffe14a}
+/* three verb stickers */
+.tag{position:absolute;padding:14px 22px 10px;border:5px solid #2a0c02;border-radius:16px;box-shadow:6px 8px 0 #2a0c02;font-size:var(--gs,44px);line-height:1;color:#2a0c02;white-space:nowrap}
+.glove{position:absolute;width:118px;filter:drop-shadow(4px 6px 0 #2a0c02)}
+.trail{position:absolute;height:12px;border-radius:6px;background:#fff6d8;box-shadow:0 3px 0 #2a0c0255}
+.arrow{position:absolute;font:900 54px/1 system-ui;color:#fff6d8;-webkit-text-stroke:6px #2a0c02;paint-order:stroke fill}
 </style></head><body>
 <div class="rays"></div>
-<svg class="crack" viewBox="0 0 1024 500"><g fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round">
-<path d="M716 230 L640 150 L600 40 M716 230 L820 120 L870 20 M716 230 L900 260 L1024 240 M716 230 L760 380 L740 500 M716 230 L600 330 L560 420"/>
-<path d="M660 170 L700 140 L760 160 L820 120 M610 300 L660 280 L760 300 L820 320 L900 260" stroke-opacity=".35"/></g></svg>
-<div id="cards"></div>
-<div class="boom" style="left:600px;top:110px;width:250px;height:250px;background:#ffe14a;transform:rotate(10deg)"></div>
-<div class="boom" style="left:625px;top:135px;width:200px;height:200px;background:#fff;transform:rotate(10deg)"></div>
-<div id="words"></div>
-<div class="title" id="title"></div>
-<div class="ribbon" id="ribbon"></div>
-<div class="spark" style="left:560px;top:40px;width:40px;height:40px"></div>
-<div class="spark" style="left:960px;top:400px;width:46px;height:46px"></div>
-<div class="spark" style="left:520px;top:440px;width:28px;height:28px"></div>
-<div class="spark" style="left:880px;top:200px;width:26px;height:26px"></div>
+<div class="phone"><div class="screen"><div class="island"></div><div class="sb"><span>9:41</span><span>▂▄▆ 100%</span></div><div id="list"></div></div></div>
+<div id="fx"></div>
+<div class="title ink" id="title" style="--s:14px;--d:10px"></div>
+<div id="tags"></div>
 <script>
 const L=new URLSearchParams(location.search).get('lang')||'ko';
-if(L==='en')document.body.classList.add('en');
+document.body.classList.add(L);
 const T={
- ko:{title:['알림','청소부'],rib:'밀고! 합치고! <b>터뜨려라!</b>',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',
-   cards:[['톡','새 메시지 3개','#F5C400','톡'],['메일','새 메일 12개','#2F7BF5','M'],['쇼핑','배송 알림','#FF5A36','쇼'],['스팸','당첨되셨습니다?!','#FF3B30','!'],['뱅킹','입금 알림','#1BA784','₩']]},
- en:{title:['NOTIFICATION','SWEEPER'],rib:'SWIPE! MERGE! <b>POP IT ALL!</b>',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',
-   cards:[['Chat','3 new messages','#F5C400','C'],['Mail','12 new emails','#2F7BF5','M'],['Shop','Delivery update','#FF5A36','S'],['Spam','You WON?!','#FF3B30','!'],['Bank','Deposit received','#1BA784','$']]}}[L];
-// title: each syllable hops at its own angle
-title.innerHTML=T.title.map((w,li)=>'<div>'+[...w].map((ch,i)=>`<span class="w" style="transform:translateY(${[0,-10,6,-6,8,-4][i%6]}px) rotate(${[-6,5,-3,7,-5,4][(i+li)%6]}deg)">${ch}</span>`).join('')+'</div>').join('');
-ribbon.innerHTML=T.rib;
-// cards flung around the blast, each tilted, some cut by the edge
-const pos=[[560,10,-18,'99+'],[820,40,14,'12'],[880,330,-10,'5'],[600,380,8,'99+'],[430,250,-24,'3']];
-cards.innerHTML=T.cards.map((c,i)=>{const[x,y,r,n]=pos[i];return `<div class="card" style="left:${x}px;top:${y}px;transform:rotate(${r}deg)"><i style="background:${c[2]}">${c[3]}</i><div><b>${c[0]}</b><span>${c[1]}</span></div><em>${n}</em></div>`}).join('')
- +[[760,100,22,40],[840,250,-30,32],[700,330,50,26],[880,160,10,22],[640,90,-40,20]].map(([x,y,r,s])=>`<div class="shard" style="left:${x}px;top:${y}px;width:${s}px;height:${s*.8}px;transform:rotate(${r}deg);clip-path:polygon(0 0,100% 25%,65% 100%,8% 70%)"></div>`).join('')
- +[[470,180,90],[450,215,60],[480,245,110]].map(([x,y,w])=>`<div class="streak" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(-8deg)"></div>`).join('');
-words.innerHTML=
- `<div class="word" style="left:650px;top:178px;font-size:${L==='en'?74:96}px;transform:rotate(-12deg)">${T.pang}</div>`+
- `<div class="word" style="left:860px;top:110px;font-size:${L==='en'?44:56}px;color:#ffe14a;transform:rotate(16deg)">${T.kwang}</div>`+
- `<div class="word" style="left:560px;top:300px;font-size:44px;color:#fff;transform:rotate(-6deg)">${T.chain}</div>`+
- `<div class="num" style="left:820px;top:240px;font-size:54px;transform:rotate(8deg)">+1.2M</div>`+
- `<div class="num" style="left:900px;top:20px;font-size:30px;transform:rotate(-10deg)">+48K</div>`+
- `<div class="num" style="left:780px;top:420px;font-size:40px;color:#ffe14a;transform:rotate(-14deg)">×9</div>`;
+ ko:{title:['알림','청소부'],ts:'104px',verbs:['밀고!','합치고!','터뜨려라!'],gs:'46px',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',pf:'150px',
+   list:[['톡','새 메시지 3개','#F5C400','톡'],['메일','새 메일 12개','#2F7BF5','M'],['쇼핑','배송 출발','#FF5A36','쇼'],['뱅킹','입금 알림','#1BA784','₩'],['영상','새 동영상','#E0262B','▶'],['날씨','비 소식','#3AA0FF','☂']],
+   fly:[['스팸','당첨되셨습니다?!','#FF3B30','!','99+'],['톡','ㅋㅋㅋㅋㅋ','#F5C400','톡','12'],['메일','광고) 오늘만 특가','#2F7BF5','M','5']]},
+ en:{title:['NOTIFICATION','SWEEPER'],ts:'72px',verbs:['SWIPE!','MERGE!','POP IT!'],gs:'40px',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',pf:'118px',
+   list:[['Chat','3 new messages','#F5C400','C'],['Mail','12 new emails','#2F7BF5','M'],['Shop','Out for delivery','#FF5A36','S'],['Bank','Deposit received','#1BA784','$'],['Video','New upload','#E0262B','▶'],['Weather','Rain later','#3AA0FF','☂']],
+   fly:[['Spam','You WON?!','#FF3B30','!','99+'],['Chat','lololol','#F5C400','C','12'],['Mail','Today only: 90% off','#2F7BF5','M','5']]},
+ ja:{title:['通知','おそうじ'],ts:'92px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
+   list:[['チャット','新着メッセージ3件','#F5C400','C'],['メール','新着メール12件','#2F7BF5','M'],['ショップ','発送しました','#FF5A36','S'],['バンク','入金のお知らせ','#1BA784','¥'],['動画','新着動画','#E0262B','▶'],['天気','雨のお知らせ','#3AA0FF','☂']],
+   fly:[['迷惑','当選しました?!','#FF3B30','!','99+'],['チャット','www','#F5C400','C','12'],['メール','本日限定セール','#2F7BF5','M','5']]}}[L];
+document.body.style.setProperty('--ts',T.ts);document.body.style.setProperty('--gs',T.gs);
+title.innerHTML=T.title.map((w,li)=>'<div>'+[...w].map((ch,i)=>`<span class="w" style="transform:translateY(${[0,-9,6,-6,8,-4][i%6]}px) rotate(${[-6,5,-3,7,-5,4][(i+li)%6]}deg)">${ch}</span>`).join('')+'</div>').join('');
+list.innerHTML=T.list.map((c,i)=>`<div class="card ${i===2?'hot':''}"><i style="background:${c[2]}">${c[3]}</i><div><b>${c[0]}</b><span>${c[1]}</span></div></div>`).join('');
+// blast centred on the "hot" card inside the phone, spilling out over the frame
+const cx=770, cy=250;
+const boom=(w,c,r)=>`<div class="boom" style="left:${cx-w/2}px;top:${cy-w/2}px;width:${w}px;height:${w}px;background:${c};transform:rotate(${r}deg)"></div>`;
+fx.innerHTML=boom(380,'#2a0c02',12)+boom(360,'#ffe14a',12)+boom(270,'#fff',12)
+ +`<div class="ink" style="position:absolute;left:${cx-150}px;top:${cy-80}px;width:300px;text-align:center;font-size:${T.pf};line-height:1;color:#ff3b30;transform:rotate(-10deg);--s:12px">${T.pang}</div>`
+ +T.fly.map((c,i)=>{const[x,y,r]=[[560,40,-16],[860,380,12],[540,330,-8]][i];return `<div class="fly" style="left:${x}px;top:${y}px;transform:rotate(${r}deg)"><i style="background:${c[2]}">${c[3]}</i><div><b>${c[0]}</b><span>${c[1]}</span></div><em>${c[4]}</em></div>`}).join('')
+ +[[640,150,22,38],[900,210,-30,34],[700,420,50,26],[930,90,10,24],[600,250,-40,22],[860,40,30,18]].map(([x,y,r,s])=>`<div class="shard" style="left:${x}px;top:${y}px;width:${s}px;height:${s*.8}px;transform:rotate(${r}deg)"></div>`).join('')
+ +`<div class="ink" style="position:absolute;left:880px;top:300px;font-size:${L==='ko'?50:40}px;color:#ffe14a;transform:rotate(16deg);--s:9px;--d:6px">${T.kwang}</div>`
+ +`<div class="ink" style="position:absolute;left:868px;top:92px;font:46px 'Luckiest Guy';color:#fff;transform:rotate(8deg);--s:8px;--d:6px">+1.2M</div>`
+ +`<div class="ink" style="position:absolute;left:600px;top:400px;font-size:${L==='ko'?40:32}px;color:#fff;transform:rotate(-6deg);--s:8px;--d:6px">${T.chain}</div>`
+ +`<div class="ink" style="position:absolute;left:910px;top:440px;font:40px 'Luckiest Guy';color:#ffe14a;transform:rotate(-14deg);--s:8px;--d:6px">×9</div>`
+ +[[520,26,38],[980,250,40],[500,460,26],[700,30,22]].map(([x,y,s])=>`<div class="spark" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px"></div>`).join('');
+// verbs: three separate stickers; "push" gets the glove dragging it with a swipe trail
+tags.innerHTML=
+ `<div class="trail" style="left:14px;top:300px;width:84px;transform:rotate(-4deg)"></div><div class="trail" style="left:4px;top:322px;width:56px;transform:rotate(-4deg);opacity:.7"></div>`
+ +`<div class="tag ink" id="push" style="left:196px;top:270px;background:#fff;color:#2a0c02;transform:rotate(-5deg);--s:0px;--d:0px;text-shadow:none">${T.verbs[0]}</div>`
+ +`<img class="glove" src="../../docs/design/ui-assets/tutorial/hand-press.png" style="left:96px;top:226px;transform:rotate(-30deg)">`
+ +`<div class="arrow" id="arr" style="top:278px;transform:rotate(-6deg)">➜</div>`
+ +`<div class="tag" style="left:${L==='ja'?120:110}px;top:372px;background:#7ee0ff;transform:rotate(4deg)">${T.verbs[1]}</div>`
+ +`<div class="tag ink" style="left:${L==='en'?300:300}px;top:384px;background:#ff3b30;color:#ffe14a;transform:rotate(-7deg) scale(1.12);--s:6px;--d:0px">${T.verbs[2]}</div>`;
+const pr=push.getBoundingClientRect();arr.style.left=(pr.right+12)+"px";
 </script></body></html>

@@ -1,6 +1,75 @@
 {
   "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
-  "pending": [],
+  "pending": [
+    {
+      "id": "comic-fx",
+      "title": "만화 효과 (팡! 말풍선·충격·파편) — 아이콘·스토어 그래픽·게임 연출 공용",
+      "priority": 1,
+      "cols": 3,
+      "rows": 2,
+      "cell": [
+        1024,
+        1024
+      ],
+      "intro": "Comic impact effects for a swipe-and-pop puzzle game. Same sticker style. These sit behind big sound words like POP! and BOOM!, so the bubbles must be EMPTY in the middle (no letters at all) and read clearly when shrunk to 64 px.",
+      "items": [
+        {
+          "id": "burst-big",
+          "note": "큰 폭발 말풍선 (팡! 자리)",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "a huge comic explosion shout bubble with 14 to 16 uneven sharp spikes of different lengths, slightly tilted; three nested layers: thick ink outline, bright yellow #FFE14A rim, wide white #FFFFFF centre left completely empty for text; a few tiny ink speed ticks around the outside"
+        },
+        {
+          "id": "burst-small",
+          "note": "작은 폭발 말풍선 (쾅!·연쇄 자리)",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "a smaller, wider jagged shout bubble with 10 short spikes, squashed horizontally (about 3:2), bright orange #FF8A1F fill with a yellow inner band and an empty centre for text"
+        },
+        {
+          "id": "bubble-round",
+          "note": "동그란 말풍선 (+숫자 자리)",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "a chubby rounded comic speech bubble with a short curved tail at the bottom left, white fill with a pale cream lower half, empty inside for text"
+        },
+        {
+          "id": "impact-flash",
+          "note": "충격 섬광",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "an impact flash: an 8-point star burst with alternating long and short rays, white core fading to yellow #FFE14A then orange #FF8A1F at the ray tips, plus a thin ring of small dots around it"
+        },
+        {
+          "id": "shards",
+          "note": "카드 파편 묶음",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "a cluster of six broken notification-card shards flying outward from the centre: irregular triangles and quads of cream #F8EFE2 card with a thin white edge highlight, different sizes and angles, small gaps between them"
+        },
+        {
+          "id": "swipe-trail",
+          "note": "밀기 잔상 선",
+          "out": [
+            1024,
+            1024
+          ],
+          "desc": "three horizontal swipe motion streaks stacked with offsets, each a long tapered stroke thick on the right and thin to a point on the left, warm white #FFF6D8 with ink outline, as if something was flung to the right"
+        }
+      ]
+    }
+  ],
   "delivered": [
     {
       "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
