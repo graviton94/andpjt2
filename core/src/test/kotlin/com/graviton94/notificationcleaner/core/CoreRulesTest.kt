@@ -672,4 +672,20 @@ class CoreRulesTest {
         assertEquals(0, SaveCodec.decode(old).let { it.backup.cloud.account.stars("zzz") })
         assertTrue(text.length < 20_000, "save is ${text.length} chars")
     }
+
+    @Test
+    fun missionsAndAchievementsTrackPlay() {
+        val e = Engine(); val meta = Meta(e); val shop = Shop(e)
+        var s = e.newGame(0, 9)
+        var t = 0L
+        repeat(400) { t += 3_000; s = e.tick(s, t); e.bestTarget(s, t)?.let { id -> e.swipe(s, id, t)?.let { o -> s = meta.record(o.state, o, t) } } }
+        assertEquals(3, meta.missionsFor(t).size)
+        assertTrue(s.account.stats["Swipes"]!! > 100 && s.account.stats["Bursts"]!! > 0)
+        if (meta.missionsDone(s, t)) assertNotNull(meta.claimMissions(shop, s, t)) else assertNull(meta.claimMissions(shop, s, t))
+        val reset = meta.reset(s.copy(level = 30), t)!!
+        assertTrue("초기화 입문" in reset.account.titles)
+        assertEquals(1, reset.account.pieces)
+        // tomorrow's progress starts at zero
+        assertEquals(0, meta.missionProgress(reset, Mission.Swipes, t + 86_400_000L))
+    }
 }

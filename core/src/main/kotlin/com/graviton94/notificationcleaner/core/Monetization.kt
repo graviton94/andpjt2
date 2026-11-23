@@ -53,6 +53,13 @@ data class Account(
     /** 프리미엄 ★ 선택권: +1 star on any unlocked app, up to [RuleSet.voucherMaxStars]. */
     val starVouchers: Int = 0,
     val titles: Set<String> = emptySet(),
+    /** Lifetime counters for achievements (Meta.kt), keyed by [Stat] name. */
+    val stats: Map<String, Long> = emptyMap(),
+    /** Today's mission progress (Meta.kt), reset when [missionProgressDay] changes. */
+    val missionProgress: Map<String, Long> = emptyMap(),
+    val missionProgressDay: Long = -1,
+    /** 꾸미기 조각 from achievements and the daily challenge: 10 = one free cosmetic. */
+    val pieces: Int = 0,
     val missionDay: Long = -1,
     val adDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
