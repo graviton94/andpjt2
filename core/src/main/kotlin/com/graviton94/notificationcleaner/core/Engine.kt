@@ -664,7 +664,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var pausedUntil = state.autoPausedUntil
         val pattern = state.pattern.toMutableList()
 
-        val overdue = if (on(state, "secret")) -1 else rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }  // 텔레그림
+        // Spam copies itself only while the board holds fewer than spamMax: otherwise young copies keep every refill spam
+        // and the board locks into spam forever (found by the BM simulator, 11-23).
+        val spamRows = rows.count { it.kind == RowKind.Spam }
+        val overdue = if (on(state, "secret") || spamRows >= rules.spamMax) -1 else rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }  // 텔레그림
         if (overdue >= 0) rows[overdue] = rows[overdue].copy(copyAt = 0)
         val quiet = now < state.dndUntil  // 방해 금지: no interruptions
         var spam = !quiet && (overdue >= 0 || n % rules.spamEverySwipes == 0)

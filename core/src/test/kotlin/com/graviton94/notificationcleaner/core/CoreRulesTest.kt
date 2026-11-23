@@ -581,4 +581,22 @@ class CoreRulesTest {
         val boosted = shop.watchAd(s, AdSlot.Boost, 10 * day)!!
         assertTrue(shop.boostActive(boosted, 10 * day + 29 * 60_000) && !shop.boostActive(boosted, 10 * day + 31 * 60_000))
     }
+
+    @Test
+    fun spamNeverLocksTheBoard() {
+        val e = Engine()
+        // A long run that only ever clears spam must still see app rows come back.
+        var s = e.newGame(0, 7).copy(level = 30)
+        var t = 0L
+        var maxSpam = 0
+        repeat(400) {
+            t += 3_000
+            s = e.tick(s, t)
+            val target = s.rows.lastOrNull { it.kind == RowKind.Spam }?.id ?: s.rows.last().id
+            s = e.swipe(s, target, t)?.state ?: s
+            maxSpam = maxOf(maxSpam, s.rows.count { it.kind == RowKind.Spam })
+        }
+        assertTrue(maxSpam <= RuleSet().spamMax + 1, "spam rows peaked at $maxSpam")
+        assertTrue(s.rows.any { it.kind == RowKind.App })
+    }
 }

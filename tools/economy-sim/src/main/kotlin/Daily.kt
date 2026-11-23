@@ -107,15 +107,18 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             }
             s = economy(s, t, session, payer, tl, slots)
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
+            if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
                 t += engine.chargeMs(s)
                 tl.activeMin += engine.chargeMs(s) / 60_000.0
                 s = engine.tick(s, t)
-                val target = engine.bestTarget(s, t) ?: continue
+                val target = engine.bestTarget(s, t)
+                val o0 = target?.let { engine.swipe(s, it, t) }
+                if (o0 == null && System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
-                val o = engine.swipe(s, target, t) ?: continue
+                val o = o0 ?: continue
                 s = o.state
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
                 if (payer != Payer.Free && AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
@@ -141,7 +144,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 }
             }
             stallSessions = if (s.level > levelAtStart) 0 else stallSessions + 1
-            if (System.getenv("SIM_TRACE") != null && seed == 1L && resets && day in 5..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets}")
+            if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && resets && day in 4..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets} 배터리 ${s.energy} 속도 ${s.earnRate} 부스트 ${s.account.boostUntil - t} 레벨P ${s.runEarned}")
             // Reset when it raises the lifetime-file bonus by 60% or more, or when the run has stalled for 3 sessions.
             val offer = engine.backupFilesNow(s)
             val pct = engine.rules.lifetimeFilePercent
@@ -150,7 +153,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             // 2nd prestige: sync at the wall, when resets have stopped paying for a while.
             val gb = engine.cloudGbNow(s)
             if (resets && gb > 0 && sinceReset >= 4 && stallSessions >= 2) {
-                if (System.getenv("SIM_RESETS") != null && seed == 1L) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
+                if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
                 s = engine.sync(s, t)!!
                 tl.syncDays += dayOf(t)
                 everSyncs++
@@ -161,7 +164,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 continue
             }
             if (resets && s.level >= engine.rules.resetLevel && offer > 0 && (gain >= 1.6 || stallSessions >= 3)) {
-                if (System.getenv("SIM_RESETS") != null && seed == 1L) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
+                if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
                 if (payer == Payer.Whale) shop.buyItem(s, CreditItem.BackupBoost, t)?.let { s = it }
                 s = engine.factoryReset(s, t)!!
                 tl.resetDays += dayOf(t)
@@ -232,7 +235,7 @@ fun monetization(days: Int, seeds: Long, profiles: List<Profile>) {
 fun profilesFor(arg: String?): List<Profile> = when (arg) {
     null, "all" -> Payer.entries.map { Profile(it.label, it) }
     "ablate" -> listOf(Profile("광고 없음", Payer.Ads, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Ads, setOf(it)) } + Profile("광고 전부", Payer.Ads)
-    else -> arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
+    else -> if (arg.startsWith("slot:")) listOf(Profile(arg, Payer.Ads, setOf(AdSlot.valueOf(arg.removePrefix("slot:"))))) else arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
 }
 
 fun daily(days: Int, seeds: Long) {

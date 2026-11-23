@@ -75,6 +75,8 @@ data class RuleSet(
     // Interruptions (base rules, not cards)
     val spamEverySwipes: Int = 11,
     val spamCopyAfterSwipes: Int = 3,
+    /** Spam stops copying itself at this many spam rows on the board. */
+    val spamMax: Int = 3,
     val callEverySwipes: Int = 23,
     val callUnlockLevel: Int = 2,
     val callPauseMs: Long = 5_000,
