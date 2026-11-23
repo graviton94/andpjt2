@@ -121,25 +121,25 @@ object Catalog {
         app("memo", "메모장끝", 1, 2, ST, Category.Work, 1), // 기본 메모
         app("flash", "번쩍등", 1, 3, ST, Category.Daily, 2), // 기본 손전등
         app("calc", "계산했산", 1, 4, ST, Category.Money, 3), // 기본 계산기
-        app("recorder", "녹음했음", 1, 5, ST, Category.Media, 4), // 기본 녹음기
+        app("recorder", "녹음했음", 1, 5, ST, Category.Daily, 4), // 기본 녹음기
         // 2티어
         app("phone", "전화왔숑", 2, 0, ST, Category.Social, 5), // 기본 전화
         app("sms", "문자왔숑", 2, 1, ST, Category.Social, 6), // 기본 메시지
         app("camera", "찰칵찰칵", 2, 2, ST, Category.Media, 7), // 기본 카메라
         app("gallery", "추억소환", 2, 3, ST, Category.Media, 8), // 기본 갤러리
-        app("contacts", "누구세요", 2, 4, ST, Category.Daily, 9), // 기본 연락처
+        app("contacts", "누구세요", 2, 4, ST, Category.Social, 9), // 기본 연락처
         app("settings", "설정했셈", 2, 5, ST, Category.Daily, 11), // 기본 설정
         // 3티어
         app("music", "메롱", 3, 0, AS, Category.Media, 12), // Melon 패러디
-        app("coin", "업빝", 3, 1, AS, Category.Money, 13), // Upbit 패러디
+        app("papago", "마마고", 3, 1, AS, Category.Work, 13), // Papago 패러디
         app("zalo", "잘로로", 3, 2, SE, Category.Social, 14), // Zalo 패러디
         app("momo", "모모모", 3, 3, SE, Category.Money, 16), // MoMo 패러디
-        app("cloud", "드랍박스", 3, 4, WE, Category.Work, 17), // Dropbox 패러디
+        app("airbnb", "에어방앤방", 3, 4, WE, Category.Daily, 17), // Airbnb 패러디
         app("duo", "듀오링구", 3, 5, WE, Category.Work, 19), // Duolingo 패러디
         // 4티어
-        app("used", "양파마켓", 4, 0, AS, Category.Money, 20), // 당근마켓 패러디
+        app("ctaxi", "코코아T", 4, 0, AS, Category.Daily, 20), // Kakao T 패러디
         app("pay", "토스트", 4, 1, AS, Category.Money, 22), // Toss 패러디
-        app("gcash", "지캐시", 4, 2, SE, Category.Money, 23), // GCash 패러디
+        app("glints", "글린츠츠", 4, 2, SE, Category.Work, 23), // Glints 패러디
         app("bigo", "비고고", 4, 3, SE, Category.Media, 26), // Bigo Live 패러디
         app("pin", "핀트레스트", 4, 4, WE, Category.Media, 28), // Pinterest 패러디
         app("meet", "주움", 4, 5, WE, Category.Work, 29), // Zoom 패러디
@@ -147,23 +147,23 @@ object Catalog {
         app("food", "배다른민족", 5, 0, AS, Category.Daily, 32), // 배달의민족 패러디
         app("edit", "컵컷", 5, 1, AS, Category.Media, 35), // CapCut 패러디
         app("travel", "트래블로까", 5, 2, SE, Category.Daily, 38), // Traveloka 패러디
-        app("toko", "토코피디아", 5, 3, SE, Category.Money, 42), // Tokopedia 패러디
+        app("joox", "쥬욱스", 5, 3, SE, Category.Media, 42), // JOOX 패러디
         app("reddit", "래딧", 5, 4, WE, Category.Social, 45), // Reddit 패러디
         app("career", "링크드아웃", 5, 5, WE, Category.Work, 48), // LinkedIn 패러디
         // 6티어
         app("mall", "쿠빵", 6, 0, AS, Category.Money, 51), // 쿠팡 패러디
         app("portal", "나베르", 6, 1, AS, Category.Work, 54), // Naver 패러디
-        app("panda", "푸드팬더", 6, 2, SE, Category.Daily, 57), // foodpanda 패러디
+        app("michat", "미챗챗", 6, 2, SE, Category.Social, 57), // MiChat 패러디
         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 60), // Agoda 패러디
-        app("discord", "디스코드드", 6, 4, WE, Category.Work, 64), // Discord 패러디
+        app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 64), // PayPal 패러디
         app("match", "튄더", 6, 5, WE, Category.Social, 67), // Tinder 패러디
         // 7티어
         app("superapp", "위잿", 7, 0, AS, Category.Money, 70), // WeChat 패러디
         app("line", "라잉", 7, 1, AS, Category.Social, 74), // LINE 패러디
-        app("gojek", "고젝젝", 7, 2, SE, Category.Daily, 78), // Gojek 패러디
+        app("jobs", "잡스트리트", 7, 2, SE, Category.Work, 78), // JobStreet 패러디
         app("lazada", "라자다다", 7, 3, SE, Category.Money, 82), // Lazada 패러디
         app("ride", "우바", 7, 4, WE, Category.Daily, 86), // Uber 패러디
-        app("snap", "스냅쳇", 7, 5, WE, Category.Social, 90), // Snapchat 패러디
+        app("robin", "로빈훗훗", 7, 5, WE, Category.Money, 90), // Robinhood 패러디
         // 8티어
         app("dance", "틱특", 8, 0, AS, Category.Media, 94), // TikTok 패러디
         app("chat", "코코아톡", 8, 1, AS, Category.Social, 98), // 카카오톡 패러디
@@ -174,10 +174,10 @@ object Catalog {
         // 9티어
         app("mega", "아마좀", 9, 0, GL, Category.Money, 118), // Amazon 패러디
         app("ott", "넷플러그", 9, 1, GL, Category.Media, 122), // Netflix 패러디
-        app("secret", "텔레그림", 9, 2, GL, Category.Social, 126), // Telegram 패러디
+        app("secret", "텔레그림", 9, 2, GL, Category.Money, 126), // Telegram 패러디
         app("mail", "쥐메일", 9, 3, GL, Category.Work, 130), // Gmail 패러디
         app("maps", "구굴맵스", 9, 4, GL, Category.Daily, 134), // Google Maps 패러디
-        app("store", "구굴플레이", 9, 5, GL, Category.Work, 138), // Google Play 패러디
+        app("store", "구굴플레이", 9, 5, GL, Category.Money, 138), // Google Play 패러디
         // 10티어
         app("tube", "너튜브", 10, 0, GL, Category.Media, 142), // YouTube 패러디
         app("photo", "인싸그램", 10, 1, GL, Category.Media, 146), // Instagram 패러디
@@ -192,11 +192,11 @@ object Catalog {
     val proLevel: Map<String, Int> = mapOf(
         "alarm" to 26, "weather" to 26, "memo" to 26, "flash" to 27, "calc" to 28, "recorder" to 29,
         "phone" to 30, "sms" to 31, "camera" to 32, "gallery" to 33, "contacts" to 34, "settings" to 36,
-        "music" to 37, "coin" to 38, "zalo" to 39, "momo" to 41, "cloud" to 42, "duo" to 44,
-        "used" to 45, "pay" to 47, "gcash" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
-        "food" to 57, "edit" to 60, "travel" to 63, "toko" to 67, "reddit" to 70, "career" to 73,
-        "mall" to 76, "portal" to 79, "panda" to 82, "agoda" to 85, "discord" to 89, "match" to 92,
-        "superapp" to 95, "line" to 99, "gojek" to 103, "lazada" to 107, "ride" to 111, "snap" to 115,
+        "music" to 37, "papago" to 38, "zalo" to 39, "momo" to 41, "airbnb" to 42, "duo" to 44,
+        "ctaxi" to 45, "pay" to 47, "glints" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
+        "food" to 57, "edit" to 60, "travel" to 63, "joox" to 67, "reddit" to 70, "career" to 73,
+        "mall" to 76, "portal" to 79, "michat" to 82, "agoda" to 85, "paypal" to 89, "match" to 92,
+        "superapp" to 95, "line" to 99, "jobs" to 103, "lazada" to 107, "ride" to 111, "robin" to 115,
         "dance" to 119, "chat" to 123, "grab" to 127, "shopee" to 131, "beat" to 135, "why" to 139,
         "mega" to 143, "ott" to 147, "secret" to 151, "mail" to 155, "maps" to 159, "store" to 163,
         "tube" to 167, "photo" to 171, "feed" to 175, "green" to 180, "search" to 185, "ai" to 191,

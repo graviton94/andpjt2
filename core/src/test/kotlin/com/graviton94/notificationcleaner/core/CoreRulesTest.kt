@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(144L, 263L, 421L, 576L, 576L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(144L, 263L, 421L, 553L, 576L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -319,7 +319,7 @@ class CoreRulesTest {
     @Test
     fun luckySynergyStaysBelowOneTierStep() {
         // Six 생활 apps from two regions cannot out-earn the same app one tier up with no synergy at all.
-        val ids = listOf("weather", "flash", "food", "travel", "panda", "agoda")
+        val ids = listOf("weather", "flash", "food", "ctaxi", "travel", "agoda")
         val base = e.newGame(now, 1).copy(appLevels = ids.associateWith { 1 }, active = listOf("weather"))
         val alone = e.earn(base, "weather", valueOf(1_000_000), 0)
         val stacked = e.earn(base.copy(active = ids), "weather", valueOf(1_000_000), 0)
@@ -342,7 +342,7 @@ class CoreRulesTest {
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
-        assertTrue(e.unlocked(after, "panda"), "app unlocks survive")
+        assertTrue(e.unlocked(after, "agoda"), "app unlocks survive")
         assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.

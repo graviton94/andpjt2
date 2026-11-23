@@ -68,17 +68,17 @@ fun igniter(): Pair<GameState, SwipeOutcome> = with(
 ) { it.copy(appLevels = mapOf("alarm" to 1, "music" to 1, "agoda" to 1), active = listOf("alarm", "music", "agoda"), level = 40, gauge = 60) }
     .let { it to engine.swipe(it, 102, NOW)!! }
 
-/** 6: the same 4 notifications of 드랍박스 under different decks. Synergy only (all 서양권, so region steps too). */
+/** 6: the same 4 notifications of 듀오링구 under different decks. Synergy only (서양권 3개 뒤로는 다른 권역 업무 앱). */
 fun synergyTable(): List<Pair<String, BigInteger>> {
     val base = engine.newGame(NOW, 7).copy(level = 40)
     fun deck(vararg ids: String) = base.copy(appLevels = ids.associateWith { 1 }, active = ids.toList())
     return listOf(
-        "드랍박스 혼자 (업무 1)" to deck("cloud", "calc", "weather"),
-        "업무 2 (+듀오링구)" to deck("cloud", "duo", "weather"),
-        "업무 3 (+주움)" to deck("cloud", "duo", "meet"),
-        "업무 4 (+링크드아웃)" to deck("cloud", "duo", "meet", "career"),
-        "업무 5 (+디스코드드)" to deck("cloud", "duo", "meet", "career", "discord"),
-    ).map { (label, s) -> label to engine.earn(s, "cloud", BigInteger.valueOf(4), 0) }
+        "듀오링구 혼자 (업무 1)" to deck("duo", "calc", "weather"),
+        "업무 2 (+주움)" to deck("duo", "meet", "weather"),
+        "업무 3 (+링크드아웃)" to deck("duo", "meet", "career"),
+        "업무 4 (+마마고)" to deck("duo", "meet", "career", "papago"),
+        "업무 5 (+글린츠츠)" to deck("duo", "meet", "career", "papago", "glints"),
+    ).map { (label, s) -> label to engine.earn(s, "duo", BigInteger.valueOf(4), 0) }
 }
 
 /** 7: a wild row merges with anything. */
