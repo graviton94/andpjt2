@@ -115,7 +115,7 @@ fun contentDoc(): String = buildString {
         appendLine("| ${b.label} | 초기화 ${b.minResets}회 | ${if (b.max == Int.MAX_VALUE) "무한" else b.max} | ${(0 until n).joinToString(" · ") { rules.backupPrice(b, it).toString() }} |")
     }
     appendLine()
-    appendLine("백업파일 총량 = `⌊10 × (최고 회차 P ÷ 10^${rules.backupPDigits})^${rules.backupExponentPermille / 1000.0}⌋` (10^${rules.backupPDigits + rules.backupSoftcapDigits} 넘으면 지수 절반), 초기화 때는 **지난 최고 기록을 넘긴 만큼만** 지급. Lv${rules.resetLevel}부터. 패시브 = `(1 + ${rules.lifetimeFilePercent}% × 평생 백업파일)^${rules.lifetimeExponentPermille / 1000.0}`. 백업파일을 받은 초기화만 초기화 횟수로 센다.")
+    appendLine("백업파일 총량 = `⌊10 × (최고 회차 P ÷ Lv${rules.resetLevel} 기준 P)^${rules.backupExponentPermille / 1000.0}⌋` (기준의 10^${rules.backupSoftcapDigits}배를 넘으면 지수 절반), 초기화 때는 **지난 최고 기록을 넘긴 만큼만** 지급. Lv${rules.resetLevel}부터. 패시브 = `(1 + ${rules.lifetimeFilePercent}% × 평생 백업파일)^${rules.lifetimeExponentPermille / 1000.0}`. 백업파일을 받은 초기화만 초기화 횟수로 센다.")
     appendLine()
     appendLine("## 8. 레벨 기준 누적 P")
     appendLine()

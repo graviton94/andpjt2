@@ -57,7 +57,7 @@ data class RuleSet(
     val callPauseMs: Long = 5_000,
     val otpLifeSwipes: Int = 3,
     // Value
-    val tierBase: Long = 10,
+    val tierBase: Long = 6,
     val levelMilestones: List<Int> = listOf(10, 25, 50, 100, 200, 300, 400, 500),
     val appPriceBase: Long = 100,
     val appPriceTierRatio: Long = 60,
@@ -75,7 +75,7 @@ data class RuleSet(
      * multipliers speed it up directly.
      */
     val levelPBase: Long = 30,
-    val levelRatioPermille: Int = 2_500,
+    val levelRatioPermille: Int = 2_100,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 5,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
@@ -91,10 +91,12 @@ data class RuleSet(
     val proPricePermille: Int = 1_000,
     val cardPricePermille: Int = 500,
     /** Value multiplier of a pro version. */
-    val proMultiplier: Long = 3,
-    /** Backup files: cube root of (run P ÷ 10^this). */
-    val backupPDigits: Int = 12,
-    /** Backup files total = ⌊10 × (best run P ÷ 10^12)^0.5⌋; beyond 10^(12+softcap) the exponent halves. Paid as the delta over files already earned (research A2). */
+    val proMultiplier: Long = 2,
+    /**
+     * Backup files total = ⌊10 × (best run P ÷ P(Lv[resetLevel]))^0.5⌋; beyond softcap digits above that anchor the
+     * exponent halves. Paid as the delta over files already earned (research A2). The anchor follows the level
+     * curve, so reaching the reset level always pays the first 10 files whatever the value tuning.
+     */
     val backupExponentPermille: Int = 500,
     val backupSoftcapDigits: Int = 8,
 ) {
@@ -173,7 +175,7 @@ data class RuleSet(
     /** Total backup files ever earnable from a best run of [bestRunP]. */
     fun backupTotal(bestRunP: BigInteger): Long {
         if (bestRunP.signum() <= 0) return 0
-        val lx = log10(bestRunP) - backupPDigits
+        val lx = log10(bestRunP) - log10(levelP(resetLevel))
         if (lx < 0) return 0
         val e = backupExponentPermille / 1000.0
         val logB = if (lx <= backupSoftcapDigits) e * lx else e * backupSoftcapDigits + e / 2 * (lx - backupSoftcapDigits)

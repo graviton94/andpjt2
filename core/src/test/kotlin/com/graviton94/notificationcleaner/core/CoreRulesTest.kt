@@ -45,7 +45,7 @@ class CoreRulesTest {
         val (s, o) = igniter()
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
         assertEquals(listOf("chat", "live"), bursts.map { it.row.app })
-        assertEquals(valueOf(1_500_000), bursts[1].earned)
+        assertEquals(valueOf(116_640), bursts[1].earned)
         // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(40L, 73L, 117L, 153L, 204L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(24L, 43L, 70L, 92L, 122L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -117,8 +117,9 @@ class CoreRulesTest {
         val r = e.rules
         assertEquals(1, r.levelFor(BigInteger.ZERO, 0))
         assertEquals(2, r.levelFor(valueOf(30), 0))
-        // ×2.5 per level until 25, then the ratio rises by 0.005 a level.
-        assertEquals(r.levelP(10) * valueOf(5) / valueOf(2), r.levelP(11))
+        // A fixed ratio per level until 25, then the ratio rises a little every level.
+        val expected = r.levelP(10) * valueOf(r.levelRatioPermille.toLong()) / valueOf(1_000)
+        assertTrue((expected - r.levelP(11)).abs() <= valueOf(1), "ratio per level")
         assertTrue(r.levelP(40) * r.levelP(19) > r.levelP(39) * r.levelP(20))
         // FastBoot 1 lowers every threshold by 10%.
         assertEquals(10, r.levelFor(r.levelP(10) * valueOf(9) / valueOf(10) + valueOf(1), 1))
@@ -178,23 +179,24 @@ class CoreRulesTest {
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        // Total = ⌊10 × (P_max/10¹²)^0.5⌋, exponent halves after 10²⁰.
-        assertEquals(10L, e.rules.backupTotal(BigInteger.TEN.pow(12)))
-        assertEquals(316L, e.rules.backupTotal(BigInteger.TEN.pow(15)))
-        assertEquals(1_000_000L, e.rules.backupTotal(BigInteger.TEN.pow(24)))
-        assertEquals(1_000_000_000L, e.rules.backupTotal(BigInteger.TEN.pow(36)))
+        // Total = ⌊10 × (P_max / P(Lv25))^0.5⌋, exponent halves 10⁸ above the anchor.
+        val anchor = e.rules.levelP(25)
+        assertEquals(10L, e.rules.backupTotal(anchor))
+        assertEquals(316L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
+        assertEquals(1_000_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
+        assertEquals(1_000_000_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
     }
 
     @Test
     fun onlyBeatingTheBestRunPaysAndCounts() {
         val (_, after) = firstReset()
         // A second run that stops below the first run's P pays nothing and does not count as a reset.
-        val weak = after.copy(level = 25, runEarned = BigInteger.TEN.pow(11))
+        val weak = after.copy(level = 25, runEarned = e.rules.levelP(25) / BigInteger.TEN)
         val again = e.factoryReset(weak, now)!!
         assertEquals(after.backup.lifetime, again.backup.lifetime)
         assertEquals(after.backup.resets, again.backup.resets)
         // Beating it pays only the difference.
-        val strong = after.copy(level = 30, runEarned = BigInteger.TEN.pow(15))
+        val strong = after.copy(level = 30, runEarned = e.rules.levelP(25) * BigInteger.TEN.pow(3))
         assertEquals(316L - 10L, e.backupFilesNow(strong))
     }
 
@@ -235,22 +237,22 @@ class CoreRulesTest {
     }
 
     @Test
-    fun proVersionTriplesAnAppForItsLevelPrice() {
+    fun proVersionDoublesAnAppForItsLevelPrice() {
         val s = e.newGame(now, 1).copy(level = 31, wallet = e.rules.levelP(31))
         val before = e.earn(s, "chat", valueOf(1_000), 0)
         val pro = e.buyPro(s, "chat")
         assertTrue("chat" in pro.pro)
         assertEquals(BigInteger.ZERO, pro.wallet)
-        assertEquals(before * valueOf(3), e.earn(pro, "chat", valueOf(1_000), 0))
+        assertEquals(before * valueOf(2), e.earn(pro, "chat", valueOf(1_000), 0))
         val early = s.copy(level = 30)
         assertEquals(early, e.buyPro(early, "chat"), "opens at its pro level")
     }
 
     @Test
-    fun lateAppsNeedResetsAsWellAsLevels() {
-        val rich = e.newGame(now, 1).copy(level = 70, wallet = BigInteger.TEN.pow(40))
-        assertEquals(rich, e.buy(rich, "live"), "지금방송중 needs 25 resets")
-        val veteran = rich.copy(backup = Backup(resets = 25))
+    fun lateAppsOpenByBestLevelEver() {
+        val rich = e.newGame(now, 1).copy(level = 30, wallet = BigInteger.TEN.pow(60))
+        assertEquals(rich, e.buy(rich, "live"), "지금방송중 opens at Lv64")
+        val veteran = rich.copy(backup = Backup(bestLevel = 64))
         assertTrue("live" in e.buy(veteran, "live").appLevels)
     }
 

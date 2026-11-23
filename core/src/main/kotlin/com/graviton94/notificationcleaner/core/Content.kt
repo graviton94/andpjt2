@@ -109,14 +109,14 @@ object Catalog {
         app("bank", "잔액알림", 4, 1, KR, Category.Money, 23),
         app("cloud", "용량부족", 4, 2, GL, Category.Work, 26),
         app("translate", "번역해줘", 4, 3, EU, Category.Social, 29),
-        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36, 3),
-        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42, 5),
-        app("match", "매칭됨", 5, 2, EU, Category.Social, 48, 7),
-        app("home", "문열림", 5, 3, EU, Category.Daily, 55, 9),
-        app("live", "지금방송중", 6, 0, AS, Category.Media, 64, 12),
-        app("stock", "장마감", 6, 1, NA, Category.Money, 72, 16),
-        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80, 20),
-        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88, 24),
+        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36),
+        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42),
+        app("match", "매칭됨", 5, 2, EU, Category.Social, 48),
+        app("home", "문열림", 5, 3, EU, Category.Daily, 55),
+        app("live", "지금방송중", 6, 0, AS, Category.Media, 64),
+        app("stock", "장마감", 6, 1, NA, Category.Money, 72),
+        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80),
+        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88),
     )
     val starter = listOf("chat", "mail", "delivery")
 
