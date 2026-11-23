@@ -26,8 +26,8 @@ body.en,body.es{--f:'Luckiest Guy'} body.ja{--f:'Dela Gothic One'} body.zh-TW{--
 .boom{position:absolute;clip-path:polygon(50% 0,58% 28%,80% 6%,72% 36%,100% 26%,82% 50%,100% 72%,70% 66%,82% 96%,56% 74%,46% 100%,40% 72%,14% 92%,26% 62%,0 58%,24% 44%,6% 18%,34% 30%)}
 .shard{position:absolute;background:#f8efe2;box-shadow:0 5px 0 #0004;clip-path:polygon(0 0,100% 25%,65% 100%,8% 70%)}
 .spark{position:absolute;background:#fff6c8;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
-.title{position:absolute;left:10px;top:34px;width:540px;text-align:center;transform:rotate(-5deg)}
-.title .w{display:inline-block;font-size:var(--ts,96px);line-height:1.02;color:#ffe14a}
+.title{position:absolute;left:4px;top:34px;width:620px;z-index:6;text-align:center;transform:rotate(-5deg)}
+.title .w{display:inline-block;font-size:var(--ts,96px);line-height:.98;color:#ffe14a}
 /* three verb stickers */
 .tag{position:absolute;padding:14px 22px 10px;border:5px solid #2a0c02;border-radius:16px;box-shadow:6px 8px 0 #2a0c02;font-size:var(--gs,44px);line-height:1;color:#2a0c02;white-space:nowrap}
 .glove{position:absolute;width:118px;filter:drop-shadow(4px 6px 0 #2a0c02)}
@@ -37,26 +37,26 @@ body.en,body.es{--f:'Luckiest Guy'} body.ja{--f:'Dela Gothic One'} body.zh-TW{--
 <div class="phone"><div class="screen"><div class="island"></div><div class="sb"><span>9:41</span><span class="r"><svg width="18" height="12" viewBox="0 0 18 12"><g fill="#f3e8dc"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g></svg><svg width="16" height="12" viewBox="0 0 16 12"><g fill="none" stroke="#f3e8dc" stroke-width="2" stroke-linecap="round"><path d="M1.5 4.2a9.5 9.5 0 0 1 13 0"/><path d="M4.2 7a5.6 5.6 0 0 1 7.6 0"/></g><circle cx="8" cy="10.2" r="1.6" fill="#f3e8dc"/></svg><svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.75" y="0.75" width="21.5" height="11.5" rx="3.5" fill="none" stroke="#f3e8dc" stroke-opacity=".55" stroke-width="1.5"/><rect x="2.5" y="2.5" width="18" height="8" rx="2" fill="#f3e8dc"/><path d="M23.6 4.3v4.4a2.2 2.2 0 0 0 0-4.4z" fill="#f3e8dc" fill-opacity=".55"/></svg></span></div><div id="list"></div></div></div>
 <div id="fx"></div>
 <img id="broom" src="../../docs/design/ui-assets/props/broom.png" style="position:absolute;width:118px;transform:rotate(-38deg);filter:drop-shadow(0 6px 0 #2a0c0288)"><img id="pan" src="../../docs/design/ui-assets/props/dustpan.png" style="position:absolute;width:104px;transform:rotate(18deg);filter:drop-shadow(0 6px 0 #2a0c0288)"><div class="title ink" id="title" style="--s:14px;--d:10px"></div>
-<div id="tags"></div>
+<div id="tags" style="position:absolute;inset:0;z-index:7"></div>
 <script src="bubbles.js"></script>
 <script>
 window.__ready=false;
 const L=new URLSearchParams(location.search).get('lang')||'ko';
 document.body.classList.add(L);document.documentElement.lang=L;
 const T={
- ko:{title:['알림','청소부'],ts:'104px',verbs:['밀고!','합치고!','터뜨려라!'],gs:'46px',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',pf:'150px',
+ ko:{title:['알림','청소부'],ts:'126px',verbs:['밀고!','합치고!','터뜨려라!'],gs:'46px',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',pf:'150px',
    list:[['톡','새 메시지 3개','#F5C400','톡'],['메일','새 메일 12개','#2F7BF5','M'],['쇼핑','배송 출발','#FF5A36','쇼'],['뱅킹','입금 알림','#1BA784','₩'],['영상','새 동영상','#E0262B','▶'],['날씨','비 소식','#3AA0FF','☂']],
    fly:[['스팸','당첨되셨습니다?!','#FF3B30','!','99+'],['톡','ㅋㅋㅋㅋㅋ','#F5C400','톡','12'],['메일','광고) 오늘만 특가','#2F7BF5','M','5']]},
- en:{title:['NOTIFICATION','SWEEPER'],ts:'72px',verbs:['SWIPE!','MERGE!','POP IT!'],gs:'40px',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',pf:'118px',
+ en:{title:['NOTIFICATION','SWEEPER'],ts:'92px',verbs:['SWIPE!','MERGE!','POP IT!'],gs:'40px',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',pf:'118px',
    list:[['Chat','3 new messages','#F5C400','C'],['Mail','12 new emails','#2F7BF5','M'],['Shop','Out for delivery','#FF5A36','S'],['Bank','Deposit received','#1BA784','$'],['Video','New upload','#E0262B','▶'],['Weather','Rain later','#3AA0FF','☂']],
    fly:[['Spam','You WON?!','#FF3B30','!','99+'],['Chat','lololol','#F5C400','C','12'],['Mail','Today only: 90% off','#2F7BF5','M','5']]},
- 'zh-TW':{title:['通知','大掃除'],ts:'98px',verbs:['滑動!','合併!','引爆!'],gs:'44px',pang:'砰!',kwang:'轟!!',chain:'9連鎖!',pf:'150px',
+ 'zh-TW':{title:['通知','大掃除'],ts:'114px',verbs:['滑動!','合併!','引爆!'],gs:'44px',pang:'砰!',kwang:'轟!!',chain:'9連鎖!',pf:'150px',
    list:[['聊天','3則新訊息','#F5C400','聊'],['郵件','12封新郵件','#2F7BF5','M'],['購物','已出貨','#FF5A36','購'],['銀行','入帳通知','#1BA784','$'],['影片','新影片上傳','#E0262B','▶'],['天氣','今天下雨','#3AA0FF','☂']],
    fly:[['垃圾簡訊','恭喜中獎了?!','#FF3B30','!','99+'],['聊天','哈哈哈哈','#F5C400','聊','12'],['郵件','今日限定特賣','#2F7BF5','M','5']]},
- es:{title:['¡LIMPIA','NOTIS!'],ts:'84px',verbs:['¡DESLIZA!','¡FUSIONA!','¡REVIENTA!'],gs:'34px',pang:'¡PUM!',kwang:'¡BUM!!',chain:'¡COMBO x9!',pf:'104px',
+ es:{title:['¡LIMPIA','NOTIS!'],ts:'112px',verbs:['¡DESLIZA!','¡FUSIONA!','¡REVIENTA!'],gs:'34px',pang:'¡PUM!',kwang:'¡BUM!!',chain:'¡COMBO x9!',pf:'104px',
    list:[['Chat','3 mensajes nuevos','#F5C400','C'],['Correo','12 correos nuevos','#2F7BF5','M'],['Tienda','Pedido enviado','#FF5A36','T'],['Banco','Depósito recibido','#1BA784','$'],['Video','Nuevo video','#E0262B','▶'],['Clima','Lluvia hoy','#3AA0FF','☂']],
    fly:[['Spam','¿¡GANASTE?!','#FF3B30','!','99+'],['Chat','jajajaja','#F5C400','C','12'],['Correo','Solo hoy: -90%','#2F7BF5','M','5']]},
- ja:{title:['通知','おそうじ'],ts:'92px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
+ ja:{title:['通知','おそうじ'],ts:'112px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
    list:[['チャット','新着メッセージ3件','#F5C400','C'],['メール','新着メール12件','#2F7BF5','M'],['ショップ','発送しました','#FF5A36','S'],['バンク','入金のお知らせ','#1BA784','¥'],['動画','新着動画','#E0262B','▶'],['天気','雨のお知らせ','#3AA0FF','☂']],
    fly:[['迷惑','当選しました?!','#FF3B30','!','99+'],['チャット','www','#F5C400','C','12'],['メール','本日限定セール','#2F7BF5','M','5']]}}[L];
 const FAM={ko:'Black Han Sans',ja:'Dela Gothic One','zh-TW':'Noto Sans TC'}[L]||'Luckiest Guy', WT=L==='zh-TW'?900:400;
@@ -78,16 +78,17 @@ fx.innerHTML=img('impact-flash',cx-230,cy-230,460,0)+''+img('shards',cx-330,cy-1
  +[[520,26,38],[980,250,40],[500,460,26],[700,30,22]].map(([x,y,s])=>`<div class="spark" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px"></div>`).join('');
 // verbs: three separate stickers; "push" gets the glove dragging it with a swipe trail
 // verbs: three stickers stepping down to the right. "push": a finger-up glove at the sticker's lower left, swooshing up-right.
-const Y0=256, X0=176;
+const Y0=246, X0=176;
 tags.innerHTML=
  `<img src="../../docs/design/ui-assets/comic-fx/swipe-trail.png" style="position:absolute;left:${X0-250}px;top:${Y0+100}px;width:200px;transform:rotate(-38deg)">`
  +`<div class="tag ink" id="push" style="left:${X0}px;top:${Y0}px;background:#fff;color:#2a0c02;transform:rotate(-5deg);--s:0px;--d:0px;text-shadow:none">${T.verbs[0]}</div>`
  +`<img class="glove" src="../../docs/design/ui-assets/tutorial/hand-swipe.png" style="left:${X0-67}px;top:${Y0+49}px;width:104px;transform:rotate(50deg)">`
- +`<div class="tag" style="left:${X0+70}px;top:${Y0+82}px;background:#7ee0ff;transform:rotate(4deg)">${T.verbs[1]}</div>`
- +`<div class="tag ink" style="left:${X0+132}px;top:${Y0+158}px;background:#ff3b30;color:#ffe14a;transform:rotate(-6deg) scale(1.08);--s:6px;--d:0px">${T.verbs[2]}</div>`;
+ +`<div class="tag" style="left:${X0+70}px;top:${Y0+72}px;background:#7ee0ff;transform:rotate(4deg)">${T.verbs[1]}</div>`
+ +`<div class="tag ink" style="left:${X0+132}px;top:${Y0+140}px;background:#ff3b30;color:#ffe14a;transform:rotate(-6deg) scale(1.08);--s:6px;--d:0px">${T.verbs[2]}</div>`;
 Promise.all([document.fonts.load(WT+' 80px "'+FAM+'"',T.pang+T.kwang),document.fonts.load('80px "Luckiest Guy"','+1.2M')]).then(()=>document.fonts.ready).then(()=>{fitBubbles();
-  const t=title.getBoundingClientRect(); title.style.top=(132-t.height/2+parseFloat(getComputedStyle(title).top)-t.top)+'px';
+  const t=title.getBoundingClientRect(); title.style.top=(Math.max(14,132-t.height/2)+parseFloat(getComputedStyle(title).top)-t.top)+'px';
   const r=title.getBoundingClientRect();
+  tags.style.transform='translateY('+Math.min(20,Math.max(0,r.bottom-252))+'px)';
   broom.style.left=Math.max(-14,r.left-96)+'px'; broom.style.top=(r.top+r.height*.30)+'px';
   pan.style.left='352px'; pan.style.top=Math.max(r.bottom-26,200)+'px'; pan.style.width='112px';
   window.__ready=true});
