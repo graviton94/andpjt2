@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>덱 편집</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#3867F0}a:hover{color:#2449B8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; color: #16181D; background: linear-gradient(180deg, #E3ECFF 0%, #EEF1F7 100%)">
+  <div style="position: absolute; inset: 0; background: #0A0F1E66" aria-hidden="true"></div>
+  <section aria-label="덱 편집" style="position: absolute; left: 0; right: 0; top: 72px; bottom: 0; border-radius: 32px 32px 0 0; background: #F7F9FC; box-shadow: 0 -12px 32px #1E2A5033; padding: 10px 16px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+    <span style="align-self: center; width: 44px; height: 5px; border-radius: 999px; background: #C7CDD8" aria-hidden="true"></span>
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 17px; font-weight: 700">덱 편집</h1>
+      <span style="font-size: 12.5px; font-weight: 700; color: #3C4250">앱 7 / 최소 7 · 최대 8</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{slots}}" as="s" hint-placeholder-count="8">
+        <div style="{{s.style}}">
+          <sc-if value="{{s.filled}}" hint-placeholder-val="{{ true }}">
+            <img src="{{s.icon}}" alt="" width="44" height="44" style="width: 44px; height: 44px; border-radius: 12px">
+            <span style="font-size: 11.5px; font-weight: 600">{{s.name}}</span>
+          </sc-if>
+          <sc-if value="{{s.empty}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 22px; color: #9AA1AD" aria-hidden="true">+</span>
+            <span style="font-size: 11.5px; color: #5F6674">빈 칸</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="padding: 14px; border-radius: 20px; background: #FFFFFF; border: 1px solid #E6EAF2; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <strong style="font-size: 14px">시너지 미리보기</strong>
+        <span style="padding: 2px 8px; border-radius: 10px; background: #FF8A1F24; color: #9A4A00; font-size: 12px; font-weight: 700">합계 ×3.6 / 상한 ×4</span>
+      </div>
+      <sc-for list="{{syn}}" as="y" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px">
+          <span style="width: 76px; font-weight: 700">{{y.label}}</span>
+          <span style="flex: 1; height: 8px; border-radius: 999px; background: #1E2A501A; overflow: hidden; display: block"><span style="{{y.bar}}"></span></span>
+          <span style="width: 92px; text-align: right; color: #3C4250; font-weight: 600">{{y.value}}</span>
+        </div>
+      </sc-for>
+      <p style="margin: 0; font-size: 11.5px; color: #5F6674">같은 권역·기능끼리 넣을수록 보너스가 오르고, 2개 이상 모인 세트마다 ×1.22가 붙어요. 합계는 티어 한 칸(×6)보다 낮게 묶여요.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700"><span>이벤트 슬롯</span><span style="color: #3C4250">2 / 2</span></div>
+      <div style="display: flex; gap: 8px">
+        <span style="flex: 1; height: 44px; border-radius: 14px; background: #FFF6E8; border: 1px solid #FF8A1F66; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; color: #9A4A00">@모두 공지</span>
+        <span style="flex: 1; height: 44px; border-radius: 14px; background: #FFF6E8; border: 1px solid #FF8A1F66; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; color: #9A4A00">알림훈련</span>
+      </div>
+    </div>
+
+    <button type="button" style="margin-top: auto; height: 52px; border: 0; border-radius: 999px; background: #3867F0; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700">덱 저장</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const slot = 'height: 84px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; ';
+    const full = slot + 'background: #FFFFFF; border: 1px solid #E6EAF2';
+    const empty = slot + 'background: transparent; border: 1.5px dashed #C7CDD8';
+    const s = (icon, name) => ({ icon, name, filled: true, empty: false, style: full });
+    const slots = [
+      s('/_blob/9e98b4072656432c276d7452786bcb16', '코코아톡'), s('/_blob/88f5e6ffdf42f01fba6e3ecd4f1a4e89', '라잉'),
+      s('/_blob/9cb19ccefbfd00aa8eb7f41caafcb6de', '틱특'), s('/_blob/7629f92ed364b5bb5ee70b2156bbaabd', '쿠빵'),
+      s('/_blob/a8df141fa0fe328ff7531d04fa5440cf', '메이버'), s('/_blob/f2585d22e973fb5ee225783b32fb3109', '너튜브'),
+      s('/_blob/03fb44a7a0f6d460445a981312712dc3', '인싸그램'), { filled: false, empty: true, style: empty },
+    ];
+    const bar = (pct, c) => 'display: block; height: 100%; border-radius: 999px; width: ' + pct + '%; background: ' + c;
+    const syn = [
+      { label: '아시아권 5', value: '+180%', bar: bar(78, '#3867F0') },
+      { label: '미디어 3', value: '+60%', bar: bar(34, '#3867F0') },
+      { label: '소통 2', value: '+25%', bar: bar(18, '#3867F0') },
+      { label: '세트 4개', value: '×1.22³', bar: bar(56, '#FF8A1F') },
+    ];
+    return { slots, syn };
+  }
+}
+</script>
+</body>
+</html>

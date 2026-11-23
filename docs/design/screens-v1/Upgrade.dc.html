@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>강화</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#3867F0}a:hover{color:#2449B8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; color: #16181D; background: linear-gradient(180deg, #E3ECFF 0%, #EEF1F7 100%)">
+  <div style="position: absolute; inset: 0; background: #0A0F1E66" aria-hidden="true"></div>
+  <section aria-label="강화" style="position: absolute; left: 0; right: 0; top: 96px; bottom: 0; border-radius: 32px 32px 0 0; background: #F7F9FC; box-shadow: 0 -12px 32px #1E2A5033; padding: 10px 16px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+    <span style="align-self: center; width: 44px; height: 5px; border-radius: 999px; background: #C7CDD8" aria-hidden="true"></span>
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 17px; font-weight: 700">강화</h1>
+      <span style="font-size: 13px; font-weight: 700">지갑 3.2조 P</span>
+    </div>
+    <div role="radiogroup" aria-label="구매 단위" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px; border-radius: 999px; background: #1E2A5014">
+      <button type="button" role="radio" aria-checked="false" style="height: 36px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: #3C4250">x1</button>
+      <button type="button" role="radio" aria-checked="true" style="height: 36px; border: 0; border-radius: 999px; background: #FFFFFF; box-shadow: 0 2px 6px #1E2A501F; font: inherit; font-size: 13px; font-weight: 700; color: #16181D">x10</button>
+      <button type="button" role="radio" aria-checked="false" style="height: 36px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: #3C4250">Max</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow: hidden">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+        <article style="min-height: 72px; padding: 10px 12px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E6EAF2">
+          <img src="{{r.icon}}" alt="" width="40" height="40" style="width: 40px; height: 40px; border-radius: 11px; flex: none">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: baseline; gap: 6px"><strong style="font-size: 14px">{{r.name}}</strong><span style="font-size: 12px; font-weight: 700; color: #3C4250">Lv {{r.lv}} → {{r.to}}</span></div>
+            <span style="height: 6px; border-radius: 999px; background: #1E2A501A; overflow: hidden; display: block"><span style="{{r.barStyle}}"></span></span>
+            <span style="{{r.noteStyle}}">{{r.note}}</span>
+          </div>
+          <button type="button" style="{{r.btnStyle}}">{{r.price}}</button>
+        </article>
+      </sc-for>
+    </div>
+    <button type="button" style="height: 52px; border: 0; border-radius: 999px; background: #3867F0; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; box-shadow: 0 8px 20px #3867F04D">모두 강화 · 싼 것부터 47단계</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const btn = 'flex: none; min-width: 92px; height: 40px; border: 0; border-radius: 999px; font: inherit; font-size: 12.5px; font-weight: 700; background: #3867F0; color: #FFFFFF';
+    const r = (icon, name, lv, to, pct, note, hot, price, can) => ({
+      icon, name, lv, to, note, price,
+      barStyle: 'display: block; height: 100%; border-radius: 999px; width: ' + pct + '%; background: ' + (hot ? '#FF8A1F' : '#3867F0'),
+      noteStyle: 'font-size: 11.5px; font-weight: ' + (hot ? '700; color: #9A4A00' : '500; color: #5F6674'),
+      btnStyle: can ? btn : btn.replace('background: #3867F0; color: #FFFFFF', 'background: #1E2A5014; color: #5F6674'),
+    });
+    const rows = [
+      r('/_blob/7629f92ed364b5bb5ee70b2156bbaabd', '쿠빵', 47, 57, 94, '마일스톤 Lv 50까지 3단계 · 가치 ×2', true, '1.8조 P', true),
+      r('/_blob/a8df141fa0fe328ff7531d04fa5440cf', '메이버', 38, 48, 52, '다음 마일스톤 Lv 50', false, '9,400억 P', true),
+      r('/_blob/9e98b4072656432c276d7452786bcb16', '코코아톡', 21, 31, 84, '마일스톤 Lv 25까지 4단계', true, '3,100억 P', true),
+      r('/_blob/f2585d22e973fb5ee225783b32fb3109', '너튜브', 12, 22, 48, '다음 마일스톤 Lv 25', false, '2.6조 P', true),
+      r('/_blob/88f5e6ffdf42f01fba6e3ecd4f1a4e89', '라잉', 30, 40, 60, '다음 마일스톤 Lv 50 · 업무 −10% (글린츠츠)', false, '7,700억 P', true),
+      r('/_blob/9cb19ccefbfd00aa8eb7f41caafcb6de', '틱특', 9, 19, 36, '다음 마일스톤 Lv 10', false, '4.0조 P', false),
+    ];
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>

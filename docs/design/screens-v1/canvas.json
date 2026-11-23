@@ -1,0 +1,82 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-23T08:21:44Z"
+ },
+ "title": "알림 청소부 화면 시안",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "메인 판 · 라이트"
+  },
+  "Shade.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "끌어내린 패널"
+  },
+  "Shop.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "앱 상점 시트"
+  },
+  "Upgrade.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "강화 시트"
+  },
+  "Deck.dc.html": {
+   "x": 0,
+   "y": 964,
+   "w": 390,
+   "h": 844,
+   "title": "덱 편집 시트"
+  },
+  "Reset.dc.html": {
+   "x": 470,
+   "y": 964,
+   "w": 390,
+   "h": 844,
+   "title": "공장 초기화 시트"
+  },
+  "MainDark.dc.html": {
+   "x": 940,
+   "y": 964,
+   "w": 390,
+   "h": 844,
+   "title": "메인 판 · 앰버 골드 다크"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Shade.dc.html",
+  "Shop.dc.html",
+  "Upgrade.dc.html",
+  "Deck.dc.html",
+  "Reset.dc.html",
+  "MainDark.dc.html"
+ ],
+ "notes": {
+  "t1": {
+   "x": 0,
+   "y": -300,
+   "text": "알림 청소부 · 화면 시안 v1 (그레이박스 기준)",
+   "kind": "title1",
+   "maxW": 1800
+  }
+ },
+ "designSystems": []
+}

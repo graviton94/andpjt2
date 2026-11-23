@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>끌어내린 패널</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#3867F0}a:hover{color:#2449B8}
+input[type=range]{accent-color:#3867F0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; color: #16181D; background: linear-gradient(180deg, #C9D6F2 0%, #D9DEE8 100%)">
+  <div style="position: absolute; inset: 0; background: #0A0F1E33" aria-hidden="true"></div>
+  <section aria-label="패널" style="position: absolute; left: 10px; right: 10px; top: 8px; bottom: 120px; border-radius: 30px; padding: 22px 18px; box-sizing: border-box; background: #F7F9FCF2; border: 1px solid #FFFFFFB3; box-shadow: 0 18px 40px #1E2A5040; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 12.5px; font-weight: 600; color: #5F6674">지갑</span>
+        <span style="font-size: 44px; line-height: 48px; font-weight: 700; letter-spacing: -0.03em">3.2조 P</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+        <span style="font-size: 12.5px; font-weight: 600; color: #5F6674">총 배율</span>
+        <span style="font-size: 28px; line-height: 34px; font-weight: 700; color: #3867F0">×1,240</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600"><span>Lv 42 → 43</span><span style="color: #5F6674">68%</span></div>
+      <span style="height: 8px; border-radius: 999px; background: #1E2A501A; overflow: hidden; display: block"><span style="display: block; width: 68%; height: 100%; background: #3867F0; border-radius: 999px"></span></span>
+      <span style="font-size: 11.5px; color: #5F6674">다음 해금: Lv 43 덱 최대 9칸</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{sheets}}" as="s" hint-placeholder-count="8">
+        <a href="{{s.href}}" style="text-decoration: none; color: #16181D; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0; border-radius: 20px; background: #FFFFFFB8; border: 1px solid #FFFFFFCC; box-shadow: 0 4px 12px #1E2A5012">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3867F0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{s.icon}}"/></svg>
+          <span style="font-size: 12px; font-weight: 600">{{s.label}}</span>
+          <span style="font-size: 10.5px; color: #5F6674">{{s.sub}}</span>
+        </a>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <label style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 999px; background: #FFFFFFB8; border: 1px solid #FFFFFFCC; font-size: 13px; font-weight: 600">
+        <span style="width: 64px">배경음</span>
+        <input type="range" min="0" max="100" value="60" style="flex: 1">
+      </label>
+      <label style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 999px; background: #FFFFFFB8; border: 1px solid #FFFFFFCC; font-size: 13px; font-weight: 600">
+        <span style="width: 64px">효과음</span>
+        <input type="range" min="0" max="100" value="80" style="flex: 1">
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <span style="padding: 6px 10px; border-radius: 10px; background: #3867F02E; color: #2449B8; font-size: 12px; font-weight: 700">백업파일 18.4만</span>
+      <span style="padding: 6px 10px; border-radius: 10px; background: #FF8A1F24; color: #9A4A00; font-size: 12px; font-weight: 700">GB 141</span>
+      <span style="padding: 6px 10px; border-radius: 10px; background: #18A95724; color: #0E7A3E; font-size: 12px; font-weight: 700">초기화 12회</span>
+    </div>
+  </section>
+  <div style="position: absolute; left: 0; right: 0; bottom: 96px; display: flex; justify-content: center"><span style="width: 44px; height: 5px; border-radius: 999px; background: #FFFFFF" aria-hidden="true"></span></div>
+  <p style="position: absolute; left: 0; right: 0; bottom: 48px; margin: 0; text-align: center; font-size: 12px; color: #16181D">위로 밀어 닫기 · 판은 그대로 이어져요</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const sheets = [
+      { label: '앱 상점', sub: '새 앱 2', href: 'Shop.dc.html', icon: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0' },
+      { label: '강화', sub: '모두 강화', href: 'Upgrade.dc.html', icon: 'M12 19V5M6 11l6-6 6 6' },
+      { label: '덱', sub: '7/8칸', href: 'Deck.dc.html', icon: 'M4 6h16M4 12h16M4 18h10' },
+      { label: '판 강화', sub: '4종', href: 'Main.dc.html', icon: 'M4 4h16v16H4zM4 10h16M10 10v10' },
+      { label: '초기화', sub: '+148 파일', href: 'Reset.dc.html', icon: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4' },
+      { label: '백업', sub: '상점', href: 'Reset.dc.html', icon: 'M6 4h9l3 3v13H6zM9 4v5h6V4' },
+      { label: '클라우드', sub: 'Lv60', href: 'Reset.dc.html', icon: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z' },
+      { label: '기록', sub: '최고 연쇄 9', href: 'Main.dc.html', icon: 'M5 19V9M12 19V5M19 19v-7' },
+    ];
+    return { sheets };
+  }
+}
+</script>
+</body>
+</html>
