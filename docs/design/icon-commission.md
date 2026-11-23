@@ -23,13 +23,14 @@
 - 전경은 가운데 **지름 66% 원 안**(안전 영역)에 들어가야 한다. 모서리는 앱이 둥근 사각형으로 자른다.
 - 평면 벡터 스타일, 굵고 단순한 형태, 그림자·질감·글자 없음(지정한 경우만 글자). 48px로 줄여도 알아볼 것.
 - **패러디 원칙**: 원작을 바로 떠올리게 하되 똑같지 않게. 실루엣·색 계열은 따르고, 이름 말장난에 맞는 **비틀기 1~2개**를 반드시 넣는다. 원작 로고를 이미지 생성 입력으로 넣지 않는다.
+- **글자·한글 비틀기 금지**: 비틀기는 전 세계 누구나 읽을 수 있는 그림이어야 한다(한글은 한국인만 알아본다). 원작 자체가 한글 로고인 경우(배달 앱 등)만 예외.
 - 납품: `docs/design/app-icons/<id>-fg.png`, `<id>-bg.png`, 가능하면 SVG도.
 
 ## 3. 프롬프트
 
 ### 3.1 마마고 (`papago`) · 3티어 · 아시아권 · 업무 · 번역 앱 패러디
 
-> Flat vector app icon foreground, transparent background. A cheerful round green parrot head in profile, white face patch, chunky yellow beak, **wearing a tiny pink bow on its head (it is the mom: "마마")**, a small speech bubble with two different scripts (a simple "가" and "A") floating beside the beak. Bold simple shapes, no outlines, no gradients, centered within a circle of 66% width. Colour palette: #03C75A green, #FFFFFF, #FFD43B beak, #FF8FB1 bow.
+> Flat vector app icon foreground, transparent background. A cheerful round green parrot head in profile, white face patch, chunky yellow beak, **wearing a tiny pink bow on its head (it is the mom: "마마")**, two small speech bubbles beside the beak, one holding a circle and one a triangle (one idea in two "languages", no letters). Bold simple shapes, no outlines, no gradients, centered within a circle of 66% width. Colour palette: #03C75A green, #FFFFFF, #FFD43B beak, #FF8FB1 bow.
 > Background layer: solid #E9FBEF.
 
 ### 3.2 듀오링구 (`duo`) · 3티어 · 서양권 · 업무 · 언어 학습 앱 패러디

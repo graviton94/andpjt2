@@ -269,19 +269,19 @@ ICONS.update({
         '<path d="M31 28.6 26.4 24 13.6 37.2c.7.7 1.9.8 2.8.3z" fill="#ff3a44"/>'
         '<path d="M31 19.4 16.4 10.5c-.9-.5-2.1-.4-2.8.3L26.4 24z" fill="#00f076"/>'
         '<path d="m31 19.4-4.6 4.6 4.6 4.6 5.4-3.1c1.5-.9 1.5-2.9 0-3.8z" fill="#ffd109"/>',
-    # YouTube: white tile, real-ratio red tube, white play triangle carrying a small red 너
+    # YouTube: white tile, real-ratio red tube, white fast-forward instead of play (no Korean text: parody must read worldwide)
     "tube": WHITE_TILE + '<rect x="6" y="13.5" width="36" height="25.2" rx="7.6" fill="#ff0000" transform="translate(0 -2)"/>'
-        '<path d="M19.5 16.4v15.2L32.5 24z" fill="#fff"/>' + text("너", "#ff0000", size=6, weight=900, y=26.2, x=23.8),
+        '<path d="M16.5 17.4v13.2L26 24zM25 17.4v13.2L34.5 24z" fill="#fff" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>',  # 빨리감기
     # WhatsApp: #25d366 tile, white OUTLINED bubble (tail mirrored) with a white handset inside
     "green": bg("#25d366") + f'<g transform="matrix(-1 0 0 1 48 0)"><path d="{WA_BUBBLE}" fill="none" stroke="#fff" stroke-width="2.8" stroke-linejoin="round"/></g>' +
         f'<path d="{HANDSET}" fill="#fff" transform="translate(7.6 7.6) scale(.68)"/>',
-    # Google G: even-thickness four-colour G; the bar ends in a small ㄱ hook (구굴)
+    # Google G: even-thickness four-colour G; the blue bar pokes out past the ring (no Korean letterform)
     "search": WHITE_TILE + '<g transform="translate(9 9) scale(.625)">'
         '<path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.4 30.5 0 24 0 14.6 0 6.5 5.4 2.6 13.2l8 6.2C12.4 13.7 17.7 9.5 24 9.5z"/>'
         '<path fill="#4285F4" d="M47 24.6c0-1.6-.2-3.1-.4-4.6H24v9h12.9c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 7.2-10.4 7.2-17.6z"/>'
         '<path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8z"/>'
         '<path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-4.9 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9l-8 6.2C6.5 42.6 14.6 48 24 48z"/>'
-        '<path fill="#4285F4" d="M24 20h7v9h-4z"/></g>',
+        '<path fill="#4285F4" d="M36 20h9.5v9H36z"/></g>',  # 막대가 원 밖으로 살짝
 })
 
 # Mascot / illustration icons: commissioned (docs/design/icon-commission.md). Placeholders until delivery.
