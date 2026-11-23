@@ -1,6 +1,62 @@
 {
  "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
- "pending": [],
+ "pending": [
+  {
+   "id": "launcher",
+   "title": "게임 앱 아이콘",
+   "priority": 1,
+   "cols": 2,
+   "rows": 1,
+   "cell": [
+    1024,
+    1024
+   ],
+   "intro": "Launcher icon for a mobile game called Notification Sweeper (swipe notifications away and pop them in chains). Same sticker style. The icon must read at 48 px and must not resemble any real app's logo.",
+   "items": [
+    {
+     "id": "icon-fg",
+     "note": "전경 (투명, 적응형 아이콘)",
+     "out": [
+      1024,
+      1024
+     ],
+     "desc": "FOREGROUND ONLY on transparent background, centred inside the middle 66% circle: a chubby notification bell tilted 15 degrees, with three small notification cards bursting out of it like confetti, and a short broom sweeping across the bottom right; bell gold #FFE27A to #F0A000, cards white with coloured stripes (#3867F0, #FF6B5A, #6BE38A), broom handle #EFA03F"
+    },
+    {
+     "id": "icon-full",
+     "note": "완성본 (배경 포함, 스토어 512)",
+     "out": [
+      1024,
+      1024
+     ],
+     "desc": "the same bell, cards and broom on a full-bleed rounded-square background with a deep amber-to-plum diagonal gradient (#2A1A10 to #5B1F4A) and a soft glow behind the bell; no text"
+    }
+   ]
+  },
+  {
+   "id": "feature",
+   "title": "스토어 그래픽 이미지",
+   "priority": 2,
+   "cols": 1,
+   "rows": 1,
+   "cell": [
+    1024,
+    500
+   ],
+   "intro": "Google Play feature graphic, 1024x500, same sticker style, bold and readable at small size. No text (the title is added by the game).",
+   "items": [
+    {
+     "id": "feature-graphic",
+     "note": "1024×500 그래픽 이미지",
+     "out": [
+      1024,
+      500
+     ],
+     "desc": "a smartphone seen slightly from the side on the left third, its screen exploding with glossy notification cards that shatter into glass shards and gold coins flying to the right; a big glowing x9 chain burst in the middle; warm amber and purple background with light rays; leave the right third calmer for a title overlay"
+    }
+   ]
+  }
+ ],
  "delivered": [
   {
    "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
