@@ -202,9 +202,12 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun on(s: GameState, appId: String) = appId in s.active
 
     fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery) + if (on(s, "grab")) 2 else 0
-    fun chargeMs(s: GameState) = (rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)).let {
+    fun chargeMs(s: GameState, now: Long = Long.MIN_VALUE) = (rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)).let {
         if (s.rows.any { r -> r.alert == Alert.LowBattery }) it * 13 / 10 else it  // 배터리 부족 left on the board
-    }
+    }.let { it * 1_000 / speedPermille(s, now) }
+
+    /** 오버클럭 (Monetization.kt): the whole game runs this much faster, ‰. */
+    fun speedPermille(s: GameState, now: Long): Long = if (now < s.backup.cloud.account.overclockUntil) rules.overclockPermille.toLong() else 1_000L
     fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
         (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
@@ -214,7 +217,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     ) - if (s.rows.any { it.alert == Alert.Storage }) 1 else 0  // 저장공간 부족 left on the board
 
     /** 방해 금지 doubles auto speed while it runs. */
-    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (now < s.dndUntil) it / 2 else it }
+    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (now < s.dndUntil) it / 2 else it }.let { it * 1_000 / speedPermille(s, now) }
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
@@ -389,9 +392,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun tick(s: GameState, now: Long): GameState {
         val cap = energyCap(s)
         if (s.energy >= cap) return s.copy(nextChargeAt = 0)
-        if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s))
+        if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s, now))
         if (now < s.nextChargeAt) return s
-        val ms = chargeMs(s)
+        val ms = chargeMs(s, now)
         val steps = ((now - s.nextChargeAt) / ms + 1).coerceAtMost((cap - s.energy).toLong()).toInt()
         val energy = s.energy + steps
         return s.copy(energy = energy, nextChargeAt = if (energy >= cap) 0 else s.nextChargeAt + steps * ms)
@@ -610,13 +613,13 @@ class Engine(val rules: RuleSet = RuleSet()) {
         for (l in s.level + 1..level) beats += Beat.LevelUp(l)
 
         val cap = energyCap(s)
-        val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s), 60_000L)
+        val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
         var next = s.copy(
             rows = rows,
             gauge = gauge,
             energy = minOf(energyCap(s), state.energy - (if (usesBattery) 1 else 0) + energyGain),
             // Any swipe below a full battery keeps a charge scheduled, even if the cap grew meanwhile.
-            nextChargeAt = if (state.nextChargeAt == 0L) now + chargeMs(s) else state.nextChargeAt,
+            nextChargeAt = if (state.nextChargeAt == 0L) now + chargeMs(s, now) else state.nextChargeAt,
             wallet = s.wallet + earned,
             runEarned = runEarned,
             lastEarned = earned,
@@ -729,7 +732,12 @@ class Engine(val rules: RuleSet = RuleSet()) {
      * in P; the level follows. The battery refills through [tick] as usual.
      */
     fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
-        val minutes = BigInteger.valueOf(minOf(awayMs, offlineCapMs(s)) / 60_000)
+        // 오버클럭 time inside the away window counts that many times over.
+        val from = now - awayMs
+        val until = s.backup.cloud.account.overclockUntil
+        val boosted = if (until <= 0L) 0L else maxOf(0L, minOf(now, until) - from)
+        val effective = minOf(awayMs, offlineCapMs(s)) + boosted * (rules.overclockPermille - 1_000) / 1_000
+        val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
         val p = (s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000))
             .min(jackpotRoom(s, rules.offlineLevelCap))

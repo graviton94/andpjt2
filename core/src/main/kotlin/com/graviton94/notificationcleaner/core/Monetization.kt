@@ -14,6 +14,7 @@ enum class AdSlot(val label: String, val daily: Int) {
     OfflineDouble("오프라인 ×2", 1),
     Boost("수입 부스트 ×2", 2),
     Warp("시간 도약", 1),
+    Overclock("오버클럭 30분", 2),
     Battery("보조배터리", 2),
     CreditBox("데이터 상자", 1),
     FreeUpgrade("무료 강화", 1),
@@ -25,6 +26,7 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Warp("시간 도약", 80, 12),
     Battery("보조배터리", 10, 20),
     BackupBoost("백업 부스트 (다음 초기화 파일 ×2)", 150, 1),
+    Overclock("오버클럭 1시간", 60, 24),
 }
 
 /** One day of the 30-day attendance board: data, and optionally a ticket for a credit item. */
@@ -46,6 +48,8 @@ data class Account(
     val shopUses: Map<CreditItem, Int> = emptyMap(),
     /** 수입 부스트: all income ×2 until this time. */
     val boostUntil: Long = 0,
+    /** 오버클럭: the game runs faster until this time. */
+    val overclockUntil: Long = 0,
     /** 월간 패스: ad-free rewards and daily credits until this time. */
     val passUntil: Long = 0,
     val passDay: Long = -1,
@@ -131,7 +135,7 @@ class Shop(private val engine: Engine) {
 
     fun claimPassDaily(s: GameState, now: Long): GameState {
         if (!passActive(s, now) || s.account.passDay >= dayOf(now)) return s
-        return credit(s, rules.passDailyCredits, bought = true).withAccount { it.copy(passDay = dayOf(now)) }
+        return overclock(credit(s, rules.passDailyCredits, bought = true).withAccount { it.copy(passDay = dayOf(now)) }, now, rules.passOverclockMinutes)
     }
 
     // Premium versions --------------------------------------------------------------------------
@@ -175,6 +179,7 @@ class Shop(private val engine: Engine) {
             AdSlot.Warp -> warp(counted)
             AdSlot.Battery -> battery(counted)
             AdSlot.CreditBox -> credit(counted, rules.adCredits)
+            AdSlot.Overclock -> overclock(counted, now, 30)
             AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + rules.freeUpgradeLevels)) }
         }
     }
@@ -200,7 +205,12 @@ class Shop(private val engine: Engine) {
         CreditItem.Warp -> warp(s)
         CreditItem.Battery -> battery(s)
         CreditItem.BackupBoost -> s.withAccount { it.copy(backupBoost = true) }
+        CreditItem.Overclock -> overclock(s, now, 60)
     }
+
+    fun overclockActive(s: GameState, now: Long) = now < s.account.overclockUntil
+
+    private fun overclock(s: GameState, now: Long, minutes: Int) = s.withAccount { it.copy(overclockUntil = maxOf(now, it.overclockUntil) + minutes * 60_000L) }
 
     fun boostActive(s: GameState, now: Long) = now < s.account.boostUntil
 

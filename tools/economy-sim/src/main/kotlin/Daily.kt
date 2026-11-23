@@ -119,8 +119,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
-                t += engine.chargeMs(s)
-                tl.activeMin += engine.chargeMs(s) / 60_000.0
+                val step = engine.chargeMs(s, t)
+                t += step
+                tl.activeMin += step / 60_000.0
                 s = engine.tick(s, t)
                 val target = engine.bestTarget(s, t)
                 val o0 = target?.let { engine.swipe(s, it, t) }
@@ -221,14 +222,17 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
     // A steady ad watcher's day: boost in two sessions, one time warp; a pass claims every placement.
     if (session == 0 || session == 2) if (!shop.boostActive(s, t)) ad(AdSlot.Boost)
     if (session == 0) ad(AdSlot.Warp)
-    if (payer.pass && session == 1) { ad(AdSlot.CreditBox); ad(AdSlot.FreeUpgrade) }
+    if (payer.pass && session == 1) { ad(AdSlot.CreditBox); ad(AdSlot.FreeUpgrade); ad(AdSlot.Overclock); ad(AdSlot.Overclock) }
     // Attendance tickets.
     if (!shop.boostActive(s, t)) shop.useTicket(s, CreditItem.Boost, t)?.let { s = it }
     while (true) s = shop.useTicket(s, CreditItem.Warp, t) ?: break
     // Spenders: boost every session, then up to a quarter of the daily warp cap each session, stars with the rest.
     if (payer.monthlyData > 0) {
         if (!shop.boostActive(s, t)) shop.buyItem(s, CreditItem.Boost, t)?.let { s = it }
-        repeat(CreditItem.Warp.daily / 4) { shop.buyItem(s, CreditItem.Warp, t)?.let { s = it } }
+        // Data budget per day goes to 오버클럭 hours (time is what the curve needs), a warp or two with the rest.
+        val perDay = payer.monthlyData / 30
+        repeat((perDay / 4 / CreditItem.Overclock.price).toInt().coerceAtLeast(if (session == 0) 1 else 0)) { shop.buyItem(s, CreditItem.Overclock, t)?.let { s = it } }
+        if (session == 0) shop.buyItem(s, CreditItem.Warp, t)?.let { s = it }
     }
     // Premium: the next star of the deck's best app, as soon as it is affordable.
     while (true) {
