@@ -92,7 +92,7 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
  * Cloud shop (2nd prestige, 클라우드 동기화). Bought with GB from syncs; survives everything. [minSyncs] spreads it
  * over the first syncs so every sync opens something new.
  */
-enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int) {
+enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int, val pack: ContentPack? = null) {
     Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 2_300, 1),
     SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 2_600, 1),
     /** Raises the 알림 가치 backup item's max by 10: each sync moves the first layer's ceiling up. */
@@ -104,6 +104,8 @@ enum class CloudItem(val label: String, val max: Int, val base: Long, val growth
     CloudEventSlot("이벤트 슬롯 +1", 1, 20, 1_000, 5),
     CloudAuto("자동 정리 −0.5초", 3, 8, 2_000, 6),
     CloudChain("연쇄 증폭 +0.2", 5, 10, 2_000, 8),
+    /** Ships with update 1: a fresh growth axis for veterans (value ×3 per level). */
+    AiBoost("AI 가속 · 알림 가치 ×3", 10, 5, 2_400, 0, ContentPack.AiTier),
 }
 
 /** A post-launch content pack. */
@@ -213,12 +215,12 @@ object Catalog {
      */
     private val packApps: Map<ContentPack, List<AppDef>> = mapOf(
         ContentPack.AiTier to listOf(
-            app("gemini", "재미나이", 11, 0, GL, Category.Work, 124), // Gemini 패러디
-            app("claude", "클로디", 11, 1, GL, Category.Social, 128), // Claude 패러디
-            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 132), // Copilot 패러디
-            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 136), // Perplexity 패러디
-            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 140), // DeepSeek 패러디
-            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 145), // Midjourney 패러디
+            app("gemini", "재미나이", 11, 0, GL, Category.Work, 122), // Gemini 패러디
+            app("claude", "클로디", 11, 1, GL, Category.Social, 124), // Claude 패러디
+            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 126), // Copilot 패러디
+            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 128), // Perplexity 패러디
+            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 130), // DeepSeek 패러디
+            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 132), // Midjourney 패러디
         ),
     )
 

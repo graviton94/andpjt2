@@ -164,7 +164,8 @@ data class RuleSet(
         val v = backup.lv(BackupItem.Value)
         val passive = Math.round(Math.pow(1.0 + lifetimeFilePercent / 100.0 * backup.lifetime, lifetimeExponentPermille / 1000.0) * 1e6)
         val sync = backup.cloud.lv(CloudItem.SyncValue)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive) * big(2).pow(sync)
+        val ai = backup.cloud.lv(CloudItem.AiBoost)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive) * big(2).pow(sync) * big(3).pow(ai)
         val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
         return num to den
     }

@@ -281,7 +281,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val c = s.backup.cloud
         val owned = c.lv(item)
         val price = rules.cloudPrice(item, owned)
-        if (owned >= item.max || c.gb < price || c.syncs < item.minSyncs) return s
+        if (owned >= item.max || c.gb < price || c.syncs < item.minSyncs || (item.pack != null && item.pack !in Catalog.packs)) return s
         return s.copy(backup = s.backup.copy(cloud = c.copy(gb = c.gb - price, items = c.items + (item to owned + 1))))
     }
 

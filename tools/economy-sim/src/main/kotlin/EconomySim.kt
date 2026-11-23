@@ -125,7 +125,7 @@ fun spendCloud(input: GameState): GameState {
     while (true) {
         val c = s.backup.cloud
         val item = com.graviton94.notificationcleaner.core.CloudItem.entries
-            .filter { c.lv(it) < it.max && c.syncs >= it.minSyncs }
+            .filter { c.lv(it) < it.max && c.syncs >= it.minSyncs && (it.pack == null || it.pack in Catalog.packs) }
             .minByOrNull { e.rules.cloudPrice(it, c.lv(it)) } ?: break
         val next = e.buyCloud(s, item)
         if (next == s) break
