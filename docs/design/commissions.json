@@ -1,6 +1,38 @@
 {
  "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
- "pending": [
+ "pending": [],
+ "delivered": [
+  {
+   "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
+   "date": "11-23"
+  },
+  {
+   "title": "메타 아이콘 8종 (시트 1장 → 8개, ui-assets/meta/)",
+   "date": "11-23"
+  },
+  {
+   "title": "프리미엄 · 등급 배지 (시트 1장 → 9개, ui-assets/badge/)",
+   "date": "11-23"
+  },
+  {
+   "title": "부스트 · 광고 보상 8종 (시트 1장 → 8개, ui-assets/boost/)",
+   "date": "11-23"
+  },
+  {
+   "title": "재화 5종 (시트 1장 → 5개, ui-assets/currency/)",
+   "date": "11-23"
+  },
+  {
+   "title": "앱 아이콘 발주 10종 (마마고·듀오링구·컵컷·트래블로까·래딧·로빈훗훗·챗GTP·메롱·글린츠츠·잡스트리트)",
+   "date": "11-23"
+  },
+  {
+   "title": "수화기 부품 (전화·왔썹)",
+   "date": "11-23"
+  }
+ ],
+ "sheetRules": "ONE image only: a sprite sheet. Draw every item in its own grid cell, in the exact order listed (left to right, top to bottom). Each item is centred in its cell with at least 12% empty margin on every side; items never touch, overlap or cross cell borders. Same scale, outline weight and lighting for all items. Transparent background; if transparency is impossible, fill everything outside the items with flat solid #FF00FF magenta. No grid lines, no cell borders, no labels, no numbers, no text anywhere.",
+ "deliveredSheets": [
   {
    "id": "currency",
    "title": "재화 5종",
@@ -334,16 +366,5 @@
     }
    ]
   }
- ],
- "delivered": [
-  {
-   "title": "앱 아이콘 발주 10종 (마마고·듀오링구·컵컷·트래블로까·래딧·로빈훗훗·챗GTP·메롱·글린츠츠·잡스트리트)",
-   "date": "11-23"
-  },
-  {
-   "title": "수화기 부품 (전화·왔썹)",
-   "date": "11-23"
-  }
- ],
- "sheetRules": "ONE image only: a sprite sheet. Draw every item in its own grid cell, in the exact order listed (left to right, top to bottom). Each item is centred in its cell with at least 12% empty margin on every side; items never touch, overlap or cross cell borders. Same scale, outline weight and lighting for all items. Transparent background; if transparency is impossible, fill everything outside the items with flat solid #FF00FF magenta. No grid lines, no cell borders, no labels, no numbers, no text anywhere."
+ ]
 }

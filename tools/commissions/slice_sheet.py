@@ -18,13 +18,22 @@ a = np.asarray(sheet).astype(np.int16)
 
 def key(cell):
     alpha = cell[..., 3]
-    if (alpha < 250).mean() > 0.2:  # real transparency
-        return alpha
+    if (alpha < 250).mean() > 0.2:  # real transparency; drop the faint glow haze some generators add
+        return np.where(alpha < 16, 0, alpha).astype(np.uint8)
     rgb = cell[..., :3]
     corners = np.array([rgb[0, 0], rgb[0, -1], rgb[-1, 0], rgb[-1, -1]])
     bg = np.array([255, 0, 255]) if np.abs(corners - [255, 0, 255]).sum(1).min() < 90 else np.median(corners, 0)
     dist = np.abs(rgb - bg).sum(-1)
     return np.clip((dist - 40) * 4, 0, 255).astype(np.uint8)
+
+def main_run(mask, axis):
+    """Rows (axis=1) or columns (axis=0) of the biggest contiguous block, so strays from neighbouring cells drop out."""
+    prof = mask.sum(axis)
+    runs, start = [], None
+    for i, v in enumerate(list(prof) + [0]):
+        if v and start is None: start = i
+        if not v and start is not None: runs.append((start, i)); start = None
+    return max(runs, key=lambda r: prof[r[0]:r[1]].sum()) if runs else (0, 0)
 
 out_dir = ROOT / "docs/design/ui-assets" / gid
 out_dir.mkdir(parents=True, exist_ok=True)
@@ -38,9 +47,13 @@ for i, it in enumerate(g["items"]):
     x0, y0, x1, y1 = round(c * cw), round(r * ch), round((c + 1) * cw), round((r + 1) * ch)
     cell = a[y0:y1, x0:x1].copy()
     alpha = key(cell)
-    ys, xs = np.nonzero(alpha > 24)
-    if len(xs) == 0:
+    m = alpha > 48
+    if not m.any():
         print("empty cell", it["id"]); continue
+    r0, r1 = main_run(m, 1); keep = np.zeros_like(m); keep[r0:r1] = True; m &= keep
+    c0, c1 = main_run(m, 0); keep = np.zeros_like(m); keep[:, c0:c1] = True; m &= keep
+    alpha = np.where(keep[..., None].squeeze() if False else (np.arange(alpha.shape[0])[:, None] >= r0) & (np.arange(alpha.shape[0])[:, None] < r1) & (np.arange(alpha.shape[1])[None, :] >= c0) & (np.arange(alpha.shape[1])[None, :] < c1), alpha, 0)
+    ys, xs = np.nonzero(m)
     cell[..., 3] = np.minimum(cell[..., 3], alpha)
     img = Image.fromarray(cell.astype(np.uint8), "RGBA").crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
     ow, oh = (it["out"], it["out"]) if isinstance(it["out"], int) else it["out"]
