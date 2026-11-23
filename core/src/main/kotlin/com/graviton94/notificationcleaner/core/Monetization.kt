@@ -60,6 +60,8 @@ data class Account(
     val missionProgressDay: Long = -1,
     /** 꾸미기 조각 from achievements and the daily challenge: 10 = one free cosmetic. */
     val pieces: Int = 0,
+    /** Recently granted claim ids (purchase tokens, ad rewards): a claim is paid once (21 platform). */
+    val processedClaims: List<String> = emptyList(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
@@ -109,6 +111,16 @@ class Shop(private val engine: Engine) {
 
     fun credit(s: GameState, n: Long, bought: Boolean = false): GameState = s.withAccount {
         it.copy(credits = it.credits + n, creditsFree = it.creditsFree + if (bought) 0 else n, creditsBought = it.creditsBought + if (bought) n else 0)
+    }
+
+    /**
+     * Pays a store or ad reward at most once: [grant] runs only for an unseen [claimId], and the id is stored with the
+     * result so the caller saves both in one transaction before confirming to the SDK. Keeps the last 500 ids.
+     */
+    fun claimOnce(s: GameState, claimId: String, grant: (GameState) -> GameState?): GameState? {
+        if (claimId in s.account.processedClaims) return null
+        val paid = grant(s) ?: return null
+        return paid.withAccount { it.copy(processedClaims = (it.processedClaims + claimId).takeLast(500)) }
     }
 
     private fun spend(s: GameState, n: Long): GameState? =

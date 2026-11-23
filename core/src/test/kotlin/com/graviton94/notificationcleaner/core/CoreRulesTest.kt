@@ -688,4 +688,14 @@ class CoreRulesTest {
         // tomorrow's progress starts at zero
         assertEquals(0, meta.missionProgress(reset, Mission.Swipes, t + 86_400_000L))
     }
+
+    @Test
+    fun claimsArePaidOnce() {
+        val e = Engine(); val shop = Shop(e)
+        val s = e.newGame(0, 1)
+        val once = shop.claimOnce(s, "gpa.1234") { shop.credit(it, 550, bought = true) }!!
+        assertEquals(550, once.account.credits)
+        assertNull(shop.claimOnce(once, "gpa.1234") { shop.credit(it, 550, bought = true) })
+        assertEquals(once, SaveCodec.decode(SaveCodec.encode(once)))
+    }
 }
