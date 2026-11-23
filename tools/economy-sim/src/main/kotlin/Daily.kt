@@ -15,6 +15,8 @@ import com.graviton94.notificationcleaner.core.GameState
  */
 
 private val engine = Engine()
+/** The app with the highest unlock level: "last app" in the reports. */
+private val LAST_APP = Catalog.apps.maxBy { it.unlockLevel }.id
 private const val START = 1_000_000L
 private const val DAY = 86_400_000L
 
@@ -97,7 +99,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 }
                 val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
                 tl.tierDay.putIfAbsent(tier, dayOf(t))
-                if (tl.lastAppDay == null && "minutes" in s.appLevels) tl.lastAppDay = dayOf(t)
+                if (tl.lastAppDay == null && LAST_APP in s.appLevels) tl.lastAppDay = dayOf(t)
                 // Exploit probe: from week 2, reset the moment Lv25 is reached.
                 if (spam && day >= 7 && s.level >= engine.rules.resetLevel && engine.backupFilesNow(s) > 0) {
                     s = chooseDeck(spendBackup(engine.factoryReset(s, t)!!), DeckPolicy.Synergy)
@@ -151,12 +153,12 @@ fun daily(days: Int, seeds: Long) {
     val noReset = (1L..seeds).map { playDays(it, minOf(days, 30), plan, false) }
     fun d(x: Double?) = if (x == null || x.isNaN()) "-" else "%.1f일".format(x)
     println("[환생] 첫 초기화 ${d(p50(withReset.mapNotNull { it.resetDays.firstOrNull() }))} · 초기화 횟수 ${p50(withReset.map { it.resetDays.size.toDouble() }).toInt()}" +
-        " · " + (2..6).joinToString(" · ") { tr -> "${tr}티어 ${d(p50(withReset.mapNotNull { it.tierDay[tr] }))}" } +
+        " · " + (2..10).joinToString(" · ") { tr -> "${tr}티어 ${d(p50(withReset.mapNotNull { it.tierDay[tr] }))}" } +
         " · 마지막 앱 ${d(p50(withReset.mapNotNull { it.lastAppDay }))} (${withReset.count { it.lastAppDay != null }}/$seeds)")
     println("       주별 최고 레벨 " + withReset[0].bestLevelByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(withReset.map { (it.bestLevelByWeek[w] ?: 0).toDouble() }).toInt()}" })
     println("       주별 최고점 자릿수 " + withReset[0].digitsByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(withReset.map { (it.digitsByWeek[w] ?: 0).toDouble() }).toInt()}" })
     println("[환생 없음 30일] 최고 레벨 ${p50(noReset.map { (it.bestLevelByWeek.values.maxOrNull() ?: 0).toDouble() }).toInt()} · " +
-        (2..6).joinToString(" · ") { tr -> "${tr}티어 ${d(p50(noReset.mapNotNull { it.tierDay[tr] }))}" } + " · 마지막 앱 ${noReset.count { it.lastAppDay != null }}/$seeds")
+        (2..10).joinToString(" · ") { tr -> "${tr}티어 ${d(p50(noReset.mapNotNull { it.tierDay[tr] }))}" } + " · 마지막 앱 ${noReset.count { it.lastAppDay != null }}/$seeds")
     // Unlock density: gaps between first-time unlocks.
     val gapsMin = withReset.flatMap { tl -> tl.unlocks.zipWithNext { a, b -> b.first - a.first } }
     val gapsDay = withReset.flatMap { tl -> tl.unlocks.zipWithNext { a, b -> b.second - a.second } }

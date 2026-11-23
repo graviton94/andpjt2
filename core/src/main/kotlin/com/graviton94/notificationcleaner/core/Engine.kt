@@ -205,11 +205,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     // Game lifecycle --------------------------------------------------------------------------
 
     /**
-     * First board of a run. Fixed so the first ten seconds teach one thing: the middle row (문앞왔) sits
-     * between two 메일소포 rows of 2; removing it makes them touch, reach 4 and burst.
+     * First board of a run. Fixed so the first ten seconds teach one thing: the middle row (맑음예보) sits
+     * between two 메모장끝 rows of 2; removing it makes them touch, reach 4 and burst.
      */
     fun newGame(now: Long, seed: Long, backup: Backup = Backup()): GameState {
-        val layout = listOf("chat" to 1, "delivery" to 2, "mail" to 2, "delivery" to 1, "mail" to 2, "chat" to 1, "delivery" to 2)
+        val layout = listOf("alarm" to 1, "weather" to 2, "memo" to 2, "weather" to 1, "memo" to 2, "alarm" to 1, "weather" to 2)
         val rows = layout.mapIndexed { i, (app, n) -> Row(i + 1L, RowKind.App, app, count = n, threshold = rules.threshold) }
         val remembered = Catalog.apps.filter { it.id !in Catalog.starter }.take(backup.lv(BackupItem.RememberedApps)).map { it.id }
         val s = GameState(

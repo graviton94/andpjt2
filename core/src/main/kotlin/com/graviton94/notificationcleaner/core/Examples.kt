@@ -49,7 +49,7 @@ fun firstSwipe(): Pair<GameState, SwipeOutcome> = engine.newGame(NOW, 7).let { i
 
 /** 2: a two-step unzip. */
 fun doubleChain(): Pair<GameState, SwipeOutcome> =
-    with(rows("chat" to 1, "mail" to 2, "chat" to 3, "delivery" to 1, "chat" to 1, "mail" to 2, "delivery" to 2)).let { it to engine.swipe(it, 103, NOW)!! }
+    with(rows("alarm" to 1, "memo" to 2, "alarm" to 3, "weather" to 1, "alarm" to 1, "memo" to 2, "weather" to 2)).let { it to engine.swipe(it, 103, NOW)!! }
 
 /** 3: the same swipe with gauge 80 and overload depth 3 (two Overload assists). */
 fun overload(): Pair<GameState, SwipeOutcome> =
@@ -57,15 +57,15 @@ fun overload(): Pair<GameState, SwipeOutcome> =
 
 /** 4: the same swipe after upgrades: 톡탁톡 Lv10 (milestone ×2), 메일소포 Lv4. */
 fun upgraded(): Pair<GameState, SwipeOutcome> =
-    overload().first.let { it.copy(appLevels = it.appLevels + ("chat" to 10) + ("mail" to 4)) }.let { it to engine.swipe(it, 103, NOW)!! }
+    overload().first.let { it.copy(appLevels = it.appLevels + ("alarm" to 10) + ("memo" to 4)) }.let { it to engine.swipe(it, 103, NOW)!! }
 
 /**
- * 5: igniter. Deck 톡탁톡(1티어) · 비트서랍(3티어) · 지금방송중(6티어). A 톡탁톡 burst under a 6-tier deck adds
+ * 5: igniter. Deck 오분만(1티어) · 길막지도(3티어) · 지금방송중(6티어). A 오분만 burst under a 6-tier deck adds
  * 12 + 4×5 = 32 gauge and raises the chain number, so the 6-tier burst after it pays ×3.
  */
 fun igniter(): Pair<GameState, SwipeOutcome> = with(
-    rows("live" to 2, "chat" to 2, "music" to 1, "chat" to 2, "live" to 2, "music" to 2, "chat" to 1),
-) { it.copy(appLevels = mapOf("chat" to 1, "music" to 1, "live" to 1), active = listOf("chat", "music", "live"), level = 40, gauge = 60) }
+    rows("live" to 2, "alarm" to 2, "map" to 1, "alarm" to 2, "live" to 2, "map" to 2, "alarm" to 1),
+) { it.copy(appLevels = mapOf("alarm" to 1, "map" to 1, "live" to 1), active = listOf("alarm", "map", "live"), level = 40, gauge = 60) }
     .let { it to engine.swipe(it, 102, NOW)!! }
 
 /** 6: the same 4 notifications of 일정찍 under different decks. Synergy only. */
@@ -73,21 +73,21 @@ fun synergyTable(): List<Pair<String, BigInteger>> {
     val base = engine.newGame(NOW, 7).copy(level = 40)
     fun deck(vararg ids: String) = base.copy(appLevels = ids.associateWith { 1 }, active = ids.toList())
     return listOf(
-        "일정찍 혼자 (업무1 · 글로벌1)" to deck("calendar", "chat", "pay"),
-        "업무 2 · 글로벌 2 (메일소포)" to deck("calendar", "mail", "pay"),
-        "업무 3 · 글로벌 3 (+용량부족)" to deck("calendar", "mail", "cloud"),
-        "업무 4 · 글로벌 3 (+밀린메일)" to deck("calendar", "mail", "cloud", "inbox"),
-        "업무 5 · 글로벌 3 (+카메라켜요)" to deck("calendar", "mail", "cloud", "inbox", "meet"),
+        "일정찍 혼자 (업무 1)" to deck("calendar", "calc", "delivery"),
+        "업무 2 (+메일소포)" to deck("calendar", "mail", "delivery"),
+        "업무 3 (+용량부족)" to deck("calendar", "mail", "cloud"),
+        "업무 4 (+밀린메일)" to deck("calendar", "mail", "cloud", "inbox"),
+        "업무 5 (+카메라켜요)" to deck("calendar", "mail", "cloud", "inbox", "meet"),
     ).map { (label, s) -> label to engine.earn(s, "calendar", BigInteger.valueOf(4), 0) }
 }
 
 /** 7: a wild row merges with anything. */
 fun wildMerge(): Pair<GameState, SwipeOutcome> =
-    with(rows("chat" to 1, "mail" to 2, "spam" to 0, "wild" to 2, "delivery" to 1, "mail" to 2, "chat" to 1)).let { it to engine.swipe(it, 104, NOW)!! }
+    with(rows("alarm" to 1, "memo" to 2, "spam" to 0, "wild" to 2, "weather" to 1, "memo" to 2, "alarm" to 1)).let { it to engine.swipe(it, 104, NOW)!! }
 
 /** 8: @모두 공지 queues a double sandwich A·B·A·B·A. */
 fun allHands(): Pair<GameState, SwipeOutcome> = with(
-    rows("chat" to 1, "mail" to 2, "delivery" to 1, "chat" to 2, "mail" to 1, "delivery" to 2, "chat" to 1)
+    rows("alarm" to 1, "memo" to 2, "weather" to 1, "alarm" to 2, "memo" to 1, "weather" to 2, "alarm" to 1)
         .toMutableList().also { it[2] = Row(102, RowKind.Event, event = EventCard.AllHands) },
 ) { it.copy(events = setOf(EventCard.AllHands), equipped = listOf(EventCard.AllHands), level = 14) }.let { it to engine.swipe(it, 102, NOW)!! }
 
@@ -98,7 +98,7 @@ data class DeckRun(val apps: Int, val rows: Int, val swipes: Int, val bursts: In
  * apps tier 1 so only the deck size differs. [assists] adds Sandwich 5 and Wild 5.
  */
 fun deckRun(seed: Long, size: Int, assists: Boolean): DeckRun {
-    val ids = listOf("chat", "mail", "delivery", "steps", "feed", "calendar", "pay", "shorts").take(size)
+    val ids = listOf("alarm", "memo", "weather", "flash", "calc", "steps", "calendar", "mail").take(size)
     var s = engine.newGame(NOW, seed).copy(
         level = 45, appLevels = ids.associateWith { 1 }, active = ids,
         assists = if (assists) mapOf(Assist.Sandwich to 5, Assist.Wild to 5) else emptyMap(),
