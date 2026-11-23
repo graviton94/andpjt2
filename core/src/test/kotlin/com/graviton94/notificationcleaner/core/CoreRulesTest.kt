@@ -655,4 +655,21 @@ class CoreRulesTest {
         val streak = duo.withAccount { it.copy(streak = 10) }
         assertEquals(e.earn(duo, "duo", BigInteger.ONE, 0) * BigInteger.valueOf(12) / BigInteger.TEN, e.earn(streak, "duo", BigInteger.ONE, 0))
     }
+
+    @Test
+    fun saveRoundTripsAPlayedGameAndReadsOldSaves() {
+        val e = Engine(); val shop = Shop(e)
+        var s = e.newGame(0, 5)
+        var t = 0L
+        repeat(200) { t += 3_000; s = e.tick(s, t); e.bestTarget(s, t)?.let { id -> e.swipe(s, id, t)?.let { s = it.state } } }
+        s = shop.claimAttendance(shop.credit(s, 500), t)
+        s = shop.upgradePremium(s, "memo") ?: s
+        s = shop.buySpeedPass(s, t, SpeedPass.Turbo)
+        val text = SaveCodec.encode(s)
+        assertEquals(s, SaveCodec.decode(text))
+        // A save from before monetization existed: no account at all.
+        val old = text.replace(Regex(""","account":\{.*?"speedPassUntil":\d+[^}]*}"""), "")
+        assertEquals(0, SaveCodec.decode(old).let { it.backup.cloud.account.stars("zzz") })
+        assertTrue(text.length < 20_000, "save is ${text.length} chars")
+    }
 }

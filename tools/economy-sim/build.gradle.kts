@@ -3,6 +3,7 @@
 //   ./gradlew -p tools/economy-sim run --args="<hours per run> <seeds> <runs>"
 plugins {
     kotlin("jvm") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
     application
 }
 
@@ -18,6 +19,10 @@ sourceSets {
     main {
         kotlin.srcDir("../../core/src/main/kotlin")
     }
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 }
 
 application { mainClass.set("EconomySimKt") }

@@ -1,5 +1,7 @@
 package com.graviton94.notificationcleaner.core
 
+import kotlinx.serialization.Serializable
+
 import java.math.BigInteger
 
 /**
@@ -38,6 +40,7 @@ enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, va
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
 data class AttendReward(val data: Long, val tickets: Map<CreditItem, Int> = emptyMap(), val starVouchers: Int = 0, val title: String? = null)
 
+@Serializable
 data class Account(
     val credits: Long = 0,
     /** App id → premium stars (0..5). */

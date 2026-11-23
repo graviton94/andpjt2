@@ -1,4 +1,9 @@
+@file:UseSerializers(BigIntegerSerializer::class)
+
 package com.graviton94.notificationcleaner.core
+
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 
 import java.math.BigInteger
 import java.math.BigInteger.ZERO
@@ -9,6 +14,7 @@ enum class RowKind { App, Wild, Spam, Call, Event, Alert }
 enum class Alert(val label: String) { LowBattery("배터리 부족"), Storage("저장공간 부족"), Crash("앱 충돌") }
 
 /** One notification row on the board. Board counts stay small; value multipliers make P large. */
+@Serializable
 data class Row(
     val id: Long,
     val kind: RowKind,
@@ -27,6 +33,7 @@ data class Row(
 }
 
 /** What survives a factory reset: backup files and what they bought. */
+@Serializable
 data class Backup(
     val files: Long = 0,
     val items: Map<BackupItem, Int> = emptyMap(),
@@ -44,6 +51,7 @@ data class Backup(
 }
 
 /** What survives a 클라우드 동기화: GB and what they bought. */
+@Serializable
 data class Cloud(
     val gb: Long = 0,
     val items: Map<CloudItem, Int> = emptyMap(),
@@ -60,6 +68,7 @@ data class Cloud(
     fun lv(item: CloudItem): Int = items[item] ?: 0
 }
 
+@Serializable
 data class GameState(
     val rulesVersion: Int,
     /** Top to bottom. */

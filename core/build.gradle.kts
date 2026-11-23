@@ -1,6 +1,7 @@
 // Core rules v2: pure Kotlin, no Android. The app will depend on this module; tools run it on the JVM.
 plugins {
     kotlin("jvm") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
     application
 }
 
@@ -13,6 +14,7 @@ java {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation(kotlin("test"))
 }
 
