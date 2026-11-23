@@ -199,6 +199,20 @@ class CoreRulesTest {
     }
 
     @Test
+    fun unlocksArePermanentAndPriceSetsTheOrder() {
+        // A fresh run after a Lv40 best: 카메라켜요 (Lv36) is unlocked but its price keeps it out of reach.
+        val veteran = e.newGame(now, 1, Backup(bestLevel = 40, resets = 5))
+        assertTrue(e.unlocked(veteran, "meet"))
+        assertEquals(veteran, e.buy(veteran, "meet"))
+        val price = e.rules.appPrice(Catalog.app("meet"))
+        assertTrue(price >= e.rules.levelP(36) / valueOf(10))
+        assertTrue("meet" in e.buy(veteran.copy(wallet = price), "meet").appLevels)
+        // Higher tiers always cost more than lower ones.
+        val prices = Catalog.apps.filter { it.id !in Catalog.starter }.map { e.rules.appPrice(it) }
+        assertEquals(prices.sorted(), prices)
+    }
+
+    @Test
     fun backupItemsShapeTheNextRun() {
         val b = Backup(items = mapOf(BackupItem.RememberedApps to 2, BackupItem.StartFunds to 3, BackupItem.Battery to 1, BackupItem.DeepOverload to 1))
         val s = e.newGame(now, 1, b)

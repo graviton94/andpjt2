@@ -68,7 +68,7 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
     val bought = mutableListOf<String>()
     while (true) {
         val bestTier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
-        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && s.level >= it.unlockLevel && s.backup.resets >= it.minResets }.minByOrNull { e.rules.appPrice(it) }
+        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && e.unlocked(s, it.id) }.minByOrNull { e.rules.appPrice(it) }
         val appPrice = nextApp?.let { e.rules.appPrice(it) }
         // 1. A new app: always for a new tier, otherwise only while the deck has room or the policy wants options.
         if (nextApp != null && s.wallet >= e.appPrice(s, nextApp.id) &&

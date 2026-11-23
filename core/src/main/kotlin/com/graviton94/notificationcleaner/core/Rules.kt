@@ -62,6 +62,9 @@ data class RuleSet(
     val appPriceBase: Long = 100,
     val appPriceTierRatio: Long = 60,
     val appPriceOrderPermille: List<Int> = listOf(1_000, 1_600, 2_500, 4_000),
+    val appPriceLevelPermille: Int = 100,
+    /** An upgrade L→L+1 costs this ‰ of the app's price × growth^(L−1). */
+    val upgradeSharePermille: Int = 250,
     val upgradeBase: Long = 25,
     val upgradeGrowthPermille: Int = 1_300,
     // Progress
@@ -141,13 +144,21 @@ data class RuleSet(
         return num to den
     }
 
-    fun appPrice(app: AppDef): BigInteger =
-        big(appPriceBase) * big(appPriceTierRatio).pow(app.tier - 1) * big(appPriceOrderPermille[app.order].toLong()) / big(1_000)
+    /**
+     * App price: the tier ladder, but never below [appPriceLevelPermille]‰ of the P its unlock level needs.
+     * Unlocks are permanent (Engine.unlocked), so in a later run the price — not the level — sets the order:
+     * high tiers stay out of reach at the start of a run and are bought one after another.
+     */
+    fun appPrice(app: AppDef): BigInteger {
+        val ladder = big(appPriceBase) * big(appPriceTierRatio).pow(app.tier - 1) * big(appPriceOrderPermille[app.order].toLong()) / big(1_000)
+        return ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
+    }
 
     fun upgradePrice(app: AppDef, level: Int): BigInteger {
-        val base = big(upgradeBase) * big(appPriceTierRatio).pow(app.tier - 1)
+        val base = appPrice(app) * big(upgradeSharePermille.toLong()) / big(1_000)
         return (base * big(upgradeGrowthPermille.toLong()).pow(level - 1) / big(1_000).pow(level - 1)).max(ONE)
     }
+
 
     fun assistPrice(a: Assist, owned: Int): BigInteger = big(a.base) * big(a.growth).pow(owned)
 

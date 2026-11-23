@@ -503,9 +503,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun appPrice(s: GameState, appId: String): BigInteger =
         rules.appPrice(Catalog.app(appId)).let { if (s.saleNext) it / BigInteger.TWO else it }
 
+    /** Unlocks are permanent: the deepest level any run reached (and the reset count) opens apps for good. */
+    fun unlocked(s: GameState, appId: String): Boolean {
+        val app = Catalog.app(appId)
+        return maxOf(s.level, s.backup.bestLevel) >= app.unlockLevel && s.backup.resets >= app.minResets
+    }
+
     fun canBuy(s: GameState, appId: String): Boolean =
-        appId !in s.appLevels && s.level >= Catalog.app(appId).unlockLevel && s.backup.resets >= Catalog.app(appId).minResets &&
-            s.wallet >= appPrice(s, appId)
+        appId !in s.appLevels && unlocked(s, appId) && s.wallet >= appPrice(s, appId)
 
     /** A bought app joins the deck if a slot is free; otherwise the player swaps it in. */
     fun buy(s: GameState, appId: String): GameState {
