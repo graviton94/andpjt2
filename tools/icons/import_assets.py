@@ -16,6 +16,8 @@ BG = {"papago": "#E9FBEF", "duo": "#FFFFFF", "reddit": "#FF4500", "robin": "#0B0
 CLEAN = {"papago": 200}
 # Centre on the art's mass (the character's head) instead of its bounding box: antenna and props stick out.
 MASS_CENTRE = {"reddit"}
+# Recolour props that vanish into the tile: (min R, max G, max B) of the source colour -> new colour.
+RECOLOR = {"reddit": ((200, 140, 90), (200, 16, 46))}  # upvote arrow #FF4500 on a #FF4500 tile -> deep red #C8102E
 
 
 def process(key):
@@ -27,6 +29,11 @@ def process(key):
         im = Image.fromarray(a)
         im.putalpha(im.getchannel("A").resize((im.width // 2, im.height // 2), Image.LANCZOS).resize(im.size, Image.LANCZOS))
         a = np.array(im)
+    if key in RECOLOR:
+        (rmin, gmax, bmax), new = RECOLOR[key]
+        m = (a[..., 0] >= rmin) & (a[..., 1] <= gmax) & (a[..., 2] <= bmax) & (a[..., 3] > 0)
+        a[m, 0], a[m, 1], a[m, 2] = new
+        im = Image.fromarray(a)
     ys, xs = np.where(a[..., 3] > 40)
     cx, cy = (xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2
     if key in MASS_CENTRE:
