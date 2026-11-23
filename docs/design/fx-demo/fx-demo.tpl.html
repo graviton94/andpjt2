@@ -39,7 +39,7 @@ tr.on td{color:var(--acc);font-weight:700}
 <body>
 <main class="band">
   <h1>탭하면 터진다: 알림 청소부 타격감 시연</h1>
-  <p class="lead">알림을 탭하면 연쇄가 위로 번집니다. 터질 때마다 파란 <b>칩</b>에 점수가, 빨간 <b>배율</b>에 연쇄 번호가 한 박자씩 쌓이고, 연쇄가 끝나면 판 가운데에서 합계가 촤르륵 올라가다 쾅 찍히고, 지갑으로 꽂힙니다. 판은 시연용이라 아무 데나 눌러도 고른 길이만큼 터집니다. 소리를 켜고 들어 보세요.</p>
+  <p class="lead">알림 카드는 젖빛 유리입니다. 탭하면 카드 유리가 금 가고 산산조각 나며, 충격파가 화면 자체를 굴절시키고 RGB가 갈라집니다. 파란 <b>칩</b>과 빨간 <b>배율</b>이 쌓였다가, 연쇄가 끝나면 판 가운데 합계가 촤르륵 올라가 쾅 찍히는 순간 화면 유리가 거미줄처럼 깨져 흘러내립니다. 판은 시연용이라 아무 데나 눌러도 고른 길이만큼 터집니다.</p>
   <div class="wrap">
     <div class="phone"><canvas id="stage" aria-label="알림 판. 탭하면 연쇄 폭발" role="img"></canvas></div>
     <div class="panel">
@@ -82,12 +82,18 @@ const LADDER = [
   { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
   { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
 ];
-const W = 390, H = 740, SIM = 1 / 120, POOL = 700;
+const W = 390, H = 740, SIM = 1 / 120, POOL = 600;
 const FD = '"Black Han Sans","Noto Sans KR",sans-serif', FB = '"Noto Sans KR",sans-serif';
-const cv = document.getElementById('stage'), ctx = cv.getContext('2d');
+const cv = document.getElementById('stage');
+const gl = cv.getContext('webgl', { premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
+const out2d = gl ? null : cv.getContext('2d');
+// everything is drawn into an offscreen 2D scene, then a shader bends it on the way to the screen
+const scene = document.createElement('canvas'), ctx = scene.getContext('2d');
+const bgS = document.createElement('canvas'); bgS.width = 66; bgS.height = 124; const bctx = bgS.getContext('2d');
+const bgT = document.createElement('canvas'); bgT.width = 18; bgT.height = 34; const tctx = bgT.getContext('2d');
 const icons = APPS.map(a => { const i = new Image(); i.src = a.icon; return i; });
 let dpr = 1;
-const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = W * dpr; cv.height = H * dpr; };
+const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = scene.width = W * dpr; cv.height = scene.height = H * dpr; if (gl) gl.viewport(0, 0, cv.width, cv.height); };
 fit(); window.addEventListener('resize', fit);
 if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Noto Sans KR"'); }
 
@@ -97,19 +103,13 @@ const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 42
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const backOut = p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
 const tier = n => LADDER.find(l => n >= l.from && n <= l.to);
-
-// springs: bouncy scale and offsets
 const spring = (v = 1) => ({ x: v, v: 0, t: v });
 const kick = (s, a) => { s.v += a; };
 const stepSpring = (s, dt, k = 340, d = 13) => { s.v += (-k * (s.x - s.t) - d * s.v) * dt; s.x += s.v * dt; };
-
-// colour
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 const ramp = h => { const c = hex(h); return [mixc(c, [0, 0, 0], .45), c, mixc(c, [255, 255, 255], .35), mixc(c, [255, 255, 255], .7), [255, 255, 255]]; };
-
-// Korean big-number format, no trailing .0
 // global idle notation: 999 · 1.23K · 12.3K · 123K · M · B · T · aa, ab …
 const SUF = g => g === 0 ? '' : g < 5 ? ['K', 'M', 'B', 'T'][g - 1] : String.fromCharCode(97 + Math.floor((g - 5) / 26)) + String.fromCharCode(97 + (g - 5) % 26);
 const split = n => {
@@ -189,134 +189,102 @@ const sfx = {
 };
 const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 
+
+// ---------- post-process shader: shockwave lens, heat haze, overload band, glass crack, RGB split ----------
+const rips = []; let crack = null, band = -1, bandAmp = 0, chroma = 0;
+const U = {};
+if (gl) {
+  const vs = 'attribute vec2 p;varying vec2 v;void main(){v=vec2((p.x+1.)*.5,(1.-p.y)*.5);gl_Position=vec4(p,0.,1.);}';
+  const fs = `precision highp float;
+varying vec2 v;
+uniform sampler2D T;
+uniform float A,t,seed,heat,chroma,amt,band,bandAmp;
+uniform vec4 rip[8];
+uniform vec4 crk;
+vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return fract(sin(p)*43758.5453);}
+void main(){
+  vec2 off=vec2(0.);float lit=0.,ca=chroma,dark=0.;
+  for(int i=0;i<8;i++){
+    vec4 r=rip[i];
+    if(r.w>0.){
+      vec2 d=(v-r.xy)*vec2(A,1.);float dist=length(d)+1e-4;
+      float rad=r.z*1.15,w=.03+r.z*.07,x=(dist-rad)/w,b=exp(-x*x),fade=clamp(1.-r.z/.75,0.,1.);fade*=fade;
+      off+=(d/dist)*vec2(1./A,1.)*(-x*b)*r.w*fade;
+      lit+=b*fade*r.w*6.;ca+=b*fade*r.w*.45;
+    }
+  }
+  off+=vec2(sin(v.y*38.+t*7.)+.6*sin(v.y*91.-t*11.),cos(v.x*29.+t*6.))*.0022*heat;
+  float g=exp(-pow((v.y-band)/.07,2.))*bandAmp;
+  off.x+=sin(v.y*120.-t*30.)*.016*g;ca+=g*.012;lit+=g*.3;
+  if(crk.w>0.){
+    vec2 p=(v-crk.xy)*vec2(A,1.);float r=length(p)+1e-4,ang=atan(p.y,p.x);
+    vec2 q=vec2((ang/6.2831853+.5)*13.,log(r)*3.4);
+    vec2 n=floor(q),f=fract(q);float d1=9.,d2=9.;vec2 id=vec2(0.);
+    for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
+      vec2 b=vec2(float(i),float(j));vec2 c=n+b;c.x=mod(c.x,13.);
+      vec2 o=.1+.8*h2(c+seed);vec2 rr=b+o-f;float dd=dot(rr,rr);
+      if(dd<d1){d2=d1;d1=dd;id=c;}else if(dd<d2){d2=dd;}
+    }
+    float e=sqrt(d2)-sqrt(d1);
+    float reach=clamp(crk.z*7.,0.,1.)*1.5;
+    float m=smoothstep(reach,reach-.1,r)*crk.w;
+    float fall=max(0.,crk.z-.3);vec2 hs=h2(id+seed*1.7);
+    float fo=clamp(1.-fall*2.4,0.,1.);
+    off+=((hs-.5)*.016+vec2((hs.x-.5)*.14,-1.)*fall*fall*(1.4+hs.y*2.4))*m*step(.001,fo);
+    float edge=1.-smoothstep(0.,.06,e);
+    lit+=(edge*1.1+hs.x*.14)*m*fo;dark+=edge*.55*m*fo;ca+=.005*m*fo;
+  }
+  off*=amt;ca*=amt;lit*=amt;dark*=amt;
+  vec2 u=v+off,cd=v-.5;
+  vec3 col=vec3(texture2D(T,u+cd*ca).r,texture2D(T,u).g,texture2D(T,u-cd*ca).b);
+  col=col*(1.-dark*.6)+vec3(1.,.96,.88)*lit*.32;
+  gl_FragColor=vec4(col,1.);
+}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+  const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
+  [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
+  ['T', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  gl.uniform1i(U.T, 0); gl.uniform1f(U.A, W / H);
+}
+const ripArr = new Float32Array(32);
+function present(t) {
+  if (!gl) { out2d.setTransform(1, 0, 0, 1, 0, 0); out2d.drawImage(scene, 0, 0); return; }
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, scene);
+  ripArr.fill(0); rips.slice(-8).forEach((r, i) => ripArr.set([r.x, r.y, r.age, r.amp], i * 4));
+  gl.uniform4fv(U.rip, ripArr);
+  gl.uniform4f(U.crk, crack ? crack.x : 0, crack ? crack.y : 0, crack ? crack.age : 0, crack ? crack.amp : 0);
+  gl.uniform1f(U.seed, crack ? crack.seed : 0); gl.uniform1f(U.heat, heat); gl.uniform1f(U.chroma, chroma);
+  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+const ripple = (x, y, amp) => { rips.push({ x: x / W, y: y / H, age: 0, amp }); if (rips.length > 8) rips.shift(); };
+const crackAt = (x, y, amp) => { crack = { x: x / W, y: y / H, age: 0, amp, seed: Math.floor(rnd() * 97) }; };
+
 // ---------- state ----------
 const MSG = ['새 메시지가 도착했어요', '지금 확인하지 않으면 사라져요', '쿠폰이 곧 만료돼요', '친구가 회원님을 언급했어요', '새 영상이 올라왔어요', '오늘의 추천이 도착했어요', '배송이 출발했어요'];
-const ROW0 = 168, ROWH = 72, CH = 60;
+const ROW0 = 168, ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
 const rows = Array.from({ length: 7 }, (_, i) => ({ app: (i * 3) % APPS.length, n: 1 + (i * 5) % 3, msg: MSG[i % MSG.length], dy: spring(0), sc: spring(1), a: 1, charge: 0 }));
 const VAL = [1.2e5, 3.4e5, 8.8e5, 2.1e6];
 const wallet = { v: 8.2e7, shown: 8.2e7, from: 8.2e7, to: 8.2e7, t: 1, dur: .6, s: spring(1), us: spring(1), unit: 'M', tick: 0, note: null };
-const CHIPX = 118, MULTX = 272, BOXY = 129;
-const plate = { on: 0, chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, cap: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '' };
+const CHIPX = 118, MULTX = 272, BOXY = 129, REVEAL_Y = 360;
+const plate = { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
 const mult = () => plate.base * plate.syn * plate.wmul;
-const parts = [], tokens = [], pops = [], timeline = [];
-let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [];
+const parts = [], shards = [], tokens = [], pops = [], timeline = [];
+let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
 const after = (sec, fn) => timeline.push({ at: sec, fn });
-
 const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
   if (parts.length >= POOL) parts.shift();
   parts.push(Object.assign({ k, x, y, vx, vy, life, max: life, col, size, rot: rnd() * 6.28, vr: (rnd() - .5) * 16 }, extra));
 };
 
-// ---------- chain choreography ----------
-function runChain(start, n, waves = 0, capMode = false) {
-  if (busy) { if (pending.length < 2) pending.push([start, n, waves, capMode]); return; }
-  busy = true;
-  Object.assign(plate, { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, phase: 'chain', merge: 0, k: 0, capMode, cap: 0, capT: 9 });
-  let t = 0;
-  for (let i = 0; i < n; i++) {
-    const idx = ((start - i) % 7 + 7) % 7;
-    after(t, () => { rows[idx].charge = 1; kick(rows[idx].sc, 3); });
-    after(t + .05, () => burst(idx, i + 1));
-    t += Math.max(.1, .19 - i * .011);
-  }
-  for (let w = 0; w < waves; w++) { after(t + .2, () => waveHit(w)); t += .45; }
-  after(t + .38, payoff);
-}
-function burst(idx, k) {
-  const r = rows[idx], app = APPS[r.app], pal = ramp(app.col), T = tier(k), y = rowY(idx) + CH / 2, q = reduce ? .3 : 1;
-  const cardCol = day ? [255, 255, 255] : [44, 37, 30];
-  for (let s = 0; s < 5; s++) { const x = 14 + s * 72.4 + 36; spawn('SLICE', x, y, (x - 195) * 2.4 + (rnd() - .5) * 90, -160 - rnd() * 240, .75, cardCol, 72, { h: CH, edge: pal[1], vr: (rnd() - .5) * 9 }); }
-  spawn('ICON', 47, y, -40 - rnd() * 90, -320 - rnd() * 80, .9, null, 38, { img: r.app, vr: (rnd() - .5) * 12 });
-  for (let i = 0; i < T.shreds * q; i++) { const a = rnd() * 6.28, sp = 140 + rnd() * 300; spawn('CONF', 30 + rnd() * 330, y + (rnd() - .5) * 40, Math.cos(a) * sp, Math.sin(a) * sp - 160, .9 + rnd() * .6, pal[1 + (i % 3)], 5 + rnd() * 5); }
-  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', 195 + (rnd() - .5) * 200, y, Math.cos(a) * sp, Math.sin(a) * sp, .22 + rnd() * .25, pal[3], 2.2); }
-  spawn('CORE', 195, y, 0, 0, .14, pal[3], 90 + k * 6);
-  if (k >= 4) for (let i = 0; i < 8 * q; i++) spawn('STAR', 40 + rnd() * 310, y + (rnd() - .5) * 70, (rnd() - .5) * 50, -40 - rnd() * 50, .5 + rnd() * .4, pal[4], 5 + rnd() * 5);
-  if (k >= 6) spawn('RING', 195, y, 0, 0, .5, pal[2], 20);
-  // value: pop at the card, then an orb carries it into the chip box
-  const val = nice(VAL[r.app % 4] * r.n * (1 + rnd() * .4));
-  pops.push({ x: 220 + rnd() * 110, y: y - 2, text: '+' + fmt(val), t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
-  pops.push({ x: 120 + rnd() * 60, y: y + 22, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
-  while (pops.length > 8) pops.shift();
-  tokens.push({ x0: 318, y0: y, cx: 60 + rnd() * 60, cy: y - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: pal[2], r: 7, done: () => { plate.chips += val; kick(plate.cs, 14); sfx.chip(k); for (let i = 0; i < 8; i++) spawn('SPARK', CHIPX, BOXY, (rnd() - .5) * 500, (rnd() - .5) * 300, .2, [140, 200, 255], 2); } });
-  plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); sfx.mult(k);
-  if (k === 3 || k === 7) after(.12, () => tokens.push({ x0: 340, y0: 200, cx: 360, cy: 150, x1: MULTX, y1: BOXY, t: 0, dur: .32, col: [255, 214, 107], text: '시너지 ×1.22', r: 0, done: () => { plate.syn *= 1.22; kick(plate.ms, 16); sfx.badge(); } }));
-  plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
-  document.querySelectorAll('#ladder tr').forEach(tr => tr.classList.toggle('on', +tr.dataset.a === T.from));
-  stop = Math.max(stop, T.stop / 1000);
-  if (!reduce) shake = Math.max(shake, T.shake * 1.4);
-  heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
-  if (k >= 9) {
-    slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .32; flashTimes.push(now); } }
-  }
-  sfx.pop(k); buzz(Math.min(40, 8 + k * 3));
-  Object.assign(r, { app: (r.app + 3 + k) % APPS.length, n: 1 + Math.floor(rnd() * 3), msg: MSG[Math.floor(rnd() * MSG.length)], a: 0, charge: 0 });
-  r.dy.x = -34; r.dy.v = 0; r.sc.x = .9;
-}
-function waveHit(w) {
-  const pal = ramp(APPS[(w * 4 + 1) % APPS.length].col);
-  for (let i = 0; i < (reduce ? 40 : 150); i++) spawn('CONF', rnd() * W, 150 + rnd() * 30, (rnd() - .5) * 140, 260 + rnd() * 340, 1.4, pal[1 + (i % 3)], 4 + rnd() * 5);
-  spawn('BAND', 0, 160, 0, 1000, .6, pal[3], 60);
-  plate.wmul *= 3; kick(plate.ms, 26);
-  plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
-  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1;
-  sfx.wave(w); buzz([20, 30, 40]);
-}
-const REVEAL_Y = 360;
-function payoff() {
-  plate.phase = 'merge'; plate.merge = 0; sfx.whoosh();
-  after(.16, () => {
-    plate.total = plate.chips * mult(); plate.eq = `${fmt(plate.chips)} × ${fmtMult(mult())}`;
-    plate.phase = 'show'; plate.showT = 0; plate.count = 0; plate.landed = false; plate.ts.x = .6; kick(plate.ts, 12);
-    plate.record = plate.total > plate.best; if (plate.record) plate.best = plate.total;
-  });
-  const hold = .16 + .62 + (plate.capMode ? .85 : .5);
-  after(hold, () => {
-    plate.phase = 'fly';
-    tokens.push({ x0: 195, y0: REVEAL_Y, cx: 380, cy: 160, x1: 195, y1: 36, t: 0, dur: .4, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; const p = pending.shift(); if (p) after(.15, () => runChain(...p)); } });
-  });
-}
-function slam() { // end of the count-up: the hit
-  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
-  for (let i = 0; i < (reduce ? 12 : 46); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('STAR', 195, REVEAL_Y - 14, Math.cos(a) * sp, Math.sin(a) * sp * .7, .7 + rnd() * .5, [255, 225, 140], 5 + rnd() * 7); }
-  for (let i = 0; i < (reduce ? 10 : 40); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 400; spawn('SPARK', 195, REVEAL_Y - 14, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 190, 90], 2.6); }
-  spawn('CORE', 195, REVEAL_Y - 14, 0, 0, .25, [255, 210, 120], 240); spawn('RING', 195, REVEAL_Y - 14, 0, 0, .5, [255, 200, 110], 20);
-  if (!reduce) shake = Math.max(shake, 4);
-  if (plate.record) after(.08, () => sfx.badge());
-  if (plate.capMode) after(.25, overheat);
-}
-function overheat() {
-  plate.total *= .4; plate.capT = 0; kick(plate.ts, -8);
-  for (let i = 0; i < (reduce ? 12 : 44); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 220, REVEAL_Y, (rnd() - .5) * 120, -60 - rnd() * 120, 1.2 + rnd() * .5, [235, 235, 235], 12 + rnd() * 14);
-  if (!reduce) shake = 5; sfx.stamp(); buzz(60); plate.totalShown = plate.total;
-}
-function addWallet(x) {
-  wallet.from = wallet.shown; wallet.to = wallet.v + x; wallet.v = wallet.to; wallet.t = 0; wallet.dur = x > wallet.from ? .7 : .4; wallet.tick = 0;
-  kick(wallet.s, 9); sfx.land();
-  for (let i = 0; i < 14; i++) spawn('SPARK', 195, 36, (rnd() - .5) * 600, (rnd() - .2) * 300, .25, [255, 214, 107], 2.4);
-}
-
-// ---------- simulation ----------
-function step(dt) {
-  for (let i = parts.length - 1; i >= 0; i--) {
-    const p = parts[i]; p.life -= dt;
-    if (p.life <= 0) { parts.splice(i, 1); continue; }
-    switch (p.k) {
-      case 'SLICE': case 'ICON': p.vy += 1500 * dt; p.rot += p.vr * dt; break;
-      case 'CONF': p.vy += 520 * dt; p.vx *= Math.pow(.2, dt); p.vy *= Math.pow(.45, dt); p.rot += p.vr * dt; break;
-      case 'SPARK': p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; break;
-      case 'STAR': case 'MOTE': case 'VAPOUR': p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); break;
-    }
-    p.x += p.vx * dt; p.y += p.vy * dt;
-  }
-  for (let i = tokens.length - 1; i >= 0; i--) { const t = tokens[i]; t.t += dt / t.dur; if (t.t >= 1) { tokens.splice(i, 1); t.done(); } }
-}
-const bez = (t, k) => { const u = 1 - t; return [u * u * t.x0 + 0, 0]; };
-const tokPos = (o, t) => { const u = 1 - t; return [u * u * o.x0 + 2 * u * t * o.cx + t * t * o.x1, u * u * o.y0 + 2 * u * t * o.cy + t * t * o.y1]; };
-
-// ---------- drawing ----------
-function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-// chunky game text: hard drop shadow, thick ink outline, vertical gradient fill, per-glyph pop-in and wobble
+// ---------- drawing helpers ----------
+function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
+const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
 function gtext(str, x, y, size, o = {}) {
   const top = o.top || '#FFFFFF', bot = o.bot || '#FFD66B', ink = o.ink || '#1A0E06', wob = reduce ? 0 : (o.wob || 0), appear = o.appear ?? 9, t = o.t || 0;
   ctx.save(); ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.scale) ctx.scale(o.scale, o.scale); if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
@@ -339,6 +307,7 @@ function gtext(str, x, y, size, o = {}) {
   ctx.restore();
   return tw;
 }
+
 function box(cx, cy, w, h, c0, c1, s) {
   ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s);
   ctx.fillStyle = '#1A0E06'; rr(-w / 2, -h / 2 + 4, w, h, 12); ctx.fill();
@@ -359,16 +328,168 @@ function flames(cx, cy, w, h, t, amt, hm = 1) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-function draw(t) {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  if (day) { bg.addColorStop(0, '#DCE6FF'); bg.addColorStop(1, '#EEF1F7'); } else { bg.addColorStop(0, `rgb(${30 + heat * 22},${22 + heat * 6},${16})`); bg.addColorStop(1, '#0C0907'); }
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = day ? 'rgba(30,42,80,.06)' : 'rgba(255,255,255,.035)';
-  for (let y = 12; y < H; y += 22) for (let x = 12 + ((y / 22) % 2) * 11; x < W; x += 22) ctx.fillRect(x, y, 2, 2);
-  const ink = day ? '#16181D' : '#F6F1EA', sub = day ? '#5B6170' : '#A89D90';
+// moving colour blobs behind frosted glass; the tiny copy is the "blur"
+function paintBg(t) {
+  bctx.setTransform(66 / W, 0, 0, 124 / H, 0, 0);
+  bctx.fillStyle = day ? '#E6ECF8' : '#0D0907'; bctx.fillRect(0, 0, W, H);
+  const blobs = day ? [[255, 170, 90, .55], [255, 120, 170, .4], [90, 140, 255, .5], [150, 110, 255, .35]] : [[255, 128, 24, .5], [226, 46, 120, .36], [56, 103, 240, .42], [122, 60, 255, .3]];
+  blobs.forEach((c, i) => {
+    const x = 195 + Math.sin(t * .31 + i * 1.9) * 170, y = 400 + Math.cos(t * .23 + i * 2.6) * 300, r = 200 + 50 * Math.sin(t * .4 + i);
+    const a = Math.min(1, c[3] * (i === 0 ? 1 + heat * 1.2 : 1)), g = bctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, rgb(c, a)); g.addColorStop(1, rgb(c, 0)); bctx.fillStyle = g; bctx.fillRect(0, 0, W, H);
+  });
+  tctx.clearRect(0, 0, 18, 34); tctx.drawImage(bgS, 0, 0, 18, 34);
+}
+function drawCard(c, r, y) {
+  const a = APPS[r.app], ink = day ? '#16181D' : '#F6F1EA', sub = day ? '#4B5160' : '#C9BFB3';
+  c.save(); rrc(c, CX0, y, CW, CH, 18); c.clip();
+  c.drawImage(bgT, 0, 0, W, H);
+  c.fillStyle = day ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.08)'; c.fillRect(CX0, y, CW, CH);
+  const g = c.createLinearGradient(0, y, 0, y + CH); g.addColorStop(0, day ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.14)'); g.addColorStop(.55, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(CX0, y, CW, CH);
+  c.restore();
+  c.lineWidth = 1; c.strokeStyle = day ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.2)'; rrc(c, CX0 + .5, y + .5, CW - 1, CH - 1, 18); c.stroke();
+  if (icons[r.app].complete) c.drawImage(icons[r.app], 26, y + 11, 38, 38);
+  c.fillStyle = ink; c.textAlign = 'left'; c.font = `700 14px ${FB}`; c.fillText(a.name, 76, y + 26);
+  c.fillStyle = sub; c.font = `400 12px ${FB}`; c.fillText(r.msg, 76, y + 45);
+  for (let d = 0; d < 4; d++) { c.fillStyle = d < r.n ? a.col : (day ? 'rgba(30,42,80,.15)' : 'rgba(255,255,255,.15)'); c.beginPath(); c.arc(318 + d * 13, y + 30, 4.5, 0, 6.28); c.fill(); }
+}
+function snapCard(r, y) {
+  const s = document.createElement('canvas'); s.width = (CW + 8) * dpr; s.height = (CH + 8) * dpr;
+  const c = s.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, (4 - CX0) * dpr, (4 - y) * dpr); drawCard(c, r, y); return s;
+}
+// crack the card's own image into a spider web of shards around the impact point
+function shatter(r, y, ix, iy, power) {
+  const snap = snapCard(r, y), N = 9 + Math.floor(rnd() * 3), a0 = rnd() * 6.28;
+  const ang = Array.from({ length: N }, (_, i) => a0 + (i + (rnd() - .5) * .55) / N * 6.283);
+  const R = [0, 12, 40, 95, 460];
+  const rad = ang.map(() => R.map((v, j) => j === 0 || j === 4 ? v : v * (.75 + rnd() * .5)));
+  const P = (i, j) => { const k = i % N; return [ix + Math.cos(ang[k]) * rad[k][j], iy + Math.sin(ang[k]) * rad[k][j]]; };
+  for (let j = 0; j < 4; j++) for (let i = 0; i < N; i++) {
+    const poly = j === 0 ? [[ix, iy], P(i, 1), P(i + 1, 1)] : [P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)];
+    const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
+    if (Math.max(...xs) < CX0 || Math.min(...xs) > CX0 + CW || Math.max(...ys) < y || Math.min(...ys) > y + CH) continue;
+    const cx = clamp(xs.reduce((a, b) => a + b) / poly.length, CX0, CX0 + CW), cy = clamp(ys.reduce((a, b) => a + b) / poly.length, y, y + CH);
+    const dx = cx - ix, dy = cy - iy, dl = Math.hypot(dx, dy) || 1, sp = (240 + rnd() * 320) * power * (1.15 - j * .12);
+    shards.push({ poly, snap, y0: y, cx, cy, x: 0, y: 0, vx: dx / dl * sp, vy: dy / dl * sp * .7 - 140 - rnd() * 160, rot: 0, vr: (rnd() - .5) * (6 + j * 3), life: .75 + rnd() * .35, max: 1.1, hold: .07, glint: rnd() * 6.28 });
+  }
+}
 
-  // HUD
+// ---------- chain choreography ----------
+function runChain(start, n, waves = 0, capMode = false) {
+  if (busy) { if (pending.length < 2) pending.push([start, n, waves, capMode]); return; }
+  busy = true;
+  Object.assign(plate, { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, phase: 'chain', merge: 0, k: 0, capMode, capT: 9 });
+  let t = 0;
+  for (let i = 0; i < n; i++) {
+    const idx = ((start - i) % 7 + 7) % 7;
+    after(t, () => { rows[idx].charge = 1; kick(rows[idx].sc, 3); });
+    after(t + .05, () => burst(idx, i + 1));
+    t += Math.max(.1, .19 - i * .011);
+  }
+  for (let w = 0; w < waves; w++) { after(t + .2, () => waveHit(w)); t += .45; }
+  after(t + .38, payoff);
+}
+function burst(idx, k) {
+  const r = rows[idx], app = APPS[r.app], pal = ramp(app.col), T = tier(k), y = rowY(idx), cy = y + CH / 2, q = reduce ? .3 : 1;
+  const ix = 110 + rnd() * 170, iy = y + 18 + rnd() * 24;
+  shatter(r, y, ix, iy, 1 + Math.min(k, 12) * .06);
+  ripple(ix, iy, .014 + Math.min(k, 12) * .0022);
+  if (k >= 9 && (!crack || crack.age > .5)) crackAt(ix, iy, .85);
+  chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
+  for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
+  for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
+  spawn('CORE', ix, iy, 0, 0, .12, pal[3], 70 + k * 5);
+  const val = nice(VAL[r.app % 4] * r.n * (1 + rnd() * .4));
+  pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + fmt(val), t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
+  pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
+  while (pops.length > 8) pops.shift();
+  tokens.push({ x0: 318, y0: cy, cx: 60 + rnd() * 60, cy: cy - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: [120, 190, 255], r: 7, done: () => { plate.chips += val; kick(plate.cs, 14); sfx.chip(k); ripple(CHIPX, BOXY, .006); } });
+  plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); sfx.mult(k);
+  if (k === 3 || k === 7) after(.12, () => tokens.push({ x0: 340, y0: 200, cx: 360, cy: 150, x1: MULTX, y1: BOXY, t: 0, dur: .32, col: [255, 214, 107], text: '시너지 ×1.22', r: 0, done: () => { plate.syn *= 1.22; kick(plate.ms, 16); sfx.badge(); ripple(MULTX, BOXY, .01); } }));
+  plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
+  document.querySelectorAll('#ladder tr').forEach(tr => tr.classList.toggle('on', +tr.dataset.a === T.from));
+  stop = Math.max(stop, T.stop / 1000);
+  if (!reduce) shake = Math.max(shake, T.shake * 1.3);
+  heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
+  if (k >= 9) {
+    slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .25; flashTimes.push(now); } }
+  }
+  sfx.pop(k); buzz(Math.min(40, 8 + k * 3));
+  Object.assign(r, { app: (r.app + 3 + k) % APPS.length, n: 1 + Math.floor(rnd() * 3), msg: MSG[Math.floor(rnd() * MSG.length)], a: 0, charge: 0 });
+  r.dy.x = -34; r.dy.v = 0; r.sc.x = .9;
+}
+function waveHit(w) {
+  for (let i = 0; i < (reduce ? 20 : 70); i++) spawn('GLASS', rnd() * W, 150 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 380, 1.2, [255, 220, 170], 3 + rnd() * 5);
+  bandT = 0; plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
+  plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
+  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1; chroma = Math.max(chroma, .012);
+  sfx.wave(w); buzz([20, 30, 40]);
+}
+function payoff() {
+  plate.phase = 'merge'; plate.merge = 0; sfx.whoosh();
+  after(.16, () => {
+    plate.total = plate.chips * mult(); plate.eq = `${fmt(plate.chips)} × ${fmtMult(mult())}`;
+    plate.phase = 'show'; plate.showT = 0; plate.count = 0; plate.landed = false; plate.ts.x = .6; kick(plate.ts, 12);
+    plate.record = plate.total > plate.best; if (plate.record) plate.best = plate.total;
+    ripple(195, BOXY, .02);
+  });
+  after(.16 + .62 + (plate.capMode ? .9 : .6), () => {
+    plate.phase = 'fly';
+    tokens.push({ x0: 195, y0: REVEAL_Y, cx: 380, cy: 160, x1: 195, y1: 36, t: 0, dur: .4, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; const p = pending.shift(); if (p) after(.15, () => runChain(...p)); } });
+  });
+}
+function slam() { // end of the count-up: the screen glass takes the hit
+  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
+  crackAt(195, REVEAL_Y - 18, 1); ripple(195, REVEAL_Y - 18, .045); chroma = Math.max(chroma, .02);
+  for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
+  for (let i = 0; i < (reduce ? 8 : 26); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('GLASS', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp - 100, .9 + rnd() * .4, [255, 236, 200], 4 + rnd() * 5); }
+  spawn('CORE', 195, REVEAL_Y - 18, 0, 0, .22, [255, 210, 120], 220);
+  if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
+  if (plate.record) after(.08, () => sfx.badge());
+  if (plate.capMode) after(.25, overheat);
+}
+function overheat() {
+  plate.total *= .4; plate.totalShown = plate.total; plate.capT = 0; kick(plate.ts, -8);
+  for (let i = 0; i < (reduce ? 12 : 44); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 220, REVEAL_Y, (rnd() - .5) * 120, -60 - rnd() * 120, 1.2 + rnd() * .5, [235, 235, 235], 12 + rnd() * 14);
+  if (!reduce) shake = 5; ripple(195, REVEAL_Y + 54, .03); sfx.stamp(); buzz(60);
+}
+function addWallet(x) {
+  wallet.from = wallet.shown; wallet.to = wallet.v + x; wallet.v = wallet.to; wallet.t = 0; wallet.dur = x > wallet.from ? .7 : .4; wallet.tick = 0;
+  kick(wallet.s, 9); sfx.land(); ripple(195, 36, .02);
+  for (let i = 0; i < 14; i++) spawn('SPARK', 195, 36, (rnd() - .5) * 600, (rnd() - .2) * 300, .25, [255, 214, 107], 2.4);
+}
+
+// ---------- simulation ----------
+function step(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.life -= dt;
+    if (p.life <= 0) { parts.splice(i, 1); continue; }
+    if (p.k === 'GLASS') { p.vy += 900 * dt; p.vx *= Math.pow(.4, dt); p.rot += p.vr * dt; }
+    else if (p.k === 'SPARK') { p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; }
+    else if (p.k === 'VAPOUR') { p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); }
+    p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  for (let i = shards.length - 1; i >= 0; i--) {
+    const s = shards[i];
+    if (s.hold > 0) { s.hold -= dt; continue; }
+    s.life -= dt; if (s.life <= 0) { shards.splice(i, 1); continue; }
+    s.vy += 1600 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.rot += s.vr * dt;
+  }
+  for (let i = tokens.length - 1; i >= 0; i--) { const t = tokens[i]; t.t += dt / t.dur; if (t.t >= 1) { tokens.splice(i, 1); t.done(); } }
+  rips.forEach(r => r.age += dt); while (rips.length && rips[0].age > .8) rips.shift();
+  if (crack) { crack.age += dt; if (crack.age > .75) crack = null; }
+  if (bandT < 1) { bandT += dt / .55; band = .16 + bandT * .95; bandAmp = Math.sin(Math.min(1, bandT) * Math.PI); } else { band = -1; bandAmp = 0; }
+}
+const tokPos = (o, t) => { const u = 1 - t; return [u * u * o.x0 + 2 * u * t * o.cx + t * t * o.x1, u * u * o.y0 + 2 * u * t * o.cy + t * t * o.y1]; };
+
+// ---------- frame ----------
+function draw(t) {
+  paintBg(t);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.drawImage(bgS, 0, 0, W, H);
+  ctx.fillStyle = day ? 'rgba(255,255,255,.25)' : 'rgba(8,5,3,.3)'; ctx.fillRect(0, 0, W, H);
+  const sub = day ? '#4B5160' : '#C9BFB3';
+
   ctx.fillStyle = sub; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'left'; ctx.fillText('Lv 42', 24, 32); ctx.textAlign = 'right'; ctx.fillText('덱 9/12', 366, 32);
   const ws = split(wallet.shown);
   ctx.font = `30px ${FD}`; const nw = ctx.measureText(ws.num).width; ctx.font = `24px ${FD}`; const uw = ctx.measureText(ws.unit + ' P').width;
@@ -377,60 +498,55 @@ function draw(t) {
   ctx.save(); ctx.translate(wx + nw + 1 + uw / 2, 40); ctx.scale(wallet.us.x, wallet.us.x); gtext(ws.unit + ' P', 0, 6, 24, { top: '#FFF3C4', bot: '#FFB020' }); ctx.restore();
   if (wallet.note) { const f = clamp(1 - wallet.note.t / 1.1, 0, 1); gtext(wallet.note.text, 322, 74, 20, { rot: -.12, appear: wallet.note.t * 5, alpha: Math.min(1, f * 3), top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t }); }
 
-  // shaken world: plate + cards + particles
   ctx.save();
   const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
   ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420);
 
   rows.forEach((r, i) => {
-    const y = rowY(i) + r.dy.x, a = APPS[r.app];
+    const y = rowY(i) + r.dy.x;
     ctx.save(); ctx.globalAlpha = r.a; ctx.translate(195, y + CH / 2); ctx.scale(r.sc.x, r.sc.x); ctx.translate(-195, -(y + CH / 2));
-    ctx.fillStyle = day ? '#FFFFFF' : '#2C251E'; rr(14, y, 362, CH, 18); ctx.fill();
-    ctx.strokeStyle = day ? 'rgba(30,42,80,.08)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.stroke();
-    if (icons[r.app].complete) ctx.drawImage(icons[r.app], 26, y + 11, 38, 38);
-    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = `700 14px ${FB}`; ctx.fillText(a.name, 76, y + 26);
-    ctx.fillStyle = sub; ctx.font = `400 12px ${FB}`; ctx.fillText(r.msg, 76, y + 45);
-    for (let d = 0; d < 4; d++) { ctx.fillStyle = d < r.n ? a.col : (day ? '#D9DEE8' : '#4A4037'); ctx.beginPath(); ctx.arc(318 + d * 13, y + 30, 4.5, 0, 6.28); ctx.fill(); }
-    if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .9})`; rr(14, y, 362, CH, 18); ctx.fill(); }
+    drawCard(ctx, r, y);
+    if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .85})`; rr(CX0, y, CW, CH, 18); ctx.fill(); }
     ctx.restore();
   });
-
-  // colour layer
+  // glass shards cut from the card image: crack lines first, then they fly
+  for (const s of shards) {
+    const f = clamp(s.life / .35, 0, 1), cracking = s.hold > 0;
+    ctx.save(); ctx.globalAlpha = f;
+    ctx.translate(s.cx + s.x, s.cy + s.y); ctx.rotate(s.rot); ctx.translate(-s.cx, -s.cy);
+    rr(CX0, s.y0, CW, CH, 18); ctx.clip();
+    ctx.beginPath(); s.poly.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
+    ctx.save(); ctx.clip(); ctx.drawImage(s.snap, CX0 - 4, s.y0 - 4, CW + 8, CH + 8);
+    const gl2 = .18 + .22 * Math.sin(s.glint + s.rot * 3); ctx.fillStyle = `rgba(255,255,255,${cracking ? .12 : Math.max(0, gl2)})`; ctx.fill();
+    ctx.restore();
+    ctx.lineWidth = cracking ? 1.4 : 1; ctx.strokeStyle = `rgba(255,255,255,${cracking ? .95 : .55})`; ctx.stroke();
+    ctx.restore();
+  }
   for (const p of parts) {
-    const f = p.life / p.max, al = Math.min(1, f * 2.5);
-    if (p.k === 'SLICE') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * .3); ctx.globalAlpha = al; ctx.fillStyle = rgb(p.col); rr(-p.size / 2, -p.h / 2, p.size - 3, p.h, 6); ctx.fill(); ctx.fillStyle = rgb(p.edge); ctx.fillRect(-p.size / 2, -p.h / 2, p.size - 3, 4); ctx.restore(); }
-    else if (p.k === 'ICON') { if (icons[p.img].complete) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * .4); ctx.globalAlpha = al; ctx.drawImage(icons[p.img], -19, -19, 38, 38); ctx.restore(); } }
-    else if (p.k === 'CONF') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.rot * 2.3)); ctx.globalAlpha = al; ctx.fillStyle = rgb(p.col); ctx.fillRect(-p.size / 2, -p.size * .3, p.size, p.size * .6); ctx.restore(); }
+    const f = p.life / p.max;
+    if (p.k === 'GLASS') { const g = .35 + .65 * Math.abs(Math.sin(p.rot * 2)); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, f * 2.5); ctx.beginPath(); ctx.moveTo(-p.size, -p.size * .4); ctx.lineTo(p.size * .8, -p.size * .7); ctx.lineTo(p.size * .2, p.size * .8); ctx.closePath(); ctx.fillStyle = rgb(mixc(p.col, [255, 255, 255], g), .35 + .5 * g); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
     else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
   }
   ctx.globalAlpha = 1;
-
-  // light layer (additive): small hot things only
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
     if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
-    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .6 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
-    else if (p.k === 'STAR') { ctx.fillStyle = rgb(p.col, f); const s = p.size * (.5 + f * .7); ctx.beginPath(); ctx.moveTo(p.x, p.y - s); ctx.lineTo(p.x + s * .22, p.y - s * .22); ctx.lineTo(p.x + s, p.y); ctx.lineTo(p.x + s * .22, p.y + s * .22); ctx.lineTo(p.x, p.y + s); ctx.lineTo(p.x - s * .22, p.y + s * .22); ctx.lineTo(p.x - s, p.y); ctx.lineTo(p.x - s * .22, p.y - s * .22); ctx.closePath(); ctx.fill(); }
-    else if (p.k === 'MOTE') { ctx.fillStyle = rgb(p.col, f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
-    else if (p.k === 'RING') { const r = 30 + (1 - f) * (1 - f) * 0 + (1 - Math.pow(f, 2)) * 230; ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = 7 * f + 1; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .4, 0, 0, 6.28); ctx.stroke(); }
-    else if (p.k === 'BAND') { const g = ctx.createLinearGradient(0, p.y - 50, 0, p.y + 50); g.addColorStop(0, rgb(p.col, 0)); g.addColorStop(.5, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, p.y - 50, W, 100); }
+    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
   }
-  // orbs carrying value, with a short trail
   for (const o of tokens) {
     if (o.text || o.big) continue;
     for (let j = 5; j >= 0; j--) { const tt = Math.max(0, o.t * o.t - j * .035), [x, y] = tokPos(o, tt), r = o.r * (1 - j * .13); const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4); g.addColorStop(0, `rgba(255,255,255,${.9 - j * .13})`); g.addColorStop(.35, rgb(o.col, .7 - j * .1)); g.addColorStop(1, rgb(o.col, 0)); ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8); }
   }
-  if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.42 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
+  if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
 
-  // score plate: chips x mult, then merge into the total
-  const live = plate.phase !== 'idle', pa = live ? 1 : .4;
+  const live = plate.phase !== 'idle';
   if (plate.phase === 'chain' || plate.phase === 'merge' || !live) {
     const m = plate.phase === 'merge' ? plate.merge : 0, e = m * m;
-    ctx.globalAlpha = pa * (1 - e * .9);
+    ctx.globalAlpha = (live ? 1 : .4) * (1 - e * .9);
     const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
-        box(cxp, BOXY, 132, 40, '#5AA2FF', '#1F5FE0', plate.cs.x);
+    box(cxp, BOXY, 132, 40, '#5AA2FF', '#1F5FE0', plate.cs.x);
     box(mxp, BOXY, 132, 40, '#FF6B5A', '#D81E2A', plate.ms.x);
     gtext(fmt(plate.chipsShown), cxp, BOXY + 9, 24, { scale: plate.cs.x, top: '#FFFFFF', bot: '#CFE4FF', wob: live ? .8 : 0, t });
     gtext('×' + fmtMult(plate.multShown), mxp, BOXY + 9, 24, { scale: plate.ms.x, top: '#FFFFFF', bot: '#FFD3CC', wob: live ? .8 : 0, t });
@@ -440,12 +556,12 @@ function draw(t) {
   }
   if (plate.phase === 'show') {
     const a = Math.min(1, plate.showT * 6), big = clamp(Math.log10(Math.max(1, plate.total / 1e6)) / 3, 0, 1);
-    ctx.fillStyle = `rgba(8,5,3,${.62 * a})`; ctx.fillRect(0, ROW0 - 8, W, H - ROW0);
-    gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
+    ctx.fillStyle = `rgba(8,5,3,${.55 * a})`; ctx.fillRect(0, ROW0 - 8, W, H - ROW0);
     gtext('합계', 195, REVEAL_Y - 104, 16, { top: '#FFE7B0', bot: '#FFB020', alpha: a });
+    gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
     const num = fmt(plate.totalShown), size = 58 + big * 14;
-    ctx.font = `${size}px ${FD}`; const tw = Math.min(340, ctx.measureText(num).width), sc = Math.min(1, 340 / ctx.measureText(num).width);
-    if (plate.landed && !reduce) flames(195, REVEAL_Y - size * .3, tw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
+    ctx.font = `${size}px ${FD}`; const mw = ctx.measureText(num).width, sc = Math.min(1, 340 / mw);
+    if (plate.landed && !reduce) flames(195, REVEAL_Y - size * .3, mw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
     gtext(num, 195, REVEAL_Y, size * sc, { scale: plate.ts.x, top: '#FFFFFF', bot: plate.landed ? '#FF9A1F' : '#FFD66B', wob: plate.landed ? 2.2 : .6, t });
     if (plate.record && plate.landed) gtext('최고 기록!', 195, REVEAL_Y + 46, 24, { appear: (plate.showT - .62) * 6, rot: -.06, top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t });
     if (plate.capT < 9) {
@@ -461,7 +577,6 @@ function draw(t) {
   }
   ctx.restore();
 
-  // flying text: synergy badges and the payout heading to the wallet
   for (const o of tokens) {
     if (!o.text && !o.big) continue;
     const e = o.t * o.t, [x, y] = tokPos(o, e);
@@ -474,9 +589,9 @@ function draw(t) {
   }
   if (flash > 0) { ctx.fillStyle = `rgba(255,246,220,${flash})`; ctx.fillRect(0, 0, W, H); }
   ctx.fillStyle = day ? 'rgba(22,24,29,.5)' : 'rgba(246,241,234,.5)'; rr(135, H - 16, 120, 5, 3); ctx.fill();
+  present(t);
 }
 
-// ---------- loop ----------
 let last = performance.now(), acc = 0, autoT = 0;
 function frame(now) {
   const t = now / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
@@ -496,26 +611,25 @@ function frame(now) {
   }
   rows.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 14); });
   shake *= Math.pow(.0008, dt); if (shake < .05) shake = 0;
-  flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .7);
+  flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
   if (plate.phase === 'show' && !plate.landed) {
     plate.count = Math.min(1, plate.showT / .62); const e = 1 - Math.pow(1 - plate.count, 2.2);
     plate.totalShown = plate.total * e; kick(plate.ts, .25);
-    plate.tick = (plate.tick || 0) - dt; if (plate.tick <= 0) { sfx.coin(plate.count * .9); plate.tick = .04; }
+    plate.tick -= dt; if (plate.tick <= 0) { sfx.coin(plate.count * .9); plate.tick = .04; }
     if (plate.count >= 1) { plate.totalShown = plate.total; slam(); }
   }
   plate.chipsShown += (plate.chips - plate.chipsShown) * Math.min(1, dt * 16);
   plate.multShown += (mult() - plate.multShown) * Math.min(1, dt * 16);
   for (let i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t >= pops[i].life) pops.splice(i, 1); }
-  // wallet count-up with ticking coins, unit change gets its own thump
   if (wallet.t < 1) {
     wallet.t = Math.min(1, wallet.t + dt / wallet.dur);
     const e = 1 - Math.pow(1 - wallet.t, 3); wallet.shown = wallet.from + (wallet.to - wallet.from) * e;
     wallet.tick -= dt; if (wallet.tick <= 0) { sfx.coin(e); wallet.tick = .045; kick(wallet.s, 1.5); }
     if (wallet.t >= 1) {
       wallet.shown = wallet.to; const u = split(wallet.to).unit;
-      if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); buzz([40, 30, 80]); wallet.note = { text: `1${u} 돌파!`, t: 0 }; for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('STAR', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .7, [255, 230, 150], 5 + rnd() * 5); } }
+      if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); buzz([40, 30, 80]); wallet.note = { text: `1${u} 돌파!`, t: 0 }; ripple(250, 40, .04); chroma = .015; for (let i = 0; i < 20; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('GLASS', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .8, [255, 230, 150], 3 + rnd() * 4); } }
       else kick(wallet.s, 5);
     }
   }
@@ -525,7 +639,6 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 
-// ---------- controls ----------
 const chainsEl = document.getElementById('chains');
 const renderChains = () => { chainsEl.innerHTML = [1, 3, 5, 8, 12].map(n => `<button type="button" data-n="${n}" aria-pressed="${n === chainLen}">${n}연쇄</button>`).join(''); };
 renderChains();
