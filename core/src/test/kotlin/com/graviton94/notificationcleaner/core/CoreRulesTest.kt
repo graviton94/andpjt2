@@ -576,7 +576,7 @@ class CoreRulesTest {
         assertEquals(10, s.account.streak)
         assertEquals(RuleSet().attendanceBoard.take(10).sumOf { it.data }, s.account.credits)
         assertEquals(1, s.account.tickets[CreditItem.BackupBoost])
-        assertEquals(3 + 1, s.account.tickets[CreditItem.Overclock])
+        assertEquals(2 + 1, s.account.tickets[CreditItem.Overclock])
         // a missed day restarts the board
         s = shop.claimAttendance(s, 12 * day)
         assertEquals(1, s.account.streak)
@@ -587,7 +587,7 @@ class CoreRulesTest {
         s = shop.buyPass(s, 10 * day)
         assertTrue(shop.passActive(s, 39 * day) && !shop.passActive(s, 40 * day))
         val boosted = shop.watchAd(s, AdSlot.Boost, 10 * day)!!
-        assertTrue(shop.boostActive(boosted, 10 * day + 29 * 60_000) && !shop.boostActive(boosted, 10 * day + 31 * 60_000))
+        assertTrue(shop.boostActive(boosted, 10 * day + 59 * 60_000) && !shop.boostActive(boosted, 10 * day + 61 * 60_000))
     }
 
     @Test

@@ -55,9 +55,9 @@ data class RuleSet(
         fun tk(vararg p: Pair<CreditItem, Int>) = AttendReward(0, mapOf(*p))
         // Weekdays alternate currencies and let everyone taste the paid speed-ups (오버클럭 on days 3, 13, 23).
         fun band(a: Long, b: Long, c: Long) = listOf(d(a), tk(B to 2), tk(O to 1), tk(Bo to 1), d(b), tk(B to 2), tk(W to 1), d(c), tk(Bo to 1))
-        band(30, 40, 40) + AttendReward(200, mapOf(O to 3, BB to 1)) +
+        band(30, 40, 40) + AttendReward(200, mapOf(O to 2, BB to 1)) +
             band(40, 50, 50) + AttendReward(300, mapOf(W to 2), starVouchers = 1) +
-            band(50, 60, 60) + AttendReward(600, mapOf(O to 12, BB to 2), starVouchers = 2, title = "알림 개근왕")
+            band(50, 60, 60) + AttendReward(600, mapOf(O to 6, BB to 2), starVouchers = 2, title = "알림 개근왕")
     },
     /** 프리미엄 ★ 선택권 raise an app up to this many stars. */
     val voucherMaxStars: Int = 3,
@@ -65,7 +65,7 @@ data class RuleSet(
     val adCredits: Long = 10,
     val passInstantCredits: Long = 300,
     val passDailyCredits: Long = 60,
-    val boostMinutes: Int = 30,
+    val boostMinutes: Int = 60,
     val boostPermille: Int = 2_000,
     val warpMinutes: Int = 120,
     val batteryOvercharge: Int = 6,

@@ -747,7 +747,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
         val p = (s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000))
-            .min(jackpotRoom(s, rules.offlineLevelCap))
+            .min(jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt()))  // paid speed isn't thrown away by 과열 보호
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0,
