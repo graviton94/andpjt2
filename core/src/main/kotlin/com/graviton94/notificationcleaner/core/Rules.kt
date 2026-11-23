@@ -114,7 +114,7 @@ data class RuleSet(
     val syncLevel: Int = 60,
     /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
     val cloudBase: Long = 10,
-    val cloudExponentPermille: Int = 350,
+    val cloudExponentPermille: Int = 450,
     /** Every GB ever synced adds this % to backup files paid by factory resets. */
     val cloudFilePercent: Int = 10,
 ) {

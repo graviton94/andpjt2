@@ -332,20 +332,20 @@ class CoreRulesTest {
         val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
             bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
         val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
-        // Four times the anchor's files → ⌊10 × 4^0.35⌋ = 16 GB.
-        assertEquals(16L, e.cloudGbNow(run))
+        // Four times the anchor's files → ⌊10 × 4^0.45⌋ = 18 GB.
+        assertEquals(18L, e.cloudGbNow(run))
         val after = e.sync(run, now)!!
         assertEquals(0L, after.backup.files)
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
         assertTrue(e.unlocked(after, "home"), "app unlocks survive")
-        assertEquals(16L, after.backup.cloud.gb)
+        assertEquals(18L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
         val bought = e.buyCloud(after, CloudItem.Compression)
         assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
         val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
-        assertEquals(Math.floor(10 * 1.5 * Math.sqrt(2.6)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 16 GB)
+        assertEquals(Math.floor(10 * 1.5 * Math.sqrt(2.8)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 18 GB)
     }
 }

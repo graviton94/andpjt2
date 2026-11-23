@@ -89,8 +89,8 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
  * over the first syncs so every sync opens something new.
  */
 enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int) {
-    Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 2_500, 1),
-    SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 3_000, 1),
+    Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 2_000, 1),
+    SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 2_200, 1),
     /** Raises the 알림 가치 backup item's max by 10: each sync moves the first layer's ceiling up. */
     ValueCap("알림 가치 한도 +10", 20, 2, 1_600, 1),
     Discount("백업 상점 −10%", 5, 3, 2_000, 2),
@@ -129,9 +129,9 @@ object Catalog {
         app("match", "매칭됨", 5, 2, EU, Category.Social, 48),
         app("home", "문열림", 5, 3, EU, Category.Daily, 55),
         app("live", "지금방송중", 6, 0, AS, Category.Media, 64),
-        app("stock", "장마감", 6, 1, NA, Category.Money, 72),
-        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80),
-        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88),
+        app("stock", "장마감", 6, 1, NA, Category.Money, 70),
+        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 76),
+        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 80),
     )
     val starter = listOf("chat", "mail", "delivery")
 
