@@ -14,7 +14,7 @@ enum class AdSlot(val label: String, val daily: Int) {
     OfflineDouble("오프라인 ×2", 1),
     Boost("수입 부스트 ×2", 2),
     Warp("시간 도약", 1),
-    Overclock("오버클럭 30분", 2),
+    Overclock("오버클럭 1시간", 2),
     Battery("보조배터리", 2),
     CreditBox("데이터 상자", 1),
     FreeUpgrade("무료 강화", 1),
@@ -30,9 +30,9 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
 }
 
 /** Speed subscriptions, each including the month pass. */
-enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long) {
-    Turbo("터보 패스", 33_000, 3_000, 0),
-    Ultra("울트라 패스", 99_000, 6_000, 200),
+enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long, val prestigePermille: Int) {
+    Turbo("터보 패스", 33_000, 3_000, 0, 1_500),
+    Ultra("울트라 패스", 99_000, 6_000, 200, 3_000),
 }
 
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
@@ -202,7 +202,7 @@ class Shop(private val engine: Engine) {
             AdSlot.Warp -> warp(counted)
             AdSlot.Battery -> battery(counted)
             AdSlot.CreditBox -> credit(counted, rules.adCredits)
-            AdSlot.Overclock -> overclock(counted, now, 30)
+            AdSlot.Overclock -> overclock(counted, now, 60)
             AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + rules.freeUpgradeLevels)) }
         }
     }

@@ -206,6 +206,12 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (s.rows.any { r -> r.alert == Alert.LowBattery }) it * 13 / 10 else it  // 배터리 부족 left on the board
     }.let { base -> maxOf(base * 1_000 / speedPermille(s, now), minOf(base, rules.minChargeMs)) }  // a thumb can't go faster than this
 
+    /** 속도 구독 bonus on backup files and GB, ‰. */
+    fun prestigePermille(s: GameState, now: Long): Long {
+        val a = s.backup.cloud.account
+        return if (a.speedPass != null && now < a.speedPassUntil) a.speedPass.prestigePermille.toLong() else 1_000L
+    }
+
     /** 오버클럭 / 속도 구독 (Monetization.kt): the whole game runs this much faster, ‰ (the faster one wins). */
     fun speedPermille(s: GameState, now: Long): Long {
         val a = s.backup.cloud.account
@@ -325,6 +331,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun factoryReset(s: GameState, now: Long): GameState? {
         if (s.level < rules.resetLevel) return null
         val files = backupFilesNow(s).let { f -> if (s.backup.cloud.account.backupBoost) f * (100 + rules.backupBoostPercent) / 100 else f }
+            .let { f -> f * prestigePermille(s, now) / 1_000 }
         // Only a reset that pays files counts toward reset-gated content; empty resets cannot farm the count.
         return newGame(now, s.rng, s.backup.copy(
             files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
@@ -370,7 +377,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val gb = cloudGbNow(s)
         val c = s.backup.cloud
         val cloud = c.copy(
-            gb = c.gb + gb, syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
+            // 속도 구독 bonus GB is spendable but not counted in lifetime, so later syncs still pay in full.
+            gb = c.gb + gb * prestigePermille(s, now) / 1_000, syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
             bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
         )
         return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))

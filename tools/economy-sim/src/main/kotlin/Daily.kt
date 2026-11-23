@@ -237,9 +237,11 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
     if (payer.monthlyData > 0 && session == 0 && dayOf(t).toLong() % 30 == 0L) s = shop.credit(s, payer.monthlyData * if (dayOf(t) < 1) 2 else 1, bought = true)
     fun ad(slot: AdSlot) { if (slot in slots && shop.adsLeft(s, slot, t) > 0 && ads.take(t)) shop.watchAd(s, slot, t)?.let { s = it; tl.ads++ } ?: ads.refund() }
     // A steady ad watcher's day: boost in two sessions, one time warp; a pass claims every placement.
-    if (session == 0 || session == 2) if (!shop.boostActive(s, t)) ad(AdSlot.Boost)
-    if (session == 0) ad(AdSlot.Warp)
-    if (payer.pass && session == 1) { ad(AdSlot.CreditBox); ad(AdSlot.FreeUpgrade); ad(AdSlot.Overclock); ad(AdSlot.Overclock) }
+    // Steady watcher (5 a day): boost, two overclocks, a warp, plus the offline double on return.
+    if (session == 0) { if (!shop.boostActive(s, t)) ad(AdSlot.Boost); ad(AdSlot.Warp) }
+    if (session == 1 || session == 3) ad(AdSlot.Overclock)
+    if (payer.pass && session == 2 && !shop.boostActive(s, t)) ad(AdSlot.Boost)
+    if (payer.pass && session == 1) { ad(AdSlot.CreditBox); ad(AdSlot.FreeUpgrade) }
     // Attendance tickets.
     if (!shop.boostActive(s, t)) shop.useTicket(s, CreditItem.Boost, t)?.let { s = it }
     while (true) s = shop.useTicket(s, CreditItem.Warp, t) ?: break

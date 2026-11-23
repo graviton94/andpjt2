@@ -60,7 +60,7 @@ data class RuleSet(
             band(50, 60, 60) + AttendReward(600, mapOf(O to 6, BB to 2), starVouchers = 2, title = "알림 개근왕")
     },
     /** 프리미엄 ★ 선택권 raise an app up to this many stars. */
-    val voucherMaxStars: Int = 3,
+    val voucherMaxStars: Int = 2,
     val missionCredits: Long = 35,
     val adCredits: Long = 10,
     val passInstantCredits: Long = 300,
