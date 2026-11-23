@@ -22,6 +22,9 @@ private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
 
 /** Spending profiles (docs/bible/17-monetization.md). */
 enum class Payer(val label: String) { Free("무과금·무광고"), Ads("광고 시청"), Pass("월간 패스"), Whale("고과금") }
+
+/** A spending profile; [slots] limits which ad placements it uses (for one-at-a-time ablation). */
+data class Profile(val label: String, val payer: Payer, val slots: Set<AdSlot> = AdSlot.entries.toSet())
 /** The app with the highest unlock level: "last app" in the reports. */
 private val LAST_APP get() = Catalog.apps.maxBy { it.unlockLevel }.id
 private const val START = 1_000_000L
@@ -71,8 +74,8 @@ fun unlockLevels(): Map<Int, List<String>> {
 }
 
 /** [update]: on this day (0-based) the pack is switched on, as a content update reaching a veteran save. */
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free): Timeline {
-    Catalog.packs = emptySet()
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet()): Timeline {
+    if (Catalog.packs.isNotEmpty()) Catalog.packs = emptySet()  // shared global: only touch it when needed (parallel runs)
     val tl = Timeline()
     var levels = unlockLevels()
     var s = chooseDeck(engine.newGame(START, seed), DeckPolicy.Synergy)
@@ -100,9 +103,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 s = back
                 tl.offlineP += got
                 t = begin
-                if (payer != Payer.Free && got.signum() > 0) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ }
+                if (payer != Payer.Free && AdSlot.OfflineDouble in slots && got.signum() > 0) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ }
             }
-            s = economy(s, t, session, payer, tl)
+            s = economy(s, t, session, payer, tl, slots)
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
@@ -115,8 +118,8 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 val o = engine.swipe(s, target, t) ?: continue
                 s = o.state
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
-                if (payer != Payer.Free && s.level >= engine.rules.bestDoubleFrom && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
-                if (payer != Payer.Free && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
+                if (payer != Payer.Free && AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
+                if (payer != Payer.Free && AdSlot.Battery in slots && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
                 if (payer == Payer.Whale && s.energy == 0) shop.buyItem(s, CreditItem.Battery, t)?.let { s = it }
                 // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
                 if (o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
@@ -182,7 +185,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
 }
 
 /** Daily claims, passes, timed boosts and premium stars for a [payer] at the start of a session. */
-private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline): GameState {
+private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>): GameState {
     var s = shop.claimAttendance(state, t)
     s = shop.claimMissions(s, t)
     if (payer == Payer.Pass || payer == Payer.Whale) {
@@ -191,7 +194,7 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
         s = shop.claimPassDaily(s, t)
     }
     if (payer != Payer.Free) {
-        for (slot in listOf(AdSlot.Boost, AdSlot.Warp, AdSlot.CreditBox, AdSlot.FreeUpgrade)) {
+        for (slot in listOf(AdSlot.Boost, AdSlot.Warp, AdSlot.CreditBox, AdSlot.FreeUpgrade).filter { it in slots }) {
             if (session < 3 && !shop.boostActive(s, t) || slot != AdSlot.Boost) shop.watchAd(s, slot, t)?.let { s = it; tl.ads++ }
         }
     }
@@ -209,18 +212,27 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
 
 private fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
 
-fun monetization(days: Int, seeds: Long, only: List<Payer> = Payer.entries) {
+fun monetization(days: Int, seeds: Long, profiles: List<Profile>) {
     val plan = DayPlan()
-    println("=== 과금 프로필 ${days}일 · 시드 $seeds")
+    println("=== 과금 프로필 ${days}일 · 시드 $seeds · ${profiles.size}개 프로필 병렬")
     fun d(x: Double?) = if (x == null || x.isNaN()) "-" else "%.1f일".format(x)
-    for (payer in only) {
-        val runs = (1L..seeds).map { playDays(it, days, plan, true, payer = payer) }
+    // Every (profile, seed) run is independent: spread them over all cores.
+    val jobs = profiles.flatMap { p -> (1L..seeds).map { p to it } }
+    val done = jobs.parallelStream().map { (p, seed) -> p to playDays(seed, days, plan, true, payer = p.payer, slots = p.slots) }.toList()
+    for (p in profiles) {
+        val runs = done.filter { it.first == p }.map { it.second }
         val off = p50(runs.map { val tot = it.offlineP + it.activeP; if (tot.signum() == 0) 0.0 else it.offlineP.toBigDecimal().divide(tot.toBigDecimal(), java.math.MathContext.DECIMAL64).toDouble() * 100 })
-        println("[${payer.label}] 마지막 앱 ${d(p50(runs.mapNotNull { it.lastAppDay }))} (${runs.count { it.lastAppDay != null }}/$seeds) · 오프라인 ${"%.0f%%".format(off)}" +
-            " · 무료 크레딧 ${p50(runs.map { it.credits.toDouble() }).toLong()} · 구매 크레딧 ${p50(runs.map { it.bought.toDouble() }).toLong()} · 광고/일 ${"%.1f".format(p50(runs.map { it.ads.toDouble() / days }))}")
+        println("[${p.label}] 첫 초기화 ${d(p50(runs.mapNotNull { it.resetDays.firstOrNull() }))} · 마지막 앱 ${d(p50(runs.mapNotNull { it.lastAppDay }))} (${runs.count { it.lastAppDay != null }}/$seeds) · 오프라인 ${"%.0f%%".format(off)}" +
+            " · 무료 데이터 ${p50(runs.map { it.credits.toDouble() }).toLong()} · 구매 데이터 ${p50(runs.map { it.bought.toDouble() }).toLong()} · 광고/일 ${"%.1f".format(p50(runs.map { it.ads.toDouble() / days }))}")
         println("      주별 최고 레벨 " + runs[0].bestLevelByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(runs.map { (it.bestLevelByWeek[w] ?: 0).toDouble() }).toInt()}" })
-        println("      프리미엄 ★ (티어별 합, 시드1) " + runs[0].stars.toSortedMap().entries.joinToString(" ") { "T${it.key}:${it.value}" })
     }
+}
+
+/** Standard profiles, or "ablate": no ads, each ad placement alone, all ads. */
+fun profilesFor(arg: String?): List<Profile> = when (arg) {
+    null, "all" -> Payer.entries.map { Profile(it.label, it) }
+    "ablate" -> listOf(Profile("광고 없음", Payer.Ads, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Ads, setOf(it)) } + Profile("광고 전부", Payer.Ads)
+    else -> arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
 }
 
 fun daily(days: Int, seeds: Long) {
@@ -265,7 +277,7 @@ fun updateCheck(launchDays: Int, extraDays: Int, seeds: Long, pack: com.graviton
     val runs = (1L..seeds).map { playDays(it, launchDays + extraDays, plan, true, update = launchDays to pack) }
     Catalog.packs = setOf(pack)
     val top = Catalog.apps.maxBy { it.unlockLevel }
-    Catalog.packs = emptySet()
+    if (Catalog.packs.isNotEmpty()) Catalog.packs = emptySet()  // shared global: only touch it when needed (parallel runs)
     fun d(x: Double?) = if (x == null || x.isNaN()) "-" else "%.1f일".format(x)
     println("적용 시점 최고 레벨 ${p50(runs.map { it.updateLevel.toDouble() }).toInt()} · 11티어 첫 앱 ${d(p50(runs.mapNotNull { it.tierDay[11] }))} · 팩 마지막 앱(${top.name} Lv${top.unlockLevel}) ${d(p50(runs.mapNotNull { it.lastAppDay }))} (${runs.count { it.lastAppDay != null }}/$seeds)")
     println("주별 최고 레벨 " + runs[0].bestLevelByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(runs.map { (it.bestLevelByWeek[w] ?: 0).toDouble() }).toInt()}" })
