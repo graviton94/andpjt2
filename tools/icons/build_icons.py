@@ -345,9 +345,25 @@ def delivered():
     return out
 
 
+def handset_image(x, y, size):
+    """The commissioned handset part (white) as an embedded image, or None before delivery."""
+    import base64, io
+    from PIL import Image
+    f = OUT / "handset-part.png"
+    if not f.exists():
+        return None
+    buf = io.BytesIO()
+    Image.open(f).resize((128, 128), Image.LANCZOS).save(buf, "PNG", optimize=True)
+    return f'<image href="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}" x="{x}" y="{y}" width="{size}" height="{size}"/>'
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     index = {}
+    hs = handset_image(13, 13, 22)
+    if hs:  # stock Phone and the WhatsApp-style icon use the delivered handset part
+        ICONS["phone"] = bg("#22b35b") + hs
+        ICONS["green"] = bg("#25d366") + '<g transform="matrix(-1 0 0 1 48 0)"><path d="M24 9.5A14.5 14.5 0 0 0 11.4 31.2L9.5 38.5l7.5-1.9A14.5 14.5 0 1 0 24 9.5z" fill="none" stroke="#fff" stroke-width="2.8" stroke-linejoin="round"/></g>' + handset_image(16.5, 16.5, 15)
     arrived = delivered()
     ICONS.update(arrived)
     for k in arrived:
