@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 청소부 타격감 시연</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap">
+<style>
+/* VOICE: 게임 쇼케이스 — 짧고 신나는 말, 숫자가 주인공
+   IDEA: 실제 게임 판 그대로, 탭하면 연쇄 사다리(19장 토큰)가 터진다
+   PICTURE: 휴대폰 한 대 크기의 살아 있는 판 (캔버스)
+   COLOUR and TYPE: 앰버 골드 다크 판 + 앱 브랜드색 파편, Noto Sans KR 900 숫자
+   LAYOUT: 판 왼쪽 크게, 조작은 오른쪽 한 열 (600px 아래는 판 → 조작) */
+:root{color-scheme:light dark;--bg:light-dark(#EEF1F7,#100D0A);--ink:light-dark(#16181D,#F6F1EA);--sub:light-dark(#4B5160,#B3A89B);--card:light-dark(#FFFFFF,#201B16);--line:light-dark(#DDE2EC,#3A332C);--acc:light-dark(#3867F0,#EFA03F);--onacc:light-dark(#FFFFFF,#1E1408)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Noto Sans KR',system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px);max-width:1180px;margin:0 auto}
+h1{margin:0 0 6px;font-size:clamp(28px,4vw,40px);line-height:1.08;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
+.lead{margin:0 0 20px;color:var(--sub);max-width:62ch}
+.wrap{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
+.phone{position:relative;width:100%;max-width:420px;aspect-ratio:390/760;border-radius:40px;padding:10px;background:#0B0907;box-shadow:0 30px 60px #0007, inset 0 0 0 2px #2b241d}
+.phone canvas{width:100%;height:100%;display:block;border-radius:32px;touch-action:manipulation;cursor:pointer}
+.panel{display:flex;flex-direction:column;gap:18px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.group h2{margin:0 0 10px;font-size:15px;font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-weight:700;font-size:14px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button[aria-pressed=true],button.primary{background:var(--acc);color:var(--onacc);border-color:transparent}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.on td{color:var(--acc);font-weight:700}
+.note{font-size:13px;color:var(--sub);margin:8px 0 0}
+@media(max-width:760px){.wrap{grid-template-columns:minmax(0,1fr)}.phone{margin:0 auto}}
+</style>
+</head>
+<body>
+<main class="band">
+  <h1>탭하면 터진다: 알림 청소부 타격감 시연</h1>
+  <p class="lead">판의 알림을 탭하면 고른 길이의 연쇄가 그 자리부터 터집니다. 연쇄가 길수록 히트스톱·흔들림·파편·화면 효과가 한 칸씩 커지고, 파편은 그 앱 아이콘의 브랜드색입니다. 수치는 바이블 19장 토큰 그대로입니다.</p>
+  <div class="wrap">
+    <div class="phone"><canvas id="stage" aria-label="알림 판. 탭하면 연쇄 폭발" role="img"></canvas></div>
+    <div class="panel">
+      <section class="group">
+        <h2>연쇄 길이</h2>
+        <div class="row" id="chains"></div>
+        <p class="note">판의 아무 알림이나 탭하세요. 빈 곳을 탭해도 맨 아래 줄부터 터집니다.</p>
+      </section>
+      <section class="group">
+        <h2>특수 연출</h2>
+        <div class="row">
+          <button type="button" id="wave" class="primary">과부하 파동 ×3³</button>
+          <button type="button" id="cap">과열 보호</button>
+          <button type="button" id="auto" aria-pressed="false">자동 시연</button>
+        </div>
+      </section>
+      <section class="group">
+        <h2>설정</h2>
+        <div class="row">
+          <button type="button" id="sound" aria-pressed="true">소리</button>
+          <button type="button" id="reduce" aria-pressed="false">움직임 줄이기</button>
+          <button type="button" id="daylight" aria-pressed="false">판 데이라이트</button>
+        </div>
+      </section>
+      <section class="group">
+        <h2>확대의 사다리 (토큰 fx.ladder)</h2>
+        <table><thead><tr><th>연쇄</th><th>이름</th><th class="n">멈춤</th><th class="n">흔들림</th><th class="n">파편</th></tr></thead><tbody id="ladder"></tbody></table>
+        <p class="note">화면 전체는 흔들지 않고 카드 영역만 흔듭니다. 번쩍임은 초당 3회 이하.</p>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+{
+const APPS = __APPS__;
+const LADDER = [
+  { from: 1, to: 1, name: '팡', stop: 28, shake: 1.5, shreds: 12 },
+  { from: 2, to: 3, name: '연쇄', stop: 36, shake: 2.0, shreds: 20 },
+  { from: 4, to: 5, name: '폭주', stop: 48, shake: 2.5, shreds: 32 },
+  { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
+  { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
+];
+const W = 390, H = 740, POOL = 600, SIM = 1 / 120;
+const cv = document.getElementById('stage'), ctx = cv.getContext('2d');
+const icons = APPS.map(a => { const i = new Image(); i.src = a.icon; return i; });
+let dpr = 1;
+const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = W * dpr; cv.height = H * dpr; };
+fit(); window.addEventListener('resize', fit);
+
+// state
+let chainLen = 5, sound = true, reduce = false, day = false, autoOn = false;
+let wallet = 3.2e12, shown = 3.2e12, stop = 0, shake = 0, zoom = 1, flash = 0, rim = 0, warm = 0, slow = 0, banner = null, cap = 0;
+const parts = [], pops = [], queue = [];
+let seed = 7;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+const rows = Array.from({ length: 7 }, (_, i) => ({ app: i % APPS.length, n: 1 + (i * 7) % 3, y: 0, dy: 0, alpha: 1 }));
+const rowY = i => 150 + i * 76;
+const tier = n => LADDER.find(l => n >= l.from && n <= l.to);
+
+// colour helpers
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const ramp = h => { const c = hex(h); return [mix(c, [0, 0, 0], .45), c, mix(c, [255, 255, 255], .4), mix(c, [255, 255, 255], .78), [255, 255, 255]]; };
+const units = [[1e20, '해'], [1e16, '경'], [1e12, '조'], [1e8, '억'], [1e4, '만']];
+const fmt = n => { for (const [v, u] of units) if (n >= v) { const x = n / v; return (x >= 100 ? Math.round(x) : x.toFixed(1)) + u; } return Math.round(n).toLocaleString('ko-KR'); };
+
+// audio
+let ac = null;
+const tone = (semi, dur = .09, type = 'triangle', vol = .14) => {
+  if (!sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.type = type; o.frequency.value = 523.25 * Math.pow(2, semi / 12);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
+  } catch (e) {}
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+// particles
+const spawn = (k, x, y, vx, vy, life, col, size) => {
+  if (parts.length >= POOL) parts.shift();
+  parts.push({ k, x, y, vx, vy, life, max: life, col, size, rot: rnd() * 6.28, vr: (rnd() - .5) * 14 });
+};
+function burst(rowIdx, chain) {
+  const r = rows[rowIdx], app = APPS[r.app], pal = ramp(app.col), t = tier(chain);
+  const cx = 195, cy = rowY(rowIdx) + 31, k = reduce ? .3 : 1;
+  for (let i = 0; i < t.shreds * k; i++) {
+    const a = rnd() * 6.28, sp = 120 + rnd() * 260 * (1 + chain * .08);
+    spawn('SHRED', cx + (rnd() - .5) * 300, cy + (rnd() - .5) * 30, Math.cos(a) * sp, Math.sin(a) * sp - 120, .55 + rnd() * .45, pal[1 + (i % 3)], 5 + rnd() * 6);
+  }
+  for (let i = 0; i < (8 + chain * 2) * k; i++) {
+    const a = rnd() * 6.28, sp = 260 + rnd() * 380;
+    spawn('SPARK', cx, cy, Math.cos(a) * sp, Math.sin(a) * sp, .25 + rnd() * .3, pal[3], 2);
+  }
+  for (let i = 0; i < 6 * k; i++) spawn('MOTE', cx + (rnd() - .5) * 280, cy, (rnd() - .5) * 30, -40 - rnd() * 60, .9 + rnd() * .6, pal[3], 2 + rnd() * 2);
+  if (chain >= 4) for (let i = 0; i < 10 * k; i++) spawn('STAR', cx + (rnd() - .5) * 320, cy + (rnd() - .5) * 60, (rnd() - .5) * 60, -30 - rnd() * 40, .5 + rnd() * .4, pal[4], 5 + rnd() * 4);
+  if (chain >= 6) spawn('RING', cx, cy, 0, 0, .55, pal[2], 20);
+  spawn('GLOW', cx, cy, 0, 0, .45, pal[2], 120 + chain * 10);
+  const base = Math.pow(6, 6 + (r.app % 4)) * (r.n + 2);
+  pops.push({ x: cx + (rnd() - .5) * 120, y: cy - 10, text: '+' + fmt(base), mult: '×' + (1 + chain), life: 1.1, max: 1.1, big: chain, col: pal[3] });
+  while (pops.length > 4) pops.shift();
+  wallet += base * (1 + chain);
+  stop = Math.max(stop, t.stop / 1000);
+  shake = reduce ? 0 : Math.max(shake, t.shake);
+  if (chain >= 2) rim = Math.max(rim, .5);
+  if (chain >= 4) warm = Math.max(warm, 1);
+  if (chain >= 6) rim = 1;
+  if (chain >= 9) { if (!reduce) flash = Math.max(flash, .55); slow = .2; zoom = reduce ? 1 : 1.03; }
+  banner = { text: chain === 1 ? '팡!' : chain + '연쇄! ' + t.name, life: 1.0, max: 1.0, size: 30 + Math.min(chain, 12) * 3.5 };
+  tone(Math.min(4, (chain - 1) * .5) + chain * 2, .1 + chain * .006, chain >= 6 ? 'sawtooth' : 'triangle', .12);
+  buzz(Math.min(40, 8 + chain * 3));
+  r.alpha = 0; r.dy = -40; r.app = (r.app + 3 + chain) % APPS.length; r.n = 1 + Math.floor(rnd() * 3);
+}
+function runChain(start, n) {
+  for (let i = 0; i < n; i++) {
+    const gap = Math.max(.045, .085 - i * .004);
+    queue.push({ at: i === 0 ? 0 : gap, fn: () => burst((start + i) % rows.length, i + 1) });
+  }
+}
+function wave() {
+  for (let w = 0; w < 3; w++) queue.push({ at: w === 0 ? .05 : .22, fn: () => {
+    const pal = ramp(APPS[(w * 3) % APPS.length].col);
+    for (let i = 0; i < (reduce ? 40 : 140); i++) spawn('SHRED', rnd() * W, 110 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 300, 1.1, pal[1 + (i % 3)], 4 + rnd() * 5);
+    spawn('BAND', 0, 110, 0, 900, .7, pal[3], 60);
+    const n = Math.pow(3, w + 1);
+    pops.push({ x: 195, y: 360 - w * 40, text: '숨은 알림 ×' + n, mult: '파동 ' + (w + 1), life: 1.2, max: 1.2, big: 8, col: pal[3] });
+    wallet *= 1.6; stop = Math.max(stop, .04); shake = reduce ? 0 : 3; rim = 1; warm = 1;
+    tone(-12 + w * 4, .25, 'sawtooth', .16); buzz(30);
+  } });
+}
+function overheat() {
+  cap = 1.4;
+  for (let i = 0; i < (reduce ? 12 : 40); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 200, 640, (rnd() - .5) * 60, -80 - rnd() * 80, 1.3, [240, 240, 240], 14 + rnd() * 14);
+  tone(-5, .4, 'square', .06);
+}
+
+// sim
+function step(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.life -= dt;
+    if (p.life <= 0) { parts.splice(i, 1); continue; }
+    if (p.k === 'SHRED') { p.vy += 900 * dt; p.vx *= .985; p.vy *= .99; p.rot += p.vr * dt; }
+    else if (p.k === 'SPARK') { p.vx *= .93; p.vy = p.vy * .93 + 300 * dt; }
+    else if (p.k === 'MOTE' || p.k === 'STAR' || p.k === 'VAPOUR') { p.vy *= .98; }
+    p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  for (let i = pops.length - 1; i >= 0; i--) { pops[i].life -= dt; if (pops[i].life <= 0) pops.splice(i, 1); }
+  for (const r of rows) { r.alpha = Math.min(1, r.alpha + dt * 4); r.dy *= Math.pow(.0005, dt); }
+}
+
+// draw
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  if (day) { g.addColorStop(0, '#E3ECFF'); g.addColorStop(1, '#EEF1F7'); } else { g.addColorStop(0, '#2A2119'); g.addColorStop(1, '#120F0C'); }
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (warm > 0) { const r = ctx.createRadialGradient(195, 420, 20, 195, 420, 380); r.addColorStop(0, `rgba(255,138,31,${.28 * warm})`); r.addColorStop(1, 'rgba(255,138,31,0)'); ctx.fillStyle = r; ctx.fillRect(0, 0, W, H); }
+  const ink = day ? '#16181D' : '#F6F1EA', sub = day ? '#4B5160' : '#B3A89B';
+  // HUD
+  ctx.fillStyle = ink; ctx.font = '700 13px "Noto Sans KR"'; ctx.textAlign = 'left'; ctx.fillText('Lv 42', 22, 34);
+  ctx.textAlign = 'center'; ctx.font = '900 24px "Noto Sans KR"'; ctx.fillText(fmt(shown) + ' P', 195, 40);
+  ctx.textAlign = 'right'; ctx.font = '700 13px "Noto Sans KR"'; ctx.fillText('9/12', 368, 34);
+  ctx.fillStyle = day ? '#1E2A501A' : '#FFFFFF14'; roundRect(22, 64, 346, 8, 4); ctx.fill();
+  ctx.fillStyle = '#FF8A1F'; roundRect(22, 64, 346 * (.45 + .5 * rim), 8, 4); ctx.fill();
+  ctx.fillStyle = sub; ctx.textAlign = 'left'; ctx.font = '600 11.5px "Noto Sans KR"'; ctx.fillText('과부하', 22, 92);
+  // cards (shaken)
+  ctx.save();
+  const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
+  ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom, zoom); ctx.translate(-195, -420);
+  rows.forEach((r, i) => {
+    const y = rowY(i) + r.dy, a = APPS[r.app];
+    ctx.globalAlpha = r.alpha;
+    ctx.fillStyle = day ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.09)'; roundRect(14, y, 362, 62, 20); ctx.fill();
+    ctx.strokeStyle = day ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.12)'; ctx.stroke();
+    if (icons[r.app].complete) ctx.drawImage(icons[r.app], 28, y + 12, 38, 38);
+    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = '700 14px "Noto Sans KR"'; ctx.fillText(a.name, 78, y + 27);
+    ctx.fillStyle = sub; ctx.font = '400 12px "Noto Sans KR"'; ctx.fillText('새 알림이 도착했어요', 78, y + 46);
+    ctx.fillStyle = day ? '#3867F0' : '#FFD66B'; ctx.font = '700 13px "Noto Sans KR"'; ctx.textAlign = 'right';
+    ctx.fillText('●'.repeat(r.n) + '○'.repeat(4 - r.n), 360, y + 37);
+    ctx.globalAlpha = 1;
+  });
+  // colour layer particles
+  for (const p of parts) {
+    const f = p.life / p.max;
+    if (p.k === 'SHRED') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = rgb(p.col, Math.min(1, f * 1.6)); roundRect(-p.size / 2, -p.size * .35, p.size, p.size * .7, 1.5); ctx.fill(); ctx.restore(); }
+    if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .25 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.6 - f), 0, 6.28); ctx.fill(); }
+  }
+  ctx.restore();
+  // light layer (additive)
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of parts) {
+    const f = p.life / p.max;
+    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .035, p.y - p.vy * .035); ctx.stroke(); }
+    if (p.k === 'MOTE') { ctx.fillStyle = rgb(p.col, f * .9); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
+    if (p.k === 'STAR') { ctx.fillStyle = rgb(p.col, f); const s = p.size * (0.6 + f * .6); ctx.beginPath(); ctx.moveTo(p.x, p.y - s); ctx.lineTo(p.x + s * .25, p.y); ctx.lineTo(p.x, p.y + s); ctx.lineTo(p.x - s * .25, p.y); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x - s, p.y); ctx.lineTo(p.x, p.y + s * .25); ctx.lineTo(p.x + s, p.y); ctx.lineTo(p.x, p.y - s * .25); ctx.closePath(); ctx.fill(); }
+    if (p.k === 'RING') { const r = 30 + (1 - f) * 220; ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = 6 * f + 1; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .45, 0, 0, 6.28); ctx.stroke(); }
+    if (p.k === 'GLOW') { const r = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size); r.addColorStop(0, rgb(p.col, .55 * f)); r.addColorStop(.25, rgb(p.col, .25 * f)); r.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = r; ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2); }
+    if (p.k === 'BAND') { const y = p.y; const gr = ctx.createLinearGradient(0, y - 40, 0, y + 40); gr.addColorStop(0, rgb(p.col, 0)); gr.addColorStop(.5, rgb(p.col, .5 * f)); gr.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = gr; ctx.fillRect(0, y - 40, W, 80); }
+  }
+  if (rim > 0) { const e = ctx.createRadialGradient(195, 380, 150, 195, 380, 420); e.addColorStop(0, 'rgba(255,120,30,0)'); e.addColorStop(1, `rgba(255,120,30,${.45 * rim})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
+  ctx.globalCompositeOperation = 'source-over';
+  // score pops
+  ctx.textAlign = 'center';
+  for (const p of pops) {
+    const f = p.life / p.max, s = 1 + Math.max(0, f - .8) * 2.5;
+    let up = (1 - Math.max(f, .45)) * 46, px = p.x; ctx.globalAlpha = 1;
+    if (f < .45) { const k = 1 - f / .45, e = k * k; px = p.x + (195 - p.x) * e; up += (p.y - 40 - up) * e; ctx.globalAlpha = 1 - k * .6; }
+    ctx.font = `900 ${Math.round((18 + Math.min(p.big, 12)) * s)}px "Noto Sans KR"`;
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.strokeText(p.text, px, p.y - up); ctx.fillStyle = rgb(p.col); ctx.fillText(p.text, px, p.y - up);
+    ctx.font = '900 15px "Noto Sans KR"'; const mw = ctx.measureText(p.mult).width + 16;
+    ctx.fillStyle = '#FF5A1F'; roundRect(px - mw / 2, p.y - up + 8, mw, 24, 8); ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; ctx.fillText(p.mult, px, p.y - up + 25);
+    ctx.globalAlpha = 1;
+  }
+  if (banner) {
+    const f = banner.life / banner.max, s = 1 + Math.max(0, f - .75) * 3;
+    ctx.globalAlpha = Math.min(1, f * 2.5); ctx.font = `900 ${Math.round(banner.size)}px "Noto Sans KR"`; const bw = ctx.measureText(banner.text).width, bs = Math.min(s, 340 / bw * s / Math.max(1, s)); ctx.font = `900 ${Math.round(banner.size * Math.min(s, 340 / bw))}px "Noto Sans KR"`;
+    ctx.lineWidth = 8; ctx.strokeStyle = '#1E1408'; ctx.strokeText(banner.text, 195, 128); ctx.fillStyle = '#FFD66B'; ctx.fillText(banner.text, 195, 128); ctx.globalAlpha = 1;
+  }
+  if (cap > 0) {
+    const f = Math.min(1, cap), s = 1 + Math.max(0, cap - 1.1) * 3;
+    ctx.save(); ctx.translate(195, 560); ctx.rotate(-.12); ctx.scale(s, s); ctx.globalAlpha = f;
+    ctx.strokeStyle = '#FF4A3D'; ctx.lineWidth = 5; roundRect(-110, -32, 220, 64, 12); ctx.stroke();
+    ctx.fillStyle = '#FF4A3D'; ctx.font = '900 30px "Noto Sans KR"'; ctx.fillText('과열 보호', 0, 11); ctx.restore(); ctx.globalAlpha = 1;
+  }
+  if (flash > 0) { ctx.fillStyle = `rgba(255,244,214,${flash})`; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = day ? '#16181D' : '#F6F1EA'; roundRect(135, H - 18, 120, 5, 3); ctx.fill();
+}
+
+// loop: real time for decay, sim time frozen during hit-stop, slowed during slow-mo
+let last = performance.now(), acc = 0, autoT = 0;
+function frame(now) {
+  let dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (queue.length) { queue[0].at -= dt; while (queue.length && queue[0].at <= 0) { const q = queue.shift(); q.fn(); } }
+  let simDt = dt;
+  if (stop > 0) { stop -= dt; simDt = 0; }
+  else if (slow > 0) { slow -= dt; simDt = dt * .35; }
+  acc += simDt; while (acc >= SIM) { step(SIM); acc -= SIM; }
+  shake = Math.max(0, shake - dt * 14); zoom += (1 - zoom) * Math.min(1, dt * 10); flash = Math.max(0, flash - dt * 2.4);
+  rim = Math.max(0, rim - dt * .8); warm = Math.max(0, warm - dt * .6); cap = Math.max(0, cap - dt * .8);
+  if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
+  shown += (wallet - shown) * Math.min(1, dt * 5);
+  if (autoOn) { autoT -= dt; if (autoT <= 0) { const n = [1, 3, 5, 8, 12][Math.floor(rnd() * 5)]; runChain(Math.floor(rnd() * 7), n); autoT = 1.4 + n * .12; } }
+  draw(); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// controls
+const chainsEl = document.getElementById('chains');
+const renderChains = () => { chainsEl.innerHTML = [1, 3, 5, 8, 12].map(n => `<button type="button" data-n="${n}" aria-pressed="${n === chainLen}">${n}연쇄</button>`).join(''); };
+renderChains();
+chainsEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; chainLen = +b.dataset.n; renderChains(); runChain(6, chainLen); });
+document.getElementById('ladder').innerHTML = LADDER.map(l => `<tr data-a="${l.from}"><td>${l.from === l.to ? l.from : l.to > 50 ? l.from + '+' : l.from + '~' + l.to}</td><td>${l.name}</td><td class="n">${l.stop}ms</td><td class="n">${l.shake}dp</td><td class="n">${l.shreds}</td></tr>`).join('');
+cv.addEventListener('pointerdown', e => {
+  const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H;
+  let idx = rows.findIndex((_, i) => y >= rowY(i) && y <= rowY(i) + 62); if (idx < 0) idx = 6;
+  runChain(idx, chainLen);
+});
+const toggle = (id, fn) => { const b = document.getElementById(id); b.addEventListener('click', () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', v); fn(v); }); };
+toggle('sound', v => sound = v);
+toggle('reduce', v => reduce = v);
+toggle('daylight', v => day = v);
+toggle('auto', v => { autoOn = v; autoT = 0; });
+document.getElementById('wave').addEventListener('click', () => { runChain(6, 3); wave(); });
+document.getElementById('cap').addEventListener('click', () => { runChain(6, 5); queue.push({ at: .5, fn: overheat }); });
+}
+</script>
+</body>
+</html>

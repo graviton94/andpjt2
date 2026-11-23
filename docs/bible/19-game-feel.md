@@ -4,6 +4,8 @@
 
 참고: [pixelfx](https://github.com/patch-gg/pixelfx) (MIT)의 **구조**(데이터 이펙트, 두 겹 합성, 팔레트 램프, 타격 안무 표, 품질 기준)를 가져온다. 파일은 복사하지 않고 Kotlin으로 새로 쓴다. 그림체(픽셀아트)는 따르지 않는다(우리는 글래스·네온). 크레딧에 "FX 구조 inspired by pixelfx" 표기.
 
+**시연판**: [타격감 시연](https://claude.ai/artifact/5zuf2fwBU2HxaW84wsY2WS) (소스 `docs/design/fx-demo/`). 1·3·5·8·12연쇄, 과부하 파동, 과열 보호 도장, 움직임 줄이기, 소리를 직접 눌러 본다.
+
 ## 1. 원칙
 
 | 원칙 | 기준 |
