@@ -129,9 +129,9 @@ class CoreRulesTest {
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 180 * 10 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 10%
+        assertEquals(valueOf(1_000L * 180 * 6 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 6%
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 14 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(1_000L * 180 * 10 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -179,12 +179,12 @@ class CoreRulesTest {
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        // Total = ⌊10 × (P_max / P(Lv25))^0.5⌋, exponent halves 10⁸ above the anchor.
+        // Total = ⌊10 × (P_max / P(Lv25))^0.4⌋, exponent halves 10⁸ above the anchor.
         val anchor = e.rules.levelP(25)
         assertEquals(10L, e.rules.backupTotal(anchor))
-        assertEquals(316L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
-        assertEquals(1_000_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
-        assertEquals(1_000_000_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
+        assertEquals(158L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
+        assertEquals(100_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
+        assertEquals(Math.floor(10 * Math.pow(10.0, 6.4)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
     }
 
     @Test
@@ -197,7 +197,7 @@ class CoreRulesTest {
         assertEquals(after.backup.resets, again.backup.resets)
         // Beating it pays only the difference.
         val strong = after.copy(level = 30, runEarned = e.rules.levelP(25) * BigInteger.TEN.pow(3))
-        assertEquals(316L - 10L, e.backupFilesNow(strong))
+        assertEquals(158L - 10L, e.backupFilesNow(strong))
     }
 
     @Test
@@ -332,20 +332,20 @@ class CoreRulesTest {
         val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
             bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
         val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
-        // Four times the anchor's files → 3 × √4 = 6 GB.
-        assertEquals(6L, e.cloudGbNow(run))
+        // Four times the anchor's files → 10 × √4 = 20 GB.
+        assertEquals(20L, e.cloudGbNow(run))
         val after = e.sync(run, now)!!
         assertEquals(0L, after.backup.files)
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
         assertTrue(e.unlocked(after, "home"), "app unlocks survive")
-        assertEquals(6L, after.backup.cloud.gb)
+        assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
         val bought = e.buyCloud(after, CloudItem.Compression)
         assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
         val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
-        assertEquals(Math.floor(10 * 1.5 * 1.6).toLong(), e.backupFilesNow(firstReset))
+        assertEquals(Math.floor(10 * 1.5 * 3.0).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × (1 + 10% × 20 GB)
     }
 }

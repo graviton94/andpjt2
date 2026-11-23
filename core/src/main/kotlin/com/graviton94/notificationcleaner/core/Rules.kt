@@ -75,7 +75,7 @@ data class RuleSet(
      * multipliers speed it up directly.
      */
     val levelPBase: Long = 30,
-    val levelRatioPermille: Int = 2_500,
+    val levelRatioPermille: Int = 2_300,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 5,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
@@ -85,7 +85,7 @@ data class RuleSet(
     // Offline settlement
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
-    val offlineEfficiencyPercent: Int = 10,
+    val offlineEfficiencyPercent: Int = 6,
     val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
     val proPricePermille: Int = 1_000,
@@ -97,7 +97,7 @@ data class RuleSet(
      * exponent halves. Paid as the delta over files already earned (research A2). The anchor follows the level
      * curve, so reaching the reset level always pays the first 10 files whatever the value tuning.
      */
-    val backupExponentPermille: Int = 500,
+    val backupExponentPermille: Int = 400,
     val backupSoftcapDigits: Int = 8,
     /** Backup files paid by a run that just reaches the reset level. */
     val backupBase: Long = 10,
@@ -111,9 +111,9 @@ data class RuleSet(
     /** Region × category × diversity synergy together multiply a value by at most this ‰: below one tier step (×[tierBase]). */
     val synergyCapPermille: Int = 4_000,
     // 2nd prestige: 클라우드 동기화
-    val syncLevel: Int = 70,
+    val syncLevel: Int = 60,
     /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
-    val cloudBase: Long = 3,
+    val cloudBase: Long = 10,
     val cloudExponentPermille: Int = 500,
     /** Every GB ever synced adds this % to backup files paid by factory resets. */
     val cloudFilePercent: Int = 10,

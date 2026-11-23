@@ -241,7 +241,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
     /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
     fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
 
-    fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < item.max && shopStage(s) >= item.minResets
+    /** Max level of a backup item; 알림 가치 한도 raises 알림 가치's. */
+    fun backupMax(s: GameState, item: BackupItem) = item.max + if (item == BackupItem.Value) 10 * s.backup.cloud.lv(CloudItem.ValueCap) else 0
+
+    fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < backupMax(s, item) && shopStage(s) >= item.minResets
 
     fun buyBackup(s: GameState, item: BackupItem): GameState {
         val owned = s.backup.lv(item)

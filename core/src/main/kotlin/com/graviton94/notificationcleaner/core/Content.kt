@@ -66,7 +66,7 @@ enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<I
  * the first resets so every reset opens something new.
  */
 enum class BackupItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minResets: Int) {
-    Value("알림 가치 ×1.25", 50, 3, 1_350, 1),
+    Value("알림 가치 ×1.25", 50, 3, 1_450, 1),
     FastBoot("빠른 부팅 · 레벨 기준 P −10%", 20, 2, 1_500, 1),
     StartFunds("시작 자금", 10, 1, 1_600, 1),
     Offline("오프라인 정산 +2%p · +1시간", 10, 4, 1_500, 1),
@@ -91,6 +91,8 @@ enum class BackupItem(val label: String, val max: Int, val base: Long, val growt
 enum class CloudItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minSyncs: Int) {
     Compression("압축 백업 · 백업파일 ×1.5", 30, 1, 1_600, 1),
     SyncValue("동기화 가치 · 알림 가치 ×2", 30, 2, 1_700, 1),
+    /** Raises the 알림 가치 backup item's max by 10: each sync moves the first layer's ceiling up. */
+    ValueCap("알림 가치 한도 +10", 20, 2, 1_600, 1),
     Discount("백업 상점 −10%", 5, 3, 2_000, 2),
     KeepShop("백업 상점 단계 유지 +3", 5, 2, 2_500, 2),
     CloudSlot("앱 슬롯 +1", 1, 10, 1_000, 3),
