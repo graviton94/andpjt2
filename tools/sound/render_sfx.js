@@ -21,6 +21,11 @@ const jobs = [
   ['smash', 'sfx.smash()', 1], ['heart', 'sfx.heart()', .7], ['zap', 'sfx.zap()', 1.2],
   ['reel', 'sfx.reel()', .2], ['jackpot', 'sfx.jackpot()', 1.8], ['fail', 'sfx.fail()', 2.2],
   ['dnd.pad', 'sfx.pad()', 3.8], ['soft', 'sfx.soft()', .8],
+  // phone vibration motor: ~170 Hz square through a resonant band, with a rattle (self-made, free to use)
+  ['phone.buzz', "for (let i = 0; i < 1; i++) { tone('square', 168, 172, .38, .22, { filt: 900, q: 6 }); hiss(.38, .08, { f0: 170, f1: 170, q: 12 }); }", .8],
+  ['phone.buzz.double', "[0, .5].forEach(at => { tone('square', 168, 172, .3, .22, { filt: 900, q: 6, at }); hiss(.3, .08, { f0: 170, f1: 170, q: 12, at }); })", 1.2],
+  ['phone.buzz.ring', "[0, .45, 1.2, 1.65].forEach(at => { tone('square', 166, 170, .32, .22, { filt: 900, q: 6, at }); hiss(.32, .08, { f0: 168, f1: 168, q: 12, at }); })", 2.4],
+  ['phone.table', "[0, .5].forEach(at => { tone('square', 120, 124, .32, .2, { filt: 600, q: 4, at }); hiss(.32, .25, { type: 'highpass', f0: 2500, f1: 2500, q: 1, at }); })", 1.2],
 ];
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage();

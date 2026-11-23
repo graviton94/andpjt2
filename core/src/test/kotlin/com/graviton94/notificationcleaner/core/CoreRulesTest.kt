@@ -744,5 +744,10 @@ class CoreRulesTest {
         val calm = FxPlan.plan(o, reducedMotion = true)
         assertTrue(calm.none { it.kind == CueKind.Shake || it.kind == CueKind.ScreenCrack || it.kind == CueKind.Flash })
         assertEquals(80, FxPlan.step(12).hitStopMs)
+        // every sound id the planner can name exists as a file
+        val ids = plan.mapNotNull { it.sound } + listOf("notify.spam", "phone.buzz.ring", "notify.event", "phone.buzz") +
+            Category.entries.map { "notify." + it.name.lowercase() } + "ui.levelup"
+        val dir = java.io.File("../assets-src/sfx")
+        ids.distinct().forEach { id -> assertTrue(java.io.File(dir, "$id.ogg").exists() || java.io.File(dir, "cc0/$id.ogg").exists(), "missing sound $id") }
     }
 }

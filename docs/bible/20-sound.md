@@ -97,3 +97,20 @@
 1. **완료**: 시연 합성음을 오프라인 렌더링해 `assets-src/sfx/` 59개 OGG(604KB)로 만들었다(`node tools/sound/render_sfx.js tools/sound/sfx-synth.html assets-src/sfx`). 파일마다 피크 −1dB로 정규화했으므로, 무게 사다리(틱 < 팡 < 정산 < 단위 돌파)는 게임의 id별 음량표로 맞춘다. `pop.1~16`은 연쇄 음정 16개, `payoff.1/3/5/8`은 근음 4개.
 2. 소프트런치 전 사운드 디자이너에게 이 표로 발주, 시연 렌더를 레퍼런스로 첨부.
 3. 레이어 합성(질감 + 몸통 + 음정)은 게임 안에서 SoundPool 동시 재생으로 유지 → 변주와 피치 이동이 싸다.
+
+## 7. CC0 · 폰 소리 층 (11-23)
+
+타격감의 핵심(팡·정산·단위 돌파·이벤트)은 우리 합성음, **폰 UI 층은 CC0 소리**로 진짜 폰 같은 느낌을 낸다. 출처: npm `uisfx@0.4.0`의 오디오(CC0-1.0, `assets-src/sfx/cc0/LICENSE-uisfx-CC0.txt`, 파일별 출처 `SOURCES.json`). 진동 소리는 직접 합성(자체 제작).
+
+| 게임 id | 언제 | 소리 |
+|---|---|---|
+| `notify.social` · `work` · `daily` · `media` · `money` | 새 알림 줄 도착 (앱 카테고리별로 다른 폰 알림음) | uisfx notification, 테마 glass·minimal·soft·studio·arcade |
+| `notify.spam` | 스팸 문자 도착 | mechanical mention |
+| `notify.event` | 이벤트 카드 도착 | dreamy receive |
+| `phone.buzz` · `.double` · `.ring` · `phone.table` | 돌발 알림 · 스팸 전화 진동 · 책상 위 진동 | 직접 합성 (170Hz 모터 + 덜덜) |
+| `phone.lock` · `unlock` · `wake` · `sleep` | 앱 충돌 CRT 꺼짐/켜짐 위에 겹침 · 방해 금지 | mechanical · scifi · zen |
+| `phone.typing` · `send` · `receive` · `connect` · `loading` | 알림 훈련 연타·패널 메시지·동기화 | mechanical · glass · soft · scifi · minimal |
+| `swipe.ui` · `merge.snap` | 스와이프·합치기의 얇은 UI 층 (합성음 위에) | glass swipe · snap |
+| `ui.*` (tap·panel·toggle·buy·cart·coupon·levelup·unlock.app·premium·attend·offline·ad.reward·bonus·error·warning·success·complete·mission) | 3장 UI·메타 | 테마별 uisfx |
+
+연출 계획기 `FxPlan.arrivalSound`가 새 줄 종류·카테고리로 알림음을 고르고, 테스트가 계획기가 부르는 모든 소리 파일이 있는지 확인한다. 폰 알림음은 판에 알림이 쌓일수록 자주 울리므로 기본 음량 −12dB, 같은 소리 120ms 안 중복은 하나로.

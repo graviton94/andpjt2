@@ -24,6 +24,18 @@ object FxPlan {
     /** Gap between consecutive bursts of one chain: a beat that speeds up as the chain grows (demo timing). */
     fun burstGap(index: Int): Long = maxOf(100L, 190L - 11L * index)
 
+    /** Arrival ping for a new row. */
+    fun arrivalSound(r: Row): String = when (r.kind) {
+        RowKind.Spam -> "notify.spam"
+        RowKind.Call -> "phone.buzz.ring"
+        RowKind.Event -> "notify.event"
+        RowKind.Alert -> "phone.buzz"
+        else -> when (r.app?.let { Catalog.app(it).category }) {
+            Category.Social -> "notify.social"; Category.Work -> "notify.work"; Category.Daily -> "notify.daily"
+            Category.Media -> "notify.media"; Category.Money -> "notify.money"; null -> "notify.stock"
+        }
+    }
+
     fun plan(o: SwipeOutcome, reducedMotion: Boolean = false): List<Cue> {
         val cues = mutableListOf<Cue>()
         var t = 0L
@@ -53,7 +65,9 @@ object FxPlan {
                 add(Cue(t, CueKind.Sound, sound = "wave.${minOf(3, b.index)}")); t += 450
             }
             is Beat.Capped -> add(Cue(t + 900, CueKind.Overheat))
-            is Beat.LevelUp -> add(Cue(t, CueKind.LevelUp, b.level.toDouble()))
+            is Beat.LevelUp -> { add(Cue(t, CueKind.LevelUp, b.level.toDouble())); add(Cue(t, CueKind.Sound, sound = "ui.levelup")) }
+            // New rows arrive like real phone notifications: a different ping per app category (CC0 layer, 20 sound).
+            is Beat.Spawned -> add(Cue(t + 40, CueKind.Sound, sound = arrivalSound(b.row)))
             else -> {}
         }
         if (o.chain >= 1) {
