@@ -178,11 +178,11 @@ class CoreRulesTest {
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        // Total = ⌊10 × (P_max/10¹²)^0.35⌋, exponent halves after 10²⁴.
+        // Total = ⌊10 × (P_max/10¹²)^0.5⌋, exponent halves after 10²⁰.
         assertEquals(10L, e.rules.backupTotal(BigInteger.TEN.pow(12)))
-        assertEquals(112L, e.rules.backupTotal(BigInteger.TEN.pow(15)))
-        assertEquals(158_489L, e.rules.backupTotal(BigInteger.TEN.pow(24)))
-        assertEquals(19_952_623L, e.rules.backupTotal(BigInteger.TEN.pow(36)))
+        assertEquals(316L, e.rules.backupTotal(BigInteger.TEN.pow(15)))
+        assertEquals(1_000_000L, e.rules.backupTotal(BigInteger.TEN.pow(24)))
+        assertEquals(1_000_000_000L, e.rules.backupTotal(BigInteger.TEN.pow(36)))
     }
 
     @Test
@@ -195,7 +195,7 @@ class CoreRulesTest {
         assertEquals(after.backup.resets, again.backup.resets)
         // Beating it pays only the difference.
         val strong = after.copy(level = 30, runEarned = BigInteger.TEN.pow(15))
-        assertEquals(112L - 10L, e.backupFilesNow(strong))
+        assertEquals(316L - 10L, e.backupFilesNow(strong))
     }
 
     @Test

@@ -91,9 +91,9 @@ data class RuleSet(
     val proMultiplier: Long = 3,
     /** Backup files: cube root of (run P ÷ 10^this). */
     val backupPDigits: Int = 12,
-    /** Backup files total = ⌊10 × (best run P ÷ 10^12)^0.35⌋; beyond 10^(12+softcap) the exponent halves. Paid as the delta over files already earned (research A2). */
-    val backupExponentPermille: Int = 350,
-    val backupSoftcapDigits: Int = 12,
+    /** Backup files total = ⌊10 × (best run P ÷ 10^12)^0.5⌋; beyond 10^(12+softcap) the exponent halves. Paid as the delta over files already earned (research A2). */
+    val backupExponentPermille: Int = 500,
+    val backupSoftcapDigits: Int = 8,
 ) {
     fun step(steps: List<Pair<Int, Int>>, level: Int): Int = steps.lastOrNull { level >= it.first }?.second ?: 0
 

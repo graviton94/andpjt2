@@ -66,7 +66,7 @@ enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<I
  * the first resets so every reset opens something new.
  */
 enum class BackupItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minResets: Int) {
-    Value("알림 가치 ×1.25", 50, 3, 1_150, 1),
+    Value("알림 가치 ×1.25", 50, 3, 1_350, 1),
     FastBoot("빠른 부팅 · 레벨 기준 P −10%", 20, 2, 1_500, 1),
     StartFunds("시작 자금", 10, 1, 1_600, 1),
     Offline("오프라인 정산 +2%p · +1시간", 10, 4, 1_500, 1),
@@ -109,14 +109,14 @@ object Catalog {
         app("bank", "잔액알림", 4, 1, KR, Category.Money, 23),
         app("cloud", "용량부족", 4, 2, GL, Category.Work, 26),
         app("translate", "번역해줘", 4, 3, EU, Category.Social, 29),
-        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36, 6),
-        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42, 10),
-        app("match", "매칭됨", 5, 2, EU, Category.Social, 48, 14),
-        app("home", "문열림", 5, 3, EU, Category.Daily, 55, 18),
-        app("live", "지금방송중", 6, 0, AS, Category.Media, 64, 25),
-        app("stock", "장마감", 6, 1, NA, Category.Money, 72, 35),
-        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80, 45),
-        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88, 55),
+        app("meet", "카메라켜요", 5, 0, NA, Category.Work, 36, 3),
+        app("coin", "떡상알림", 5, 1, AS, Category.Money, 42, 5),
+        app("match", "매칭됨", 5, 2, EU, Category.Social, 48, 7),
+        app("home", "문열림", 5, 3, EU, Category.Daily, 55, 9),
+        app("live", "지금방송중", 6, 0, AS, Category.Media, 64, 12),
+        app("stock", "장마감", 6, 1, NA, Category.Money, 72, 16),
+        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80, 20),
+        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 88, 24),
     )
     val starter = listOf("chat", "mail", "delivery")
 

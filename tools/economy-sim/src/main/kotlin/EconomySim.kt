@@ -107,7 +107,11 @@ private val backupOrder = listOf(
 fun spendBackup(input: GameState): GameState {
     var s = input
     while (true) {
-        val item = BackupItem.entries.filter { s.backup.lv(it) < it.max && s.backup.resets >= it.minResets }.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
+        val open = BackupItem.entries.filter { s.backup.lv(it) < it.max && s.backup.resets >= it.minResets }
+        // The infinite value sink first whenever it costs no more than twice the cheapest other item.
+        val cheapest = open.minByOrNull { e.rules.backupPrice(it, s.backup.lv(it)) } ?: break
+        val value = open.firstOrNull { it == BackupItem.Value }
+        val item = if (value != null && e.rules.backupPrice(value, s.backup.lv(value)) <= 2 * e.rules.backupPrice(cheapest, s.backup.lv(cheapest))) value else cheapest
         val next = e.buyBackup(s, item)
         if (next == s) break
         s = next
