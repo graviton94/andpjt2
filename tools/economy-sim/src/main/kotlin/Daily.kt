@@ -21,7 +21,14 @@ private val engine = Engine()
 private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
 
 /** Spending profiles (docs/bible/17-monetization.md). */
-enum class Payer(val label: String) { Free("무과금·무광고"), Ads("광고 시청"), Pass("월간 패스"), Whale("고과금") }
+/** [adsPerDay]: rewarded ads actually watched a day; [monthlyData]: data bought each 30 days (first month doubled). */
+enum class Payer(val label: String, val adsPerDay: Int, val pass: Boolean, val monthlyData: Long) {
+    Free("무과금·무광고", 0, false, 0),
+    Ads("광고 꾸준히 (하루 5회)", 5, false, 0),
+    Pass("월간 패스 ₩5,500", 99, true, 0),
+    Spend30("월 ₩3만", 99, true, 3_500),
+    Spend100("월 ₩10만", 99, true, 11_000),
+}
 
 /** A spending profile; [slots] limits which ad placements it uses (for one-at-a-time ablation). */
 data class Profile(val label: String, val payer: Payer, val slots: Set<AdSlot> = AdSlot.entries.toSet())
@@ -86,6 +93,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     var sinceReset = 0
     var everSyncs = 0
     val gap = (16 * 60 / plan.sessions) * 60_000L
+    val ads = AdBudget(payer.adsPerDay)
     fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
 
@@ -103,9 +111,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 s = back
                 tl.offlineP += got
                 t = begin
-                if (payer != Payer.Free && AdSlot.OfflineDouble in slots && got.signum() > 0) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ }
+                if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ } ?: ads.refund()
             }
-            s = economy(s, t, session, payer, tl, slots)
+            s = economy(s, t, session, payer, tl, slots, ads)
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             val levelAtStart = s.level
@@ -121,9 +129,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 val o = o0 ?: continue
                 s = o.state
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
-                if (payer != Payer.Free && AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
-                if (payer != Payer.Free && AdSlot.Battery in slots && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
-                if (payer == Payer.Whale && s.energy == 0) shop.buyItem(s, CreditItem.Battery, t)?.let { s = it }
+                if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
+                if (s.energy == 0) shop.useTicket(s, CreditItem.Battery, t)?.let { s = it }
+                if (payer.pass && AdSlot.Battery in slots && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
                 // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
                 if (o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
                 tl.activeP += o.earned
@@ -165,7 +173,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             }
             if (resets && s.level >= engine.rules.resetLevel && offer > 0 && (gain >= 1.6 || stallSessions >= 3)) {
                 if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
-                if (payer == Payer.Whale) shop.buyItem(s, CreditItem.BackupBoost, t)?.let { s = it }
+                s = shop.useTicket(s, CreditItem.BackupBoost, t) ?: if (payer.monthlyData > 0) shop.buyItem(s, CreditItem.BackupBoost, t) ?: s else s
                 s = engine.factoryReset(s, t)!!
                 tl.resetDays += dayOf(t)
                 everResets++
@@ -187,23 +195,40 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     return tl
 }
 
-/** Daily claims, passes, timed boosts and premium stars for a [payer] at the start of a session. */
-private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>): GameState {
+/** Rewarded ads a profile still watches today. */
+class AdBudget(private val perDay: Int) {
+    private var day = -1L
+    private var left = 0
+    fun take(t: Long): Boolean {
+        val d = (t - START) / DAY
+        if (d != day) { day = d; left = perDay }
+        if (left <= 0) return false
+        left--; return true
+    }
+    fun refund() { left++ }
+}
+
+/** Daily claims, passes, ads, tickets, data spending and premium stars for a [payer] at the start of a session. */
+private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>, ads: AdBudget): GameState {
     var s = shop.claimAttendance(state, t)
     s = shop.claimMissions(s, t)
-    if (payer == Payer.Pass || payer == Payer.Whale) {
+    if (payer.pass) {
         if (!shop.passActive(s, t)) s = shop.buyPass(s, t)
-        if (payer == Payer.Whale && session == 0 && dayOf(t).toLong() % 30 == 0L) s = shop.credit(s, 7_500, bought = true)  // ₩69,000 a month
         s = shop.claimPassDaily(s, t)
     }
-    if (payer != Payer.Free) {
-        for (slot in listOf(AdSlot.Boost, AdSlot.Warp, AdSlot.CreditBox, AdSlot.FreeUpgrade).filter { it in slots }) {
-            if (session < 3 && !shop.boostActive(s, t) || slot != AdSlot.Boost) shop.watchAd(s, slot, t)?.let { s = it; tl.ads++ }
-        }
-    }
-    if (payer == Payer.Whale) {
+    if (payer.monthlyData > 0 && session == 0 && dayOf(t).toLong() % 30 == 0L) s = shop.credit(s, payer.monthlyData * if (dayOf(t) < 1) 2 else 1, bought = true)
+    fun ad(slot: AdSlot) { if (slot in slots && shop.adsLeft(s, slot, t) > 0 && ads.take(t)) shop.watchAd(s, slot, t)?.let { s = it; tl.ads++ } ?: ads.refund() }
+    // A steady ad watcher's day: boost in two sessions, one time warp; a pass claims every placement.
+    if (session == 0 || session == 2) if (!shop.boostActive(s, t)) ad(AdSlot.Boost)
+    if (session == 0) ad(AdSlot.Warp)
+    if (payer.pass && session == 1) { ad(AdSlot.CreditBox); ad(AdSlot.FreeUpgrade) }
+    // Attendance tickets.
+    if (!shop.boostActive(s, t)) shop.useTicket(s, CreditItem.Boost, t)?.let { s = it }
+    while (true) s = shop.useTicket(s, CreditItem.Warp, t) ?: break
+    // Spenders: boost every session, then up to a quarter of the daily warp cap each session, stars with the rest.
+    if (payer.monthlyData > 0) {
         if (!shop.boostActive(s, t)) shop.buyItem(s, CreditItem.Boost, t)?.let { s = it }
-        shop.buyItem(s, CreditItem.Warp, t)?.let { s = it }
+        repeat(CreditItem.Warp.daily / 4) { shop.buyItem(s, CreditItem.Warp, t)?.let { s = it } }
     }
     // Premium: the next star of the deck's best app, as soon as it is affordable.
     while (true) {
@@ -234,8 +259,8 @@ fun monetization(days: Int, seeds: Long, profiles: List<Profile>) {
 /** Standard profiles, or "ablate": no ads, each ad placement alone, all ads. */
 fun profilesFor(arg: String?): List<Profile> = when (arg) {
     null, "all" -> Payer.entries.map { Profile(it.label, it) }
-    "ablate" -> listOf(Profile("광고 없음", Payer.Ads, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Ads, setOf(it)) } + Profile("광고 전부", Payer.Ads)
-    else -> if (arg.startsWith("slot:")) listOf(Profile(arg, Payer.Ads, setOf(AdSlot.valueOf(arg.removePrefix("slot:"))))) else arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
+    "ablate" -> listOf(Profile("광고 없음", Payer.Pass, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Pass, setOf(it)) } + Profile("광고 전부", Payer.Pass)
+    else -> if (arg.startsWith("slot:")) listOf(Profile(arg, Payer.Pass, setOf(AdSlot.valueOf(arg.removePrefix("slot:"))))) else arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
 }
 
 fun daily(days: Int, seeds: Long) {

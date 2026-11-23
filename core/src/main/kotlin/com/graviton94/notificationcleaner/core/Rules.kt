@@ -45,22 +45,34 @@ data class RuleSet(
     val premiumBudget: Long = 6_000,
     /** Share of the full premium cost per star, ‰ (sums to 1000). */
     val premiumStarShare: List<Int> = listOf(50, 100, 170, 280, 400),
-    /** 7-day attendance cycle; the last day is the big one. */
-    val attendance: List<Long> = listOf(20, 20, 30, 30, 40, 40, 120),
-    val missionCredits: Long = 30,
+    /**
+     * 30-day consecutive attendance board (missed day → day 1). Currencies alternate; days 10, 20, 30 are big.
+     * About 1,300 data a board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
+     */
+    val attendanceBoard: List<AttendReward> = (1..30).map { d ->
+        val band = (d - 1) / 10
+        when {
+            d % 10 == 0 -> AttendReward(listOf(150L, 250L, 400L)[band], if (band == 1) CreditItem.Warp else CreditItem.BackupBoost, if (band == 2) 2 else 1)
+            d % 10 in listOf(2, 6) -> AttendReward(0, CreditItem.Battery, 2)
+            d % 10 == 4 -> AttendReward(0, CreditItem.Boost, 1)
+            d % 10 == 8 -> AttendReward(0, CreditItem.Warp, 1)
+            else -> AttendReward(listOf(listOf(20L, 20, 30, 30, 30), listOf(20L, 20, 40, 40, 40), listOf(30L, 30, 50, 50, 50))[band][listOf(1, 3, 5, 7, 9).indexOf(d % 10)])
+        }
+    },
+    val missionCredits: Long = 35,
     val adCredits: Long = 10,
     val passInstantCredits: Long = 300,
     val passDailyCredits: Long = 60,
     val boostMinutes: Int = 30,
-    val boostPermille: Int = 1_500,
-    val warpMinutes: Int = 60,
+    val boostPermille: Int = 2_000,
+    val warpMinutes: Int = 120,
     val batteryOvercharge: Int = 6,
-    val backupBoostPercent: Int = 25,
+    val backupBoostPercent: Int = 100,
     /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
     val adLevelCap: Int = 1,
     /** 오프라인 광고: the settlement once more at this percent. */
     val offlineAdPercent: Int = 50,
-    val freeUpgradeLevels: Int = 3,
+    val freeUpgradeLevels: Int = 5,
     /** 최고 기록 ×2 is offered from this level. */
     val bestDoubleFrom: Int = 20,
     // Battery and auto

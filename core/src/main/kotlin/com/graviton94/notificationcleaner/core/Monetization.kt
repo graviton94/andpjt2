@@ -10,30 +10,35 @@ import java.math.BigInteger
 
 /** Rewarded ad placements and their daily caps. A month pass gives the same rewards without the ad. */
 enum class AdSlot(val label: String, val daily: Int) {
-    BestDouble("최고 기록 ×2", 3),
-    OfflineDouble("오프라인 +50%", 2),
-    Boost("수입 부스트 30분", 3),
-    Warp("시간 도약 1시간", 1),
-    Battery("보조배터리", 3),
-    CreditBox("데이터 상자", 3),
-    FreeUpgrade("무료 강화 +3", 1),
+    BestDouble("최고 기록 ×2", 2),
+    OfflineDouble("오프라인 ×2", 1),
+    Boost("수입 부스트 ×2", 2),
+    Warp("시간 도약", 1),
+    Battery("보조배터리", 2),
+    CreditBox("데이터 상자", 1),
+    FreeUpgrade("무료 강화", 1),
 }
 
 /** What 데이터 (credits) buys besides premium stars. */
 enum class CreditItem(val label: String, val price: Long, val daily: Int) {
-    Boost("수입 부스트 30분", 40, 6),
-    Warp("시간 도약 1시간", 60, 5),
+    Boost("수입 부스트 ×2", 40, 6),
+    Warp("시간 도약", 80, 12),
     Battery("보조배터리", 10, 20),
-    BackupBoost("백업 부스트 (다음 초기화 파일 +25%)", 100, 1),
+    BackupBoost("백업 부스트 (다음 초기화 파일 ×2)", 150, 1),
 }
+
+/** One day of the 30-day attendance board: data, and optionally a ticket for a credit item. */
+data class AttendReward(val data: Long, val ticket: CreditItem? = null, val tickets: Int = 0)
 
 data class Account(
     val credits: Long = 0,
     /** App id → premium stars (0..5). */
     val premium: Map<String, Int> = emptyMap(),
     val attendDay: Long = -1,
-    /** Attendance days claimed so far; the 7-day reward table cycles on it. */
-    val attendCount: Int = 0,
+    /** Day of the 30-day board reached by the current unbroken streak (0 = not started). A missed day restarts at 1. */
+    val streak: Int = 0,
+    /** Free uses of credit items (from attendance), spent like a purchase without data. */
+    val tickets: Map<CreditItem, Int> = emptyMap(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
@@ -85,13 +90,29 @@ class Shop(private val engine: Engine) {
 
     // Daily free credits -------------------------------------------------------------------
 
-    fun attendanceReward(s: GameState): Long = rules.attendance[s.account.attendCount % rules.attendance.size]
-
-    /** Daily check-in: once per calendar day, 7-day cycle with a big last day. */
-    fun claimAttendance(s: GameState, now: Long): GameState {
+    /** The board day today's check-in would claim: the streak continues only from yesterday. */
+    fun attendanceDay(s: GameState, now: Long): Int {
         val a = s.account
-        if (a.attendDay >= dayOf(now)) return s
-        return credit(s, attendanceReward(s)).withAccount { it.copy(attendDay = dayOf(now), attendCount = it.attendCount + 1) }
+        val continues = a.attendDay == dayOf(now) - 1 && a.streak < rules.attendanceBoard.size
+        return if (continues) a.streak + 1 else 1
+    }
+
+    /** 30-day consecutive attendance board: once per calendar day; a missed day starts again at day 1. */
+    fun claimAttendance(s: GameState, now: Long): GameState {
+        if (s.account.attendDay >= dayOf(now)) return s
+        val day = attendanceDay(s, now)
+        val r = rules.attendanceBoard[day - 1]
+        return credit(s, r.data).withAccount { a ->
+            val t = if (r.ticket == null) a.tickets else a.tickets + (r.ticket to (a.tickets[r.ticket] ?: 0) + r.tickets)
+            a.copy(attendDay = dayOf(now), streak = day, tickets = t)
+        }
+    }
+
+    /** Spend a ticket: the item's effect, no data, no daily limit. */
+    fun useTicket(s: GameState, item: CreditItem, now: Long): GameState? {
+        val have = s.account.tickets[item] ?: 0
+        if (have <= 0 || (item == CreditItem.BackupBoost && s.account.backupBoost)) return null
+        return apply(s.withAccount { it.copy(tickets = it.tickets + (item to have - 1)) }, item, now)
     }
 
     /** Daily missions (the game decides when they are done): one payout per day. */
@@ -149,7 +170,7 @@ class Shop(private val engine: Engine) {
         }
         return when (slot) {
             AdSlot.BestDouble -> grantP(counted, offerP, rules.adLevelCap)
-            AdSlot.OfflineDouble -> grantP(counted, offerP * BigInteger.valueOf(rules.offlineAdPercent.toLong()) / BigInteger.valueOf(100), rules.adLevelCap)
+            AdSlot.OfflineDouble -> grantP(counted, offerP, rules.adLevelCap)
             AdSlot.Boost -> boost(counted, now)
             AdSlot.Warp -> warp(counted)
             AdSlot.Battery -> battery(counted)
@@ -171,12 +192,14 @@ class Shop(private val engine: Engine) {
             val uses = if (a.shopDay < dayOf(now)) emptyMap() else a.shopUses
             a.copy(shopDay = dayOf(now), shopUses = uses + (item to (uses[item] ?: 0) + 1))
         }
-        return when (item) {
-            CreditItem.Boost -> boost(counted, now)
-            CreditItem.Warp -> warp(counted)
-            CreditItem.Battery -> battery(counted)
-            CreditItem.BackupBoost -> counted.withAccount { it.copy(backupBoost = true) }
-        }
+        return apply(counted, item, now)
+    }
+
+    private fun apply(s: GameState, item: CreditItem, now: Long): GameState = when (item) {
+        CreditItem.Boost -> boost(s, now)
+        CreditItem.Warp -> warp(s)
+        CreditItem.Battery -> battery(s)
+        CreditItem.BackupBoost -> s.withAccount { it.copy(backupBoost = true) }
     }
 
     fun boostActive(s: GameState, now: Long) = now < s.account.boostUntil

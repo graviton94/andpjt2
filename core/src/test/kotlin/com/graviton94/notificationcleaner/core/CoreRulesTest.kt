@@ -542,8 +542,9 @@ class CoreRulesTest {
     fun premiumBudgetMatchesTwelveWeeksOfFreeCredits() {
         val r = RuleSet()
         fun full(tier: Int) = (1..5).sumOf { r.premiumCost(Catalog.apps.first { it.tier == tier }, it) }
-        // 12 weeks of attendance + daily missions
-        val free = 12 * (r.attendance.sum() + 7 * r.missionCredits)
+        // 84 days of unbroken attendance (2 full boards + 24 days) + daily missions
+        val board = r.attendanceBoard.map { it.data }
+        val free = 2 * board.sum() + board.take(24).sum() + 84 * r.missionCredits
         // one top-tier app to ★5, or two mid-tier, or four tier-1 apps
         assertTrue(full(10) <= free, "top ${full(10)} vs $free")
         assertTrue(2 * full(5) <= free && 2 * full(6) <= free * 11 / 10, "mid ${full(5)} ${full(6)}")
@@ -571,11 +572,17 @@ class CoreRulesTest {
     fun attendanceAdsAndPassFollowTheirDailyLimits() {
         val e = Engine(); val shop = Shop(e); val day = 86_400_000L
         var s = e.newGame(0, 1)
-        repeat(7) { d -> s = shop.claimAttendance(s, d * day); s = shop.claimAttendance(s, d * day + 1) }
-        assertEquals(RuleSet().attendance.sum(), s.account.credits)
-        repeat(3) { s = shop.watchAd(s, AdSlot.CreditBox, 8 * day)!! }
-        assertNull(shop.watchAd(s, AdSlot.CreditBox, 8 * day))
-        assertNotNull(shop.watchAd(s, AdSlot.CreditBox, 9 * day))
+        repeat(10) { d -> s = shop.claimAttendance(s, d * day); s = shop.claimAttendance(s, d * day + 1) }
+        assertEquals(10, s.account.streak)
+        assertEquals(RuleSet().attendanceBoard.take(10).sumOf { it.data }, s.account.credits)
+        assertEquals(1, s.account.tickets[CreditItem.BackupBoost])
+        // a missed day restarts the board
+        s = shop.claimAttendance(s, 12 * day)
+        assertEquals(1, s.account.streak)
+        assertNotNull(shop.useTicket(s, CreditItem.BackupBoost, 12 * day))
+        repeat(AdSlot.CreditBox.daily) { s = shop.watchAd(s, AdSlot.CreditBox, 13 * day)!! }
+        assertNull(shop.watchAd(s, AdSlot.CreditBox, 13 * day))
+        assertNotNull(shop.watchAd(s, AdSlot.CreditBox, 14 * day))
         s = shop.buyPass(s, 10 * day)
         assertTrue(shop.passActive(s, 39 * day) && !shop.passActive(s, 40 * day))
         val boosted = shop.watchAd(s, AdSlot.Boost, 10 * day)!!
