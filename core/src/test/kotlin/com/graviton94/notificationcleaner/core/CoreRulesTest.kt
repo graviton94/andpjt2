@@ -619,4 +619,15 @@ class CoreRulesTest {
         assertTrue(shop.passActive(s, day))
         assertEquals(1_000L, e.speedPermille(s, 31 * day))
     }
+
+    @Test
+    fun prestigeBonusDoesNotOverflowLateGameFiles() {
+        val e = Engine(); val shop = Shop(e)
+        var s = e.newGame(0, 1)
+        s = shop.buySpeedPass(s, 0, SpeedPass.Ultra).copy(level = 125, runEarned = BigInteger.TEN.pow(110))
+        val plain = e.backupFilesNow(s)
+        assertTrue(plain > 10_000_000_000_000_000L, "late game pays $plain files")
+        val after = e.factoryReset(s, 1)!!
+        assertEquals(plain / 1_000 * 3_000 + plain % 1_000 * 3, after.backup.files)
+    }
 }

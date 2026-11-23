@@ -206,6 +206,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (s.rows.any { r -> r.alert == Alert.LowBattery }) it * 13 / 10 else it  // 배터리 부족 left on the board
     }.let { base -> maxOf(base * 1_000 / speedPermille(s, now), minOf(base, rules.minChargeMs)) }  // a thumb can't go faster than this
 
+    /** [x] × [permille] / 1000 without overflowing: late-game backup files reach 10^16 and more. */
+    private fun scalePermille(x: Long, permille: Long): Long = if (permille == 1_000L) x else x / 1_000 * permille + x % 1_000 * permille / 1_000
+
     /** 속도 구독 bonus on backup files and GB, ‰. */
     fun prestigePermille(s: GameState, now: Long): Long {
         val a = s.backup.cloud.account
@@ -330,8 +333,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
     /** Factory reset: converts this run into backup files. Null below the reset level. */
     fun factoryReset(s: GameState, now: Long): GameState? {
         if (s.level < rules.resetLevel) return null
-        val files = backupFilesNow(s).let { f -> if (s.backup.cloud.account.backupBoost) f * (100 + rules.backupBoostPercent) / 100 else f }
-            .let { f -> f * prestigePermille(s, now) / 1_000 }
+        val files = backupFilesNow(s).let { f -> if (s.backup.cloud.account.backupBoost) scalePermille(f, 10L * (100 + rules.backupBoostPercent)) else f }
+            .let { f -> scalePermille(f, prestigePermille(s, now)) }
         // Only a reset that pays files counts toward reset-gated content; empty resets cannot farm the count.
         return newGame(now, s.rng, s.backup.copy(
             files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
@@ -378,7 +381,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val c = s.backup.cloud
         val cloud = c.copy(
             // 속도 구독 bonus GB is spendable but not counted in lifetime, so later syncs still pay in full.
-            gb = c.gb + gb * prestigePermille(s, now) / 1_000, syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
+            gb = c.gb + scalePermille(gb, prestigePermille(s, now)), syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
             bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
         )
         return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
