@@ -29,6 +29,12 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
     Overclock("오버클럭 1시간", 40, 24),
 }
 
+/** Speed subscriptions, each including the month pass. */
+enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long) {
+    Turbo("터보 패스", 33_000, 3_000, 0),
+    Ultra("울트라 패스", 99_000, 6_000, 200),
+}
+
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
 data class AttendReward(val data: Long, val tickets: Map<CreditItem, Int> = emptyMap(), val starVouchers: Int = 0, val title: String? = null)
 
@@ -53,6 +59,9 @@ data class Account(
     val boostUntil: Long = 0,
     /** 오버클럭: the game runs faster until this time. */
     val overclockUntil: Long = 0,
+    /** 속도 구독 (터보 ×3 / 울트라 ×6): permanent game speed until [speedPassUntil]. */
+    val speedPass: SpeedPass? = null,
+    val speedPassUntil: Long = 0,
     /** 월간 패스: ad-free rewards and daily credits until this time. */
     val passUntil: Long = 0,
     val passDay: Long = -1,
@@ -142,9 +151,14 @@ class Shop(private val engine: Engine) {
     fun buyPass(s: GameState, now: Long): GameState =
         credit(s, rules.passInstantCredits, bought = true).withAccount { it.copy(passUntil = maxOf(now, it.passUntil) + 30 * DAY_MS) }
 
+    /** 터보·울트라: 30 days of permanent speed, the month pass included. */
+    fun buySpeedPass(s: GameState, now: Long, pass: SpeedPass): GameState =
+        buyPass(s, now).withAccount { it.copy(speedPass = pass, speedPassUntil = maxOf(now, it.speedPassUntil) + 30 * 86_400_000L) }
+
     fun claimPassDaily(s: GameState, now: Long): GameState {
         if (!passActive(s, now) || s.account.passDay >= dayOf(now)) return s
-        return overclock(credit(s, rules.passDailyCredits, bought = true).withAccount { it.copy(passDay = dayOf(now)) }, now, rules.passOverclockMinutes)
+        val extra = s.account.speedPass?.takeIf { now < s.account.speedPassUntil }?.dailyData ?: 0
+        return overclock(credit(s, rules.passDailyCredits + extra, bought = true).withAccount { it.copy(passDay = dayOf(now)) }, now, rules.passOverclockMinutes)
     }
 
     // Premium versions --------------------------------------------------------------------------

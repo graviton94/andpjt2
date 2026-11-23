@@ -204,10 +204,15 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery) + if (on(s, "grab")) 2 else 0
     fun chargeMs(s: GameState, now: Long = Long.MIN_VALUE) = (rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)).let {
         if (s.rows.any { r -> r.alert == Alert.LowBattery }) it * 13 / 10 else it  // 배터리 부족 left on the board
-    }.let { it * 1_000 / speedPermille(s, now) }
+    }.let { base -> maxOf(base * 1_000 / speedPermille(s, now), minOf(base, rules.minChargeMs)) }  // a thumb can't go faster than this
 
-    /** 오버클럭 (Monetization.kt): the whole game runs this much faster, ‰. */
-    fun speedPermille(s: GameState, now: Long): Long = if (now < s.backup.cloud.account.overclockUntil) rules.overclockPermille.toLong() else 1_000L
+    /** 오버클럭 / 속도 구독 (Monetization.kt): the whole game runs this much faster, ‰ (the faster one wins). */
+    fun speedPermille(s: GameState, now: Long): Long {
+        val a = s.backup.cloud.account
+        val oc = if (now < a.overclockUntil) rules.overclockPermille.toLong() else 1_000L
+        val sub = if (a.speedPass != null && now < a.speedPassUntil) a.speedPass.speedPermille.toLong() else 1_000L
+        return maxOf(oc, sub)
+    }
     fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
         (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
@@ -734,9 +739,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
         // 오버클럭 time inside the away window counts that many times over.
         val from = now - awayMs
-        val until = s.backup.cloud.account.overclockUntil
-        val boosted = if (until <= 0L) 0L else maxOf(0L, minOf(now, until) - from)
-        val effective = minOf(awayMs, offlineCapMs(s)) + boosted * (rules.overclockPermille - 1_000) / 1_000
+        val acc = s.backup.cloud.account
+        val sub = if (acc.speedPass != null && acc.speedPassUntil >= now) acc.speedPass.speedPermille.toLong() else 1_000L
+        val until = acc.overclockUntil
+        val boosted = if (until <= 0L || sub >= rules.overclockPermille) 0L else maxOf(0L, minOf(now, until) - from)
+        val effective = minOf(awayMs, offlineCapMs(s)) * sub / 1_000 + boosted * (rules.overclockPermille - 1_000) / 1_000
         val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
         val p = (s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000))

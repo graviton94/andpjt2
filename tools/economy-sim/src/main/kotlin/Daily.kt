@@ -7,6 +7,7 @@ import com.graviton94.notificationcleaner.core.EventCard
 import com.graviton94.notificationcleaner.core.GameState
 import com.graviton94.notificationcleaner.core.AdSlot
 import com.graviton94.notificationcleaner.core.CreditItem
+import com.graviton94.notificationcleaner.core.SpeedPass
 import com.graviton94.notificationcleaner.core.account
 
 /*
@@ -37,13 +38,13 @@ private val engine = Engine(simRules())
 private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
 
 /** Spending profiles (docs/bible/17-monetization.md). */
-/** [adsPerDay]: rewarded ads actually watched a day; [monthlyData]: data bought each 30 days (first month doubled). */
-enum class Payer(val label: String, val adsPerDay: Int, val pass: Boolean, val monthlyData: Long) {
+/** [adsPerDay]: rewarded ads watched a day; [speed]: speed subscription kept up; [monthlyData]: data bought each 30 days. */
+enum class Payer(val label: String, val adsPerDay: Int, val pass: Boolean, val monthlyData: Long, val speed: SpeedPass? = null) {
     Free("무과금·무광고", 0, false, 0),
     Ads("광고 꾸준히 (하루 5회)", 5, false, 0),
     Pass("월간 패스 ₩5,500", 99, true, 0),
-    Spend30("월 ₩3만", 99, true, 3_500),
-    Spend100("월 ₩10만", 99, true, 11_000),
+    Spend30("터보 패스 ₩33,000", 99, true, 0, SpeedPass.Turbo),
+    Spend100("울트라 패스 ₩99,000", 99, true, 0, SpeedPass.Ultra),
 }
 
 /** A spending profile; [slots] limits which ad placements it uses (for one-at-a-time ablation). */
@@ -230,7 +231,7 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
     var s = shop.claimAttendance(state, t)
     s = shop.claimMissions(s, t)
     if (payer.pass) {
-        if (!shop.passActive(s, t)) s = shop.buyPass(s, t)
+        if (!shop.passActive(s, t)) s = if (payer.speed != null) shop.buySpeedPass(s, t, payer.speed) else shop.buyPass(s, t)
         s = shop.claimPassDaily(s, t)
     }
     if (payer.monthlyData > 0 && session == 0 && dayOf(t).toLong() % 30 == 0L) s = shop.credit(s, payer.monthlyData * if (dayOf(t) < 1) 2 else 1, bought = true)

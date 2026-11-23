@@ -549,7 +549,7 @@ class CoreRulesTest {
         assertTrue(full(10) <= free, "top ${full(10)} vs $free")
         assertTrue(2 * full(5) <= free && 2 * full(6) <= free * 11 / 10, "mid ${full(5)} ${full(6)}")
         assertTrue(4 * full(1) <= free, "low ${full(1)}")
-        assertEquals(7_593L, r.premiumPermille(5))
+        assertEquals(32_000L, r.premiumPermille(5))
     }
 
     @Test
@@ -560,7 +560,7 @@ class CoreRulesTest {
         val before = e.earn(s, "memo", BigInteger.ONE, 0)
         s = shop.upgradePremium(s, "memo")!!
         assertEquals(1, s.account.stars("memo"))
-        assertEquals(before * BigInteger.valueOf(3) / BigInteger.TWO, e.earn(s, "memo", BigInteger.ONE, 0))
+        assertEquals(before * BigInteger.TWO, e.earn(s, "memo", BigInteger.ONE, 0))
         val after = e.factoryReset(s, 1)!!
         assertEquals(1, after.account.stars("memo"))
         assertEquals(s.account.credits, after.account.credits)
@@ -606,5 +606,17 @@ class CoreRulesTest {
         }
         assertTrue(maxSpam <= RuleSet().spamMax + 1, "spam rows peaked at $maxSpam")
         assertTrue(s.rows.any { it.kind == RowKind.App })
+    }
+
+    @Test
+    fun speedPassesSpeedUpTheGameButNotPastAThumb() {
+        val e = Engine(); val shop = Shop(e); val day = 86_400_000L
+        var s = e.newGame(0, 1)
+        assertEquals(3_000L, e.chargeMs(s, 0))
+        s = shop.buySpeedPass(s, 0, SpeedPass.Ultra)
+        assertEquals(6_000L, e.speedPermille(s, day))
+        assertEquals(1_000L, e.chargeMs(s, day))
+        assertTrue(shop.passActive(s, day))
+        assertEquals(1_000L, e.speedPermille(s, 31 * day))
     }
 }

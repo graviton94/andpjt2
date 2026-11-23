@@ -40,7 +40,7 @@ data class RuleSet(
     // Monetization (docs/bible/17-monetization.md)
     val premiumMaxStars: Int = 5,
     /** Each premium star multiplies the app's value by this. */
-    val premiumStepPermille: Int = 1_500,
+    val premiumStepPermille: Int = 2_000,
     /** Credits for ★0→★5 of a top-tier app: what 12 weeks of attendance + missions pay a steady free player. */
     val premiumBudget: Long = 6_000,
     /** Share of the full premium cost per star, ‰ (sums to 1000). */
@@ -72,6 +72,8 @@ data class RuleSet(
     val backupBoostPercent: Int = 100,
     /** 오버클럭: game speed while on (battery, auto-clean, offline time). */
     val overclockPermille: Int = 3_000,
+    /** Fastest battery charge under any speed-up: direct swipes stay humanly possible. */
+    val minChargeMs: Long = 1_000,
     val passOverclockMinutes: Int = 120,
     /** P from an ad or a credit item (×2 offers, 시간 도약) raises the level by at most this. */
     val adLevelCap: Int = 1,
