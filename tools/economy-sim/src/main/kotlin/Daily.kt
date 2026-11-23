@@ -29,6 +29,9 @@ private fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "passOverclockMinutes" -> r.copy(passOverclockMinutes = v.toInt())
             "boostPermille" -> r.copy(boostPermille = v.toInt())
             "warpMinutes" -> r.copy(warpMinutes = v.toInt())
+            "levelRatioPermille" -> r.copy(levelRatioPermille = v.toInt())
+            "offlineEfficiencyPercent" -> r.copy(offlineEfficiencyPercent = v.toInt())
+            "boostMinutes" -> r.copy(boostMinutes = v.toInt())
             else -> error("unknown rule $k")
         }
     }
