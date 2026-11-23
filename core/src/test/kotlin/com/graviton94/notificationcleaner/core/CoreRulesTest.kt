@@ -365,4 +365,21 @@ class CoreRulesTest {
         apps.forEach { assertTrue(Catalog.proLevel.getValue(it.id) > it.unlockLevel, it.id) }
         assertTrue(Catalog.starter.all { Catalog.app(it).tier == 1 })
     }
+
+    @Test
+    fun contentPacksAddTiersOnTopWithoutTouchingLaunchContent() {
+        val launch = Catalog.apps
+        try {
+            Catalog.packs = setOf(ContentPack.AiTier)
+            assertEquals(66, Catalog.apps.size)
+            assertEquals(launch, Catalog.apps.take(60))
+            val ai = Catalog.apps.drop(60)
+            assertTrue(ai.all { it.tier == 11 && it.unlockLevel > launch.maxOf { a -> a.unlockLevel } })
+            assertTrue(e.rules.appPrice(ai.first()) > launch.maxOf { e.rules.appPrice(it) })
+            assertEquals(ai.first().unlockLevel + 25, Catalog.proLevel.getValue(ai.first().id))
+        } finally {
+            Catalog.packs = emptySet()
+        }
+        assertEquals(60, Catalog.apps.size)
+    }
 }

@@ -16,7 +16,7 @@ import com.graviton94.notificationcleaner.core.GameState
 
 private val engine = Engine()
 /** The app with the highest unlock level: "last app" in the reports. */
-private val LAST_APP = Catalog.apps.maxBy { it.unlockLevel }.id
+private val LAST_APP get() = Catalog.apps.maxBy { it.unlockLevel }.id
 private const val START = 1_000_000L
 private const val DAY = 86_400_000L
 
@@ -29,6 +29,8 @@ class Timeline {
     var lastAppDay: Double? = null
     val resetDays = mutableListOf<Double>()
     val syncDays = mutableListOf<Double>()
+    /** Best level when the update arrived (update mode). */
+    var updateLevel = 0
     val bestLevelByWeek = sortedMapOf<Int, Int>()
     val digitsByWeek = sortedMapOf<Int, Int>()
     var activeMin = 0.0
@@ -53,13 +55,15 @@ fun unlockLevels(): Map<Int, List<String>> {
     r.minSlotSteps.drop(1).forEach { add(it.first, "덱 최소 ${it.second}") }
     r.eventSlotSteps.forEach { add(it.first, "이벤트 슬롯 ${it.second}") }
     add(r.resetLevel, "공장 초기화")
-    add(r.callUnlockLevel, "전화")
+    add(r.callUnlockLevel, "스팸 전화")
     return m
 }
 
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false): Timeline {
+/** [update]: on this day (0-based) the pack is switched on, as a content update reaching a veteran save. */
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null): Timeline {
+    Catalog.packs = emptySet()
     val tl = Timeline()
-    val levels = unlockLevels()
+    var levels = unlockLevels()
     var s = chooseDeck(engine.newGame(START, seed), DeckPolicy.Synergy)
     var t = START
     var everLevel = 1
@@ -72,6 +76,12 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
 
     for (day in 0 until days) {
+        if (update != null && day == update.first) {
+            Catalog.packs = setOf(update.second)
+            levels = unlockLevels()
+            tl.updateLevel = maxOf(s.backup.bestLevel, s.level)
+            tl.lastAppDay = null  // from now on the pack's top app is the last app
+        }
         for (session in 0 until plan.sessions) {
             val begin = START + day * DAY + session * gap
             if (t < begin) {
@@ -175,4 +185,22 @@ fun daily(days: Int, seeds: Long) {
     println("  시드1 해금 순서: " + tl.unlocks.joinToString(" | ") { "${d(it.second)} ${it.third}" })
     println("  시드1 초기화: " + tl.resetDays.joinToString(" ") { d(it) })
     println("[동기화] 첫 동기화 ${d(p50(withReset.mapNotNull { it.syncDays.firstOrNull() }))} · 횟수 ${p50(withReset.map { it.syncDays.size.toDouble() }).toInt()} · 시드1 " + tl.syncDays.joinToString(" ") { d(it) })
+}
+
+
+/**
+ * Update check: [launchDays] of play on launch content, then [pack] switches on and play continues for
+ * [extraDays]. Reports whether growth restarts and when the pack's top app opens.
+ */
+fun updateCheck(launchDays: Int, extraDays: Int, seeds: Long, pack: com.graviton94.notificationcleaner.core.ContentPack) {
+    val plan = DayPlan()
+    println("=== 업데이트 검증 · ${pack.label} · 출시 ${launchDays}일 뒤 적용, ${extraDays}일 더 · 시드 $seeds")
+    val runs = (1L..seeds).map { playDays(it, launchDays + extraDays, plan, true, update = launchDays to pack) }
+    Catalog.packs = setOf(pack)
+    val top = Catalog.apps.maxBy { it.unlockLevel }
+    Catalog.packs = emptySet()
+    fun d(x: Double?) = if (x == null || x.isNaN()) "-" else "%.1f일".format(x)
+    println("적용 시점 최고 레벨 ${p50(runs.map { it.updateLevel.toDouble() }).toInt()} · 11티어 첫 앱 ${d(p50(runs.mapNotNull { it.tierDay[11] }))} · 팩 마지막 앱(${top.name} Lv${top.unlockLevel}) ${d(p50(runs.mapNotNull { it.lastAppDay }))} (${runs.count { it.lastAppDay != null }}/$seeds)")
+    println("주별 최고 레벨 " + runs[0].bestLevelByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(runs.map { (it.bestLevelByWeek[w] ?: 0).toDouble() }).toInt()}" })
+    println("동기화 횟수 ${p50(runs.map { it.syncDays.size.toDouble() }).toInt()} · 적용 후 동기화 ${p50(runs.map { tl -> tl.syncDays.count { it >= launchDays }.toDouble() }).toInt()}")
 }

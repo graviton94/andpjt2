@@ -106,6 +106,9 @@ enum class CloudItem(val label: String, val max: Int, val base: Long, val growth
     CloudChain("연쇄 증폭 +0.2", 5, 10, 2_000, 8),
 }
 
+/** A post-launch content pack. */
+enum class ContentPack(val label: String) { AiTier("업데이트 1 · 11티어 AI") }
+
 object Catalog {
     private fun app(id: String, name: String, tier: Int, order: Int, r: Region, c: Category, lv: Int, resets: Int = 0) = AppDef(id, name, tier, order, r, c, lv, resets)
     private val ST = Region.Stock
@@ -114,7 +117,7 @@ object Catalog {
     private val WE = Region.West
     private val GL = Region.Global
 
-    val apps = listOf(
+    private val launchApps = listOf(
         // 1티어
         app("alarm", "시계", 1, 0, ST, Category.Work, 1), // 기본 시계
         app("weather", "날씨", 1, 1, ST, Category.Daily, 1), // 기본 날씨
@@ -189,7 +192,7 @@ object Catalog {
     val starter = listOf("alarm", "memo", "weather")
 
     /** Level at which each app's pro version (×2 value) opens: 25 levels after the app itself. */
-    val proLevel: Map<String, Int> = mapOf(
+    private val launchPro: Map<String, Int> = mapOf(
         "alarm" to 26, "weather" to 26, "memo" to 26, "flash" to 27, "calc" to 28, "recorder" to 29,
         "phone" to 30, "sms" to 31, "camera" to 32, "gallery" to 33, "contacts" to 34, "settings" to 36,
         "music" to 37, "papago" to 38, "zalo" to 39, "momo" to 41, "airbnb" to 42, "duo" to 44,
@@ -201,5 +204,39 @@ object Catalog {
         "mega" to 107, "ott" to 110, "secret" to 113, "mail" to 116, "maps" to 119, "store" to 122,
         "tube" to 125, "photo" to 129, "feed" to 133, "green" to 137, "search" to 141, "ai" to 145,
     )
-    fun app(id: String): AppDef = apps.first { it.id == id }
+    // Live updates ---------------------------------------------------------------------------
+
+    /**
+     * Content packs added after launch (docs/bible/14-live-updates.md). New tiers go on top, so early
+     * curves stay untouched. The game sets [packs] from its content version; the simulator switches
+     * packs on mid-run to test an update against veteran saves.
+     */
+    private val packApps: Map<ContentPack, List<AppDef>> = mapOf(
+        ContentPack.AiTier to listOf(
+            app("gemini", "재미나이", 11, 0, GL, Category.Work, 124), // Gemini 패러디
+            app("claude", "클로디", 11, 1, GL, Category.Social, 128), // Claude 패러디
+            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 132), // Copilot 패러디
+            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 136), // Perplexity 패러디
+            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 140), // DeepSeek 패러디
+            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 145), // Midjourney 패러디
+        ),
+    )
+
+    var packs: Set<ContentPack> = emptySet()
+        set(value) { field = value; rebuild() }
+
+    var apps: List<AppDef> = launchApps
+        private set
+    var proLevel: Map<String, Int> = launchPro
+        private set
+    private var byId: Map<String, AppDef> = launchApps.associateBy { it.id }
+
+    private fun rebuild() {
+        val extra = packs.sortedBy { it.ordinal }.flatMap { packApps.getValue(it) }
+        apps = launchApps + extra
+        proLevel = launchPro + extra.associate { it.id to it.unlockLevel + 25 }
+        byId = apps.associateBy { it.id }
+    }
+
+    fun app(id: String): AppDef = byId[id] ?: error("unknown app $id")
 }
