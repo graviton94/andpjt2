@@ -225,11 +225,11 @@ object Catalog {
     private val packApps: Map<ContentPack, List<AppDef>> = mapOf(
         ContentPack.AiTier to listOf(
             app("gemini", "재미나이", 11, 0, GL, Category.Work, 126), // Gemini 패러디
-            app("claude", "클로디", 11, 1, GL, Category.Social, 130), // Claude 패러디
-            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 134), // Copilot 패러디
-            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 138), // Perplexity 패러디
-            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 142), // DeepSeek 패러디
-            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 146), // Midjourney 패러디
+            app("claude", "클로디", 11, 1, GL, Category.Social, 129), // Claude 패러디
+            app("copilot", "코파일롯", 11, 2, GL, Category.Work, 132), // Copilot 패러디
+            app("perplexity", "퍼플렉씨", 11, 3, GL, Category.Daily, 135), // Perplexity 패러디
+            app("deepseek", "딥씨크", 11, 4, GL, Category.Money, 138), // DeepSeek 패러디
+            app("midjourney", "미드저니어", 11, 5, GL, Category.Media, 141), // Midjourney 패러디
         ),
     )
 
