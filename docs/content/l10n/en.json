@@ -100,5 +100,337 @@
   "copilot": "copy a lot",
   "perplexity": "purple",
   "deepseek": "seek → sick"
+ },
+ "lines": {
+  "alarm": [
+   "Snoozing for 5 more minutes (7th time)",
+   "Alarm dismissed. Are you actually up?",
+   "No alarm set for tomorrow"
+  ],
+  "weather": [
+   "Rain this afternoon (umbrella: at home)",
+   "Air quality: bad. Close the windows",
+   "Feels like -12°C"
+  ],
+  "memo": [
+   "You have an unfinished note: asdf",
+   "Shopping list: milk (3 weeks ago)",
+   "Back up your notes to the cloud?"
+  ],
+  "flash": [
+   "Flashlight is on (in your pocket)",
+   "Top battery drain: Flashlight",
+   "Brightness set to maximum"
+  ],
+  "calc": [
+   "99+ calculations in history",
+   "Split the bill: 13.33333 each",
+   "Switch to scientific mode?"
+  ],
+  "recorder": [
+   "23 recordings are filling your storage",
+   "Recording stopped (incoming call)",
+   "New Recording 1 (3h 12m)"
+  ],
+  "phone": [
+   "3 missed calls",
+   "Unknown caller",
+   "Suspected spam call"
+  ],
+  "sms": [
+   "Your parcel has arrived (click link)",
+   "Your code is 482913",
+   "(Ad) Today only!"
+  ],
+  "camera": [
+   "1,024 photos not backed up",
+   "Not enough storage to take photos",
+   "New filters added"
+  ],
+  "gallery": [
+   "Your memories from a year ago",
+   "Clean up 432 similar photos?",
+   "New memory album: My Finger"
+  ],
+  "contacts": [
+   "3 contacts have birthdays today",
+   "Merge 18 duplicate contacts?",
+   "'Boss (new number)' added"
+  ],
+  "settings": [
+   "1 software update",
+   "Check notification permissions",
+   "Turn on battery optimization?"
+  ],
+  "music": [
+   "Live chart: new #1!",
+   "Your subscription expires soon",
+   "Your liked songs playlist was updated"
+  ],
+  "papago": [
+   "Translate this page? (It's already in English)",
+   "Try conversation mode?",
+   "Phrase of the day: Hello"
+  ],
+  "zalo": [
+   "4 new friend requests",
+   "A group call has started",
+   "News from an official account"
+  ],
+  "momo": [
+   "5,000 VND cashback earned",
+   "Your electricity bill is due",
+   "A friend sent you money"
+  ],
+  "airbnb": [
+   "Your host sent a message",
+   "A saved stay dropped in price",
+   "Leave a review"
+  ],
+  "duo": [
+   "You skipped today's lesson. The owl is sad",
+   "Streak: 0 days",
+   "Danger of demotion from your league!"
+  ],
+  "ctaxi": [
+   "Driver arrives in 3 min (for 11 min now)",
+   "No cars nearby. Try again?",
+   "Rate your ride"
+  ],
+  "pay": [
+   "Transfer complete ($3)",
+   "Your monthly spending report is here",
+   "Walk 10,000 steps, earn 1 cent"
+  ],
+  "glints": [
+   "23 new job posts",
+   "Interview scheduled",
+   "Update your résumé"
+  ],
+  "bigo": [
+   "Your favorite streamer just went live",
+   "Gift ranking #1 changed",
+   "Live PK battle starting!"
+  ],
+  "pin": [
+   "48 ideas for you",
+   "New pin added to your board",
+   "Your saved pin is trending"
+  ],
+  "meet": [
+   "Meeting started (your mic is on)",
+   "The host asks you to turn on your camera",
+   "Your 40-minute free meeting ends soon"
+  ],
+  "food": [
+   "Your order is on its way (the other way)",
+   "Write a review, get a free drink!",
+   "Same dinner again tonight?"
+  ],
+  "edit": [
+   "Rendering 87%… don't close the app",
+   "A new template is trending",
+   "Subscribe to remove the watermark"
+  ],
+  "travel": [
+   "Flight prices dropped",
+   "Check-in in 30 days",
+   "Your points expire soon"
+  ],
+  "joox": [
+   "New karaoke songs added",
+   "7-day VIP free trial",
+   "A friend shared a playlist"
+  ],
+  "reddit": [
+   "Your post hit the front page",
+   "87 replies in your thread",
+   "Your karma went up"
+  ],
+  "career": [
+   "Someone viewed your profile",
+   "48 new job posts",
+   "Your ex-coworker got promoted"
+  ],
+  "mall": [
+   "Guaranteed dawn delivery (order today)",
+   "An item in your cart is almost sold out",
+   "Buy again: 2L water"
+  ],
+  "portal": [
+   "Trending now",
+   "Today's weather and horoscope",
+   "3 new messages in your inbox"
+  ],
+  "michat": [
+   "Someone nearby said hi",
+   "12 new messages",
+   "Someone liked your moment"
+  ],
+  "agoda": [
+   "12 people are viewing this stay right now",
+   "A secret deal unlocked",
+   "Your booking is confirmed"
+  ],
+  "paypal": [
+   "Payment complete",
+   "You received money",
+   "Review your account security"
+  ],
+  "match": [
+   "You have a new match",
+   "Someone viewed your profile",
+   "This chat has been quiet for 3 days"
+  ],
+  "superapp": [
+   "New posts in Moments",
+   "A mini program was updated",
+   "Payment complete"
+  ],
+  "line": [
+   "New stickers out!",
+   "99+ group chat messages",
+   "A coupon from an official account"
+  ],
+  "jobs": [
+   "48 jobs match your profile",
+   "A company opened your résumé",
+   "Salary insights updated"
+  ],
+  "lazada": [
+   "11.11 up to 90% off",
+   "New arrivals in the mall",
+   "Grab your coupons"
+  ],
+  "ride": [
+   "Your driver has arrived",
+   "Prices are 1.8× right now",
+   "How was your trip?"
+  ],
+  "robin": [
+   "Your stocks are up 3%",
+   "Claim your free stock",
+   "Market opens in 5 minutes"
+  ],
+  "dance": [
+   "Videos picked for you",
+   "A friend tagged you in a video",
+   "A live just started"
+  ],
+  "chat": [
+   "Messages piling up in a quiet group chat",
+   "\"lol\" and 999+ more",
+   "Send a gift: 5 friends have birthdays"
+  ],
+  "grab": [
+   "Your food is on the way",
+   "Ride discount code",
+   "Reward points expire soon"
+  ],
+  "shopee": [
+   "9.9 Mega Sale is live!",
+   "3 free shipping vouchers",
+   "An item in your cart dropped in price"
+  ],
+  "beat": [
+   "Your mix was updated",
+   "Your year in review is here",
+   "3 months of Premium free"
+  ],
+  "why": [
+   "#1 trending now",
+   "Your post was reposted",
+   "Get a blue check with Premium"
+  ],
+  "mega": [
+   "Your order has shipped",
+   "Recently viewed item on sale!",
+   "Subscription renews soon"
+  ],
+  "ott": [
+   "Next episode in 5 seconds",
+   "A new season is out",
+   "What you're watching leaves soon"
+  ],
+  "secret": [
+   "You were invited to a channel (12K members)",
+   "A secret chat self-destructed",
+   "Sticker pack updated"
+  ],
+  "mail": [
+   "99+ new in Promotions",
+   "Re: Re: Re: Please confirm",
+   "14.9 GB of 15 GB used"
+  ],
+  "maps": [
+   "Rerouting",
+   "Review a place you visited",
+   "This place is busy right now"
+  ],
+  "store": [
+   "37 apps can be updated",
+   "Recommended: an app to turn off notifications",
+   "Check your payment method"
+  ],
+  "tube": [
+   "New video from a subscription",
+   "1,204 videos in Watch Later",
+   "Video plays after 2 ads"
+  ],
+  "photo": [
+   "Reels picked for you",
+   "A friend posted a story",
+   "3 likes on your post"
+  ],
+  "feed": [
+   "Showing you posts you already saw",
+   "Your memories from 3 years ago",
+   "12 friend requests"
+  ],
+  "green": [
+   "248 messages in a group",
+   "Voice message (4:12)",
+   "Backup not completed"
+  ],
+  "search": [
+   "Recommended from your search history",
+   "Today's doodle",
+   "Run a security checkup"
+  ],
+  "ai": [
+   "Generating a response…",
+   "Ask me anything",
+   "You've hit the limit (try again in 1 hour)"
+  ],
+  "gemini": [
+   "Here's a draft. And another. And another",
+   "Want me to summarize your inbox?",
+   "I can help with that!"
+  ],
+  "claude": [
+   "Let me think about that carefully…",
+   "I'd be happy to help",
+   "Here's a more concise version"
+  ],
+  "copilot": [
+   "Suggestion ready: 1 line, 0 tests",
+   "Copilot finished your sentence",
+   "Accept all changes?"
+  ],
+  "perplexity": [
+   "Sources: 12",
+   "Related questions you might ask",
+   "Your daily discover feed is ready"
+  ],
+  "deepseek": [
+   "Thinking… (142 seconds)",
+   "Server is busy, please try again",
+   "New model released"
+  ],
+  "midjourney": [
+   "Your image has 6 fingers",
+   "4 variations ready",
+   "Upscaling…"
+  ]
  }
 }
