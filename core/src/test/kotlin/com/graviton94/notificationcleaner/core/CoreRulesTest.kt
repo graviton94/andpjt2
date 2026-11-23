@@ -45,7 +45,7 @@ class CoreRulesTest {
         val (s, o) = igniter()
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
         assertEquals(listOf("chat", "live"), bursts.map { it.row.app })
-        assertEquals(valueOf(1_440_000), bursts[1].earned)
+        assertEquals(valueOf(1_500_000), bursts[1].earned)
         // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(40L, 57L, 90L, 120L, 180L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(40L, 73L, 117L, 153L, 204L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -128,9 +128,9 @@ class CoreRulesTest {
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 60 * 10 / 100), p) // capped at 1 hour, 10%
+        assertEquals(valueOf(1_000L * 180 * 10 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 10%
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 20 / 100), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(1_000L * 180 * 14 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -169,16 +169,33 @@ class CoreRulesTest {
     @Test
     fun factoryResetTurnsTheRunIntoBackupFiles() {
         val (run, next) = firstReset()
-        assertEquals(15, e.backupFilesNow(run))
+        assertEquals(10, e.backupFilesNow(run))
         assertEquals(1, next.level)
         assertEquals(Catalog.starter.toSet(), next.appLevels.keys)
         assertEquals(1, next.backup.resets)
-        assertEquals(9, next.backup.files)
-        assertEquals(15, next.backup.lifetime)
+        assertEquals(4, next.backup.files)
+        assertEquals(10, next.backup.lifetime)
         assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        assertEquals(10_000L + 30, e.rules.backupFiles(BigInteger.TEN.pow(21), 50))
+        // Total = ⌊10 × (P_max/10¹²)^0.35⌋, exponent halves after 10²⁴.
+        assertEquals(10L, e.rules.backupTotal(BigInteger.TEN.pow(12)))
+        assertEquals(112L, e.rules.backupTotal(BigInteger.TEN.pow(15)))
+        assertEquals(158_489L, e.rules.backupTotal(BigInteger.TEN.pow(24)))
+        assertEquals(19_952_623L, e.rules.backupTotal(BigInteger.TEN.pow(36)))
+    }
+
+    @Test
+    fun onlyBeatingTheBestRunPaysAndCounts() {
+        val (_, after) = firstReset()
+        // A second run that stops below the first run's P pays nothing and does not count as a reset.
+        val weak = after.copy(level = 25, runEarned = BigInteger.TEN.pow(11))
+        val again = e.factoryReset(weak, now)!!
+        assertEquals(after.backup.lifetime, again.backup.lifetime)
+        assertEquals(after.backup.resets, again.backup.resets)
+        // Beating it pays only the difference.
+        val strong = after.copy(level = 30, runEarned = BigInteger.TEN.pow(15))
+        assertEquals(112L - 10L, e.backupFilesNow(strong))
     }
 
     @Test

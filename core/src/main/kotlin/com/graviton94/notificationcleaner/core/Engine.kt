@@ -30,6 +30,8 @@ data class Backup(
     val lifetime: Long = 0,
     /** Deepest level any run reached. */
     val bestLevel: Int = 0,
+    /** Best run P ever: backup files pay only for beating it. */
+    val bestRunP: BigInteger = BigInteger.ZERO,
 ) {
     fun lv(item: BackupItem): Int = items[item] ?: 0
 }
@@ -138,14 +140,20 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun eventSlots(s: GameState) = rules.eventSlots(s.level, s.backup)
     fun bestTier(s: GameState) = s.active.maxOf { Catalog.app(it).tier }
     fun bestApp(s: GameState) = s.active.maxBy { Catalog.app(it).tier * 1_000 + (s.appLevels[it] ?: 1) }
-    fun backupFilesNow(s: GameState) = rules.backupFiles(s.runEarned, s.level)
+    fun backupFilesNow(s: GameState) = rules.backupFiles(s.runEarned, s.level, s.backup)
 
     /** The deck's synergy bonus % for an app's region and category (0 when alone). */
     fun synergy(s: GameState, appId: String): Pair<Int, Int> {
         val app = Catalog.app(appId)
         val r = s.active.count { Catalog.app(it).region == app.region }
         val c = s.active.count { Catalog.app(it).category == app.category }
-        return rules.synergyPercent(r, s.backup) to rules.synergyPercent(c, s.backup)
+        return rules.synergyPercent(r, s.backup, rules.regionSynergySteps) to rules.synergyPercent(c, s.backup, rules.categorySynergySteps)
+    }
+
+    /** Regions and categories with 2+ apps in the deck: each multiplies every value by RuleSet.diversityPermille. */
+    fun activeSets(s: GameState): Int {
+        val apps = s.active.map { Catalog.app(it) }
+        return apps.groupingBy { it.region }.eachCount().count { it.value >= 2 } + apps.groupingBy { it.category }.eachCount().count { it.value >= 2 }
     }
 
     private fun digits(n: BigInteger?) = if (n == null || n.signum() <= 0) 1 else n.toString().length
@@ -160,7 +168,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val pct = BigInteger.valueOf((100L + rs) * (100L + cs) * (100L + rd) * (100L + cd))
         val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost)))
         val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
-        return count * num * pct * chainNum * pro / (den * hundred.pow(4) * BigInteger.TEN)
+        val sets = maxOf(0, activeSets(s) - 1)
+        val div = BigInteger.valueOf(rules.diversityPermille.toLong()).pow(sets)
+        val divDen = BigInteger.valueOf(1_000).pow(sets)
+        return count * num * pct * chainNum * pro * div / (den * hundred.pow(4) * BigInteger.TEN * divDen)
     }
 
     private fun valueApp(s: GameState, row: Row): String = if (row.kind == RowKind.Wild) bestApp(s) else row.app!!
@@ -189,9 +200,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun factoryReset(s: GameState, now: Long): GameState? {
         if (s.level < rules.resetLevel) return null
         val files = backupFilesNow(s)
+        // Only a reset that pays files counts toward reset-gated content; empty resets cannot farm the count.
         return newGame(now, s.rng, s.backup.copy(
-            files = s.backup.files + files, resets = s.backup.resets + 1,
+            files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
             lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
+            bestRunP = s.backup.bestRunP.max(s.runEarned),
         ))
     }
 
@@ -428,7 +441,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     // Offline --------------------------------------------------------------------------------
 
     fun offlineCapMs(s: GameState): Long = (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline)) * 3_600_000L
-    fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 5 * s.backup.lv(BackupItem.Offline)
+    fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 2 * s.backup.lv(BackupItem.Offline)
 
     /**
      * Returning after [awayMs]: pays the recent income rate for the capped time at the offline efficiency,
@@ -437,7 +450,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
         val minutes = BigInteger.valueOf(minOf(awayMs, offlineCapMs(s)) / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
-        val p = s.earnRate * minutes * pct / BigInteger.valueOf(100)
+        val p = s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000)
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0))

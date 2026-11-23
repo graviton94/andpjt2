@@ -47,14 +47,16 @@
 | 스키마 | `schema` 정수, 규칙 버전 `rulesVersion`. 이전 스키마 읽기 테스트 필수 |
 | 큰 수 | 10진 문자열 |
 | 저장 시점 | 스와이프 확정·구매·초기화·광고 보상마다 (거래 단위, 원자적 쓰기) |
-| 시간 | 오프라인 경과 = `SystemClock.elapsedRealtime` 기반 + 상한, 서버 연결 시 UTC 검증 (사례조사 22) |
-| 광고·결제 | 거래 ID로 멱등 처리, 재시작·중복 콜백에도 한 번만 지급 |
+| 시간 | **같은 부팅**이면 `elapsedRealtime` 차이, 재부팅·시간원 불연속이면 서버 마지막 검증 시각 또는 보수적 상한. 의심만으로 정상 사용자 보상을 몰수하지 않음 (조사 E4) |
+| 저장 기록 | 종료·저장 때 `save_id · session_id · state_version · save_hash · wall_time · elapsedRealtime · 부팅 정보 · deck_snapshot · R_auto`를 원자적으로 (조사 E5) |
+| 오프라인 | `B_off = min(t, 상한) × R_auto × 효율`, 광고 ×2는 별도 거래. 광고를 안 봐도 기본 전액 |
+| 광고·결제 | `claim_id = hash(account, save_id, 구간 끝, 보상 종류)` 고유키로 멱등 지급. 재시작·중복 콜백·Auto Backup 복원에도 한 번만. Play Integrity는 결제·계정 동기화 같은 고가치 거래에만 |
 
 ## 큰 수 전략
 
 - 현재 최댓값 약 10⁴⁰(8주 시뮬). `BigInteger` 연산은 스와이프당 수십 번이라 문제없음.
 - 표시·연출(카운트업 60fps)은 `Double` 로그값 근사로 그린다.
-- 10³⁰⁰ 근처 또는 프로파일링 병목 시 표시 계층에 BigDouble(가수+지수) 도입 검토. 판정은 정확 연산 유지.
+- `BigInteger`는 상한이 없어 1.8e308 오버플로가 생기지 않는다(조사 B8의 BigDouble 권고는 거절). 성능만 프로파일링으로 감시.
 
 ## 원격 설정 (계획)
 

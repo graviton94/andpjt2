@@ -29,6 +29,10 @@ class Timeline {
     val bestLevelByWeek = sortedMapOf<Int, Int>()
     val digitsByWeek = sortedMapOf<Int, Int>()
     var activeMin = 0.0
+    var lifetimeFiles = 0L
+    var offlineP = java.math.BigInteger.ZERO
+    var activeP = java.math.BigInteger.ZERO
+    val lifetimeByWeek = sortedMapOf<Int, Long>()
     val runDigitsByDay = sortedMapOf<Int, Int>()
 }
 
@@ -50,7 +54,7 @@ fun unlockLevels(): Map<Int, List<String>> {
     return m
 }
 
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean): Timeline {
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false): Timeline {
     val tl = Timeline()
     val levels = unlockLevels()
     var s = chooseDeck(engine.newGame(START, seed), DeckPolicy.Synergy)
@@ -66,7 +70,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean): Timeline {
         for (session in 0 until plan.sessions) {
             val begin = START + day * DAY + session * gap
             if (t < begin) {
-                s = engine.settleOffline(s, begin - t, begin).first
+                val (back, got) = engine.settleOffline(s, begin - t, begin)
+                s = back
+                tl.offlineP += got
                 t = begin
             }
             val levelAtStart = s.level
@@ -78,6 +84,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean): Timeline {
                 val target = engine.bestTarget(s, t) ?: continue
                 val o = engine.swipe(s, target, t) ?: continue
                 s = o.state
+                tl.activeP += o.earned
                 val (spent, bought) = spend(s, DeckPolicy.Synergy)
                 s = spent
                 if (bought.isNotEmpty() || o.beats.any { it is Beat.LevelUp }) s = chooseDeck(s, DeckPolicy.Synergy)
@@ -88,6 +95,11 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean): Timeline {
                 val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
                 tl.tierDay.putIfAbsent(tier, dayOf(t))
                 if (tl.lastAppDay == null && "minutes" in s.appLevels) tl.lastAppDay = dayOf(t)
+                // Exploit probe: from week 2, reset the moment Lv25 is reached.
+                if (spam && day >= 7 && s.level >= engine.rules.resetLevel && engine.backupFilesNow(s) > 0) {
+                    s = chooseDeck(spendBackup(engine.factoryReset(s, t)!!), DeckPolicy.Synergy)
+                    tl.resetDays += dayOf(t)
+                }
             }
             stallSessions = if (s.level > levelAtStart) 0 else stallSessions + 1
             if (System.getenv("SIM_TRACE") != null && seed == 1L && resets && day in 5..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets}")
@@ -108,6 +120,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean): Timeline {
         val week = day / 7 + 1
         tl.bestLevelByWeek[week] = maxOf(s.backup.bestLevel, s.level, tl.bestLevelByWeek[week] ?: 0)
         tl.digitsByWeek[week] = s.bestSwipe.toString().length
+        tl.lifetimeByWeek[week] = s.backup.lifetime
     }
     return tl
 }
@@ -128,8 +141,15 @@ fun daily(days: Int, seeds: Long) {
     // Unlock density: gaps between first-time unlocks.
     val gapsMin = withReset.flatMap { tl -> tl.unlocks.zipWithNext { a, b -> b.first - a.first } }
     val gapsDay = withReset.flatMap { tl -> tl.unlocks.zipWithNext { a, b -> b.second - a.second } }
+    println("[오프라인 몫] P 중 오프라인 비율 중앙값 " + "%.0f%%".format(p50(withReset.map { val tot = it.offlineP + it.activeP; if (tot.signum() == 0) 0.0 else it.offlineP.toBigDecimal().divide(tot.toBigDecimal(), java.math.MathContext.DECIMAL64).toDouble() * 100 })))
     println("[환생 없음] 회차 누적 P 자릿수 " + listOf(1, 2, 3, 5, 7, 10, 14, 21, 30).joinToString(" · ") { d -> "${d}일 ${p50(noReset.mapNotNull { it.runDigitsByDay[d]?.toDouble() }).toInt()}" })
     println("[해금 밀도] 해금 ${p50(withReset.map { it.unlocks.size.toDouble() }).toInt()}개 · 간격(직접 플레이) p50 ${fmtMin(pct(gapsMin, .5))} p90 ${fmtMin(pct(gapsMin, .9))} 최대 ${fmtMin(gapsMin.maxOrNull() ?: 0.0)} · 달력 최대 공백 ${d(gapsDay.maxOrNull())}")
+    if (System.getenv("SIM_SPAM") != null) {
+        val spamRuns = (1L..seeds).map { playDays(it, days, plan, true, spam = true) }
+        println("[단타 탐지] 평생 백업파일 주별 — 일반: " + withReset[0].lifetimeByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(withReset.map { (it.lifetimeByWeek[w] ?: 0).toDouble() }).toLong()}" })
+        println("            단타(2주차부터 Lv25 즉시 초기화): " + spamRuns[0].lifetimeByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(spamRuns.map { (it.lifetimeByWeek[w] ?: 0).toDouble() }).toLong()}" })
+        println("            단타 최고 레벨: " + spamRuns[0].bestLevelByWeek.keys.joinToString(" · ") { w -> "${w}주 ${p50(spamRuns.map { (it.bestLevelByWeek[w] ?: 0).toDouble() }).toInt()}" } + " · 초기화 ${p50(spamRuns.map { it.resetDays.size.toDouble() }).toInt()}회 · 마지막 앱 ${spamRuns.count { it.lastAppDay != null }}/$seeds")
+    }
     val tl = withReset[0]
     println("  시드1 해금 순서: " + tl.unlocks.joinToString(" | ") { "${d(it.second)} ${it.third}" })
     println("  시드1 초기화: " + tl.resetDays.joinToString(" ") { d(it) })

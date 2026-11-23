@@ -73,7 +73,7 @@ fun contentDoc(): String = buildString {
             "${c?.label ?: ""} | ${c?.let { x -> Catalog.apps.filter { it.category == x }.joinToString(", ") { it.name } } ?: ""} |")
     }
     appendLine()
-    appendLine("시너지(덱 안 같은 권역·카테고리 수): ${rules.synergySteps.joinToString(" · ") { "${it.first}개 +${it.second}%" }}. 누적 처리량 자릿수마다 권역 +${rules.regionDigitPercent}%, 카테고리 +${rules.categoryDigitPercent}%.")
+    appendLine("시너지(덱 안 같은 수): 카테고리 ${rules.categorySynergySteps.joinToString(" · ") { "${it.first}개 +${it.second}%" }} / 권역 ${rules.regionSynergySteps.joinToString(" · ") { "${it.first}개 +${it.second}%" }}. 2개 이상 모인 세트가 하나 늘 때마다 모든 가치 ×${rules.diversityPermille / 1000.0}. 누적 처리량 자릿수마다 권역 +${rules.regionDigitPercent}%, 카테고리 +${rules.categoryDigitPercent}%.")
     appendLine()
     appendLine("## 3. 이벤트 카드")
     appendLine()
@@ -115,7 +115,7 @@ fun contentDoc(): String = buildString {
         appendLine("| ${b.label} | 초기화 ${b.minResets}회 | ${if (b.max == Int.MAX_VALUE) "무한" else b.max} | ${(0 until n).joinToString(" · ") { rules.backupPrice(b, it).toString() }} |")
     }
     appendLine()
-    appendLine("백업파일 = `⌊10 × ∛(회차 누적 P ÷ 10^${rules.backupPDigits})⌋ + (레벨 − 20)`, Lv${rules.resetLevel}부터. 지금까지 얻은 백업파일 1개마다 모든 알림 가치 +${rules.lifetimeFilePercent}%.")
+    appendLine("백업파일 총량 = `⌊10 × (최고 회차 P ÷ 10^${rules.backupPDigits})^${rules.backupExponentPermille / 1000.0}⌋` (10^${rules.backupPDigits + rules.backupSoftcapDigits} 넘으면 지수 절반), 초기화 때는 **지난 최고 기록을 넘긴 만큼만** 지급. Lv${rules.resetLevel}부터. 패시브 = `(1 + ${rules.lifetimeFilePercent}% × 평생 백업파일)^${rules.lifetimeExponentPermille / 1000.0}`. 백업파일을 받은 초기화만 초기화 횟수로 센다.")
     appendLine()
     appendLine("## 8. 레벨 기준 누적 P")
     appendLine()
@@ -124,5 +124,5 @@ fun contentDoc(): String = buildString {
     val ls = listOf(2, 5, 10, 15, 20, 25, 30, 36, 42, 48, 55, 64, 72, 80, 88)
     ls.chunked(3).forEach { row -> appendLine("| " + row.joinToString(" | ") { "Lv$it | ${kor(rules.levelP(it))}" } + " |") }
     appendLine()
-    appendLine("`Lv L = ${rules.levelPBase} × ${rules.levelRatioPermille / 1000.0}^(L−2)`, Lv${rules.levelLateFrom}부터 배수가 레벨마다 +${rules.levelRatioStepPermille / 1000.0}. 오프라인 상한: ${steps(rules.offlineCapSteps, "시간")}, 효율 ${rules.offlineEfficiencyPercent}%.")
+    appendLine("`Lv L = ${rules.levelPBase} × ${rules.levelRatioPermille / 1000.0}^(L−2)`, Lv${rules.levelLateFrom}부터 배수가 레벨마다 +${rules.levelRatioStepPermille / 1000.0}. 오프라인: 자동 정리 기준 속도(직접의 ${rules.offlineAutoPermille / 10}%) × 효율 ${rules.offlineEfficiencyPercent}%, 상한 ${steps(rules.offlineCapSteps, "시간")}.")
 }

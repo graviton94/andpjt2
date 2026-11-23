@@ -66,10 +66,10 @@ enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<I
  * the first resets so every reset opens something new.
  */
 enum class BackupItem(val label: String, val max: Int, val base: Long, val growthPermille: Int, val minResets: Int) {
-    Value("알림 가치 ×1.1", Int.MAX_VALUE, 3, 1_150, 1),
+    Value("알림 가치 ×1.25", 50, 3, 1_150, 1),
     FastBoot("빠른 부팅 · 레벨 기준 P −10%", 20, 2, 1_500, 1),
     StartFunds("시작 자금", 10, 1, 1_600, 1),
-    Offline("오프라인 정산 +5%p · +1시간", 10, 4, 1_500, 1),
+    Offline("오프라인 정산 +2%p · +1시간", 10, 4, 1_500, 1),
     Sandwich("샌드위치 +2%p", 10, 3, 1_500, 2),
     ChainBoost("연쇄 증폭 +0.1", 10, 8, 1_800, 2),
     AutoClean("자동 정리 −0.3초", 10, 4, 1_500, 3),

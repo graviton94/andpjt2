@@ -29,7 +29,11 @@ data class RuleSet(
     val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7, 62 to 8),
     val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2, 38 to 3, 63 to 4),
     // Synergy: same category / region in the deck → bonus % for those apps
-    val synergySteps: List<Pair<Int, Int>> = listOf(2 to 20, 3 to 50, 4 to 100, 5 to 200, 6 to 300),
+    // Synergy (research A·B plan S3): same category / region in the deck → bonus % for those apps,
+    // and every active set (2+ apps) multiplies all values by diversityPermille‰ once more.
+    val categorySynergySteps: List<Pair<Int, Int>> = listOf(2 to 25, 3 to 60, 4 to 110, 5 to 180, 6 to 270),
+    val regionSynergySteps: List<Pair<Int, Int>> = listOf(2 to 20, 3 to 50, 4 to 95, 5 to 155, 6 to 230),
+    val diversityPermille: Int = 1_220,
     /** Bonus % per digit of cumulative notifications cleared in a region / category. */
     val regionDigitPercent: Int = 10,
     val categoryDigitPercent: Int = 12,
@@ -73,9 +77,13 @@ data class RuleSet(
     val levelRatioStepPermille: Int = 5,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
+    /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
+    val lifetimeExponentPermille: Int = 850,
     // Offline settlement
+    /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
+    val offlineAutoPermille: Int = 400,
     val offlineEfficiencyPercent: Int = 10,
-    val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 1, 7 to 2, 35 to 4),
+    val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
     val proPricePermille: Int = 1_000,
     val cardPricePermille: Int = 500,
@@ -83,6 +91,9 @@ data class RuleSet(
     val proMultiplier: Long = 3,
     /** Backup files: cube root of (run P ÷ 10^this). */
     val backupPDigits: Int = 12,
+    /** Backup files total = ⌊10 × (best run P ÷ 10^12)^0.35⌋; beyond 10^(12+softcap) the exponent halves. Paid as the delta over files already earned (research A2). */
+    val backupExponentPermille: Int = 350,
+    val backupSoftcapDigits: Int = 12,
 ) {
     fun step(steps: List<Pair<Int, Int>>, level: Int): Int = steps.lastOrNull { level >= it.first }?.second ?: 0
 
@@ -114,19 +125,19 @@ data class RuleSet(
         return l
     }
 
-    fun synergyPercent(count: Int, backup: Backup): Int {
-        val base = step(synergySteps, count)
+    fun synergyPercent(count: Int, backup: Backup, steps: List<Pair<Int, Int>>): Int {
+        val base = step(steps, count)
         return base * (100 + 10 * backup.lv(BackupItem.Synergy)) / 100
     }
 
-    /** One notification before deck multipliers: 10^(tier−1) × level × (2 + 0.1k)^milestones × 1.1^value. */
+    /** One notification before deck multipliers: 10^(tier−1) × level × (2 + 0.1k)^milestones × 1.25^value. */
     fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger> {
         val m = levelMilestones.count { level >= it }
         val k = backup.lv(BackupItem.Milestone).toLong()
         val v = backup.lv(BackupItem.Value)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(11).pow(v) *
-            big(100 + lifetimeFilePercent * backup.lifetime)
-        val den = TEN.pow(m) * TEN.pow(v) * big(100)
+        val passive = Math.round(Math.pow(1.0 + lifetimeFilePercent / 100.0 * backup.lifetime, lifetimeExponentPermille / 1000.0) * 1e6)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive)
+        val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
         return num to den
     }
 
@@ -148,13 +159,29 @@ data class RuleSet(
     fun backupPrice(item: BackupItem, owned: Int): Long =
         Math.ceil(item.base * Math.pow(item.growthPermille / 1000.0, owned.toDouble())).toLong()
 
-    /** Backup files for a factory reset now: ⌊10 × ∛(run P ÷ 10^backupPDigits)⌋ + (level − 20). */
-    fun backupFiles(runEarned: BigInteger, level: Int): Long {
+    /** Total backup files ever earnable from a best run of [bestRunP]. */
+    fun backupTotal(bestRunP: BigInteger): Long {
+        if (bestRunP.signum() <= 0) return 0
+        val lx = log10(bestRunP) - backupPDigits
+        if (lx < 0) return 0
+        val e = backupExponentPermille / 1000.0
+        val logB = if (lx <= backupSoftcapDigits) e * lx else e * backupSoftcapDigits + e / 2 * (lx - backupSoftcapDigits)
+        return Math.floor(10 * Math.pow(10.0, logB)).toLong()
+    }
+
+    /** Backup files a factory reset pays now: only what beating the best run adds (no farming of easy resets). */
+    fun backupFiles(runEarned: BigInteger, level: Int, backup: Backup): Long {
         if (level < resetLevel) return 0
-        return cubeRoot(runEarned * big(1_000) / TEN.pow(backupPDigits)).toLong() + (level - 20)
+        return maxOf(0L, backupTotal(runEarned.max(backup.bestRunP)) - backup.lifetime)
     }
 
     companion object {
+        fun log10(n: BigInteger): Double {
+            val str = n.toString()
+            val head = str.take(15).toDouble()
+            return Math.log10(head) + (str.length - minOf(15, str.length))
+        }
+
         fun cubeRoot(n: BigInteger): BigInteger {
             if (n.signum() <= 0) return BigInteger.ZERO
             var lo = BigInteger.ZERO
