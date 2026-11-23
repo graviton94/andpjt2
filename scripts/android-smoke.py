@@ -17,9 +17,12 @@ def adb(*args, check=True, **options):
 
 
 def wait_node(label):
-    deadline = time.monotonic() + 35
+    deadline = time.monotonic() + 60
     while time.monotonic() < deadline:
-        adb("shell", "uiautomator", "dump", REMOTE_DUMP, stdout=subprocess.DEVNULL)
+        # The board animates constantly, so a dump can be killed waiting for idle: retry instead of failing.
+        if adb("shell", "uiautomator", "dump", REMOTE_DUMP, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False).returncode != 0:
+            time.sleep(0.5)
+            continue
         xml = adb("exec-out", "cat", REMOTE_DUMP, stdout=subprocess.PIPE).stdout
         for node in ET.fromstring(xml).iter("node"):
             if label in (node.get("text"), node.get("content-desc")):
