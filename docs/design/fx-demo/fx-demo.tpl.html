@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>알림 청소부 타격감 시연</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap">
 <style>
 /* VOICE: 게임 쇼케이스 — 짧고 신나는 말, 숫자가 주인공
-   IDEA: 실제 게임 판 그대로, 탭하면 연쇄 사다리(19장 토큰)가 터진다
+   IDEA: 칩 × 배율이 한 박자씩 쌓였다가 한 방에 지갑으로 꽂힌다 (적립 → 정산)
    PICTURE: 휴대폰 한 대 크기의 살아 있는 판 (캔버스)
-   COLOUR and TYPE: 앰버 골드 다크 판 + 앱 브랜드색 파편, Noto Sans KR 900 숫자
-   LAYOUT: 판 왼쪽 크게, 조작은 오른쪽 한 열 (600px 아래는 판 → 조작) */
+   COLOUR and TYPE: 어두운 판 + 파랑 칩 · 빨강 배율 상자, Black Han Sans 숫자에 단단한 잉크 외곽선과 그림자
+   LAYOUT: 판 왼쪽 크게, 조작은 오른쪽 한 열 (760px 아래는 판 → 조작) */
 :root{color-scheme:light dark;--bg:light-dark(#EEF1F7,#100D0A);--ink:light-dark(#16181D,#F6F1EA);--sub:light-dark(#4B5160,#B3A89B);--card:light-dark(#FFFFFF,#201B16);--line:light-dark(#DDE2EC,#3A332C);--acc:light-dark(#3867F0,#EFA03F);--onacc:light-dark(#FFFFFF,#1E1408)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
@@ -19,7 +19,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Noto Sans KR
 h1{margin:0 0 6px;font-size:clamp(28px,4vw,40px);line-height:1.08;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
 .lead{margin:0 0 20px;color:var(--sub);max-width:62ch}
 .wrap{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
-.phone{position:relative;width:100%;max-width:420px;aspect-ratio:390/760;border-radius:40px;padding:10px;background:#0B0907;box-shadow:0 30px 60px #0007, inset 0 0 0 2px #2b241d}
+.phone{position:relative;width:100%;max-width:420px;aspect-ratio:390/740;border-radius:40px;padding:10px;background:#0B0907;box-shadow:0 30px 60px #0007, inset 0 0 0 2px #2b241d}
 .phone canvas{width:100%;height:100%;display:block;border-radius:32px;touch-action:manipulation;cursor:pointer}
 .panel{display:flex;flex-direction:column;gap:18px}
 .group{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
@@ -39,14 +39,14 @@ tr.on td{color:var(--acc);font-weight:700}
 <body>
 <main class="band">
   <h1>탭하면 터진다: 알림 청소부 타격감 시연</h1>
-  <p class="lead">판의 알림을 탭하면 고른 길이의 연쇄가 그 자리부터 터집니다. 연쇄가 길수록 히트스톱·흔들림·파편·화면 효과가 한 칸씩 커지고, 파편은 그 앱 아이콘의 브랜드색입니다. 수치는 바이블 19장 토큰 그대로입니다.</p>
+  <p class="lead">알림을 탭하면 연쇄가 위로 번집니다. 터질 때마다 파란 <b>칩</b>에 점수가, 빨간 <b>배율</b>에 연쇄 번호가 한 박자씩 쌓이고, 연쇄가 끝나면 둘이 곱해져 한 방에 지갑으로 꽂힙니다. 소리를 켜고 들어 보세요.</p>
   <div class="wrap">
     <div class="phone"><canvas id="stage" aria-label="알림 판. 탭하면 연쇄 폭발" role="img"></canvas></div>
     <div class="panel">
       <section class="group">
         <h2>연쇄 길이</h2>
         <div class="row" id="chains"></div>
-        <p class="note">판의 아무 알림이나 탭하세요. 빈 곳을 탭해도 맨 아래 줄부터 터집니다.</p>
+        <p class="note">판의 아무 알림이나 탭하세요. 단위가 바뀌는 순간(억 → 조)을 노려 보세요.</p>
       </section>
       <section class="group">
         <h2>특수 연출</h2>
@@ -67,7 +67,7 @@ tr.on td{color:var(--acc);font-weight:700}
       <section class="group">
         <h2>확대의 사다리 (토큰 fx.ladder)</h2>
         <table><thead><tr><th>연쇄</th><th>이름</th><th class="n">멈춤</th><th class="n">흔들림</th><th class="n">파편</th></tr></thead><tbody id="ladder"></tbody></table>
-        <p class="note">화면 전체는 흔들지 않고 카드 영역만 흔듭니다. 번쩍임은 초당 3회 이하.</p>
+        <p class="note">화면 전체는 흔들지 않고 판과 점수판만 흔듭니다. 번쩍임은 9연쇄 이상에서 초당 3회 이하.</p>
       </section>
     </div>
   </div>
@@ -82,216 +82,427 @@ const LADDER = [
   { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
   { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
 ];
-const W = 390, H = 740, POOL = 600, SIM = 1 / 120;
+const W = 390, H = 740, SIM = 1 / 120, POOL = 700;
+const FD = '"Black Han Sans","Noto Sans KR",sans-serif', FB = '"Noto Sans KR",sans-serif';
 const cv = document.getElementById('stage'), ctx = cv.getContext('2d');
 const icons = APPS.map(a => { const i = new Image(); i.src = a.icon; return i; });
 let dpr = 1;
 const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = W * dpr; cv.height = H * dpr; };
 fit(); window.addEventListener('resize', fit);
+if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Noto Sans KR"'); }
 
-// state
 let chainLen = 5, sound = true, reduce = false, day = false, autoOn = false;
-let wallet = 3.2e12, shown = 3.2e12, stop = 0, shake = 0, zoom = 1, flash = 0, rim = 0, warm = 0, slow = 0, banner = null, cap = 0;
-const parts = [], pops = [], queue = [];
-let seed = 7;
+let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-const rows = Array.from({ length: 7 }, (_, i) => ({ app: i % APPS.length, n: 1 + (i * 7) % 3, y: 0, dy: 0, alpha: 1 }));
-const rowY = i => 150 + i * 76;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const backOut = p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
 const tier = n => LADDER.find(l => n >= l.from && n <= l.to);
 
-// colour helpers
+// springs: bouncy scale and offsets
+const spring = (v = 1) => ({ x: v, v: 0, t: v });
+const kick = (s, a) => { s.v += a; };
+const stepSpring = (s, dt, k = 340, d = 13) => { s.v += (-k * (s.x - s.t) - d * s.v) * dt; s.x += s.v * dt; };
+
+// colour
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-const ramp = h => { const c = hex(h); return [mix(c, [0, 0, 0], .45), c, mix(c, [255, 255, 255], .4), mix(c, [255, 255, 255], .78), [255, 255, 255]]; };
-const units = [[1e20, '해'], [1e16, '경'], [1e12, '조'], [1e8, '억'], [1e4, '만']];
-const fmt = n => { for (const [v, u] of units) if (n >= v) { const x = n / v; return (x >= 100 ? Math.round(x) : x.toFixed(1)) + u; } return Math.round(n).toLocaleString('ko-KR'); };
+const ramp = h => { const c = hex(h); return [mixc(c, [0, 0, 0], .45), c, mixc(c, [255, 255, 255], .35), mixc(c, [255, 255, 255], .7), [255, 255, 255]]; };
 
-// audio
-let ac = null;
-const tone = (semi, dur = .09, type = 'triangle', vol = .14) => {
-  if (!sound) return;
+// Korean big-number format, no trailing .0
+const UNITS = [[1e20, '해'], [1e16, '경'], [1e12, '조'], [1e8, '억'], [1e4, '만']];
+const split = n => {
+  for (const [v, u] of UNITS) if (n >= v) { const x = n / v; return { num: x >= 1000 ? Math.round(x).toLocaleString('ko-KR') : x >= 100 ? String(Math.round(x)) : String(Math.round(x * 10) / 10), unit: u }; }
+  return { num: Math.round(n).toLocaleString('ko-KR'), unit: '' };
+};
+const fmt = n => { const s = split(n); return s.num + s.unit; };
+const fmtMult = m => m >= 100 ? Math.round(m).toLocaleString('ko-KR') : String(Math.round(m * 10) / 10);
+const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; };
+
+// ---------- sound: layered synth through compressor + short echo ----------
+const A = {};
+function ac() {
+  if (!sound) return null;
   try {
-    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
-    o.type = type; o.frequency.value = 523.25 * Math.pow(2, semi / 12);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
-    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
-  } catch (e) {}
+    if (!A.c) {
+      const c = new (window.AudioContext || window.webkitAudioContext)();
+      const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = .003; comp.release.value = .12;
+      const m = c.createGain(); m.gain.value = .6;
+      const d = c.createDelay(.5); d.delayTime.value = .095; const fb = c.createGain(); fb.gain.value = .25;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2800; const wet = c.createGain(); wet.gain.value = .2;
+      m.connect(comp); m.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(wet); wet.connect(comp); comp.connect(c.destination);
+      const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), ch = nb.getChannelData(0);
+      for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+      Object.assign(A, { c, m, nb });
+    }
+    if (A.c.state === 'suspended') A.c.resume();
+    return A.c;
+  } catch (e) { return null; }
+}
+function env(g, t, a, peak, dur) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
+function tone(type, f0, f1, dur, vol, o = {}) {
+  const c = ac(); if (!c) return;
+  const t = c.currentTime + (o.at || 0), osc = c.createOscillator(), g = c.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(f0, t); if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  if (o.det) osc.detune.value = o.det;
+  env(g, t, o.a || .004, vol, dur);
+  let n = osc; if (o.filt) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.filt; f.Q.value = o.q || 1; osc.connect(f); n = f; }
+  n.connect(g); g.connect(A.m); osc.start(t); osc.stop(t + dur + .03);
+}
+function hiss(dur, vol, o = {}) {
+  const c = ac(); if (!c) return;
+  const t = c.currentTime + (o.at || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = A.nb; f.type = o.type || 'bandpass'; f.Q.value = o.q || 1.2;
+  f.frequency.setValueAtTime(o.f0 || 2000, t); f.frequency.exponentialRampToValueAtTime(o.f1 || o.f0 || 2000, t + dur);
+  env(g, t, o.a || .003, vol, dur); s.connect(f); f.connect(g); g.connect(A.m); s.start(t, Math.random() * .5); s.stop(t + dur + .03);
+}
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31, 33, 36];
+const pitch = (base, k) => base * Math.pow(2, PENTA[clamp(k, 0, PENTA.length - 1)] / 12);
+const sfx = {
+  pop(k) { // paper rip + body thump + pitched pluck climbing the pentatonic scale
+    const f = pitch(523.25, k - 1);
+    hiss(.09, .4, { f0: 3600, f1: 1200, q: .8 });
+    tone('sine', 190, 45, .14, .8);
+    tone('triangle', f, f, .26, .2); tone('square', f * 2, f * 2, .08, .045, { filt: 4500 });
+    if (k >= 6) tone('sawtooth', f / 2, f / 2, .2, .06, { filt: 1200, q: 4, det: 8 });
+  },
+  chip(k) { const f = pitch(1568, Math.floor(k / 2)); tone('square', f, f, .03, .05, { filt: 6000 }); tone('sine', f * 1.5, f * 1.5, .06, .06, { at: .01 }); },
+  mult(k) { const f = pitch(130.8, k - 1); tone('sawtooth', f, f * 1.5, .15, .13, { filt: 1500, q: 7 }); tone('sine', f * 2, f * 2, .14, .12); },
+  badge() { tone('triangle', 1318.5, 1318.5, .12, .12); tone('triangle', 1975.5, 1975.5, .18, .1, { at: .07 }); },
+  whoosh() { hiss(.2, .28, { f0: 400, f1: 5000, q: 1.4, a: .07 }); },
+  payoff(k) {
+    tone('sine', 130, 34, .75, 1); hiss(.5, .26, { type: 'lowpass', f0: 7000, f1: 300, q: .7 });
+    const root = 261.63 * Math.pow(2, clamp(k - 1, 0, 7) / 12);
+    [0, 4, 7, 12, 16, 19].forEach((s, i) => tone('triangle', root * 2 * Math.pow(2, s / 12), root * 2 * Math.pow(2, s / 12), .55, .11, { at: i * .045 }));
+    tone('square', root, root, .3, .05, { filt: 900 });
+  },
+  coin(p) { const f = 1100 * Math.pow(2, p * 1.3); tone('square', f, f, .028, .03, { filt: 7000 }); tone('sine', f * 1.5, f * 1.5, .05, .045); },
+  land() { tone('sine', 95, 48, .2, .7); hiss(.05, .2, { f0: 2600 }); },
+  unit() {
+    tone('sine', 82, 30, 1, 1); hiss(.7, .14, { type: 'highpass', f0: 3500, f1: 9000, a: .06 });
+    [0, 7, 12, 16, 19, 24].forEach((s, i) => tone('triangle', 523.25 * Math.pow(2, s / 12), 523.25 * Math.pow(2, s / 12), .7, .1, { at: .04 + i * .055 }));
+  },
+  stamp() { tone('sine', 120, 38, .32, 1); hiss(.16, .55, { type: 'lowpass', f0: 1400, f1: 250 }); hiss(.7, .12, { type: 'highpass', f0: 2500, f1: 7000, a: .1, at: .1 }); },
+  wave(w) { hiss(.55, .32, { f0: 260, f1: 5200, q: 2, a: .06 }); tone('sine', 110 - w * 12, 32, .7, .95); const f = 196 * Math.pow(2, w * 5 / 12); tone('sawtooth', f, f * 2, .4, .08, { filt: 2200, q: 6 }); },
 };
-const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 
-// particles
-const spawn = (k, x, y, vx, vy, life, col, size) => {
+// ---------- state ----------
+const MSG = ['새 메시지가 도착했어요', '지금 확인하지 않으면 사라져요', '쿠폰이 곧 만료돼요', '친구가 회원님을 언급했어요', '새 영상이 올라왔어요', '오늘의 추천이 도착했어요', '배송이 출발했어요'];
+const ROW0 = 168, ROWH = 72, CH = 60;
+const rowY = i => ROW0 + i * ROWH;
+const rows = Array.from({ length: 7 }, (_, i) => ({ app: (i * 3) % APPS.length, n: 1 + (i * 5) % 3, msg: MSG[i % MSG.length], dy: spring(0), sc: spring(1), a: 1, charge: 0 }));
+const VAL = [1.2e5, 3.4e5, 8.8e5, 2.1e6];
+const wallet = { v: 8.2e7, shown: 8.2e7, from: 8.2e7, to: 8.2e7, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '만', tick: 0, note: null };
+const CHIPX = 118, MULTX = 272, BOXY = 129;
+const plate = { on: 0, chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, cap: 0, capMode: false, capT: 9 };
+const mult = () => plate.base * plate.syn * plate.wmul;
+const parts = [], tokens = [], pops = [], timeline = [];
+let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [];
+const after = (sec, fn) => timeline.push({ at: sec, fn });
+
+const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
   if (parts.length >= POOL) parts.shift();
-  parts.push({ k, x, y, vx, vy, life, max: life, col, size, rot: rnd() * 6.28, vr: (rnd() - .5) * 14 });
+  parts.push(Object.assign({ k, x, y, vx, vy, life, max: life, col, size, rot: rnd() * 6.28, vr: (rnd() - .5) * 16 }, extra));
 };
-function burst(rowIdx, chain) {
-  const r = rows[rowIdx], app = APPS[r.app], pal = ramp(app.col), t = tier(chain);
-  const cx = 195, cy = rowY(rowIdx) + 31, k = reduce ? .3 : 1;
-  for (let i = 0; i < t.shreds * k; i++) {
-    const a = rnd() * 6.28, sp = 120 + rnd() * 260 * (1 + chain * .08);
-    spawn('SHRED', cx + (rnd() - .5) * 300, cy + (rnd() - .5) * 30, Math.cos(a) * sp, Math.sin(a) * sp - 120, .55 + rnd() * .45, pal[1 + (i % 3)], 5 + rnd() * 6);
-  }
-  for (let i = 0; i < (8 + chain * 2) * k; i++) {
-    const a = rnd() * 6.28, sp = 260 + rnd() * 380;
-    spawn('SPARK', cx, cy, Math.cos(a) * sp, Math.sin(a) * sp, .25 + rnd() * .3, pal[3], 2);
-  }
-  for (let i = 0; i < 6 * k; i++) spawn('MOTE', cx + (rnd() - .5) * 280, cy, (rnd() - .5) * 30, -40 - rnd() * 60, .9 + rnd() * .6, pal[3], 2 + rnd() * 2);
-  if (chain >= 4) for (let i = 0; i < 10 * k; i++) spawn('STAR', cx + (rnd() - .5) * 320, cy + (rnd() - .5) * 60, (rnd() - .5) * 60, -30 - rnd() * 40, .5 + rnd() * .4, pal[4], 5 + rnd() * 4);
-  if (chain >= 6) spawn('RING', cx, cy, 0, 0, .55, pal[2], 20);
-  spawn('GLOW', cx, cy, 0, 0, .45, pal[2], 120 + chain * 10);
-  const base = Math.pow(6, 6 + (r.app % 4)) * (r.n + 2);
-  pops.push({ x: cx + (rnd() - .5) * 120, y: cy - 10, text: '+' + fmt(base), mult: '×' + (1 + chain), life: 1.1, max: 1.1, big: chain, col: pal[3] });
-  while (pops.length > 4) pops.shift();
-  wallet += base * (1 + chain);
-  stop = Math.max(stop, t.stop / 1000);
-  shake = reduce ? 0 : Math.max(shake, t.shake);
-  if (chain >= 2) rim = Math.max(rim, .5);
-  if (chain >= 4) warm = Math.max(warm, 1);
-  if (chain >= 6) rim = 1;
-  if (chain >= 9) { if (!reduce) flash = Math.max(flash, .55); slow = .2; zoom = reduce ? 1 : 1.03; }
-  banner = { text: chain === 1 ? '팡!' : chain + '연쇄! ' + t.name, life: 1.0, max: 1.0, size: 30 + Math.min(chain, 12) * 3.5 };
-  tone(Math.min(4, (chain - 1) * .5) + chain * 2, .1 + chain * .006, chain >= 6 ? 'sawtooth' : 'triangle', .12);
-  buzz(Math.min(40, 8 + chain * 3));
-  r.alpha = 0; r.dy = -40; r.app = (r.app + 3 + chain) % APPS.length; r.n = 1 + Math.floor(rnd() * 3);
-}
-function runChain(start, n) {
+
+// ---------- chain choreography ----------
+function runChain(start, n, waves = 0, capMode = false) {
+  if (busy) { if (pending.length < 2) pending.push([start, n, waves, capMode]); return; }
+  busy = true;
+  Object.assign(plate, { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, phase: 'chain', merge: 0, k: 0, capMode, cap: 0, capT: 9 });
+  let t = 0;
   for (let i = 0; i < n; i++) {
-    const gap = Math.max(.045, .085 - i * .004);
-    queue.push({ at: i === 0 ? 0 : gap, fn: () => burst((start + i) % rows.length, i + 1) });
+    const idx = ((start - i) % 7 + 7) % 7;
+    after(t, () => { rows[idx].charge = 1; kick(rows[idx].sc, 3); });
+    after(t + .05, () => burst(idx, i + 1));
+    t += Math.max(.1, .19 - i * .011);
   }
+  for (let w = 0; w < waves; w++) { after(t + .2, () => waveHit(w)); t += .45; }
+  after(t + .38, payoff);
 }
-function wave() {
-  for (let w = 0; w < 3; w++) queue.push({ at: w === 0 ? .05 : .22, fn: () => {
-    const pal = ramp(APPS[(w * 3) % APPS.length].col);
-    for (let i = 0; i < (reduce ? 40 : 140); i++) spawn('SHRED', rnd() * W, 110 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 300, 1.1, pal[1 + (i % 3)], 4 + rnd() * 5);
-    spawn('BAND', 0, 110, 0, 900, .7, pal[3], 60);
-    const n = Math.pow(3, w + 1);
-    pops.push({ x: 195, y: 360 - w * 40, text: '숨은 알림 ×' + n, mult: '파동 ' + (w + 1), life: 1.2, max: 1.2, big: 8, col: pal[3] });
-    wallet *= 1.6; stop = Math.max(stop, .04); shake = reduce ? 0 : 3; rim = 1; warm = 1;
-    tone(-12 + w * 4, .25, 'sawtooth', .16); buzz(30);
-  } });
+function burst(idx, k) {
+  const r = rows[idx], app = APPS[r.app], pal = ramp(app.col), T = tier(k), y = rowY(idx) + CH / 2, q = reduce ? .3 : 1;
+  const cardCol = day ? [255, 255, 255] : [44, 37, 30];
+  for (let s = 0; s < 5; s++) { const x = 14 + s * 72.4 + 36; spawn('SLICE', x, y, (x - 195) * 2.4 + (rnd() - .5) * 90, -160 - rnd() * 240, .75, cardCol, 72, { h: CH, edge: pal[1], vr: (rnd() - .5) * 9 }); }
+  spawn('ICON', 47, y, -40 - rnd() * 90, -320 - rnd() * 80, .9, null, 38, { img: r.app, vr: (rnd() - .5) * 12 });
+  for (let i = 0; i < T.shreds * q; i++) { const a = rnd() * 6.28, sp = 140 + rnd() * 300; spawn('CONF', 30 + rnd() * 330, y + (rnd() - .5) * 40, Math.cos(a) * sp, Math.sin(a) * sp - 160, .9 + rnd() * .6, pal[1 + (i % 3)], 5 + rnd() * 5); }
+  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', 195 + (rnd() - .5) * 200, y, Math.cos(a) * sp, Math.sin(a) * sp, .22 + rnd() * .25, pal[3], 2.2); }
+  spawn('CORE', 195, y, 0, 0, .14, pal[3], 90 + k * 6);
+  if (k >= 4) for (let i = 0; i < 8 * q; i++) spawn('STAR', 40 + rnd() * 310, y + (rnd() - .5) * 70, (rnd() - .5) * 50, -40 - rnd() * 50, .5 + rnd() * .4, pal[4], 5 + rnd() * 5);
+  if (k >= 6) spawn('RING', 195, y, 0, 0, .5, pal[2], 20);
+  // value: pop at the card, then an orb carries it into the chip box
+  const val = nice(VAL[r.app % 4] * r.n * (1 + rnd() * .4));
+  pops.push({ x: 318, y: y + 8, text: '+' + fmt(val), t: 0, life: .55, col: pal[3] });
+  while (pops.length > 3) pops.shift();
+  tokens.push({ x0: 318, y0: y, cx: 60 + rnd() * 60, cy: y - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: pal[2], r: 7, done: () => { plate.chips += val; kick(plate.cs, 14); sfx.chip(k); for (let i = 0; i < 8; i++) spawn('SPARK', CHIPX, BOXY, (rnd() - .5) * 500, (rnd() - .5) * 300, .2, [140, 200, 255], 2); } });
+  plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); sfx.mult(k);
+  if (k === 3 || k === 7) after(.12, () => tokens.push({ x0: 340, y0: 200, cx: 360, cy: 150, x1: MULTX, y1: BOXY, t: 0, dur: .32, col: [255, 214, 107], text: '시너지 ×1.22', r: 0, done: () => { plate.syn *= 1.22; kick(plate.ms, 16); sfx.badge(); } }));
+  plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
+  document.querySelectorAll('#ladder tr').forEach(tr => tr.classList.toggle('on', +tr.dataset.a === T.from));
+  stop = Math.max(stop, T.stop / 1000);
+  if (!reduce) shake = Math.max(shake, T.shake * 1.4);
+  heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
+  if (k >= 9) {
+    slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .32; flashTimes.push(now); } }
+  }
+  sfx.pop(k); buzz(Math.min(40, 8 + k * 3));
+  Object.assign(r, { app: (r.app + 3 + k) % APPS.length, n: 1 + Math.floor(rnd() * 3), msg: MSG[Math.floor(rnd() * MSG.length)], a: 0, charge: 0 });
+  r.dy.x = -34; r.dy.v = 0; r.sc.x = .9;
+}
+function waveHit(w) {
+  const pal = ramp(APPS[(w * 4 + 1) % APPS.length].col);
+  for (let i = 0; i < (reduce ? 40 : 150); i++) spawn('CONF', rnd() * W, 150 + rnd() * 30, (rnd() - .5) * 140, 260 + rnd() * 340, 1.4, pal[1 + (i % 3)], 4 + rnd() * 5);
+  spawn('BAND', 0, 160, 0, 1000, .6, pal[3], 60);
+  plate.wmul *= 3; kick(plate.ms, 26);
+  plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
+  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1;
+  sfx.wave(w); buzz([20, 30, 40]);
+}
+function payoff() {
+  plate.phase = 'merge'; plate.merge = 0; sfx.whoosh();
+  after(.16, () => {
+    plate.total = plate.chips * mult();
+    plate.phase = 'show'; plate.showT = 0; plate.ts.x = .2; kick(plate.ts, 30);
+    sfx.payoff(plate.k); buzz([30, 40, 60]);
+    for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 240; spawn('STAR', 195, BOXY, Math.cos(a) * sp, Math.sin(a) * sp, .6 + rnd() * .4, [255, 230, 150], 5 + rnd() * 6); }
+    spawn('CORE', 195, BOXY, 0, 0, .2, [255, 220, 140], 200);
+    if (!reduce) shake = Math.max(shake, 3.5);
+    if (plate.capMode) after(.32, overheat);
+  });
+  after(plate.capMode ? 1.25 : .85, () => {
+    plate.phase = 'fly';
+    tokens.push({ x0: 195, y0: BOXY, cx: 360, cy: 70, x1: 195, y1: 36, t: 0, dur: .38, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; const p = pending.shift(); if (p) after(.15, () => runChain(...p)); } });
+  });
 }
 function overheat() {
-  cap = 1.4;
-  for (let i = 0; i < (reduce ? 12 : 40); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 200, 640, (rnd() - .5) * 60, -80 - rnd() * 80, 1.3, [240, 240, 240], 14 + rnd() * 14);
-  tone(-5, .4, 'square', .06);
+  plate.total *= .4; plate.capT = 0; kick(plate.ts, -8);
+  for (let i = 0; i < (reduce ? 12 : 44); i++) spawn('VAPOUR', 195 + (rnd() - .5) * 220, BOXY + 10, (rnd() - .5) * 120, -60 - rnd() * 120, 1.2 + rnd() * .5, [235, 235, 235], 12 + rnd() * 14);
+  if (!reduce) shake = 5; sfx.stamp(); buzz(60);
+}
+function addWallet(x) {
+  wallet.from = wallet.shown; wallet.to = wallet.v + x; wallet.v = wallet.to; wallet.t = 0; wallet.dur = x > wallet.from ? .7 : .4; wallet.tick = 0;
+  kick(wallet.s, 9); sfx.land();
+  for (let i = 0; i < 14; i++) spawn('SPARK', 195, 36, (rnd() - .5) * 600, (rnd() - .2) * 300, .25, [255, 214, 107], 2.4);
 }
 
-// sim
+// ---------- simulation ----------
 function step(dt) {
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i]; p.life -= dt;
     if (p.life <= 0) { parts.splice(i, 1); continue; }
-    if (p.k === 'SHRED') { p.vy += 900 * dt; p.vx *= .985; p.vy *= .99; p.rot += p.vr * dt; }
-    else if (p.k === 'SPARK') { p.vx *= .93; p.vy = p.vy * .93 + 300 * dt; }
-    else if (p.k === 'MOTE' || p.k === 'STAR' || p.k === 'VAPOUR') { p.vy *= .98; }
+    switch (p.k) {
+      case 'SLICE': case 'ICON': p.vy += 1500 * dt; p.rot += p.vr * dt; break;
+      case 'CONF': p.vy += 520 * dt; p.vx *= Math.pow(.2, dt); p.vy *= Math.pow(.45, dt); p.rot += p.vr * dt; break;
+      case 'SPARK': p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; break;
+      case 'STAR': case 'MOTE': case 'VAPOUR': p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); break;
+    }
     p.x += p.vx * dt; p.y += p.vy * dt;
   }
-  for (let i = pops.length - 1; i >= 0; i--) { pops[i].life -= dt; if (pops[i].life <= 0) pops.splice(i, 1); }
-  for (const r of rows) { r.alpha = Math.min(1, r.alpha + dt * 4); r.dy *= Math.pow(.0005, dt); }
+  for (let i = tokens.length - 1; i >= 0; i--) { const t = tokens[i]; t.t += dt / t.dur; if (t.t >= 1) { tokens.splice(i, 1); t.done(); } }
+}
+const bez = (t, k) => { const u = 1 - t; return [u * u * t.x0 + 0, 0]; };
+const tokPos = (o, t) => { const u = 1 - t; return [u * u * o.x0 + 2 * u * t * o.cx + t * t * o.x1, u * u * o.y0 + 2 * u * t * o.cy + t * t * o.y1]; };
+
+// ---------- drawing ----------
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+// chunky game text: hard drop shadow, thick ink outline, vertical gradient fill, per-glyph pop-in and wobble
+function gtext(str, x, y, size, o = {}) {
+  const top = o.top || '#FFFFFF', bot = o.bot || '#FFD66B', ink = o.ink || '#1A0E06', wob = reduce ? 0 : (o.wob || 0), appear = o.appear ?? 9, t = o.t || 0;
+  ctx.save(); ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.scale) ctx.scale(o.scale, o.scale); if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+  ctx.font = `${size}px ${FD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  const ch = [...str], ws = ch.map(c => ctx.measureText(c).width), gap = size * .01, tw = ws.reduce((a, b) => a + b, 0) + gap * (ch.length - 1);
+  let cx = o.align === 'left' ? 0 : o.align === 'right' ? -tw : -tw / 2;
+  const g = ctx.createLinearGradient(0, -size * .78, 0, size * .05); g.addColorStop(0, top); g.addColorStop(1, bot);
+  ch.forEach((c, i) => {
+    const p = clamp((appear - i * .045) / .2, 0, 1);
+    if (p > 0 && c !== ' ') {
+      const s = backOut(p);
+      ctx.save(); ctx.translate(cx + ws[i] / 2, Math.sin(t * 9 + i * .9) * wob); ctx.rotate(Math.sin(t * 6 + i * 1.7) * wob * .02); ctx.scale(s, s);
+      ctx.lineWidth = size * .22; ctx.strokeStyle = ink; ctx.fillStyle = ink;
+      ctx.strokeText(c, 0, size * .09); ctx.fillText(c, 0, size * .09);
+      ctx.strokeText(c, 0, 0); ctx.fillStyle = g; ctx.fillText(c, 0, 0);
+      ctx.restore();
+    }
+    cx += ws[i] + gap;
+  });
+  ctx.restore();
+  return tw;
+}
+function box(cx, cy, w, h, c0, c1, s) {
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s);
+  ctx.fillStyle = '#1A0E06'; rr(-w / 2, -h / 2 + 4, w, h, 12); ctx.fill();
+  const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2); g.addColorStop(0, c0); g.addColorStop(1, c1);
+  ctx.fillStyle = g; rr(-w / 2, -h / 2, w, h, 12); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = '#1A0E06'; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; rr(-w / 2 + 6, -h / 2 + 4, w - 12, 6, 3); ctx.fill();
+  ctx.restore();
+}
+function flames(cx, cy, w, h, t, amt) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 9; i++) {
+    const x = cx - w / 2 + 8 + i * (w - 16) / 8, fh = (10 + 12 * amt) * (.6 + .4 * Math.sin(t * 23 + i * 2.1)) + 6 * Math.sin(t * 13 + i);
+    const g = ctx.createLinearGradient(0, cy - h / 2 - fh, 0, cy - h / 2 + 4);
+    g.addColorStop(0, 'rgba(255,220,120,0)'); g.addColorStop(.5, `rgba(255,140,40,${.55 * amt})`); g.addColorStop(1, `rgba(255,70,20,${.8 * amt})`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 9, cy - h / 2 + 4); ctx.quadraticCurveTo(x - 4, cy - h / 2 - fh * .5, x + Math.sin(t * 17 + i) * 3, cy - h / 2 - fh); ctx.quadraticCurveTo(x + 4, cy - h / 2 - fh * .5, x + 9, cy - h / 2 + 4); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
 }
 
-// draw
-function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-function draw() {
+function draw(t) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  if (day) { g.addColorStop(0, '#E3ECFF'); g.addColorStop(1, '#EEF1F7'); } else { g.addColorStop(0, '#2A2119'); g.addColorStop(1, '#120F0C'); }
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (warm > 0) { const r = ctx.createRadialGradient(195, 420, 20, 195, 420, 380); r.addColorStop(0, `rgba(255,138,31,${.28 * warm})`); r.addColorStop(1, 'rgba(255,138,31,0)'); ctx.fillStyle = r; ctx.fillRect(0, 0, W, H); }
-  const ink = day ? '#16181D' : '#F6F1EA', sub = day ? '#4B5160' : '#B3A89B';
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  if (day) { bg.addColorStop(0, '#DCE6FF'); bg.addColorStop(1, '#EEF1F7'); } else { bg.addColorStop(0, `rgb(${30 + heat * 22},${22 + heat * 6},${16})`); bg.addColorStop(1, '#0C0907'); }
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = day ? 'rgba(30,42,80,.06)' : 'rgba(255,255,255,.035)';
+  for (let y = 12; y < H; y += 22) for (let x = 12 + ((y / 22) % 2) * 11; x < W; x += 22) ctx.fillRect(x, y, 2, 2);
+  const ink = day ? '#16181D' : '#F6F1EA', sub = day ? '#5B6170' : '#A89D90';
+
   // HUD
-  ctx.fillStyle = ink; ctx.font = '700 13px "Noto Sans KR"'; ctx.textAlign = 'left'; ctx.fillText('Lv 42', 22, 34);
-  ctx.textAlign = 'center'; ctx.font = '900 24px "Noto Sans KR"'; ctx.fillText(fmt(shown) + ' P', 195, 40);
-  ctx.textAlign = 'right'; ctx.font = '700 13px "Noto Sans KR"'; ctx.fillText('9/12', 368, 34);
-  ctx.fillStyle = day ? '#1E2A501A' : '#FFFFFF14'; roundRect(22, 64, 346, 8, 4); ctx.fill();
-  ctx.fillStyle = '#FF8A1F'; roundRect(22, 64, 346 * (.45 + .5 * rim), 8, 4); ctx.fill();
-  ctx.fillStyle = sub; ctx.textAlign = 'left'; ctx.font = '600 11.5px "Noto Sans KR"'; ctx.fillText('과부하', 22, 92);
-  // cards (shaken)
+  ctx.fillStyle = sub; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'left'; ctx.fillText('Lv 42', 24, 32); ctx.textAlign = 'right'; ctx.fillText('덱 9/12', 366, 32);
+  const ws = split(wallet.shown);
+  ctx.font = `30px ${FD}`; const nw = ctx.measureText(ws.num).width; ctx.font = `24px ${FD}`; const uw = ctx.measureText(ws.unit + ' P').width;
+  const wx = 195 - (nw + uw + 4) / 2;
+  gtext(ws.num, wx, 46, 30, { align: 'left', scale: wallet.s.x, top: '#FFFFFF', bot: '#FFE2A0' });
+  ctx.save(); ctx.translate(wx + nw + 4 + uw / 2, 40); ctx.scale(wallet.us.x, wallet.us.x); gtext(ws.unit + ' P', 0, 6, 24, { top: '#FFF3C4', bot: '#FFB020' }); ctx.restore();
+  if (wallet.note) { const f = clamp(1 - wallet.note.t / 1.1, 0, 1); gtext(wallet.note.text, 322, 74, 20, { rot: -.12, appear: wallet.note.t * 5, alpha: Math.min(1, f * 3), top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t }); }
+
+  // shaken world: plate + cards + particles
   ctx.save();
   const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
-  ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom, zoom); ctx.translate(-195, -420);
+  ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420);
+
   rows.forEach((r, i) => {
-    const y = rowY(i) + r.dy, a = APPS[r.app];
-    ctx.globalAlpha = r.alpha;
-    ctx.fillStyle = day ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.09)'; roundRect(14, y, 362, 62, 20); ctx.fill();
-    ctx.strokeStyle = day ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.12)'; ctx.stroke();
-    if (icons[r.app].complete) ctx.drawImage(icons[r.app], 28, y + 12, 38, 38);
-    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = '700 14px "Noto Sans KR"'; ctx.fillText(a.name, 78, y + 27);
-    ctx.fillStyle = sub; ctx.font = '400 12px "Noto Sans KR"'; ctx.fillText('새 알림이 도착했어요', 78, y + 46);
-    ctx.fillStyle = day ? '#3867F0' : '#FFD66B'; ctx.font = '700 13px "Noto Sans KR"'; ctx.textAlign = 'right';
-    ctx.fillText('●'.repeat(r.n) + '○'.repeat(4 - r.n), 360, y + 37);
-    ctx.globalAlpha = 1;
+    const y = rowY(i) + r.dy.x, a = APPS[r.app];
+    ctx.save(); ctx.globalAlpha = r.a; ctx.translate(195, y + CH / 2); ctx.scale(r.sc.x, r.sc.x); ctx.translate(-195, -(y + CH / 2));
+    ctx.fillStyle = day ? '#FFFFFF' : '#2C251E'; rr(14, y, 362, CH, 18); ctx.fill();
+    ctx.strokeStyle = day ? 'rgba(30,42,80,.08)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.stroke();
+    if (icons[r.app].complete) ctx.drawImage(icons[r.app], 26, y + 11, 38, 38);
+    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = `700 14px ${FB}`; ctx.fillText(a.name, 76, y + 26);
+    ctx.fillStyle = sub; ctx.font = `400 12px ${FB}`; ctx.fillText(r.msg, 76, y + 45);
+    for (let d = 0; d < 4; d++) { ctx.fillStyle = d < r.n ? a.col : (day ? '#D9DEE8' : '#4A4037'); ctx.beginPath(); ctx.arc(318 + d * 13, y + 30, 4.5, 0, 6.28); ctx.fill(); }
+    if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .9})`; rr(14, y, 362, CH, 18); ctx.fill(); }
+    ctx.restore();
   });
-  // colour layer particles
+
+  // colour layer
   for (const p of parts) {
-    const f = p.life / p.max;
-    if (p.k === 'SHRED') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = rgb(p.col, Math.min(1, f * 1.6)); roundRect(-p.size / 2, -p.size * .35, p.size, p.size * .7, 1.5); ctx.fill(); ctx.restore(); }
-    if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .25 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.6 - f), 0, 6.28); ctx.fill(); }
+    const f = p.life / p.max, al = Math.min(1, f * 2.5);
+    if (p.k === 'SLICE') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * .3); ctx.globalAlpha = al; ctx.fillStyle = rgb(p.col); rr(-p.size / 2, -p.h / 2, p.size - 3, p.h, 6); ctx.fill(); ctx.fillStyle = rgb(p.edge); ctx.fillRect(-p.size / 2, -p.h / 2, p.size - 3, 4); ctx.restore(); }
+    else if (p.k === 'ICON') { if (icons[p.img].complete) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * .4); ctx.globalAlpha = al; ctx.drawImage(icons[p.img], -19, -19, 38, 38); ctx.restore(); } }
+    else if (p.k === 'CONF') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.rot * 2.3)); ctx.globalAlpha = al; ctx.fillStyle = rgb(p.col); ctx.fillRect(-p.size / 2, -p.size * .3, p.size, p.size * .6); ctx.restore(); }
+    else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
   }
-  ctx.restore();
-  // light layer (additive)
+  ctx.globalAlpha = 1;
+
+  // light layer (additive): small hot things only
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
-    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .035, p.y - p.vy * .035); ctx.stroke(); }
-    if (p.k === 'MOTE') { ctx.fillStyle = rgb(p.col, f * .9); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
-    if (p.k === 'STAR') { ctx.fillStyle = rgb(p.col, f); const s = p.size * (0.6 + f * .6); ctx.beginPath(); ctx.moveTo(p.x, p.y - s); ctx.lineTo(p.x + s * .25, p.y); ctx.lineTo(p.x, p.y + s); ctx.lineTo(p.x - s * .25, p.y); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x - s, p.y); ctx.lineTo(p.x, p.y + s * .25); ctx.lineTo(p.x + s, p.y); ctx.lineTo(p.x, p.y - s * .25); ctx.closePath(); ctx.fill(); }
-    if (p.k === 'RING') { const r = 30 + (1 - f) * 220; ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = 6 * f + 1; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .45, 0, 0, 6.28); ctx.stroke(); }
-    if (p.k === 'GLOW') { const r = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size); r.addColorStop(0, rgb(p.col, .55 * f)); r.addColorStop(.25, rgb(p.col, .25 * f)); r.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = r; ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2); }
-    if (p.k === 'BAND') { const y = p.y; const gr = ctx.createLinearGradient(0, y - 40, 0, y + 40); gr.addColorStop(0, rgb(p.col, 0)); gr.addColorStop(.5, rgb(p.col, .5 * f)); gr.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = gr; ctx.fillRect(0, y - 40, W, 80); }
+    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
+    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .6 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
+    else if (p.k === 'STAR') { ctx.fillStyle = rgb(p.col, f); const s = p.size * (.5 + f * .7); ctx.beginPath(); ctx.moveTo(p.x, p.y - s); ctx.lineTo(p.x + s * .22, p.y - s * .22); ctx.lineTo(p.x + s, p.y); ctx.lineTo(p.x + s * .22, p.y + s * .22); ctx.lineTo(p.x, p.y + s); ctx.lineTo(p.x - s * .22, p.y + s * .22); ctx.lineTo(p.x - s, p.y); ctx.lineTo(p.x - s * .22, p.y - s * .22); ctx.closePath(); ctx.fill(); }
+    else if (p.k === 'MOTE') { ctx.fillStyle = rgb(p.col, f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
+    else if (p.k === 'RING') { const r = 30 + (1 - f) * (1 - f) * 0 + (1 - Math.pow(f, 2)) * 230; ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = 7 * f + 1; ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .4, 0, 0, 6.28); ctx.stroke(); }
+    else if (p.k === 'BAND') { const g = ctx.createLinearGradient(0, p.y - 50, 0, p.y + 50); g.addColorStop(0, rgb(p.col, 0)); g.addColorStop(.5, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, p.y - 50, W, 100); }
   }
-  if (rim > 0) { const e = ctx.createRadialGradient(195, 380, 150, 195, 380, 420); e.addColorStop(0, 'rgba(255,120,30,0)'); e.addColorStop(1, `rgba(255,120,30,${.45 * rim})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
+  // orbs carrying value, with a short trail
+  for (const o of tokens) {
+    if (o.text || o.big) continue;
+    for (let j = 5; j >= 0; j--) { const tt = Math.max(0, o.t * o.t - j * .035), [x, y] = tokPos(o, tt), r = o.r * (1 - j * .13); const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4); g.addColorStop(0, `rgba(255,255,255,${.9 - j * .13})`); g.addColorStop(.35, rgb(o.col, .7 - j * .1)); g.addColorStop(1, rgb(o.col, 0)); ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8); }
+  }
+  if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.42 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
-  // score pops
-  ctx.textAlign = 'center';
-  for (const p of pops) {
-    const f = p.life / p.max, s = 1 + Math.max(0, f - .8) * 2.5;
-    let up = (1 - Math.max(f, .45)) * 46, px = p.x; ctx.globalAlpha = 1;
-    if (f < .45) { const k = 1 - f / .45, e = k * k; px = p.x + (195 - p.x) * e; up += (p.y - 40 - up) * e; ctx.globalAlpha = 1 - k * .6; }
-    ctx.font = `900 ${Math.round((18 + Math.min(p.big, 12)) * s)}px "Noto Sans KR"`;
-    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.strokeText(p.text, px, p.y - up); ctx.fillStyle = rgb(p.col); ctx.fillText(p.text, px, p.y - up);
-    ctx.font = '900 15px "Noto Sans KR"'; const mw = ctx.measureText(p.mult).width + 16;
-    ctx.fillStyle = '#FF5A1F'; roundRect(px - mw / 2, p.y - up + 8, mw, 24, 8); ctx.fill();
-    ctx.fillStyle = '#FFFFFF'; ctx.fillText(p.mult, px, p.y - up + 25);
+
+  // score plate: chips x mult, then merge into the total
+  const live = plate.phase !== 'idle', pa = live ? 1 : .4;
+  if (plate.phase === 'chain' || plate.phase === 'merge' || !live) {
+    const m = plate.phase === 'merge' ? plate.merge : 0, e = m * m;
+    ctx.globalAlpha = pa * (1 - e * .9);
+    const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
+        box(cxp, BOXY, 132, 40, '#5AA2FF', '#1F5FE0', plate.cs.x);
+    box(mxp, BOXY, 132, 40, '#FF6B5A', '#D81E2A', plate.ms.x);
+    gtext(fmt(plate.chipsShown), cxp, BOXY + 9, 24, { scale: plate.cs.x, top: '#FFFFFF', bot: '#CFE4FF', wob: live ? .8 : 0, t });
+    gtext('×' + fmtMult(plate.multShown), mxp, BOXY + 9, 24, { scale: plate.ms.x, top: '#FFFFFF', bot: '#FFD3CC', wob: live ? .8 : 0, t });
+    gtext('×', 195, BOXY + 8, 22, { top: '#FFFFFF', bot: '#FFD66B', scale: plate.xs.x });
     ctx.globalAlpha = 1;
+    if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
-  if (banner) {
-    const f = banner.life / banner.max, s = 1 + Math.max(0, f - .75) * 3;
-    ctx.globalAlpha = Math.min(1, f * 2.5); ctx.font = `900 ${Math.round(banner.size)}px "Noto Sans KR"`; const bw = ctx.measureText(banner.text).width, bs = Math.min(s, 340 / bw * s / Math.max(1, s)); ctx.font = `900 ${Math.round(banner.size * Math.min(s, 340 / bw))}px "Noto Sans KR"`;
-    ctx.lineWidth = 8; ctx.strokeStyle = '#1E1408'; ctx.strokeText(banner.text, 195, 128); ctx.fillStyle = '#FFD66B'; ctx.fillText(banner.text, 195, 128); ctx.globalAlpha = 1;
+  if (plate.phase === 'show' || plate.phase === 'merge' && plate.merge > .9) {
+    const s = plate.ts.x;
+    gtext(fmt(plate.total), 195, BOXY + 14, 40, { scale: s, top: '#FFFFFF', bot: '#FFC23D', wob: 1.6, t, appear: plate.showT * 7 });
+    if (plate.capT < 9) {
+      const p = clamp(plate.capT / .12, 0, 1), sc = 2.4 - 1.4 * (1 - Math.pow(1 - p, 3));
+      ctx.save(); ctx.translate(195, BOXY - 30); ctx.rotate(-.14); ctx.scale(sc, sc); ctx.globalAlpha = p;
+      ctx.lineWidth = 4; ctx.strokeStyle = '#FF3B30'; rr(-78, -20, 156, 40, 8); ctx.stroke();
+      gtext('과열 보호', 0, 11, 26, { top: '#FFB4AA', bot: '#FF3B30' }); ctx.restore();
+    }
   }
-  if (cap > 0) {
-    const f = Math.min(1, cap), s = 1 + Math.max(0, cap - 1.1) * 3;
-    ctx.save(); ctx.translate(195, 560); ctx.rotate(-.12); ctx.scale(s, s); ctx.globalAlpha = f;
-    ctx.strokeStyle = '#FF4A3D'; ctx.lineWidth = 5; roundRect(-110, -32, 220, 64, 12); ctx.stroke();
-    ctx.fillStyle = '#FF4A3D'; ctx.font = '900 30px "Noto Sans KR"'; ctx.fillText('과열 보호', 0, 11); ctx.restore(); ctx.globalAlpha = 1;
+  if (plate.labelT < 1 && plate.label) {
+    const f = 1 - plate.labelT, sc = Math.min(1, 340 / (plate.label.length * plate.labelSize * .95));
+    gtext(plate.label, 195, 92, plate.labelSize * sc, { appear: plate.labelT * 6, alpha: Math.min(1, f * 4), wob: 2, t, top: '#FFFFFF', bot: plate.k >= 6 ? '#FF8A1F' : '#FFD66B' });
   }
-  if (flash > 0) { ctx.fillStyle = `rgba(255,244,214,${flash})`; ctx.fillRect(0, 0, W, H); }
-  ctx.fillStyle = day ? '#16181D' : '#F6F1EA'; roundRect(135, H - 18, 120, 5, 3); ctx.fill();
+  ctx.restore();
+
+  // flying text: synergy badges and the payout heading to the wallet
+  for (const o of tokens) {
+    if (!o.text && !o.big) continue;
+    const e = o.t * o.t, [x, y] = tokPos(o, e);
+    if (o.text) gtext(o.text, x, y, 17, { top: '#FFFFFF', bot: '#FFD66B', scale: 1 - e * .3 });
+    else { gtext(o.big, x, y + 12, 40, { top: '#FFFFFF', bot: '#FFC23D', scale: 1 - e * .55 }); ctx.globalCompositeOperation = 'lighter'; for (let j = 1; j < 6; j++) { const [tx, ty] = tokPos(o, Math.max(0, e - j * .05)); ctx.fillStyle = `rgba(255,190,80,${.35 - j * .06})`; ctx.beginPath(); ctx.arc(tx, ty, 12 - j * 1.5, 0, 6.28); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; }
+  }
+  for (const p of pops) {
+    const f = p.t / p.life;
+    gtext(p.text, p.x, p.y - f * 22, 19, { appear: p.t * 9, alpha: Math.min(1, (1 - f) * 3), top: '#FFFFFF', bot: rgb(p.col) });
+  }
+  if (flash > 0) { ctx.fillStyle = `rgba(255,246,220,${flash})`; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = day ? 'rgba(22,24,29,.5)' : 'rgba(246,241,234,.5)'; rr(135, H - 16, 120, 5, 3); ctx.fill();
 }
 
-// loop: real time for decay, sim time frozen during hit-stop, slowed during slow-mo
+// ---------- loop ----------
 let last = performance.now(), acc = 0, autoT = 0;
 function frame(now) {
-  let dt = Math.min(.05, (now - last) / 1000); last = now;
-  if (queue.length) { queue[0].at -= dt; while (queue.length && queue[0].at <= 0) { const q = queue.shift(); q.fn(); } }
-  let simDt = dt;
-  if (stop > 0) { stop -= dt; simDt = 0; }
-  else if (slow > 0) { slow -= dt; simDt = dt * .35; }
-  acc += simDt; while (acc >= SIM) { step(SIM); acc -= SIM; }
-  shake = Math.max(0, shake - dt * 14); zoom += (1 - zoom) * Math.min(1, dt * 10); flash = Math.max(0, flash - dt * 2.4);
-  rim = Math.max(0, rim - dt * .8); warm = Math.max(0, warm - dt * .6); cap = Math.max(0, cap - dt * .8);
-  if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
-  shown += (wallet - shown) * Math.min(1, dt * 5);
-  if (autoOn) { autoT -= dt; if (autoT <= 0) { const n = [1, 3, 5, 8, 12][Math.floor(rnd() * 5)]; runChain(Math.floor(rnd() * 7), n); autoT = 1.4 + n * .12; } }
-  draw(); requestAnimationFrame(frame);
+  const t = now / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
+  let gdt = dt;
+  if (stop > 0) { stop -= dt; gdt = 0; } else if (slow > 0) { slow -= dt; gdt = dt * .35; }
+  if (gdt > 0 && timeline.length) {
+    timeline.forEach(e => e.at -= gdt);
+    const due = timeline.filter(e => e.at <= 0).sort((a, b) => a.at - b.at);
+    for (const e of due) timeline.splice(timeline.indexOf(e), 1);
+    due.forEach(e => e.fn());
+  }
+  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; }
+  const n = Math.ceil(dt / (1 / 240)), sd = dt / Math.max(1, n);
+  for (let i = 0; i < n; i++) {
+    [plate.cs, plate.ms, plate.xs, plate.ts, wallet.s, wallet.us, zoom].forEach(s => stepSpring(s, sd));
+    rows.forEach(r => { stepSpring(r.sc, sd, 300, 16); stepSpring(r.dy, sd, 220, 18); });
+  }
+  rows.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 14); });
+  shake *= Math.pow(.0008, dt); if (shake < .05) shake = 0;
+  flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .7);
+  plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
+  if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
+  plate.chipsShown += (plate.chips - plate.chipsShown) * Math.min(1, dt * 16);
+  plate.multShown += (mult() - plate.multShown) * Math.min(1, dt * 16);
+  for (let i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t >= pops[i].life) pops.splice(i, 1); }
+  // wallet count-up with ticking coins, unit change gets its own thump
+  if (wallet.t < 1) {
+    wallet.t = Math.min(1, wallet.t + dt / wallet.dur);
+    const e = 1 - Math.pow(1 - wallet.t, 3); wallet.shown = wallet.from + (wallet.to - wallet.from) * e;
+    wallet.tick -= dt; if (wallet.tick <= 0) { sfx.coin(e); wallet.tick = .045; kick(wallet.s, 1.5); }
+    if (wallet.t >= 1) {
+      wallet.shown = wallet.to; const u = split(wallet.to).unit;
+      if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); buzz([40, 30, 80]); wallet.note = { text: `${u} 돌파!`, t: 0 }; for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('STAR', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .7, [255, 230, 150], 5 + rnd() * 5); } }
+      else kick(wallet.s, 5);
+    }
+  }
+  if (wallet.note) { wallet.note.t += dt; if (wallet.note.t > 1.1) wallet.note = null; }
+  if (autoOn && !busy) { autoT -= dt; if (autoT <= 0) { const k = [3, 5, 8, 12, 1][Math.floor(rnd() * 5)]; runChain(Math.floor(rnd() * 7), k, rnd() < .2 ? 2 : 0); autoT = .6; } }
+  draw(t); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
-// controls
+// ---------- controls ----------
 const chainsEl = document.getElementById('chains');
 const renderChains = () => { chainsEl.innerHTML = [1, 3, 5, 8, 12].map(n => `<button type="button" data-n="${n}" aria-pressed="${n === chainLen}">${n}연쇄</button>`).join(''); };
 renderChains();
@@ -299,7 +510,7 @@ chainsEl.addEventListener('click', e => { const b = e.target.closest('button'); 
 document.getElementById('ladder').innerHTML = LADDER.map(l => `<tr data-a="${l.from}"><td>${l.from === l.to ? l.from : l.to > 50 ? l.from + '+' : l.from + '~' + l.to}</td><td>${l.name}</td><td class="n">${l.stop}ms</td><td class="n">${l.shake}dp</td><td class="n">${l.shreds}</td></tr>`).join('');
 cv.addEventListener('pointerdown', e => {
   const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H;
-  let idx = rows.findIndex((_, i) => y >= rowY(i) && y <= rowY(i) + 62); if (idx < 0) idx = 6;
+  let idx = rows.findIndex((_, i) => y >= rowY(i) && y <= rowY(i) + CH); if (idx < 0) idx = 6;
   runChain(idx, chainLen);
 });
 const toggle = (id, fn) => { const b = document.getElementById(id); b.addEventListener('click', () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', v); fn(v); }); };
@@ -307,8 +518,8 @@ toggle('sound', v => sound = v);
 toggle('reduce', v => reduce = v);
 toggle('daylight', v => day = v);
 toggle('auto', v => { autoOn = v; autoT = 0; });
-document.getElementById('wave').addEventListener('click', () => { runChain(6, 3); wave(); });
-document.getElementById('cap').addEventListener('click', () => { runChain(6, 5); queue.push({ at: .5, fn: overheat }); });
+document.getElementById('wave').addEventListener('click', () => runChain(6, 3, 3));
+document.getElementById('cap').addEventListener('click', () => runChain(6, 6, 0, true));
 }
 </script>
 </body>
