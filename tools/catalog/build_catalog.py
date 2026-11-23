@@ -12,6 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt"
 TEXTS = ROOT / "docs/content/app-texts.json"
 HTML = ROOT / "docs/content/notification-catalog.html"
+ICONS = ROOT / "docs/design/app-icons"
 
 REGION = {"ST": "ST", "AS": "AS", "SE": "SE", "WE": "WE", "GL": "GL"}
 # Non-app unlocks by level (cards, slots, caps, docs-only content in <b>). Apps and pro versions are added from the engine.
@@ -74,6 +75,12 @@ def main():
     html = HTML.read_text()
     html = gen(html, "apps", "\nconst STARTER=" + json.dumps(starter) + ";\nconst A=[\n" + ",\n".join(rows) + "];\n")
     html = gen(html, "unlocks", "const U={" + u + "};")
+    icons = {}
+    for a in apps:
+        f = ICONS / f"{a['id']}.svg"
+        if f.exists():  # gradient ids made unique per icon: many inline SVGs share one page
+            icons[a["id"]] = f.read_text().strip().replace('id="g"', f'id="g-{a["id"]}"').replace("url(#g)", f"url(#g-{a['id']})")
+    html = gen(html, "icons", "const ICON=" + json.dumps(icons, ensure_ascii=False) + ";")
     HTML.write_text(html)
     top = max(unlock)
     gaps = [l for l in range(1, top + 1) if l not in unlock]

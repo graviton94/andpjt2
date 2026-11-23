@@ -1,0 +1,182 @@
+{
+ "alarm": {
+  "kind": "code"
+ },
+ "weather": {
+  "kind": "code"
+ },
+ "memo": {
+  "kind": "code"
+ },
+ "flash": {
+  "kind": "code"
+ },
+ "calc": {
+  "kind": "code"
+ },
+ "recorder": {
+  "kind": "code"
+ },
+ "phone": {
+  "kind": "code"
+ },
+ "sms": {
+  "kind": "code"
+ },
+ "camera": {
+  "kind": "code"
+ },
+ "gallery": {
+  "kind": "code"
+ },
+ "contacts": {
+  "kind": "code"
+ },
+ "settings": {
+  "kind": "code"
+ },
+ "music": {
+  "kind": "code"
+ },
+ "pay": {
+  "kind": "code"
+ },
+ "ctaxi": {
+  "kind": "code"
+ },
+ "food": {
+  "kind": "code"
+ },
+ "mall": {
+  "kind": "code"
+ },
+ "portal": {
+  "kind": "code"
+ },
+ "superapp": {
+  "kind": "code"
+ },
+ "line": {
+  "kind": "code"
+ },
+ "dance": {
+  "kind": "code"
+ },
+ "chat": {
+  "kind": "code"
+ },
+ "zalo": {
+  "kind": "code"
+ },
+ "momo": {
+  "kind": "code"
+ },
+ "glints": {
+  "kind": "code"
+ },
+ "bigo": {
+  "kind": "code"
+ },
+ "joox": {
+  "kind": "code"
+ },
+ "agoda": {
+  "kind": "code"
+ },
+ "michat": {
+  "kind": "code"
+ },
+ "lazada": {
+  "kind": "code"
+ },
+ "jobs": {
+  "kind": "code"
+ },
+ "grab": {
+  "kind": "code"
+ },
+ "shopee": {
+  "kind": "code"
+ },
+ "airbnb": {
+  "kind": "code"
+ },
+ "pin": {
+  "kind": "code"
+ },
+ "meet": {
+  "kind": "code"
+ },
+ "career": {
+  "kind": "code"
+ },
+ "paypal": {
+  "kind": "code"
+ },
+ "match": {
+  "kind": "code"
+ },
+ "ride": {
+  "kind": "code"
+ },
+ "beat": {
+  "kind": "code"
+ },
+ "why": {
+  "kind": "code"
+ },
+ "mega": {
+  "kind": "code"
+ },
+ "ott": {
+  "kind": "code"
+ },
+ "secret": {
+  "kind": "code"
+ },
+ "mail": {
+  "kind": "code"
+ },
+ "maps": {
+  "kind": "code"
+ },
+ "store": {
+  "kind": "code"
+ },
+ "tube": {
+  "kind": "code"
+ },
+ "photo": {
+  "kind": "code"
+ },
+ "feed": {
+  "kind": "code"
+ },
+ "green": {
+  "kind": "code"
+ },
+ "search": {
+  "kind": "code"
+ },
+ "papago": {
+  "kind": "placeholder"
+ },
+ "duo": {
+  "kind": "placeholder"
+ },
+ "edit": {
+  "kind": "placeholder"
+ },
+ "travel": {
+  "kind": "placeholder"
+ },
+ "reddit": {
+  "kind": "placeholder"
+ },
+ "robin": {
+  "kind": "placeholder"
+ },
+ "ai": {
+  "kind": "placeholder"
+ }
+}
