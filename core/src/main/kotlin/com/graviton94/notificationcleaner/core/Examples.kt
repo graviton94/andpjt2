@@ -60,25 +60,25 @@ fun upgraded(): Pair<GameState, SwipeOutcome> =
     overload().first.let { it.copy(appLevels = it.appLevels + ("alarm" to 10) + ("memo" to 4)) }.let { it to engine.swipe(it, 103, NOW)!! }
 
 /**
- * 5: igniter. Deck 오분만(1티어) · 쇼피피(3티어) · 원신신(6티어). A 오분만 burst under a 6-tier deck adds
+ * 5: igniter. Deck 오분만(1티어) · 메롱(3티어) · 아고다다(6티어). A 오분만 burst under a 6-tier deck adds
  * 12 + 4×5 = 32 gauge and raises the chain number, so the 6-tier burst after it pays ×3.
  */
 fun igniter(): Pair<GameState, SwipeOutcome> = with(
-    rows("reward" to 2, "alarm" to 2, "shopee" to 1, "alarm" to 2, "reward" to 2, "shopee" to 2, "alarm" to 1),
-) { it.copy(appLevels = mapOf("alarm" to 1, "shopee" to 1, "reward" to 1), active = listOf("alarm", "shopee", "reward"), level = 40, gauge = 60) }
+    rows("agoda" to 2, "alarm" to 2, "music" to 1, "alarm" to 2, "agoda" to 2, "music" to 2, "alarm" to 1),
+) { it.copy(appLevels = mapOf("alarm" to 1, "music" to 1, "agoda" to 1), active = listOf("alarm", "music", "agoda"), level = 40, gauge = 60) }
     .let { it to engine.swipe(it, 102, NOW)!! }
 
-/** 6: the same 4 notifications of 쥐메일 under different decks. Synergy only. */
+/** 6: the same 4 notifications of 드랍박스 under different decks. Synergy only (all 서양권, so region steps too). */
 fun synergyTable(): List<Pair<String, BigInteger>> {
     val base = engine.newGame(NOW, 7).copy(level = 40)
     fun deck(vararg ids: String) = base.copy(appLevels = ids.associateWith { 1 }, active = ids.toList())
     return listOf(
-        "쥐메일 혼자 (업무 1)" to deck("mail", "calc", "weather"),
-        "업무 2 (+딥에루)" to deck("mail", "translate", "weather"),
-        "업무 3 (+위트랜스뻐)" to deck("mail", "translate", "transfer"),
-        "업무 4 (+드랍박스)" to deck("mail", "translate", "transfer", "cloud"),
-        "업무 5 (+오페라라)" to deck("mail", "translate", "transfer", "cloud", "browser"),
-    ).map { (label, s) -> label to engine.earn(s, "mail", BigInteger.valueOf(4), 0) }
+        "드랍박스 혼자 (업무 1)" to deck("cloud", "calc", "weather"),
+        "업무 2 (+듀오링구)" to deck("cloud", "duo", "weather"),
+        "업무 3 (+주움)" to deck("cloud", "duo", "meet"),
+        "업무 4 (+링크드아웃)" to deck("cloud", "duo", "meet", "career"),
+        "업무 5 (+디스코드드)" to deck("cloud", "duo", "meet", "career", "discord"),
+    ).map { (label, s) -> label to engine.earn(s, "cloud", BigInteger.valueOf(4), 0) }
 }
 
 /** 7: a wild row merges with anything. */

@@ -44,8 +44,8 @@ class CoreRulesTest {
     fun lowTiersIgniteHighTiers() {
         val (s, o) = igniter()
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
-        assertEquals(listOf("alarm", "reward"), bursts.map { it.row.app })
-        assertEquals(valueOf(111_974), bursts[1].earned)
+        assertEquals(listOf("alarm", "agoda"), bursts.map { it.row.app })
+        assertEquals(valueOf(93_312), bursts[1].earned)
         // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(144L, 180L, 281L, 540L, 576L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(144L, 263L, 421L, 576L, 576L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test
@@ -251,11 +251,11 @@ class CoreRulesTest {
 
     @Test
     fun lateAppsOpenByBestLevelEver() {
-        val late = Catalog.app("reward")
+        val late = Catalog.app("agoda")
         val rich = e.newGame(now, 1).copy(level = late.unlockLevel - 1, wallet = BigInteger.TEN.pow(60))
-        assertEquals(rich, e.buy(rich, "reward"), "원신신 opens at its level")
+        assertEquals(rich, e.buy(rich, "agoda"), "아고다다 opens at its level")
         val veteran = rich.copy(backup = Backup(bestLevel = late.unlockLevel))
-        assertTrue("reward" in e.buy(veteran, "reward").appLevels)
+        assertTrue("agoda" in e.buy(veteran, "agoda").appLevels)
     }
 
     @Test
@@ -318,8 +318,8 @@ class CoreRulesTest {
 
     @Test
     fun luckySynergyStaysBelowOneTierStep() {
-        // Six 생활 apps from three regions cannot out-earn the same app one tier up with no synergy at all.
-        val ids = listOf("weather", "flash", "taxi", "food", "home", "carpool")
+        // Six 생활 apps from two regions cannot out-earn the same app one tier up with no synergy at all.
+        val ids = listOf("weather", "flash", "food", "travel", "panda", "agoda")
         val base = e.newGame(now, 1).copy(appLevels = ids.associateWith { 1 }, active = listOf("weather"))
         val alone = e.earn(base, "weather", valueOf(1_000_000), 0)
         val stacked = e.earn(base.copy(active = ids), "weather", valueOf(1_000_000), 0)
@@ -342,7 +342,7 @@ class CoreRulesTest {
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
-        assertTrue(e.unlocked(after, "home"), "app unlocks survive")
+        assertTrue(e.unlocked(after, "panda"), "app unlocks survive")
         assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.

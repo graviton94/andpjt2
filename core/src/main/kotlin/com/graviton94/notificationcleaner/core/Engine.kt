@@ -164,8 +164,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
     /** The deck's synergy bonus % for an app's region and category (0 when alone). */
     fun synergy(s: GameState, appId: String): Pair<Int, Int> {
         val app = Catalog.app(appId)
-        // Stock apps (Region.Global) have no home market: category synergy only.
-        val r = if (app.region == Region.Global) 0 else s.active.count { Catalog.app(it).region == app.region }
+        // Stock apps have no home market: category synergy only.
+        val r = if (app.region == Region.Stock) 0 else s.active.count { Catalog.app(it).region == app.region }
         val c = s.active.count { Catalog.app(it).category == app.category }
         return rules.synergyPercent(r, s.backup, rules.regionSynergySteps) to rules.synergyPercent(c, s.backup, rules.categorySynergySteps)
     }
@@ -173,7 +173,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     /** Regions and categories with 2+ apps in the deck: each multiplies every value by RuleSet.diversityPermille. */
     fun activeSets(s: GameState): Int {
         val apps = s.active.map { Catalog.app(it) }
-        return apps.filter { it.region != Region.Global }.groupingBy { it.region }.eachCount().count { it.value >= 2 } +
+        return apps.filter { it.region != Region.Stock }.groupingBy { it.region }.eachCount().count { it.value >= 2 } +
             apps.groupingBy { it.category }.eachCount().count { it.value >= 2 }
     }
 
