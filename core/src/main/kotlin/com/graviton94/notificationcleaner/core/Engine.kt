@@ -123,6 +123,17 @@ data class GameState(
     val dndUses: Int = 0,
     /** 앱 충돌: the restarted app's next burst pays ×2. */
     val crashBoost: String? = null,
+    // Unique effects, phase 2
+    /** P of the last swipe that burst something (음성 녹음 · 갤러리 echoes). */
+    val lastBurstP: BigInteger = ZERO,
+    /** 음성 녹음: swipes left that echo 10% of [lastBurstP]. */
+    val echoSwipes: Int = 0,
+    /** 쿠빵: swipes left of the dawn-delivery ×2 after a night return. */
+    val nightSwipes: Int = 0,
+    /** 우바: the next auto-clean waits 2 s less. */
+    val rideBoost: Boolean = false,
+    /** 와이: stacks this run (+2% to social apps each, max 15). */
+    val whyStacks: Int = 0,
 ) {
     fun assist(a: Assist): Int = assists[a] ?: 0
 }
@@ -231,7 +242,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     ) - if (s.rows.any { it.alert == Alert.Storage }) 1 else 0  // 저장공간 부족 left on the board
 
     /** 방해 금지 doubles auto speed while it runs. */
-    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (now < s.dndUntil) it / 2 else it }.let { it * 1_000 / speedPermille(s, now) }
+    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (s.rideBoost) maxOf(500L, it - 2_000) else it }.let { if (now < s.dndUntil) it / 2 else it }.let { it * 1_000 / speedPermille(s, now) }
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
@@ -301,6 +312,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (id == "mail" && chain >= 2) times(1_500)
         if (id == "robin") times(ctx.gamblePermille.toLong())
         if (on(s, "portal") && s.trend == app.category) times(2_000)
+        if (id == "duo") times(1_000L + 20L * minOf(30, s.backup.cloud.account.streak))  // 듀오링구: login streak
+        if (on(s, "why") && app.category == Category.Social) times(1_000L + 20L * s.whyStacks)  // 와이
         return m
     }
 
@@ -418,7 +431,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     // Swipe ----------------------------------------------------------------------------------
 
-    private fun canMerge(a: Row, b: Row) = a.merges && b.merges && (a.app == b.app || a.kind == RowKind.Wild || b.kind == RowKind.Wild)
+    private fun canMerge(a: Row, b: Row) = a.merges && b.merges && (a.app == b.app || a.kind == RowKind.Wild || b.kind == RowKind.Wild ||
+        (a.app == "maps" && b.kind == RowKind.App) || (b.app == "maps" && a.kind == RowKind.App))  // 큐글맵스: merges across apps
 
     fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor = Actor.Player): SwipeOutcome? {
         val state = tick(input, now)
@@ -519,6 +533,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         // Collapse: the rows that now touch merge if they are the same app (or one is wild). A full merge
         // bursts and the next pair is checked, so one swipe can unzip the board outward.
         val bursts = mutableListOf<Row>()
+        var rideBoost = state.rideBoost && !auto  // the boosted auto-clean uses it up
+        var whyStacks = state.whyStacks
         val bestTier = bestTier(s)
         var pivot = index
         var chainBonus = 0  // 메롱: later bursts in this swipe count one more chain
@@ -536,10 +552,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
             )
             rows.removeAt(pivot)
             rows[pivot - 1] = merged
+            // 코코아T: a merged taxi row pulls the nearest other taxi row in once more.
+            if (merged.app == "ctaxi") {
+                val j = rows.indices.filter { it != pivot - 1 && rows[it].app == "ctaxi" && rows[it].kind == RowKind.App }.minByOrNull { Math.abs(it - (pivot - 1)) }
+                if (j != null) {
+                    val pulled = rows.removeAt(j)
+                    if (j < pivot - 1) pivot--
+                    rows[pivot - 1] = rows[pivot - 1].copy(count = rows[pivot - 1].count + pulled.count)
+                }
+            }
             gauge += rules.gaugePerMerge
             beats += Beat.Merged(merged, b.id)
             val matched = a.app == "match" && b.app == "match"  // 튄더: two rows touching burst at once
-            if (merged.count < merged.threshold && !matched) break
+            if (rows[pivot - 1].count < merged.threshold && !matched) break
             rows.removeAt(--pivot)
             chain++
             val tier = Catalog.app(valueApp(s, merged)).tier
@@ -569,6 +594,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 "bigo" -> waveFactor = 4
                 "superapp" -> Category.entries.forEach { c -> if (c != Catalog.app("superapp").category) categoryAdd.merge(c, n, BigInteger::add) }
                 "mega" -> earned += rules.appPrice(Catalog.app("mega")) * BigInteger.TWO / BigInteger.valueOf(1_000)
+                // phase 2: 25% copies by hash roll, so the board's random sequence is untouched
+                "lazada", "dance" -> if (Math.floorMod(mix(roll xor (chain * 7919L)), 4L) == 0L) pattern = pattern + burstApp
+                "ride" -> if (merged.count >= 4) rideBoost = true
+                "why" -> whyStacks = minOf(15, whyStacks + 1)
             }
         }
 
@@ -591,10 +620,13 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 earned += waveEarned
                 cleared += waveCleared
                 beats += Beat.Wave(wave + 1, chain, waveCleared, waveEarned)
+                if (on(s, "edit")) for (i in rows.indices) if (rows[i].app == "edit") rows[i] = rows[i].copy(count = rows[i].count + 1)  // 컵컷
             }
             gauge = 0
         }
         gauge = gauge.coerceAtMost(100)
+        if (chain >= 2 && on(s, "camera")) rows.filter { it.kind == RowKind.App }.takeIf { it.isNotEmpty() }
+            ?.let { apps -> pattern = pattern + apps[Math.floorMod(mix(roll xor 0xCA3E), apps.size.toLong()).toInt()].app!! }  // 카메라
 
         // Swipe-level effects: daily, return, after-purchase and binge bonuses.
         var dailyBonusDay = s.dailyBonusDay
@@ -612,6 +644,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
             returnBurst = false
         }
         if (returnSwipes > 0) { if (on(s, "ott")) earned *= BigInteger.TWO; returnSwipes-- }
+        var nightSwipes = s.nightSwipes
+        if (nightSwipes > 0) { if (on(s, "mall")) earned *= BigInteger.TWO; nightSwipes-- }  // 쿠빵 새벽 배송
+        // 날씨: the first swipe of the day adds one to its rows.
+        if (on(s, "weather") && (dailyBonusDay["weather"] ?: -1L) < today) {
+            for (i in rows.indices) if (rows[i].app == "weather") rows[i] = rows[i].copy(count = rows[i].count + 1)
+            dailyBonusDay = dailyBonusDay + ("weather" to today)
+        }
+        // 음성 녹음 · 갤러리: echoes of the last swipe that burst.
+        var echoSwipes = s.echoSwipes
+        var lastBurstP = s.lastBurstP
+        if (bursts.isEmpty() && echoSwipes > 0) { if (on(s, "recorder")) earned += lastBurstP / BigInteger.TEN; echoSwipes-- }
+        if (on(s, "gallery") && s.swipes % 5 == 4) earned += lastBurstP / BigInteger.TEN
+        if (bursts.isNotEmpty()) { lastBurstP = earned; echoSwipes = 3 }
         // 앱 충돌 restarted: that app's next burst ×2. 알림훈련: taps raise income while the drill runs.
         if (crashBoost != null && bursts.any { valueApp(s, it) == crashBoost }) { earned *= BigInteger.TWO; crashBoost = null }
         if (now < state.drillUntil) earned = earned * BigInteger.valueOf(100L + minOf(100, state.drillTaps)) / hundred
@@ -651,6 +696,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
             // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
             earnRate = (s.earnRate * BigInteger.valueOf(9) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
             lastSwipeAt = now,
+            lastBurstP = lastBurstP,
+            echoSwipes = echoSwipes,
+            nightSwipes = nightSwipes,
+            rideBoost = rideBoost,
+            whyStacks = whyStacks,
             freeSwipes = freeSwipes,
             boostNext = boostNext,
             returnBurst = returnBurst,
@@ -762,7 +812,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0,
-            returnBurst = true, returnSwipes = 3))
+            returnBurst = true, returnSwipes = 3, nightSwipes = if (Math.floorMod(now / 3_600_000L + 9, 24L) !in 7..21) 3 else 0))  // KST 22~7시
         return next to p
     }
 
