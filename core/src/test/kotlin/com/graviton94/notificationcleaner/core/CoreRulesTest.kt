@@ -129,9 +129,9 @@ class CoreRulesTest {
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 180 * 6 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 6%
+        assertEquals(valueOf(1_000L * 180 * 5 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 5%
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 10 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(1_000L * 180 * 9 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -251,8 +251,8 @@ class CoreRulesTest {
     @Test
     fun lateAppsOpenByBestLevelEver() {
         val rich = e.newGame(now, 1).copy(level = 30, wallet = BigInteger.TEN.pow(60))
-        assertEquals(rich, e.buy(rich, "live"), "지금방송중 opens at Lv64")
-        val veteran = rich.copy(backup = Backup(bestLevel = 64))
+        assertEquals(rich, e.buy(rich, "live"), "지금방송중 opens at Lv67")
+        val veteran = rich.copy(backup = Backup(bestLevel = 67))
         assertTrue("live" in e.buy(veteran, "live").appLevels)
     }
 
@@ -333,20 +333,20 @@ class CoreRulesTest {
         val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
             bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
         val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
-        // Four times the anchor's files → ⌊10 × 4^0.45⌋ = 18 GB.
-        assertEquals(18L, e.cloudGbNow(run))
+        // Four times the anchor's files → ⌊10 × 4^0.5⌋ = 20 GB.
+        assertEquals(20L, e.cloudGbNow(run))
         val after = e.sync(run, now)!!
         assertEquals(0L, after.backup.files)
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
         assertTrue(e.unlocked(after, "home"), "app unlocks survive")
-        assertEquals(18L, after.backup.cloud.gb)
+        assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
         val bought = e.buyCloud(after, CloudItem.Compression)
         assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
         val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
-        assertEquals(Math.floor(10 * 1.5 * Math.sqrt(2.8)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 18 GB)
+        assertEquals(Math.floor(10 * 1.5 * Math.sqrt(3.0)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 20 GB)
     }
 }

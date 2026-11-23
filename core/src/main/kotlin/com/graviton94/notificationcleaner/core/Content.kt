@@ -131,21 +131,21 @@ object Catalog {
         app("coin", "떡상알림", 5, 1, AS, Category.Money, 42),
         app("match", "매칭됨", 5, 2, EU, Category.Social, 48),
         app("home", "문열림", 5, 3, EU, Category.Daily, 55),
-        app("live", "지금방송중", 6, 0, AS, Category.Media, 64),
+        app("live", "지금방송중", 6, 0, AS, Category.Media, 67),
         app("stock", "장마감", 6, 1, NA, Category.Money, 70),
-        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 76),
-        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 80),
+        app("comment", "댓글폭탄", 6, 2, KR, Category.Social, 80),
+        app("minutes", "회의록봇", 6, 3, EU, Category.Work, 90),
     )
     val starter = listOf("chat", "mail", "delivery")
 
-    /** Level at which each app's pro version (×2 value) opens: tier by tier, Lv31-86. */
+    /** Level at which each app's pro version (×2 value) opens: tier by tier, Lv31-94. */
     val proLevel: Map<String, Int> = mapOf(
         "chat" to 31, "mail" to 32, "delivery" to 33, "steps" to 34,
         "feed" to 43, "calendar" to 44, "pay" to 45, "shorts" to 46,
         "music" to 56, "inbox" to 57, "map" to 58, "point" to 59,
         "reward" to 65, "bank" to 66, "cloud" to 67, "translate" to 68,
         "meet" to 76, "coin" to 77, "match" to 78, "home" to 79,
-        "live" to 81, "stock" to 82, "comment" to 84, "minutes" to 86,
+        "live" to 81, "stock" to 82, "comment" to 86, "minutes" to 94,
     )
     fun app(id: String): AppDef = apps.first { it.id == id }
 }

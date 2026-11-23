@@ -85,7 +85,7 @@ data class RuleSet(
     // Offline settlement
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
-    val offlineEfficiencyPercent: Int = 6,
+    val offlineEfficiencyPercent: Int = 5,
     val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
     val proPricePermille: Int = 1_000,
@@ -114,7 +114,7 @@ data class RuleSet(
     val syncLevel: Int = 60,
     /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
     val cloudBase: Long = 10,
-    val cloudExponentPermille: Int = 450,
+    val cloudExponentPermille: Int = 500,
     /** Every GB ever synced adds this % to backup files paid by factory resets. */
     val cloudFilePercent: Int = 10,
 ) {
