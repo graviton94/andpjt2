@@ -54,6 +54,8 @@ data class Cloud(
     val bestCycleFiles: Long = 0,
     /** Paying factory resets made while a content pack was on: pack items open one level per 3 of them. */
     val packResets: Int = 0,
+    /** Credits, premium stars, ads and passes: permanent, survives everything (Monetization.kt). */
+    val account: Account = Account(),
 ) {
     fun lv(item: CloudItem): Int = items[item] ?: 0
 }
@@ -134,6 +136,8 @@ data class EarnCtx(
     val gamblePermille: Int = 1_000,
     /** 핀트레스트: rows of this app on the board. */
     val pile: Int = 0,
+    /** 수입 부스트 is running. */
+    val boosted: Boolean = false,
 )
 
 /** What happened, in order. The UI replays these; the state is already final. */
@@ -258,7 +262,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val cap = BigInteger.valueOf(rules.synergyCapPermille.toLong())
         if (comboNum * BigInteger.valueOf(1_000) > cap * comboDen) { comboNum = cap; comboDen = BigInteger.valueOf(1_000) }
         val fx = BigInteger.valueOf(effectPermille(s, app, count, chain, ctx))
-        return count * num * comboNum * digitPct * chainNum * pro * fx / (den * comboDen * hundred.pow(2) * BigInteger.TEN * BigInteger.valueOf(1_000))
+        val premium = BigInteger.valueOf(rules.premiumPermille(s.backup.cloud.account.stars(appId)) * (if (ctx.boosted) rules.boostPermille.toLong() else 1_000L))
+        return count * num * comboNum * digitPct * chainNum * pro * fx * premium / (den * comboDen * hundred.pow(2) * BigInteger.TEN * BigInteger.valueOf(1_000_000_000))
     }
 
     /** Value effects of the deck on one clear of [app], in ‰ (1000 = none). */
@@ -311,13 +316,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
     /** Factory reset: converts this run into backup files. Null below the reset level. */
     fun factoryReset(s: GameState, now: Long): GameState? {
         if (s.level < rules.resetLevel) return null
-        val files = backupFilesNow(s)
+        val files = backupFilesNow(s).let { f -> if (s.backup.cloud.account.backupBoost) f * (100 + rules.backupBoostPercent) / 100 else f }
         // Only a reset that pays files counts toward reset-gated content; empty resets cannot farm the count.
         return newGame(now, s.rng, s.backup.copy(
             files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
             lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
             bestRunP = s.backup.bestRunP.max(s.runEarned),
-            cloud = s.backup.cloud.let { c -> if (files > 0 && Catalog.packs.isNotEmpty()) c.copy(packResets = c.packResets + 1) else c },
+            cloud = s.backup.cloud.let { c -> if (files > 0 && Catalog.packs.isNotEmpty()) c.copy(packResets = c.packResets + 1) else c }
+                .let { c -> c.copy(account = c.account.copy(backupBoost = false)) },
         ))
     }
 
@@ -428,7 +434,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val gamble = 500 + Math.floorMod(roll, 2_501L).toInt().let { if (it > 1_800) (it - 1_800) / 2 + 1_800 else it }
         fun pileOf(app: String?) = rows.count { it.app == app }
         fun ctx(wave: Boolean = false, direct: Boolean = false, app: String? = null) =
-            EarnCtx(direct = direct, wave = wave, auto = auto, gamblePermille = gamble, pile = pileOf(app))
+            EarnCtx(direct = direct, wave = wave, auto = auto, gamblePermille = gamble, pile = pileOf(app), boosted = now < state.backup.cloud.account.boostUntil)
 
         fun track(row: Row, n: BigInteger) {
             if (row.kind != RowKind.App) return

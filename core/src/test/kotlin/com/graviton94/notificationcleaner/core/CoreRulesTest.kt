@@ -537,4 +537,48 @@ class CoreRulesTest {
         assertEquals("1az", s("1" + "0".repeat(15 + 25 * 3)))
         assertEquals("1ba", s("1" + "0".repeat(15 + 26 * 3)))
     }
+
+    @Test
+    fun premiumBudgetMatchesTwelveWeeksOfFreeCredits() {
+        val r = RuleSet()
+        fun full(tier: Int) = (1..5).sumOf { r.premiumCost(Catalog.apps.first { it.tier == tier }, it) }
+        // 12 weeks of attendance + daily missions
+        val free = 12 * (r.attendance.sum() + 7 * r.missionCredits)
+        // one top-tier app to ★5, or two mid-tier, or four tier-1 apps
+        assertTrue(full(10) <= free, "top ${full(10)} vs $free")
+        assertTrue(2 * full(5) <= free && 2 * full(6) <= free * 11 / 10, "mid ${full(5)} ${full(6)}")
+        assertTrue(4 * full(1) <= free, "low ${full(1)}")
+        assertEquals(7_593L, r.premiumPermille(5))
+    }
+
+    @Test
+    fun accountSurvivesResetAndSyncAndPremiumRaisesValue() {
+        val e = Engine(); val shop = Shop(e)
+        var s = e.newGame(0, 1).copy(level = 30, runEarned = BigInteger.TEN.pow(14))
+        s = shop.credit(s, 1_000)
+        val before = e.earn(s, "memo", BigInteger.ONE, 0)
+        s = shop.upgradePremium(s, "memo")!!
+        assertEquals(1, s.account.stars("memo"))
+        assertEquals(before * BigInteger.valueOf(3) / BigInteger.TWO, e.earn(s, "memo", BigInteger.ONE, 0))
+        val after = e.factoryReset(s, 1)!!
+        assertEquals(1, after.account.stars("memo"))
+        assertEquals(s.account.credits, after.account.credits)
+        val synced = e.sync(after.copy(level = 60), 2)!!
+        assertEquals(1, synced.account.stars("memo"))
+    }
+
+    @Test
+    fun attendanceAdsAndPassFollowTheirDailyLimits() {
+        val e = Engine(); val shop = Shop(e); val day = 86_400_000L
+        var s = e.newGame(0, 1)
+        repeat(7) { d -> s = shop.claimAttendance(s, d * day); s = shop.claimAttendance(s, d * day + 1) }
+        assertEquals(RuleSet().attendance.sum(), s.account.credits)
+        repeat(3) { s = shop.watchAd(s, AdSlot.CreditBox, 8 * day)!! }
+        assertNull(shop.watchAd(s, AdSlot.CreditBox, 8 * day))
+        assertNotNull(shop.watchAd(s, AdSlot.CreditBox, 9 * day))
+        s = shop.buyPass(s, 10 * day)
+        assertTrue(shop.passActive(s, 39 * day) && !shop.passActive(s, 40 * day))
+        val boosted = shop.watchAd(s, AdSlot.Boost, 10 * day)!!
+        assertTrue(shop.boostActive(boosted, 10 * day + 29 * 60_000) && !shop.boostActive(boosted, 10 * day + 31 * 60_000))
+    }
 }

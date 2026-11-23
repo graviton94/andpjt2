@@ -1,0 +1,198 @@
+package com.graviton94.notificationcleaner.core
+
+import java.math.BigInteger
+
+/**
+ * Monetization layer (docs/bible/17-monetization.md). Four currencies:
+ * P (run gold) · 크레딧 (paid, permanent) · 백업파일/GB (prestige) · 배터리 (energy).
+ * Everything here is permanent and lives in [Account], which survives resets and syncs.
+ */
+
+/** Rewarded ad placements and their daily caps. A month pass gives the same rewards without the ad. */
+enum class AdSlot(val label: String, val daily: Int) {
+    BestDouble("최고 기록 ×2", 5),
+    OfflineDouble("오프라인 ×2", 3),
+    Boost("수입 부스트 30분", 3),
+    Warp("시간 도약 2시간", 2),
+    Battery("보조배터리", 3),
+    CreditBox("크레딧 상자", 3),
+    FreeUpgrade("무료 강화 +5", 1),
+}
+
+/** What credits buy besides premium stars. */
+enum class CreditItem(val label: String, val price: Long, val daily: Int) {
+    Boost("수입 부스트 30분", 40, 6),
+    Warp("시간 도약 2시간", 60, 5),
+    Battery("보조배터리", 10, 20),
+    BackupBoost("백업 부스트 (다음 초기화 파일 +25%)", 100, 1),
+}
+
+data class Account(
+    val credits: Long = 0,
+    /** App id → premium stars (0..5). */
+    val premium: Map<String, Int> = emptyMap(),
+    val attendDay: Long = -1,
+    /** Attendance days claimed so far; the 7-day reward table cycles on it. */
+    val attendCount: Int = 0,
+    val missionDay: Long = -1,
+    val adDay: Long = -1,
+    val adUses: Map<AdSlot, Int> = emptyMap(),
+    val shopDay: Long = -1,
+    val shopUses: Map<CreditItem, Int> = emptyMap(),
+    /** 수입 부스트: all income ×2 until this time. */
+    val boostUntil: Long = 0,
+    /** 월간 패스: ad-free rewards and daily credits until this time. */
+    val passUntil: Long = 0,
+    val passDay: Long = -1,
+    /** 백업 부스트 bought for the next factory reset. */
+    val backupBoost: Boolean = false,
+    val creditsFree: Long = 0,
+    val creditsBought: Long = 0,
+    val creditsSpent: Long = 0,
+) {
+    fun stars(appId: String) = premium[appId] ?: 0
+}
+
+val GameState.account: Account get() = backup.cloud.account
+fun GameState.withAccount(f: (Account) -> Account): GameState = copy(backup = backup.copy(cloud = backup.cloud.copy(account = f(backup.cloud.account))))
+
+private const val DAY_MS = 86_400_000L
+fun dayOf(now: Long) = Math.floorDiv(now, DAY_MS)
+
+/** Premium star value multiplier in ‰. */
+fun RuleSet.premiumPermille(stars: Int): Long { var m = 1_000L; repeat(stars) { m = m * premiumStepPermille / 1_000 }; return m }
+
+/**
+ * Credits for one premium star. A full ★0→★5 costs [RuleSet.premiumBudget] for a top-tier app, half for a
+ * mid-tier one and a quarter for tier 1: what 12 weeks of steady free play (attendance + missions) earns.
+ */
+fun RuleSet.premiumCost(app: AppDef, star: Int): Long {
+    val full = premiumBudget / 4.0 * Math.pow(2.0, (app.tier - 1) / 4.5)
+    val share = premiumStarShare[star - 1]
+    return (Math.round(full * share / 1_000 / 5) * 5).coerceAtLeast(5)
+}
+
+/** All monetization actions. Pure: state in, state out. */
+class Shop(private val engine: Engine) {
+    private val rules get() = engine.rules
+
+    fun credit(s: GameState, n: Long, bought: Boolean = false): GameState = s.withAccount {
+        it.copy(credits = it.credits + n, creditsFree = it.creditsFree + if (bought) 0 else n, creditsBought = it.creditsBought + if (bought) n else 0)
+    }
+
+    private fun spend(s: GameState, n: Long): GameState? =
+        if (s.account.credits < n) null else s.withAccount { it.copy(credits = it.credits - n, creditsSpent = it.creditsSpent + n) }
+
+    // Daily free credits -------------------------------------------------------------------
+
+    fun attendanceReward(s: GameState): Long = rules.attendance[s.account.attendCount % rules.attendance.size]
+
+    /** Daily check-in: once per calendar day, 7-day cycle with a big last day. */
+    fun claimAttendance(s: GameState, now: Long): GameState {
+        val a = s.account
+        if (a.attendDay >= dayOf(now)) return s
+        return credit(s, attendanceReward(s)).withAccount { it.copy(attendDay = dayOf(now), attendCount = it.attendCount + 1) }
+    }
+
+    /** Daily missions (the game decides when they are done): one payout per day. */
+    fun claimMissions(s: GameState, now: Long): GameState {
+        if (s.account.missionDay >= dayOf(now)) return s
+        return credit(s, rules.missionCredits).withAccount { it.copy(missionDay = dayOf(now)) }
+    }
+
+    // Month pass -----------------------------------------------------------------------------
+
+    fun passActive(s: GameState, now: Long) = now < s.account.passUntil
+
+    /** Purchase: 30 days of ad-free rewards and daily credits, plus credits now. Stacks. */
+    fun buyPass(s: GameState, now: Long): GameState =
+        credit(s, rules.passInstantCredits, bought = true).withAccount { it.copy(passUntil = maxOf(now, it.passUntil) + 30 * DAY_MS) }
+
+    fun claimPassDaily(s: GameState, now: Long): GameState {
+        if (!passActive(s, now) || s.account.passDay >= dayOf(now)) return s
+        return credit(s, rules.passDailyCredits, bought = true).withAccount { it.copy(passDay = dayOf(now)) }
+    }
+
+    // Premium versions --------------------------------------------------------------------------
+
+    /** Premium works on any app the player has ever unlocked; the stars stay through resets and syncs. */
+    fun premiumOpen(s: GameState, appId: String): Boolean {
+        val app = Catalog.app(appId)
+        val ever = maxOf(s.backup.bestLevel, s.level)
+        return app.unlockLevel <= ever && s.account.stars(appId) < rules.premiumMaxStars
+    }
+
+    fun premiumPrice(s: GameState, appId: String): Long = rules.premiumCost(Catalog.app(appId), s.account.stars(appId) + 1)
+
+    fun upgradePremium(s: GameState, appId: String): GameState? {
+        if (!premiumOpen(s, appId)) return null
+        val paid = spend(s, premiumPrice(s, appId)) ?: return null
+        return paid.withAccount { it.copy(premium = it.premium + (appId to it.stars(appId) + 1)) }
+    }
+
+    // Ads and the credit shop share their rewards --------------------------------------------
+
+    fun adsLeft(s: GameState, slot: AdSlot, now: Long): Int {
+        val a = s.account
+        return if (a.adDay < dayOf(now)) slot.daily else slot.daily - (a.adUses[slot] ?: 0)
+    }
+
+    /**
+     * One rewarded placement (an ad watched, or claimed directly with a month pass). [offerP] is the P the
+     * offer doubles: the swipe for [AdSlot.BestDouble], the settlement for [AdSlot.OfflineDouble].
+     */
+    fun watchAd(s: GameState, slot: AdSlot, now: Long, offerP: BigInteger = BigInteger.ZERO): GameState? {
+        if (adsLeft(s, slot, now) <= 0) return null
+        val counted = s.withAccount { a ->
+            val uses = if (a.adDay < dayOf(now)) emptyMap() else a.adUses
+            a.copy(adDay = dayOf(now), adUses = uses + (slot to (uses[slot] ?: 0) + 1))
+        }
+        return when (slot) {
+            AdSlot.BestDouble -> grantP(counted, offerP, rules.swipeLevelCap)
+            AdSlot.OfflineDouble -> grantP(counted, offerP, rules.offlineLevelCap)
+            AdSlot.Boost -> boost(counted, now)
+            AdSlot.Warp -> warp(counted)
+            AdSlot.Battery -> battery(counted)
+            AdSlot.CreditBox -> credit(counted, rules.adCredits)
+            AdSlot.FreeUpgrade -> engine.bestApp(counted).let { id -> counted.copy(appLevels = counted.appLevels + (id to (counted.appLevels[id] ?: 1) + 5)) }
+        }
+    }
+
+    fun shopLeft(s: GameState, item: CreditItem, now: Long): Int {
+        val a = s.account
+        return if (a.shopDay < dayOf(now)) item.daily else item.daily - (a.shopUses[item] ?: 0)
+    }
+
+    fun buyItem(s: GameState, item: CreditItem, now: Long): GameState? {
+        if (shopLeft(s, item, now) <= 0) return null
+        if (item == CreditItem.BackupBoost && s.account.backupBoost) return null
+        val paid = spend(s, item.price) ?: return null
+        val counted = paid.withAccount { a ->
+            val uses = if (a.shopDay < dayOf(now)) emptyMap() else a.shopUses
+            a.copy(shopDay = dayOf(now), shopUses = uses + (item to (uses[item] ?: 0) + 1))
+        }
+        return when (item) {
+            CreditItem.Boost -> boost(counted, now)
+            CreditItem.Warp -> warp(counted)
+            CreditItem.Battery -> battery(counted)
+            CreditItem.BackupBoost -> counted.withAccount { it.copy(backupBoost = true) }
+        }
+    }
+
+    fun boostActive(s: GameState, now: Long) = now < s.account.boostUntil
+
+    private fun boost(s: GameState, now: Long) = s.withAccount { it.copy(boostUntil = maxOf(now, it.boostUntil) + rules.boostMinutes * 60_000L) }
+
+    /** 시간 도약: [RuleSet.warpMinutes] of the recent income rate now, at full (not offline) efficiency. */
+    private fun warp(s: GameState) = grantP(s, s.earnRate * BigInteger.valueOf(rules.warpMinutes.toLong()), rules.offlineLevelCap)
+
+    /** 보조배터리: full battery plus an overcharge above the cap. */
+    private fun battery(s: GameState) = s.copy(energy = engine.energyCap(s) + rules.batteryOvercharge, nextChargeAt = 0)
+
+    /** P granted outside a swipe; the one-shot level cap still applies (과열 보호). */
+    fun grantP(s: GameState, p: BigInteger, levelCap: Int): GameState {
+        val got = p.min(engine.jackpotRoom(s, levelCap)).max(BigInteger.ZERO)
+        val run = s.runEarned + got
+        return s.copy(wallet = s.wallet + got, runEarned = run, level = maxOf(s.level, rules.levelFor(run, s.backup.lv(BackupItem.FastBoot))))
+    }
+}

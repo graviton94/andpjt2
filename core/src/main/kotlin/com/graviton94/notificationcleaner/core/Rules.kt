@@ -37,6 +37,25 @@ data class RuleSet(
     /** Bonus % per digit of cumulative notifications cleared in a region / category. */
     val regionDigitPercent: Int = 10,
     val categoryDigitPercent: Int = 12,
+    // Monetization (docs/bible/17-monetization.md)
+    val premiumMaxStars: Int = 5,
+    /** Each premium star multiplies the app's value by this. */
+    val premiumStepPermille: Int = 1_500,
+    /** Credits for ★0→★5 of a top-tier app: what 12 weeks of attendance + missions pay a steady free player. */
+    val premiumBudget: Long = 6_000,
+    /** Share of the full premium cost per star, ‰ (sums to 1000). */
+    val premiumStarShare: List<Int> = listOf(50, 100, 170, 280, 400),
+    /** 7-day attendance cycle; the last day is the big one. */
+    val attendance: List<Long> = listOf(20, 20, 30, 30, 40, 40, 120),
+    val missionCredits: Long = 30,
+    val adCredits: Long = 10,
+    val passInstantCredits: Long = 300,
+    val passDailyCredits: Long = 60,
+    val boostMinutes: Int = 30,
+    val boostPermille: Int = 2_000,
+    val warpMinutes: Int = 120,
+    val batteryOvercharge: Int = 6,
+    val backupBoostPercent: Int = 25,
     // Battery and auto
     val energyCap: Int = 12,
     val chargeMs: Long = 3_000,
