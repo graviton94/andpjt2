@@ -38,8 +38,8 @@ EXTRA = {
 def parse_engine():
     src = CONTENT.read_text()
     apps = [dict(id=m[0], name=m[1], tier=int(m[2]), order=int(m[3]), reg=m[4], cat=m[5].lower(), lv=int(m[6]))
-            for m in re.findall(r'app\("(\w+)", "([^"]+)", (\d+), (\d+), (\w+), Category\.(\w+), (\d+)\)', src)]
-    pro = {a: int(l) for a, l in re.findall(r'"(\w+)" to (\d+)', src[src.index("val proLevel"):])}
+            for m in re.findall(r'app\("(\w+)", "([^"]+)", (\d+), (\d+), (\w+), Category\.(\w+), (\d+)\)', src) if int(m[2]) <= 10]  # launch content only; update packs live in 14 live-updates
+    pro = {a: int(l) for a, l in re.findall(r'"(\w+)" to (\d+)', src[src.index("val launchPro"):src.index("var proLevel")])}
     starter = re.search(r'val starter = listOf\(([^)]*)\)', src).group(1).replace('"', "").replace(" ", "").split(",")
     return apps, pro, starter
 
