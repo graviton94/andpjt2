@@ -87,7 +87,7 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
         // 3. The upgrade with the best value gain per P, unless saving for an app it would delay a lot.
         val ups = s.active.map { id ->
             val lv = s.appLevels.getValue(id)
-            val price = e.rules.upgradePrice(Catalog.app(id), lv)
+            val price = e.upgradePrice(s, id)
             val gain = perNotification(s.copy(appLevels = s.appLevels + (id to lv + 1)), id) - perNotification(s, id)
             Triple(id, price, gain.toDouble() / price.toDouble())
         }.filter { s.wallet >= it.second }

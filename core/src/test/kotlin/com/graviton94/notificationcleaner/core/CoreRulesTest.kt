@@ -54,7 +54,7 @@ class CoreRulesTest {
 
     @Test
     fun synergyStepsByDeckCount() {
-        assertEquals(listOf(144L, 263L, 421L, 553L, 576L).map(::valueOf), synergyTable().map { it.second })
+        assertEquals(listOf(144L, 263L, 421L, 571L, 576L).map(::valueOf), synergyTable().map { it.second })
     }
 
     @Test

@@ -89,9 +89,33 @@ data class GameState(
     /** 앱스토어 세일: the next app bought costs half. */
     val saleNext: Boolean = false,
     val lastSwipeAt: Long = 0,
+    // Unique-effect state (docs/bible/15-unique-effects.md)
+    /** 배다른민족: swipes left that cost no battery. */
+    val freeSwipes: Int = 0,
+    /** 트래블로까: the next swipe with a burst after buying an app pays ×3. */
+    val boostNext: Boolean = false,
+    /** 아고다다: the first burst after an offline settlement pays ×3. */
+    val returnBurst: Boolean = false,
+    /** 넷플러그: swipes left after returning that pay ×2. */
+    val returnSwipes: Int = 0,
+    /** 모모모 · 에어방앤방: day number of each app's last daily bonus. */
+    val dailyBonusDay: Map<String, Long> = emptyMap(),
+    /** 메이버: the trending category (×2) for the current 10 swipes. */
+    val trend: Category? = null,
 ) {
     fun assist(a: Assist): Int = assists[a] ?: 0
 }
+
+/** How a notification was cleared, for value effects. */
+data class EarnCtx(
+    val direct: Boolean = false,
+    val wave: Boolean = false,
+    val auto: Boolean = false,
+    /** 로빈훗훗: the swipe's gamble multiplier in ‰. */
+    val gamblePermille: Int = 1_000,
+    /** 핀트레스트: rows of this app on the board. */
+    val pile: Int = 0,
+)
 
 /** What happened, in order. The UI replays these; the state is already final. */
 sealed interface Beat {
@@ -143,16 +167,28 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     // Derived values -------------------------------------------------------------------------
 
-    fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery)
+    /** SplitMix64 finaliser: effect rolls that must not touch the board's random sequence. */
+    private fun mix(x: Long): Long {
+        var z = x + -0x61c8864680b583ebL
+        z = (z xor (z ushr 30)) * -0x40a7b892e31b1a47L
+        z = (z xor (z ushr 27)) * -0x6b2fb644ecceee15L
+        return z xor (z ushr 31)
+    }
+
+    /** Unique effects work only while the app is in the deck. */
+    fun on(s: GameState, appId: String) = appId in s.active
+
+    fun energyCap(s: GameState) = rules.energyCap + 2 * s.backup.lv(BackupItem.Battery) + if (on(s, "grab")) 2 else 0
     fun chargeMs(s: GameState) = rules.chargeMs - 200L * s.backup.lv(BackupItem.Battery)
-    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto)
+    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
+        (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
     fun rowCount(s: GameState) = minOf(
         rules.maxRows,
         rules.baseRows + maxOf(0, s.active.size - 4) / rules.appsPerExtraRow + s.assist(Assist.Board) + s.backup.lv(BackupItem.Board),
     )
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
-        rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich)
+        rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
     fun maxSlots(s: GameState) = rules.maxSlots(s.level, s.backup)
     fun minSlots(s: GameState) = minOf(rules.minSlots(s.level), s.appLevels.size)
@@ -167,7 +203,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         // Stock apps have no home market: category synergy only.
         val r = if (app.region == Region.Stock) 0 else s.active.count { Catalog.app(it).region == app.region }
         val c = s.active.count { Catalog.app(it).category == app.category }
-        return rules.synergyPercent(r, s.backup, rules.regionSynergySteps) to rules.synergyPercent(c, s.backup, rules.categorySynergySteps)
+        val rs = rules.synergyPercent(r, s.backup, rules.regionSynergySteps).let { if (on(s, "papago")) it * 110 / 100 else it }
+        return rs to rules.synergyPercent(c, s.backup, rules.categorySynergySteps)
     }
 
     /** Regions and categories with 2+ apps in the deck: each multiplies every value by RuleSet.diversityPermille. */
@@ -180,14 +217,15 @@ class Engine(val rules: RuleSet = RuleSet()) {
     private fun digits(n: BigInteger?) = if (n == null || n.signum() <= 0) 1 else n.toString().length
 
     /** P for [count] notifications of [appId] at chain number [chain]. */
-    fun earn(s: GameState, appId: String, count: BigInteger, chain: Int): BigInteger {
+    fun earn(s: GameState, appId: String, count: BigInteger, chain: Int, ctx: EarnCtx = EarnCtx()): BigInteger {
         val app = Catalog.app(appId)
         val (num, den) = rules.baseValue(app, s.appLevels[appId] ?: 1, s.backup)
         val (rs, cs) = synergy(s, appId)
         val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
         val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
         val digitPct = BigInteger.valueOf((100L + rd) * (100L + cd))
-        val chainNum = BigInteger.valueOf(10L + chain * (10L + s.backup.lv(BackupItem.ChainBoost) + 2 * s.backup.cloud.lv(CloudItem.CloudChain)))
+        val link = if (chain > 0 && on(s, "tube")) chain + 1 else chain  // 너튜브: deck-wide chain +1
+        val chainNum = BigInteger.valueOf(10L + link * (10L + s.backup.lv(BackupItem.ChainBoost) + 2 * s.backup.cloud.lv(CloudItem.CloudChain)))
         val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
         // Deck synergy (region × category × diversity) is capped below one tier step.
         val sets = maxOf(0, activeSets(s) - 1)
@@ -195,7 +233,29 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var comboDen = hundred.pow(2) * BigInteger.valueOf(1_000).pow(sets)
         val cap = BigInteger.valueOf(rules.synergyCapPermille.toLong())
         if (comboNum * BigInteger.valueOf(1_000) > cap * comboDen) { comboNum = cap; comboDen = BigInteger.valueOf(1_000) }
-        return count * num * comboNum * digitPct * chainNum * pro / (den * comboDen * hundred.pow(2) * BigInteger.TEN)
+        val fx = BigInteger.valueOf(effectPermille(s, app, count, chain, ctx))
+        return count * num * comboNum * digitPct * chainNum * pro * fx / (den * comboDen * hundred.pow(2) * BigInteger.TEN * BigInteger.valueOf(1_000))
+    }
+
+    /** Value effects of the deck on one clear of [app], in ‰ (1000 = none). */
+    fun effectPermille(s: GameState, app: AppDef, count: BigInteger, chain: Int, ctx: EarnCtx): Long {
+        var m = 1_000L
+        fun times(p: Long) { m = m * p / 1_000 }
+        val id = app.id
+        val deck = s.active.map { Catalog.app(it) }
+        if (id == "memo" && ctx.direct) times(2_000)
+        if (id == "calc" && count.signum() > 0 && count.mod(BigInteger.valueOf(4)).signum() == 0) times(1_500)
+        if (id == "pin" && ctx.pile >= 3) times(1_200)
+        if (id == "contacts") times(1_000L + 150L * deck.count { it.id != id && it.category == Category.Social })
+        if (id == "photo") times(1_000L + 150L * deck.count { it.id != id && it.category == Category.Media })
+        if (id == "career") times(1_000L + 100L * deck.map { it.category }.distinct().size)
+        if (on(s, "jobs") && app.category == Category.Work && deck.count { it.category == Category.Work } >= 3) times(1_200)
+        if (id == "joox" && ctx.wave) times(1_500)
+        if (id == "beat" && ctx.auto) times(1_300)
+        if (id == "mail" && chain >= 2) times(1_500)
+        if (id == "robin") times(ctx.gamblePermille.toLong())
+        if (on(s, "portal") && s.trend == app.category) times(2_000)
+        return m
     }
 
     /** Most P this run can still gain in one go without rising more than [steps] levels. */
@@ -303,6 +363,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor = Actor.Player): SwipeOutcome? {
         val state = tick(input, now)
+        val auto = actor == Actor.Auto
         if (state.energy <= 0) return null
         if (actor == Actor.Auto && now < state.autoPausedUntil) return null
         val index = state.rows.indexOfFirst { it.id == rowId }
@@ -321,6 +382,16 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var pattern = state.pattern
         val regionAdd = mutableMapOf<Region, BigInteger>()
         val categoryAdd = mutableMapOf<Category, BigInteger>()
+        var energyGain = 0
+        var freeSwipes = maxOf(0, state.freeSwipes - if (state.freeSwipes > 0) 1 else 0)
+        val usesBattery = state.freeSwipes <= 0
+        // 로빈훗훗: one gamble roll per swipe, ×0.5 to ×3 (mean about ×1.4). Hashed from the state so effects never
+        // shift the board's random sequence for decks without the app.
+        val roll = mix(state.rng xor state.swipes.toLong())
+        val gamble = 500 + Math.floorMod(roll, 2_501L).toInt().let { if (it > 1_800) (it - 1_800) / 2 + 1_800 else it }
+        fun pileOf(app: String?) = rows.count { it.app == app }
+        fun ctx(wave: Boolean = false, direct: Boolean = false, app: String? = null) =
+            EarnCtx(direct = direct, wave = wave, auto = auto, gamblePermille = gamble, pile = pileOf(app))
 
         fun track(row: Row, n: BigInteger) {
             if (row.kind != RowKind.App) return
@@ -332,13 +403,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
         when (removed.kind) {
             RowKind.App, RowKind.Wild -> {
                 val n = BigInteger.valueOf(removed.count.toLong())
-                val e = earn(state, valueApp(state, removed), n, 0)
+                val e = earn(state, valueApp(state, removed), n, 0, ctx(direct = !auto, app = removed.app))
                 earned += e
                 cleared += n
                 track(removed, n)
                 beats += Beat.Swiped(removed, e)
             }
-            RowKind.Call -> { pausedUntil = 0; beats += Beat.Swiped(removed, ZERO) }
+            RowKind.Call -> {
+                pausedUntil = 0
+                if (on(state, "phone")) energyGain += 2  // 전화: answering recharges
+                val e = if (on(state, "meet")) state.earnRate else ZERO  // 주움: joining the call pays a minute of income
+                earned += e
+                beats += Beat.Swiped(removed, e)
+            }
             RowKind.Spam -> beats += Beat.Swiped(removed, ZERO)
             RowKind.Event -> {
                 var e = ZERO
@@ -371,6 +448,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val bursts = mutableListOf<Row>()
         val bestTier = bestTier(s)
         var pivot = index
+        var chainBonus = 0  // 메롱: later bursts in this swipe count one more chain
+        var waveFactor = rules.waveFactor
         while (pivot in 1 until rows.size) {
             val a = rows[pivot - 1]
             val b = rows[pivot]
@@ -386,25 +465,45 @@ class Engine(val rules: RuleSet = RuleSet()) {
             rows[pivot - 1] = merged
             gauge += rules.gaugePerMerge
             beats += Beat.Merged(merged, b.id)
-            if (merged.count < merged.threshold) break
+            val matched = a.app == "match" && b.app == "match"  // 튄더: two rows touching burst at once
+            if (merged.count < merged.threshold && !matched) break
             rows.removeAt(--pivot)
             chain++
             val tier = Catalog.app(valueApp(s, merged)).tier
             gauge += rules.gaugePerBurst + rules.igniterGaugePerTier * (bestTier - tier)
             val n = BigInteger.valueOf(merged.count.toLong())
-            val e = earn(s, valueApp(s, merged), n, chain)
+            val burstApp = valueApp(s, merged)
+            val e = earn(s, burstApp, n, chain + chainBonus, ctx(app = burstApp))
             earned += e
             cleared += n
             track(merged, n)
             bursts += merged
             beats += Beat.Burst(merged, chain, e)
+            // Burst effects of the app that burst.
+            when (burstApp) {
+                "music" -> chainBonus++
+                "alarm" -> pattern = pattern + "alarm"
+                "flash" -> rows.indexOfFirst { it.kind == RowKind.Spam }.takeIf { it >= 0 }?.let { rows.removeAt(it); if (it < pivot) pivot-- }
+                "sms" -> rows.getOrNull(pivot - 1)?.takeIf { it.kind == RowKind.App }?.let { rows[pivot - 1] = it.copy(count = it.count + 1) }
+                "chat" -> rows.getOrNull(pivot - 1)?.takeIf { it.app == "chat" }?.let { rows[pivot - 1] = it.copy(count = it.count + 1) }
+                "michat" -> rows.getOrNull(pivot)?.takeIf { it.kind == RowKind.App }?.let { rows[pivot] = it.copy(count = it.count + 1) }
+                "reddit" -> for (i in rows.indices) rows[i].app?.takeIf { it != "reddit" && Catalog.app(it).category == Category.Social }
+                    ?.let { rows[i] = rows[i].copy(count = rows[i].count + 1) }
+                "pay" -> energyGain++
+                "food" -> freeSwipes = 3
+                "zalo" -> gauge += 2 * s.active.count { Catalog.app(it).region == Region.SoutheastAsia }
+                "line" -> gauge += 2 * s.active.count { Catalog.app(it).region == Region.Asia }
+                "bigo" -> waveFactor = 4
+                "superapp" -> Category.entries.forEach { c -> if (c != Catalog.app("superapp").category) categoryAdd.merge(c, n, BigInteger::add) }
+                "mega" -> earned += rules.appPrice(Catalog.app("mega")) * BigInteger.TWO / BigInteger.valueOf(1_000)
+            }
         }
 
         // Overload: a full gauge turns the bursts into waves through the hidden backlog.
         val overload = bursts.isNotEmpty() && gauge >= 100
         val depth = overloadDepth(s)
         if (overload) {
-            val factor = BigInteger.valueOf(rules.waveFactor.toLong())
+            val factor = BigInteger.valueOf(waveFactor.toLong())
             var backlog = bursts.map { BigInteger.valueOf(it.count.toLong()) }
             repeat(depth) { wave ->
                 backlog = backlog.map { it * factor }
@@ -413,7 +512,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 var waveCleared = ZERO
                 bursts.forEachIndexed { i, row ->
                     waveCleared += backlog[i]
-                    waveEarned += earn(s, valueApp(s, row), backlog[i], chain)
+                    waveEarned += earn(s, valueApp(s, row), backlog[i], chain + chainBonus, ctx(wave = true, app = valueApp(s, row)))
                     track(row, backlog[i])
                 }
                 earned += waveEarned
@@ -423,6 +522,25 @@ class Engine(val rules: RuleSet = RuleSet()) {
             gauge = 0
         }
         gauge = gauge.coerceAtMost(100)
+
+        // Swipe-level effects: daily, return, after-purchase and binge bonuses.
+        var dailyBonusDay = s.dailyBonusDay
+        var boostNext = s.boostNext
+        var returnBurst = s.returnBurst
+        var returnSwipes = s.returnSwipes
+        val today = now / 86_400_000L
+        if (bursts.isNotEmpty()) {
+            for ((app, mult) in listOf("momo" to 3L, "airbnb" to 5L)) {
+                if (on(s, app) && (dailyBonusDay[app] ?: -1L) < today) { earned *= BigInteger.valueOf(mult); dailyBonusDay = dailyBonusDay + (app to today) }
+            }
+            if (boostNext && on(s, "travel")) earned *= BigInteger.valueOf(3)
+            boostNext = false
+            if (returnBurst && on(s, "agoda")) earned *= BigInteger.valueOf(3)
+            returnBurst = false
+        }
+        if (returnSwipes > 0) { if (on(s, "ott")) earned *= BigInteger.TWO; returnSwipes-- }
+        // 메이버: a new trending category every 10 swipes.
+        val trend = if (on(s, "portal") && s.swipes % 10 == 0) Category.entries[Math.floorMod(mix(roll), Category.entries.size.toLong()).toInt()] else s.trend
 
         // Jackpot cap: luck may jump a few levels, never the whole run.
         val room = jackpotRoom(s, rules.swipeLevelCap)
@@ -439,7 +557,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var next = s.copy(
             rows = rows,
             gauge = gauge,
-            energy = state.energy - 1,
+            energy = minOf(energyCap(s), state.energy - (if (usesBattery) 1 else 0) + energyGain),
             // Any swipe below a full battery keeps a charge scheduled, even if the cap grew meanwhile.
             nextChargeAt = if (state.nextChargeAt == 0L) now + chargeMs(s) else state.nextChargeAt,
             wallet = s.wallet + earned,
@@ -456,6 +574,12 @@ class Engine(val rules: RuleSet = RuleSet()) {
             rng = rng.seed,
             earnRate = (s.earnRate * BigInteger.valueOf(9) + earned * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
             lastSwipeAt = now,
+            freeSwipes = freeSwipes,
+            boostNext = boostNext,
+            returnBurst = returnBurst,
+            returnSwipes = returnSwipes,
+            dailyBonusDay = dailyBonusDay,
+            trend = trend,
         )
         next = fillDeck(next)
         next = refill(next, now, beats)
@@ -479,7 +603,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var pausedUntil = state.autoPausedUntil
         val pattern = state.pattern.toMutableList()
 
-        val overdue = rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }
+        val overdue = if (on(state, "secret")) -1 else rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }  // 텔레그림
         if (overdue >= 0) rows[overdue] = rows[overdue].copy(copyAt = 0)
         var spam = overdue >= 0 || n % rules.spamEverySwipes == 0
         var call = state.level >= rules.callUnlockLevel && n % rules.callEverySwipes == 0 && rows.none { it.kind == RowKind.Call }
@@ -487,13 +611,13 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
         while (rows.size < rowCount(state)) {
             val row = when {
-                call -> { call = false; pausedUntil = now + rules.callPauseMs; Row(id++, RowKind.Call) }
+                call -> { call = false; pausedUntil = now + rules.callPauseMs / (if (on(state, "secret")) 2 else 1); Row(id++, RowKind.Call) }
                 spam -> { spam = false; Row(id++, RowKind.Spam, copyAt = n + rules.spamCopyAfterSwipes) }
                 cards.isNotEmpty() -> {
                     val c = cards.removeAt(0)
                     Row(id++, RowKind.Event, event = c, expireAt = if (c == EventCard.Otp) n + rules.otpLifeSwipes else 0)
                 }
-                pattern.isNotEmpty() -> Row(id++, RowKind.App, pattern.removeAt(0), count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
+                pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = thresholdOf(a)) }
                 else -> spawnApp(state, rows, rng, id++)
             }
             rows.add(0, row)
@@ -510,8 +634,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val options = s.active.filter { top?.kind != RowKind.App || it != top.app }
         val sandwich = second?.kind == RowKind.App && second.app != top?.app && second.app in options
         val app = if (sandwich && rng.next(100) < sandwichPercent(s)) second!!.app!! else options[rng.next(options.size)]
-        return Row(id, RowKind.App, app, count = count(), threshold = rules.threshold)
+        return Row(id, RowKind.App, app, count = count(), threshold = thresholdOf(app))
     }
+
+    /** 왔썹 rows burst at 3. */
+    fun thresholdOf(app: String) = if (app == "green") 3 else rules.threshold
 
     // Offline --------------------------------------------------------------------------------
 
@@ -530,7 +657,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             .min(jackpotRoom(s, rules.offlineLevelCap))
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
-        val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0))
+        val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0,
+            returnBurst = true, returnSwipes = 3))
         return next to p
     }
 
@@ -548,7 +676,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
      * else the bottom row. From AutoClean backup level 5 it looks one move ahead like [bestTarget].
      */
     fun autoTarget(s: GameState, now: Long): Long? {
-        if (s.backup.lv(BackupItem.AutoClean) >= rules.smartAutoLevel) return bestTarget(s, now)
+        if (s.backup.lv(BackupItem.AutoClean) >= rules.smartAutoLevel || on(s, "search") || on(s, "ai")) return bestTarget(s, now)
         return mergeTargets(s).lastOrNull()?.id
             ?: s.rows.lastOrNull { it.kind == RowKind.Event }?.id
             ?: s.rows.lastOrNull { it.kind == RowKind.Spam }?.id
@@ -577,8 +705,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
     // Shop and deck --------------------------------------------------------------------------
 
     /** App price now: half after 앱스토어 세일. */
-    fun appPrice(s: GameState, appId: String): BigInteger =
-        rules.appPrice(Catalog.app(appId)).let { if (s.saleNext) it / BigInteger.TWO else it }
+    fun appPrice(s: GameState, appId: String): BigInteger {
+        var p = rules.appPrice(Catalog.app(appId))
+        if (on(s, "shopee") && p < rules.appPrice(Catalog.app("shopee"))) p = p * BigInteger.valueOf(9) / BigInteger.TEN  // 쇼피피
+        return if (s.saleNext) p / BigInteger.TWO else p
+    }
+
+    /** Upgrade price after 글린츠츠 (업무 −10%) and 페이팔팔 (금융 −10%). */
+    fun upgradePrice(s: GameState, appId: String): BigInteger {
+        val app = Catalog.app(appId)
+        var p = rules.upgradePrice(app, s.appLevels[appId] ?: 1)
+        if ((on(s, "glints") && app.category == Category.Work) || (on(s, "paypal") && app.category == Category.Money)) p = p * BigInteger.valueOf(9) / BigInteger.TEN
+        return p
+    }
 
     /** Unlocks are permanent: the deepest level any run reached (and the reset count) opens apps for good. */
     fun unlocked(s: GameState, appId: String): Boolean {
@@ -593,7 +732,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun buy(s: GameState, appId: String): GameState {
         if (!canBuy(s, appId)) return s
         val active = if (s.active.size < maxSlots(s)) s.active + appId else s.active
-        return s.copy(wallet = s.wallet - appPrice(s, appId), appLevels = s.appLevels + (appId to 1), active = active, saleNext = false)
+        val start = if (on(s, "store")) 2 else 1  // 큐글플레이: new apps arrive upgraded once
+        return s.copy(wallet = s.wallet - appPrice(s, appId), appLevels = s.appLevels + (appId to start), active = active, saleNext = false,
+            boostNext = on(s, "travel") || s.boostNext)
     }
 
     /** Pro version: ×3 value for an owned app, from its pro level; priced from the level curve. */
@@ -605,7 +746,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     fun upgrade(s: GameState, appId: String): GameState {
         val level = s.appLevels[appId] ?: return s
-        val price = rules.upgradePrice(Catalog.app(appId), level)
+        val price = upgradePrice(s, appId)
         if (s.wallet < price) return s
         return s.copy(wallet = s.wallet - price, appLevels = s.appLevels + (appId to level + 1))
     }
