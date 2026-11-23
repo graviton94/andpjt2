@@ -105,6 +105,7 @@ const ui = document.createElement('canvas'), uctx = ui.getContext('2d');
 let ctx = sctx;
 const bgS = document.createElement('canvas'); bgS.width = 66; bgS.height = 124; const bctx = bgS.getContext('2d');
 const bgT = document.createElement('canvas'); bgT.width = 18; bgT.height = 34; const tctx = bgT.getContext('2d');
+const HANDSET = new Image(); HANDSET.src = __HANDSET__;
 const icons = APPS.map(a => { const i = new Image(); i.src = a.icon; return i; });
 let dpr = 1;
 const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = scene.width = ui.width = W * dpr; cv.height = scene.height = ui.height = H * dpr; if (gl) gl.viewport(0, 0, cv.width, cv.height); };
@@ -495,10 +496,9 @@ function warnSign(x, y, s) {
   ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(22, 18); ctx.lineTo(-22, 18); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#1A0E06'; ctx.fillRect(-2.5, -8, 5, 15); ctx.beginPath(); ctx.arc(0, 12, 2.8, 0, 6.28); ctx.fill(); ctx.restore();
 }
-function handset(x, y, s, rot, col) {
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineWidth = 6;
-  ctx.beginPath(); ctx.arc(0, 4, 13, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
-  ctx.fillStyle = col; rr(-17, -6, 9, 12, 3); ctx.fill(); rr(8, -6, 9, 12, 3); ctx.fill(); ctx.restore();
+function handset(x, y, size, rot) { // the commissioned handset part (white, transparent)
+  if (!HANDSET.complete) return;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.drawImage(HANDSET, -size / 2, -size / 2, size, size); ctx.restore();
 }
 function hazard(alpha, t) {
   [REVEAL_Y - 150, REVEAL_Y + 100].forEach((y, k) => {
@@ -663,8 +663,8 @@ const EVENTS = {
       ctx.fillStyle = '#FF3B30'; rr(155, y0 + 196, 80, 24, 12); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('스팸 의심', 195, y0 + 212);
       ctx.fillStyle = '#F6F1EA'; ctx.font = `900 26px ${FB}`; ctx.fillText('010-7••4-2••9', 195, y0 + 256);
       ctx.fillStyle = '#B3A89B'; ctx.font = `400 13px ${FB}`; ctx.fillText('휴대전화 · 신고 1,284건', 195, y0 + 280);
-      ctx.fillStyle = '#FF3B30'; ctx.beginPath(); ctx.arc(110, y0 + 410, 34, 0, 6.28); ctx.fill(); handset(110, y0 + 412, 1, Math.PI * .75, '#FFFFFF');
-      ctx.fillStyle = '#34C759'; ctx.beginPath(); ctx.arc(280, y0 + 410, 34, 0, 6.28); ctx.fill(); handset(280, y0 + 408, 1, 0, '#FFFFFF');
+      ctx.fillStyle = '#FF3B30'; ctx.beginPath(); ctx.arc(110, y0 + 410, 34, 0, 6.28); ctx.fill(); handset(110, y0 + 412, 38, Math.PI * 1.25);
+      ctx.fillStyle = '#34C759'; ctx.beginPath(); ctx.arc(280, y0 + 410, 34, 0, 6.28); ctx.fill(); handset(280, y0 + 410, 34, 0);
       ctx.fillStyle = '#B3A89B'; ctx.font = `700 12px ${FB}`; ctx.fillText('탭해서 차단', 110, y0 + 468); ctx.fillText('받기', 280, y0 + 468);
       ctx = prev;
     },
