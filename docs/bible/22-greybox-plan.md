@@ -2,7 +2,9 @@
 
 목표: **core 엔진을 그대로 쓰는 실제 안드로이드 앱**으로 "밀고 → 터지고 → 정산 쾅"의 손맛과 하루 루프(출석·오프라인·초기화)를 폰에서 확인한다. 그림은 회색 상자여도 되지만 **타격감과 숫자 연출은 시연판 수준**이어야 한다(이 게임은 손맛 원툴).
 
-빌드 환경: 이 클라우드 작업 공간은 안드로이드 SDK 다운로드 호스트가 막혀 있다. 로컬 PC(Android Studio) 또는 CI(`.github/workflows/android.yml`, main 푸시·PR)에서 빌드한다. core는 어디서나 `gradle -p core test`.
+빌드 환경: 앱 빌드는 GitHub Actions CI(`.github/workflows/android.yml`)가 한다 — main·`ccr-*` 작업 브랜치 푸시, PR, 수동 실행. core 테스트 → 앱 단위 테스트·lint·디버그 APK → 에뮬레이터 스모크(판 표시, 6번 밀기, 강제 종료 후 저장에서 복원). core는 어디서나 `gradle -p core test`.
+
+**M1 상태(11-23)**: CI 9번 실행 초록 — 빌드·스모크 통과.
 
 ## 1. 모듈 연결
 
