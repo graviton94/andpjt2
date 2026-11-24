@@ -1,5 +1,7 @@
 # 22 · 그레이박스 작업 계획 (3단계)
 
+> **11-24 결정: 게임 화면 = 승인된 시연판(HTML/WebGL) + 실제 core 엔진.** Compose 그레이박스(M1·M2 1차)는 시안·시연판과 달라 폐기(`app/legacy/greybox`). 페이지 원본 `tools/game-page/game.tpl.html` → `build.py` → `app/src/main/assets/game`. 앱은 WebView(AssetLoader) + `GameBridge`(window.Game) → core `WebSession`. 브라우저에서는 `gradle -p core run --args="serve 8765 ../app/src/main/assets/game"` 후 `node tools/game-page/playtest.js`로 손가락처럼 플레이·캡처해 확인하고 넘긴다. 아래 Compose 기준 내용은 참고용.
+
 목표: **core 엔진을 그대로 쓰는 실제 안드로이드 앱**으로 "밀고 → 터지고 → 정산 쾅"의 손맛과 하루 루프(출석·오프라인·초기화)를 폰에서 확인한다. 그림은 회색 상자여도 되지만 **타격감과 숫자 연출은 시연판 수준**이어야 한다(이 게임은 손맛 원툴).
 
 빌드 환경: 앱 빌드는 GitHub Actions CI(`.github/workflows/android.yml`)가 한다 — main·`ccr-*` 작업 브랜치 푸시, PR, 수동 실행. core 테스트 → 앱 단위 테스트·lint·디버그 APK → 에뮬레이터 스모크(판 표시, 6번 밀기, 강제 종료 후 저장에서 복원). core는 어디서나 `gradle -p core test`.
