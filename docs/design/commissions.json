@@ -1,6 +1,251 @@
 {
   "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
-  "pending": [],
+  "pending": [
+    {
+      "id": "cta",
+      "title": "버튼 스킨 (상점·출석·패스·프리미엄 공용, 9-슬라이스)",
+      "priority": 1,
+      "cols": 2,
+      "rows": 4,
+      "cell": [
+        1024,
+        384
+      ],
+      "intro": "Stretchable button skins for a mobile game shop. Same sticker style. Every button is a wide pill or rounded bar with NO text and NO icon on it (text is added in code). Keep the middle third perfectly uniform horizontally so the button can be 9-slice stretched; all detail (highlight, bevel) runs along the whole length. Pressed versions are the same shape pushed down: shorter bottom lip, slightly darker, highlight dimmer.",
+      "items": [
+        {
+          "id": "btn-gold",
+          "note": "구매(P·원화) 기본",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "a wide pill button, warm gold gradient #FFE27A to #F0A000, thick ink outline, glossy white highlight strip along the top, a darker amber bottom lip about 12% of the height"
+        },
+        {
+          "id": "btn-gold-pressed",
+          "note": "구매 눌림",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "the same gold pill pressed: bottom lip almost gone, colours one step darker, highlight dimmer"
+        },
+        {
+          "id": "btn-green",
+          "note": "데이터로 사기",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "a wide rounded-bar button (corner radius about 30% of the height, not a full pill), fresh green gradient #9BE37A to #4FB43A, ink outline, top highlight, darker green bottom lip"
+        },
+        {
+          "id": "btn-green-pressed",
+          "note": "데이터 눌림",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "the same green bar pressed: lip almost gone, one step darker"
+        },
+        {
+          "id": "btn-blue",
+          "note": "광고 보고 받기",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "a wide pill button, sky-to-royal blue gradient #7CC4FF to #2F7BF5, ink outline, top highlight, darker blue bottom lip"
+        },
+        {
+          "id": "btn-blue-pressed",
+          "note": "광고 눌림",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "the same blue pill pressed: lip almost gone, one step darker"
+        },
+        {
+          "id": "btn-off",
+          "note": "비활성(못 삼·잠김)",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "the same wide pill shape in flat cool grey #B9BEC9 to #8E94A3, outline a softer grey, no gloss, a faint bottom lip"
+        },
+        {
+          "id": "btn-claim",
+          "note": "받기·출석하기 큰 버튼",
+          "out": [
+            768,
+            288
+          ],
+          "desc": "an extra-juicy wide pill: hot orange to red gradient #FFB14A to #FF5A1F, ink outline, big glossy top highlight, a few tiny white sparkles at both ends, thick darker red bottom lip"
+        }
+      ]
+    },
+    {
+      "id": "promo",
+      "title": "판촉 딱지·광고 표시·상태 아이콘 (글자 없는 판, 글씨는 코드)",
+      "priority": 1,
+      "cols": 4,
+      "rows": 4,
+      "cell": [
+        1024,
+        1024
+      ],
+      "intro": "Promo stickers and status marks for a mobile game shop and attendance board. Same sticker style. Stickers are BLANK where words would go (a clean flat area for text added in code): never draw letters, numbers, percent signs or currency symbols.",
+      "items": [
+        {
+          "id": "ribbon",
+          "note": "리본 띠 (첫 구매 2배·한정)",
+          "out": [
+            768,
+            384
+          ],
+          "desc": "a horizontal red ribbon banner #FF3B30 with folded tails at both ends, blank flat centre band, ink outline"
+        },
+        {
+          "id": "sash",
+          "note": "모서리 띠 (BEST·HOT)",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a diagonal corner sash that wraps the top-left corner of a card (drawn as the corner piece only, ends cut straight), golden yellow #FFD34D with a darker underside fold, blank band"
+        },
+        {
+          "id": "burst",
+          "note": "할인 폭발 딱지 (-50%)",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a round starburst sale badge with 16 short points, red #FF3B30 outer ring and yellow #FFE14A inner disc, blank centre"
+        },
+        {
+          "id": "tag",
+          "note": "가격표 (원래 가격)",
+          "out": [
+            512,
+            384
+          ],
+          "desc": "a small price tag shape with a punched hole and a short string, cream #FFF6E0 with a red edge stripe, blank face"
+        },
+        {
+          "id": "stamp",
+          "note": "출석 도장",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a red rubber-stamp seal mark #E8322B, round with a double ring and slightly rough ink texture at the edges, tilted 12 degrees, blank centre (no characters)"
+        },
+        {
+          "id": "rosette",
+          "note": "BEST 로제트",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a gold award rosette with two short ribbon tails, blank centre disc"
+        },
+        {
+          "id": "flame",
+          "note": "HOT 불꽃 딱지",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a chunky orange-red flame badge #FF7A1A to #FF2D2D with a yellow core, blank flat oval on its body for text"
+        },
+        {
+          "id": "bolt",
+          "note": "기간 한정 번개 딱지",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a purple pill-shaped tag #8B5CF6 with a yellow lightning bolt on its left end, blank space on the right"
+        },
+        {
+          "id": "ad",
+          "note": "광고 표시 (AD)",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a rewarded-ad mark: a small rounded TV screen #2F7BF5 with a white play triangle, a tiny gift ribbon on its top right corner"
+        },
+        {
+          "id": "lock",
+          "note": "잠김",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a chunky padlock, steel grey body #9AA3B5 with a gold keyhole"
+        },
+        {
+          "id": "check",
+          "note": "받음·완료",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a round green badge #34C759 with a thick white tick"
+        },
+        {
+          "id": "clock",
+          "note": "남은 시간·매일 초기화",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a small round alarm clock, orange #FF8A1F rim, cream face, hands at ten past ten"
+        },
+        {
+          "id": "crown",
+          "note": "MAX·프리미엄 최고",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a gold crown with three points tipped with small cyan gems"
+        },
+        {
+          "id": "gift",
+          "note": "큰 보상 상자 (10·20·30일)",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a gift box, magenta #E22E78 box with a gold ribbon and bow, a few sparkles"
+        },
+        {
+          "id": "bubble",
+          "note": "NEW 말풍선",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a small round speech bubble, mint green #34C759, white outline inside the ink outline, blank"
+        },
+        {
+          "id": "close",
+          "note": "닫기 버튼 판",
+          "out": [
+            512,
+            512
+          ],
+          "desc": "a round close button plate, dark translucent grey #2A2420 with a white X, ink outline"
+        }
+      ]
+    }
+  ],
   "delivered": [
     {
       "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
