@@ -13,16 +13,17 @@ async function run() {
   const desktop = endpoint === 'desktop';
   const browser = desktop
     ? await chromium.launch({ executablePath: process.env.SMOKE_CHROMIUM || undefined, args: ['--no-sandbox', '--no-proxy-server', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
-    : await chromium.connectOverCDP(endpoint);
+    : await chromium.connectOverCDP(endpoint, { noDefaults: true });
   let page;
   if (desktop) {
     page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   } else {
-    assert.equal(browser.contexts().length, 1);
-    page = await browser.contexts()[0].waitForEvent('page', {
-      predicate: candidate => candidate.url() === appUrl, timeout: 750,
-    }).catch(() => browser.contexts()[0].pages().find(candidate => candidate.url() === appUrl));
-    assert.ok(page, 'Could not find the game WebView');
+    const [context] = browser.contexts();
+    assert.ok(context, 'Could not open the default WebView context');
+    page = context.pages().find(candidate => candidate.url() === appUrl);
+    if (!page) page = await context.waitForEvent('page', {
+      predicate: candidate => candidate.url() === appUrl, timeout: 5_000,
+    });
   }
 
   const errors = [];

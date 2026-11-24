@@ -54,7 +54,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Prepare the balance smoke test
         run: |
-          npm install --prefix build/smoke-tools --no-save --no-package-lock playwright-core@1.55.1
+          npm install --prefix build/smoke-tools --no-save --no-package-lock playwright-core@1.62.1
           ./gradlew -p core run --args="android-balance-fixture ${{ github.workspace }}/build/balance-fixture.json"
       - name: Enable Android emulator acceleration
         run: |

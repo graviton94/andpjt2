@@ -78,12 +78,13 @@ fun balanceReport(out: File) {
         listOf(it.name, it.won, rules.passInstantCredits + 30L *
             (rules.passDailyCredits + it.dailyData + rules.passOverclockMinutes * CreditItem.Overclock.price / 60), null)
     }
-    csv(File(out, "sku-values.csv"), listOf("sku", "won", "data_equivalent", "first_data_equivalent", "normal_x", "first_x"),
-        sku.asSequence().map { row ->
+    val skuValues = sku.map { row ->
             val price = (row[1] as Number).toDouble()
             row + listOf(fmt((row[2] as Number).toDouble() * offers.baseWonPerData / price),
                 fmt((row[3] as Number?)?.toDouble()?.times(offers.baseWonPerData)?.div(price)))
-        })
+    }
+    csv(File(out, "sku-values.csv"), listOf("sku", "won", "data_equivalent", "first_data_equivalent", "normal_x", "first_x"),
+        skuValues.asSequence())
 
     val report = StringBuilder("# 본선 밸런스 판정\n\n")
     fun line(s: String = "") { report.appendLine(s) }
@@ -140,6 +141,16 @@ fun balanceReport(out: File) {
         }
     }
     line()
+    line("## 상품별 지급과 기준가 대비 효율")
+    line()
+    line("| 상품 | 가격 ₩ | 데이터 환산 | 첫 팩 환산 | 기본 배율 | 첫 팩 배율 |")
+    line("|---|---:|---:|---:|---:|---:|")
+    for (row in skuValues) {
+        line(row.joinToString(separator = " | ", prefix = "| ", postfix = " |") { it?.toString()?.ifEmpty { "—" } ?: "—" })
+    }
+    line()
     line("속도 구독의 데이터 환산은 확정 지급분과 오버클럭만 계산한다. 속도·초기화·동기화 배율은 프로필 표에서 판정한다.")
+    line()
+    line("출석 가치는 [검산식](standards.md)과 [출석 CSV](attendance-values.csv)를 참고한다. [상품·출석 40개 케이스](commerce-scenarios.csv)는 84일 성장 프로필과 별도다.")
     File(out, "REPORT.md").writeText(report.toString())
 }
