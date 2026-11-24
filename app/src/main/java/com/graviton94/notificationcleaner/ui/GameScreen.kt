@@ -1,9 +1,8 @@
 package com.graviton94.notificationcleaner.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,88 +24,87 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Text
 import com.graviton94.notificationcleaner.GameViewModel
 import com.graviton94.notificationcleaner.core.Catalog
-import com.graviton94.notificationcleaner.core.FxPlan
 import com.graviton94.notificationcleaner.core.Row as BoardRow
 import com.graviton94.notificationcleaner.core.RowKind
 import com.graviton94.notificationcleaner.core.short
+import com.graviton94.notificationcleaner.fx.FxDirector
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.random.Random
 
 private val Ink = Color(0xFFF6F1EA)
 private val Sub = Color(0xFFB3A89B)
 private val Gold = Color(0xFFFFD66B)
 private val Card = Color(0x1AFFFFFF)
+private val Outline = Color(0xFF2A0C02)
+private val ChipBlue = Color(0xFF2F7BF5)
+private val MultRed = Color(0xFFFF3B30)
 
 @Composable
 fun GameScreen(vm: GameViewModel) {
     val s = vm.state
-    val shake = remember { Animatable(0f) }
-    val pop = remember { Animatable(0f) }
-    var popText by remember { mutableStateOf("") }
-    var label by remember { mutableStateOf("") }
+    val fx = vm.fx
+    // Frame clock for the FX director (particles, shake, count-up).
+    LaunchedEffect(Unit) { while (true) { withFrameNanos { fx.tick() } } }
+    @Suppress("UNUSED_VARIABLE") val frame = fx.frame // read: redraw every frame
+    val density = LocalDensity.current.density
+    val rows = fx.frozenRows ?: s.rows
+    val drop = fx.collapse
 
-    // One celebration per swipe: shake by the ladder, the payout pops and fades.
-    LaunchedEffect(vm.fxSeq) {
-        val o = vm.lastOutcome ?: return@LaunchedEffect
-        if (o.chain <= 0) return@LaunchedEffect
-        val step = FxPlan.step(o.chain)
-        popText = "+" + short(o.earned) + " P"
-        label = if (o.chain == 1) "팡!" else "${o.chain}연쇄 ${step.name}!"
-        launch {
-            repeat(6) { i -> shake.animateTo(((if (i % 2 == 0) 1 else -1) * step.shakeDp * 2 * (1 - i / 6f)).toFloat(), tween(28)) }
-            shake.animateTo(0f, tween(40))
-        }
-        pop.snapTo(0f)
-        pop.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMedium))
-        kotlinx.coroutines.delay(900)
-        pop.animateTo(0f, tween(250))
-    }
-
-    Box(
-        Modifier.fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF2A1A10), Color(0xFF0C0907))))
-            .safeDrawingPadding()
-    ) {
-        Column(Modifier.fillMaxSize().padding(horizontal = 14.dp)) {
-            Hud(vm)
-            Spacer(Modifier.height(8.dp))
-            Column(Modifier.weight(1f).offset { IntOffset(shake.value.dp.roundToPx(), 0) }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                s.rows.forEachIndexed { i, row -> key(row.id) { RowCard(row, i) { vm.swipe(row.id) } } }
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF2A1A10), Color(0xFF0C0907))))) {
+        // ── world layer: shaken, cracked, flashed ──
+        Box(Modifier.fillMaxSize().graphicsLayer { translationX = fx.shakeX * density; translationY = fx.shakeY * density }) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 14.dp)) {
+                Hud(vm, Modifier.graphicsLayer { translationY = drop * 70f * density; rotationZ = drop * -6f; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.1f, 0f) })
+                Spacer(Modifier.height(8.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rows.forEachIndexed { i, row -> key(row.id) { RowCard(row, i, fx) { vm.swipe(row.id) } } }
+                }
+                Footer(vm, Modifier.graphicsLayer { translationY = drop * 110f * density; rotationZ = drop * 5f })
             }
-            Footer(vm)
+            WorldFx(fx)
         }
-        if (pop.value > 0.01f) {
-            Column(Modifier.align(Alignment.Center).scale(0.6f + 0.4f * pop.value).graphicsLayer { alpha = pop.value.coerceIn(0f, 1f) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(label, color = Gold, fontSize = 26.sp, fontWeight = FontWeight.Black)
-                Text(popText, color = Ink, fontSize = 40.sp, fontWeight = FontWeight.Black)
-            }
-        }
+        // ── score layer: never distorted ──
+        ScoreLayer(fx, Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 96.dp))
         vm.offlinePaid?.let { paid ->
             Box(Modifier.fillMaxSize().background(Color(0x99000000)).clickable { vm.offlinePaid = null }, contentAlignment = Alignment.Center) {
                 Column(Modifier.clip(RoundedCornerShape(24.dp)).background(Color(0xFF241B14)).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -120,19 +118,106 @@ fun GameScreen(vm: GameViewModel) {
     }
 }
 
+/** Shards, sparks, screen glass cracks and the white flash, drawn over the board in window coordinates. */
 @Composable
-private fun key(id: Long, content: @Composable () -> Unit) { androidx.compose.runtime.key(id) { content() } }
+private fun WorldFx(fx: FxDirector) {
+    Canvas(Modifier.fillMaxSize().onGloballyPositioned { fx.origin = it.positionInWindow() }) {
+        @Suppress("UNUSED_VARIABLE") val f = fx.frame
+        val o = fx.origin
+        for (p in fx.particles) {
+            val fade = (1f - p.life / p.maxLife).coerceIn(0f, 1f)
+            translate(p.x - o.x, p.y - o.y) {
+                rotate(p.rot, pivot = Offset.Zero) {
+                    if (p.shard) {
+                        val h = p.size
+                        val path = Path().apply { moveTo(-h * 0.5f, -h * 0.35f); lineTo(h * 0.55f, -h * 0.15f); lineTo(h * 0.1f, h * 0.5f); close() }
+                        drawPath(path, Outline.copy(alpha = fade), style = Stroke(width = 3f))
+                        drawPath(path, p.color.copy(alpha = fade))
+                    } else drawCircle(p.color.copy(alpha = fade), radius = p.size * 0.22f, center = Offset.Zero)
+                }
+            }
+        }
+        if (fx.crack > 0.01f) {
+            val r = Random(fx.crackSeed)
+            val c = Offset(size.width * (0.35f + r.nextFloat() * 0.3f), size.height * (0.3f + r.nextFloat() * 0.25f))
+            val a = fx.crack.coerceAtMost(1f)
+            repeat(11) { k ->
+                var ang = k / 11f * 6.283f + r.nextFloat() * 0.4f
+                var pt = c
+                val path = Path().apply { moveTo(c.x, c.y) }
+                repeat(5) {
+                    val len = (40f + r.nextFloat() * 120f) * (1f + it * 0.3f)
+                    ang += (r.nextFloat() - 0.5f) * 0.7f
+                    pt = Offset(pt.x + cos(ang) * len, pt.y + sin(ang) * len)
+                    path.lineTo(pt.x, pt.y)
+                }
+                drawPath(path, Color.Black.copy(alpha = 0.35f * a), style = Stroke(width = 6f, cap = StrokeCap.Round))
+                drawPath(path, Color.White.copy(alpha = 0.85f * a), style = Stroke(width = 2.2f, cap = StrokeCap.Round))
+            }
+            drawCircle(Color.White.copy(alpha = 0.5f * a), radius = 26f, center = c, style = Stroke(width = 3f))
+        }
+        if (fx.flash > 0.01f) drawRect(Color.White.copy(alpha = fx.flash * 0.55f))
+    }
+}
+
+/** Balatro-style tally: chain label, chips × mult while the chain runs, then the total counts up and slams. */
+@Composable
+private fun ScoreLayer(fx: FxDirector, modifier: Modifier) {
+    @Suppress("UNUSED_VARIABLE") val f = fx.frame
+    val t = fx.now()
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        if (fx.labelAt >= 0) {
+            val e = (t - fx.labelAt) / 1000f
+            val pop = 1f + 0.5f * exp(-e * 9f)
+            val alpha = if (e < 1.1f) 1f else (1f - (e - 1.1f) * 3f).coerceIn(0f, 1f)
+            Outlined(fx.label, 30.sp, if (fx.labelHot) MultRed else Gold, Modifier.graphicsLayer { scaleX = pop; scaleY = pop; this.alpha = alpha; rotationZ = -4f })
+        }
+        val total = fx.totalShown
+        if (total == null && fx.mult > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tally(short(fx.chips), ChipBlue)
+                Outlined("×", 30.sp, Ink)
+                Tally(fx.mult.toString(), MultRed)
+            }
+        }
+        if (total != null) {
+            val e = if (fx.slamAt >= 0) (t - fx.slamAt) / 1000f else -1f
+            val punch = if (e >= 0) 1f + 0.7f * exp(-e * 7f) * cos(e * 26f).coerceAtLeast(-0.3f) else 1f + 0.05f * sin(t / 40f)
+            Outlined("+" + short(total), 52.sp, if (e >= 0) Gold else Ink, Modifier.graphicsLayer { scaleX = punch; scaleY = punch; rotationZ = -3f })
+        }
+    }
+}
 
 @Composable
-private fun Hud(vm: GameViewModel) {
+private fun Tally(text: String, color: Color) {
+    Box(Modifier.clip(RoundedCornerShape(14.dp)).background(Outline).padding(3.dp).clip(RoundedCornerShape(12.dp)).background(color).padding(horizontal = 14.dp, vertical = 4.dp)) {
+        Text(text, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+    }
+}
+
+/** Big game text with an ink outline and a hard drop (demo `gtext`). */
+@Composable
+private fun Outlined(text: String, size: androidx.compose.ui.unit.TextUnit, color: Color, modifier: Modifier = Modifier) {
+    Box(modifier) {
+        val st = TextStyle(fontSize = size, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+        Text(text, style = st.copy(color = Outline), modifier = Modifier.offset(y = 4.dp))
+        for ((dx, dy) in listOf(-2 to 0, 2 to 0, 0 to -2, 0 to 2, -2 to -2, 2 to 2, -2 to 2, 2 to -2)) {
+            Text(text, style = st.copy(color = Outline), modifier = Modifier.offset(dx.dp, dy.dp))
+        }
+        Text(text, style = st.copy(color = color))
+    }
+}
+
+@Composable
+private fun Hud(vm: GameViewModel, modifier: Modifier) {
     val s = vm.state
-    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+    Column(modifier.fillMaxWidth().padding(top = 6.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("알림 청소부", color = Sub, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Text("Lv ${s.level}", color = Sub, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Text("배터리 ${s.energy}/${vm.engine.energyCap(s)}", color = Sub, fontSize = 13.sp)
         }
-        Text(short(s.wallet) + " P", color = Ink, fontSize = 34.sp, fontWeight = FontWeight.Black,
+        Text(short(vm.fx.walletShown ?: s.wallet) + " P", color = Ink, fontSize = 34.sp, fontWeight = FontWeight.Black,
             modifier = Modifier.align(Alignment.CenterHorizontally).semantics { contentDescription = "지갑" })
         Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color(0x22FFFFFF))) {
             Box(Modifier.fillMaxWidth(s.gauge / 100f).height(8.dp).background(Color(0xFFFF8A1F)))
@@ -142,43 +227,56 @@ private fun Hud(vm: GameViewModel) {
 }
 
 @Composable
-private fun RowCard(row: BoardRow, index: Int, onSwipe: () -> Unit) {
+private fun RowCard(row: BoardRow, index: Int, fx: FxDirector, onSwipe: () -> Unit) {
     val dx = remember(row.id) { Animatable(0f) }
+    val enter = remember(row.id) { Animatable(0f) }
+    LaunchedEffect(row.id) { enter.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 500f)) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val limit = with(density) { 110.dp.toPx() }
     val (title, sub, color, letter) = describe(row)
-    Row(
+    val t = fx.now()
+    // burst: swell + white-hot, then gone; merge: a quick bump
+    val b = fx.bursting[row.id]?.let { ((t - it) / 220f).coerceIn(0f, 1f) }
+    val bump = fx.bumped[row.id]?.let { ((t - it) / 180f).coerceIn(0f, 1f) }
+    val scale = when {
+        b != null -> 1f + 0.16f * sin(min(b, 1f) * 3.1416f * 0.5f)
+        bump != null -> 1f + 0.07f * (1f - bump)
+        else -> 0.92f + 0.08f * enter.value
+    }
+    val alpha = if (b != null) (1f - (b - 0.35f) / 0.65f).coerceIn(0f, 1f) else enter.value.coerceIn(0f, 1f)
+    Box(
         Modifier.fillMaxWidth().height(60.dp)
-            .offset { IntOffset(dx.value.roundToInt(), 0) }
-            .clip(RoundedCornerShape(18.dp)).background(Card).border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(18.dp))
+            .onGloballyPositioned { fx.bounds[row.id] = it.boundsInWindow() }
+            .offset { IntOffset(dx.value.roundToInt(), ((1f - enter.value) * -24f * density.density).roundToInt()) }
+            .graphicsLayer { scaleX = scale; scaleY = scale; this.alpha = alpha }
             .semantics { contentDescription = "알림 줄 ${index + 1}" }
             .pointerInput(row.id) {
                 detectHorizontalDragGestures(
-                    onDragEnd = {
-                        scope.launch {
-                            if (abs(dx.value) > limit) { onSwipe() } else dx.animateTo(0f, spring())
-                        }
-                    },
+                    onDragEnd = { scope.launch { if (abs(dx.value) > limit) onSwipe() else dx.animateTo(0f, spring()) } },
                     onHorizontalDrag = { _, d -> scope.launch { dx.snapTo(dx.value + d) } },
                 )
             }
-            .clickable { onSwipe() }
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .clickable { onSwipe() },
     ) {
-        Box(Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(color), contentAlignment = Alignment.Center) {
-            Text(letter, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
-        }
-        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-            Text(title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text(sub, color = Sub, fontSize = 12.sp)
-        }
-        if (row.merges) Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            repeat(row.threshold.coerceAtLeast(1)) { k ->
-                Box(Modifier.size(9.dp).clip(CircleShape).background(if (k < row.count) color else Color(0x33FFFFFF)))
+        Row(
+            Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp)).background(Card).border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(18.dp)).padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(color), contentAlignment = Alignment.Center) {
+                Text(letter, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+            }
+            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                Text(title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(sub, color = Sub, fontSize = 12.sp)
+            }
+            if (row.merges) Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                repeat(row.threshold.coerceAtLeast(1)) { k ->
+                    Box(Modifier.size(9.dp).clip(CircleShape).background(if (k < row.count) color else Color(0x33FFFFFF)))
+                }
             }
         }
+        if (b != null) Box(Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = (1f - b) * 0.9f)))
     }
 }
 
@@ -194,8 +292,8 @@ private fun describe(r: BoardRow): Look = when (r.kind) {
 }
 
 @Composable
-private fun Footer(vm: GameViewModel) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+private fun Footer(vm: GameViewModel, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Pill("상점 · 강화") { vm.shopOpen = true }
         Text("밀어서 정리", color = Sub, fontSize = 12.sp)
         Pill(if (vm.soundOn) "소리 켬" else "소리 끔") { vm.soundOn = !vm.soundOn }

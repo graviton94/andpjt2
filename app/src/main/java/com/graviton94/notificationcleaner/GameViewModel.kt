@@ -12,14 +12,13 @@ import androidx.lifecycle.viewModelScope
 import com.graviton94.notificationcleaner.core.Actor
 import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.Catalog
-import com.graviton94.notificationcleaner.core.CueKind
 import com.graviton94.notificationcleaner.core.Engine
-import com.graviton94.notificationcleaner.core.FxPlan
 import com.graviton94.notificationcleaner.core.GameState
 import com.graviton94.notificationcleaner.core.Meta
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.Shop
 import com.graviton94.notificationcleaner.core.SwipeOutcome
+import com.graviton94.notificationcleaner.fx.FxDirector
 import com.graviton94.notificationcleaner.fx.Sfx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,6 +35,8 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
     private val meta = Meta(engine)
     val shop = Shop(engine)
     private val sfx = Sfx(app)
+    /** Plays every swipe's FX plan; the screen draws from it. */
+    val fx = FxDirector(sfx, viewModelScope) { soundOn }
     private val saveFile = File(app.filesDir, "save.json")
     private val prefs = app.getSharedPreferences("clock", 0)
 
@@ -99,38 +100,24 @@ class GameViewModel(app: Application) : AndroidViewModel(app) {
         state = engine.tick(state, t)
         if (t < state.autoPausedUntil || t - lastAuto < engine.autoIntervalMs(state, t)) return
         lastAuto = t
+        if (fx.busy) return // let the show finish before the auto-cleaner moves the board
         val target = engine.autoTarget(state, t) ?: return
-        engine.swipe(state, target, t, Actor.Auto)?.let { apply(it, t, auto = true) }
+        val prev = state
+        engine.swipe(state, target, t, Actor.Auto)?.let { apply(it, t, auto = true, prev) }
     }
 
     fun swipe(rowId: Long) {
         val t = now()
+        val prev = state
         val o = engine.swipe(state, rowId, t) ?: run { sfx.play("ui.error"); return }
-        apply(o, t, auto = false)
+        apply(o, t, auto = false, prev)
     }
 
-    private fun apply(o: SwipeOutcome, t: Long, auto: Boolean) {
+    private fun apply(o: SwipeOutcome, t: Long, auto: Boolean, prev: GameState) {
         state = meta.record(o.state, o, t)
         if (!auto || o.chain > 0) { lastOutcome = o; fxSeq++ }
-        play(o, quiet = auto)
+        fx.run(o, prev.rows, prev.wallet, quiet = auto)
         save()
-    }
-
-    /** Sounds and haptics from the core FX plan, on its timeline. */
-    private fun play(o: SwipeOutcome, quiet: Boolean) {
-        if (!soundOn) return
-        val plan = FxPlan.plan(o)
-        viewModelScope.launch {
-            var at = 0L
-            for (cue in plan) {
-                if (cue.atMs > at) { delay(cue.atMs - at); at = cue.atMs }
-                when (cue.kind) {
-                    CueKind.Sound -> cue.sound?.let { sfx.play(it, if (quiet) 0.35f else 1f) }
-                    CueKind.Haptic -> if (!quiet) sfx.buzz(cue.value.toLong())
-                    else -> {}
-                }
-            }
-        }
     }
 
     // Shop (M1 minimum: buy the next apps, upgrade the deck, factory reset) -----------------------
