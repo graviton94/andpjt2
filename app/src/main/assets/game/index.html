@@ -51,6 +51,9 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .it{min-height:66px;padding:10px 12px;border-radius:20px;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);margin-bottom:8px}
 .it.lock{background:#FFFFFF08}.it.lock img{filter:grayscale(1);opacity:.5}
 .it img{width:40px;height:40px;border-radius:11px;flex:none}
+.fr{position:relative;flex:none;width:58px;height:58px;margin:-9px -7px}
+.fr img{position:absolute;margin:0}.fr img.ring{inset:0;width:100%;height:100%;border-radius:0;z-index:1}
+.slot .fr{width:52px;height:52px;margin:-6px 0 -8px}
 .it .t{flex:1;min-width:0}.it .t b{font-size:14.5px}.it .t .m{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tier{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;color:var(--acc2)}
 .btn{flex:none;min-width:88px;height:40px;padding:0 12px;border-radius:999px;border:0;font:inherit;font-size:12.5px;font-weight:800;background:var(--acc);color:#1E1408}
@@ -1288,7 +1291,16 @@ let P = null, sheetKind = null, upMode = '1', shopTier = 0, armReset = false;
 const ICONP = { data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
   reset: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4', backup: 'M6 4h9l3 3v13H6zM9 4v5h6V4', cloud: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z', rec: 'M5 19V9M12 19V5M19 19v-7' };
 const svg = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
-const ico = id => `<img src="icons/${id}.svg" alt="" onerror="this.style.visibility='hidden'">`;
+// premium ★n wraps the icon in frame n: the icon is scaled to the frame's measured hole (centre, size, corner) so the
+// ring covers its edge exactly (holes measured from img/bm/badge-frame-n.webp, see tools/game-page/build.py notes)
+const FRAME = {"1": {"cx": 0.4948, "cy": 0.4922, "s": 0.5348, "r": 0.1543}, "2": {"cx": 0.4974, "cy": 0.4922, "s": 0.5296, "r": 0.172}, "3": {"cx": 0.4948, "cy": 0.5312, "s": 0.5035, "r": 0.1187}, "4": {"cx": 0.4948, "cy": 0.5052, "s": 0.514, "r": 0.1543}, "5": {"cx": 0.4922, "cy": 0.5521, "s": 0.4775, "r": 0.1009}};
+const starsOf = id => (P && P.bm && (P.bm.premium.find(a => a.id === id) || {}).stars) || 0;
+const ico = (id, stars = starsOf(id)) => {
+  const img = `<img src="icons/${id}.svg" alt="" onerror="this.style.visibility='hidden'"`;
+  if (!stars) return img + '>';
+  const f = FRAME[Math.min(5, stars)], pct = v => (v * 100).toFixed(2) + '%';
+  return `<span class="fr">${img} style="left:${pct(f.cx - f.s / 2)};top:${pct(f.cy - f.s / 2)};width:${pct(f.s)};height:${pct(f.s)};border-radius:${(f.r / f.s * 100).toFixed(1)}%"><img class="ring" src="img/bm/badge-frame-${Math.min(5, stars)}.webp" alt=""></span>`;
+};
 const P$ = n => fmt(Number(n)) + ' P';
 async function loadPanel() { P = await api('panel'); P.bm = await api('bm'); applyState(P.state); return P; }
 function closeAll() { shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
@@ -1476,7 +1488,7 @@ async function afterAct(o, failMsg) {
 }
 
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }) };
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k) };
 
 // ---------- boot ----------
 (async () => {
