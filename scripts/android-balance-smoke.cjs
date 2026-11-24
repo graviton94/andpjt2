@@ -64,8 +64,24 @@ async function run() {
   const act = name => attr('data-act', name);
   const close = async () => {
     checkpointStage('close panel');
-    if (await page.locator('#scrim.open').count()) await page.locator('#scrim').click({ position: { x: 3, y: 3 } });
+    const scrim = page.locator('#scrim.open');
+    if (await scrim.count()) await scrim.dispatchEvent('click');
     await page.locator('#scrim.open').waitFor({ state: 'detached' });
+  };
+  const drag = async (x, y, endX, endY) => {
+    if (desktop) {
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(endX, endY, { steps: 6 });
+      await page.mouse.up();
+      return;
+    }
+    const size = [...adb('shell', 'wm', 'size').toString().matchAll(/(\d+)x(\d+)/g)].at(-1);
+    assert.ok(size, 'Unable to read emulator display size');
+    const viewport = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+    const px = x => String(Math.round(x * Number(size[1]) / viewport.w));
+    const py = y => String(Math.round(y * Number(size[2]) / viewport.h));
+    adb('shell', 'input', 'swipe', px(x), py(y), px(endX), py(endY), '180');
   };
   const open = async kind => {
     checkpointStage(`open ${kind}`);
@@ -73,10 +89,7 @@ async function run() {
     else if (!(await page.locator('#shade.open').count())) {
       const b = await page.locator('#stage').boundingBox();
       const x = b.x + b.width / 2;
-      await page.mouse.move(x, b.y + b.height * .145);
-      await page.mouse.down();
-      await page.mouse.move(x, b.y + b.height * .36, { steps: 5 });
-      await page.mouse.up();
+      await drag(x, b.y + b.height * .145, x, b.y + b.height * .36);
     }
     await page.locator('#shade.open').locator(`[data-k="${kind}"]`).click();
     await page.locator('#sheet.open').waitFor();
@@ -181,11 +194,8 @@ async function run() {
     const h = Math.max(740, Math.round(390 * dimensions.h / dimensions.w));
     const y = b.y + (206 + Math.round((h - 740) * .35) + 72 * row) / h * b.height;
     const x = b.x + b.width * .75;
-    await page.waitForFunction(({ x, y }) => document.elementFromPoint(x, y)?.id === 'stage', { x, y });
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.move(b.x + b.width * .2, y, { steps: 6 });
-    await page.mouse.up();
+    await page.waitForFunction(({ x, y }) => document.elementFromPoint(x, y)?.id === 'stage', { x, y }, { polling: 100 });
+    await drag(x, y, b.x + b.width * .2, y);
     await until(async () => (await api('snapshot')).swipes === s.swipes + 1, 'Swipe was not applied');
     assert.ok((await panel()).bestChain >= 1);
     await shot('07-chain');
