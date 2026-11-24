@@ -104,9 +104,27 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .day.big{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;background:var(--bigday);border-color:#FFC23D66;min-height:54px}
 .day.big img{margin:0;width:36px;height:36px}.day.big b{font:20px "Black Han Sans",sans-serif;color:var(--gold)}
 .mis{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}.mis .bar{height:6px}
+.skin{border:0;border-style:solid;background:none!important;border-image-slice:62 78 62 78 fill;border-image-width:17px 21px 17px 21px;border-image-repeat:stretch;padding:0 14px 3px;text-shadow:none}
+.skin.gold{border-image-source:url(img/ui/btn-gold.webp);color:#3A1E02}.skin.gold:active{border-image-source:url(img/ui/btn-gold-pressed.webp)}
+.skin.green{border-image-source:url(img/ui/btn-green.webp);color:#0F3306}.skin.green:active{border-image-source:url(img/ui/btn-green-pressed.webp)}
+.skin.blue{border-image-source:url(img/ui/btn-blue.webp);color:#fff;text-shadow:0 1px 0 #0B3A8A}.skin.blue:active{border-image-source:url(img/ui/btn-blue-pressed.webp)}
+.skin.claim{border-image-source:url(img/ui/btn-claim.webp);color:#fff;text-shadow:0 1px 0 #8A2200,0 0 6px #A23000}
+.skin:disabled,.skin.off{border-image-source:url(img/ui/btn-off.webp)!important;color:#5A5F6C!important;text-shadow:none;filter:none;opacity:1}
+.skin img{width:20px;height:20px;vertical-align:-4px}
+.ic,.it img.ic,.skin img.ic{width:16px;height:16px;border-radius:0;vertical-align:-3px;margin-right:3px;flex:none}
+.it .skin img{width:20px;height:20px;border-radius:0}
+.btn.own{display:inline-flex;align-items:center;justify-content:center}
+.rib{background:url(img/ui/ribbon.webp) center/100% 100% no-repeat!important;padding:6px 18px 9px!important;border-radius:0!important;top:-12px!important;text-shadow:0 1px 0 #8A1010}
+.sash{position:absolute;left:-3px;top:-3px;width:46px;height:46px;background:url(img/ui/sash.webp) 0 0/100% 100% no-repeat;z-index:1}
+.sash span{position:absolute;left:3px;top:10px;transform:rotate(-45deg);font-size:10px;font-weight:900;color:#5A3300}
+.boltt{display:inline-flex;align-items:center;justify-content:flex-end;width:78px;height:24px;background:url(img/ui/bolt.webp) left center/contain no-repeat;color:#fff;font-size:11px;font-weight:900;padding-right:9px;vertical-align:middle}
+.x{background:url(img/ui/close.webp) center/contain no-repeat!important;font-size:0!important}
+.newb{position:absolute;top:-6px;right:2px;width:34px;height:30px;background:url(img/ui/bubble.webp) center/contain no-repeat;color:#fff;font-size:9px;font-weight:900;font-style:normal;line-height:26px;text-align:center}
+.tile{position:relative}
+.day.got::after{content:"출석"!important;border:0!important;width:40px;height:40px;right:-4px!important;bottom:-6px!important;background:url(img/ui/stamp.webp) center/contain no-repeat;color:#fff!important;line-height:38px;text-align:center;padding:0!important;font-size:10px!important}
 #adov{position:fixed;inset:0;background:#000;color:#fff;display:none;place-items:center;text-align:center;font:16px "Noto Sans KR",sans-serif;z-index:50}
 #adov.on{display:grid}#adov b{display:block;font:28px "Black Han Sans",sans-serif;margin-bottom:8px}
-#offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;border:0;border-radius:999px;padding:12px 18px;font:800 15px "Noto Sans KR",sans-serif;
+#offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;height:52px;padding:0 24px 4px;white-space:nowrap;font:800 15px "Noto Sans KR",sans-serif;
  background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff;box-shadow:0 8px 24px #2F7BF566;z-index:20}
 #offer.on{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
 
@@ -114,7 +132,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -1336,7 +1354,7 @@ function renderShade() {
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${fmt(w)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${fmt(Number(P.nextLevelP))}</span></div>
-    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><b>${l}</b><em>${sub}</em></button>`).join('')}</div>
+    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? '<i class="newb">NEW</i>' : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
     <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span><span class="chip">최고 연쇄 ${P.bestChain}</span></div>
@@ -1367,7 +1385,7 @@ function renderSheet() {
       + list.map(a => {
         const lock = !a.owned && !a.open;
         const fx = (TEXTS[a.id] || [])[0] || '';
-        const btn = a.owned ? `<button class="btn own" disabled>보유</button>` : lock ? `<button class="btn" disabled>잠김</button>` : `<button class="btn" data-act="buy" data-id="${a.id}" ${w >= Number(a.price) ? '' : 'disabled'}>${P$(a.price)}</button>`;
+        const btn = a.owned ? `<span class="btn own"><img class="ic" src="img/ui/check.webp">보유</span>` : lock ? `<button class="btn skin off" disabled><img class="ic" src="img/ui/lock.webp">잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${w >= Number(a.price) ? '' : 'disabled'}>${P$(a.price)}</button>`;
         const meta = lock ? `${a.region} · ${a.cat} · ${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel} 해금`}` : `${a.region} · ${a.cat} · ${fx}`;
         return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
       }).join('');
@@ -1376,7 +1394,7 @@ function renderSheet() {
     $('sheet-t').textContent = '강화';
     const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (Number(x.price1) - Number(y.price1)));
     b.innerHTML = `<div class="seg">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
-      <button class="btn big" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
+      <button class="btn big skin claim" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
       + mine.map(a => {
         const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
         const pct = Math.round((a.level - prev) / Math.max(1, next - prev) * 100), left = next - a.level, hot = left <= 5;
@@ -1384,7 +1402,7 @@ function renderSheet() {
         const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price);
         return `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">Lv ${a.level} → ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
           <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `마일스톤 Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
-          <button class="btn" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
+          <button class="btn skin gold" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
       }).join('');
     b.querySelectorAll('[data-mode]').forEach(x => x.addEventListener('click', () => { upMode = x.dataset.mode; renderSheet(); }));
   } else if (sheetKind === 'deck') {
@@ -1399,7 +1417,7 @@ function renderSheet() {
       ${syn.length ? syn.map(([l, v]) => `<div class="syn"><span>${l}</span><span class="bar"><i style="width:${Math.min(100, v / 2)}%"></i></span><span class="v">+${v}%</span></div>`).join('') : '<div class="note">같은 권역·기능 앱을 2개 이상 넣으면 시너지가 붙어요</div>'}
       <div class="syn"><span>세트 ${P.sets}개</span><span class="bar"><i style="width:${Math.min(100, P.sets * 14)}%;background:#FF8A1F"></i></span><span class="v">×${P.sets > 1 ? '1.22^' + (P.sets - 1) : '1'}</span></div>
       <div class="h3">보유한 앱</div>
-      ${rest.length ? rest.map(a => `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${a.region} · ${a.cat} · Lv ${a.level}</div></div><button class="btn" data-in="${a.id}" ${act.length < P.maxSlots ? '' : 'disabled'}>넣기</button></div>`).join('') : '<div class="note">상점에서 앱을 사면 여기에 나와요</div>'}`;
+      ${rest.length ? rest.map(a => `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${a.region} · ${a.cat} · Lv ${a.level}</div></div><button class="btn skin gold" data-in="${a.id}" ${act.length < P.maxSlots ? '' : 'disabled'}>넣기</button></div>`).join('') : '<div class="note">상점에서 앱을 사면 여기에 나와요</div>'}`;
     const setDeck = async ids => { const o = await api('setDeck', { apps: ids.join(',') }); afterAct(o, '덱 슬롯은 최소 ' + Math.max(2, P.minSlots) + '칸이에요'); };
     b.querySelectorAll('[data-out]').forEach(x => x.addEventListener('click', () => setDeck(act.map(a => a.id).filter(id => id !== x.dataset.out))));
     b.querySelectorAll('[data-in]').forEach(x => x.addEventListener('click', () => setDeck([...act.map(a => a.id), x.dataset.in])));
@@ -1408,9 +1426,9 @@ function renderSheet() {
     const files = st.backupFilesNow;
     b.innerHTML = (sheetKind === 'reset' ? `<div class="hero">받을 백업파일<b>+${files}</b><span class="note">${P.canReset ? (files ? '지난 최고 기록을 넘긴 만큼만 받아요' : '이번 판이 지난 최고를 넘어야 받아요') : `Lv ${st.resetLevel}부터 초기화할 수 있어요 (지금 Lv ${st.level})`}</span></div>
       <div class="cols"><div><h4>초기화되는 것</h4>P · 레벨 · 앱 · 강화 · 덱</div><div><h4>남는 것</h4>백업파일 · 백업 상점 · 데이터 · 칭호</div></div>
-      <button class="btn big" data-act="reset" ${P.canReset && files > 0 ? '' : 'disabled'}>${armReset ? '정말 초기화할까요? 한 번 더 누르기' : '공장 초기화'}</button>` : '')
+      <button class="btn big skin claim" data-act="reset" ${P.canReset && files > 0 ? '' : 'disabled'}>${armReset ? '정말 초기화할까요? 한 번 더 누르기' : '공장 초기화'}</button>` : '')
       + `<div class="h3">백업 상점 · 가진 파일 ${P.files}개</div>`
-      + P.backupShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 초기화 ${x.minResets}회 후`}</div></div><button class="btn" data-act="buyBackup" data-item="${x.id}" ${x.open && P.files >= x.price ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : x.price + '개'}</button></div>`).join('');
+      + P.backupShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 초기화 ${x.minResets}회 후`}</div></div><button class="btn skin gold" data-act="buyBackup" data-item="${x.id}" ${x.open && P.files >= x.price ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : x.price + '개'}</button></div>`).join('');
   } else if (sheetKind === 'rec') {
     $('sheet-t').textContent = '기록';
     b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
@@ -1428,17 +1446,17 @@ const AD_IMG = { BestDouble: 'boost-best-double', OfflineDouble: 'boost-offline-
 const won = n => '₩' + n.toLocaleString('ko-KR');
 function renderData(b) {
   const m = P.bm; $('sheet-t').textContent = '데이터 충전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
-  b.innerHTML = `<div class="packs">${m.packs.map((p, i) => `<button class="pack" data-act="buyData" data-pack="${p.id}">${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}<img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${DIMG.replace('<img', '<img style="width:16px;height:16px;vertical-align:-3px"')} ${p.data.toLocaleString()}</div><span class="won">${won(p.won)}</span></button>`).join('')}</div>`
-    + (m.starter ? `<button class="starter" data-act="buyStarter"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b><div class="note">데이터 500 · 프리미엄 ★ 선택권 1 · 한 번만</div></div></button>` : '')
-    + `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
-      <button class="dbtn" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
+  b.innerHTML = `<div class="packs">${m.packs.map((p, i) => `<button class="pack" data-act="buyData" data-pack="${p.id}">${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}${p.id === 'data_1200' ? '<span class="sash"><span>추천</span></span>' : ''}<img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${DIMG.replace('<img', '<img style="width:16px;height:16px;vertical-align:-3px"')} ${p.data.toLocaleString()}</div><span class="won">${won(p.won)}</span></button>`).join('')}</div>`
+    + (m.starter ? `<button class="starter" data-act="buyStarter"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b> <span class="boltt">한 번만</span><div class="note">데이터 500 · 프리미엄 ★ 선택권 1 · 한 번만</div></div></button>` : '')
+    + `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m"><img class="ic" src="img/ui/clock.webp">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
+      <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
-      <button class="dbtn adbtn" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '▶ 광고'}</button></div>`).join('')
+      <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '<img src="img/ui/ad.webp">광고'}</button></div>`).join('')
     + `<div class="note" style="text-align:center;margin-top:10px">확률형 상품 없음 · 받는 것을 사기 전에 그대로 보여 드려요 · 결제는 테스트용 가짜</div>`;
 }
 function renderPass(b) {
   const m = P.bm; $('sheet-t').textContent = '더 빠르게'; $('sheet-w').innerHTML = '';
-  const card = (kind, bg, head, lines, price, active) => `<div class="passc" style="background:${bg}">${head}<div style="flex:1"><h3>${kind === 'month' ? '월간 패스' : kind === 'Turbo' ? '터보 패스' : '울트라 패스'}${active ? `<span class="on-tag">이용 중</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul><button class="btn" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>`;
+  const card = (kind, bg, head, lines, price, active) => `<div class="passc" style="background:${bg}">${head}<div style="flex:1"><h3>${kind === 'month' ? '월간 패스' : kind === 'Turbo' ? '터보 패스' : '울트라 패스'}${active ? `<span class="on-tag">이용 중</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul><button class="btn skin gold" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>`;
   b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', ['광고 없이 광고 보상 즉시', '매일 데이터 60 + 즉시 300', '매일 오버클럭 3시간'], '₩5,500 / 30일', m.passActive && !m.speedPass)
     + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×3.5', '백업파일·GB ×1.75'], '₩33,000 / 30일', m.speedPass === 'Turbo')
     + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×8', '백업파일·GB ×4', '매일 데이터 +200'], '₩99,000 / 30일', m.speedPass === 'Ultra')
@@ -1449,7 +1467,7 @@ function renderPremium(b) {
   const stars = n => `<span class="stars">${Array.from({ length: 5 }, (_, i) => `<img src="img/bm/badge-star-${i < n ? 'on' : 'off'}.webp">`).join('')}</span>`;
   b.innerHTML = (m.vouchers ? `<div class="it" style="border-color:var(--gold)"><img src="img/bm/badge-star-on.webp"><div class="t"><b>★ 선택권 ${m.vouchers}장</b><div class="m">아무 앱 ★2까지 무료로 · 아래에서 "선택권" 누르기</div></div></div>` : '')
     + m.premium.map(a => `<div class="it ${a.open ? '' : 'lock'}">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">${a.tier}티어 · 가치 ×${(a.permille / 1000).toFixed(a.permille % 1000 ? 1 : 0)}</span><div>${stars(a.stars)}</div></div>
-      ${a.stars >= a.max ? '<b style="color:var(--gold)">MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
+      ${a.stars >= a.max ? '<b style="color:var(--gold)"><img class="ic" src="img/ui/crown.webp" style="width:22px;height:22px">MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn skin gold" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn skin green" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
     + `<div class="note" style="text-align:center;margin-top:8px">★마다 그 앱 가치 ×2 · 초기화·동기화해도 남아요 · 높은 티어일수록 효율이 좋아요</div>`;
 }
 function renderAttend(b) {
@@ -1459,15 +1477,15 @@ function renderAttend(b) {
   const cell = (d, i) => {
     const n = i + 1, big = n % 10 === 0, cls = `day ${big ? 'big' : ''} ${n <= got ? 'got' : ''} ${n === (m.claimedToday ? m.streak : m.today) ? 'now' : ''}`;
     const what = d.tickets.length ? `${d.tickets[0].label.split(' ')[0]} ×${d.tickets[0].n}` : '';
-    if (big) return `<div class="${cls}"><i>${n}</i><img src="img/bm/meta-attendance-day7.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
+    if (big) return `<div class="${cls}"><i>${n}</i><img src="img/ui/gift.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
     return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b></div>`;
   };
   b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:22px 'Black Han Sans';color:var(--gold)">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
     <div class="board">${m.board.map(cell).join('')}</div>
-    ${m.claimedToday ? '' : `<button class="btn big" data-act="attend">${m.today}일차 출석하기</button>`}
+    ${m.claimedToday ? '' : `<button class="btn big skin claim" data-act="attend">${m.today}일차 출석하기</button>`}
     <div class="h3">오늘의 미션 · 모두 하면 데이터 ${m.missionReward}</div>
     ${m.missions.map(x => `<div class="mis"><span style="flex:1">${x.label}</span><span class="bar" style="flex:1"><i style="width:${x.now / x.goal * 100}%"></i></span><span class="note">${x.now}/${x.goal}</span></div>`).join('')}
-    <button class="btn big" data-act="claimMissions" ${m.missionsDone ? '' : 'disabled'}>미션 보상 받기</button>`;
+    <button class="btn big skin claim" data-act="claimMissions" ${m.missionsDone ? '' : 'disabled'}>미션 보상 받기</button>`;
 }
 async function sheetAct(x) {
   const act = x.dataset.act;
@@ -1482,7 +1500,7 @@ const offerEl = $('offer');
 let offerT = null;
 async function offerDouble(total) {
   const m = await api('bm'); const ad = m.ads.find(a => a.id === 'BestDouble'); if (!ad || ad.left <= 0 || m.state.level < 20) return;
-  offerEl.textContent = (m.passActive ? '패스 혜택 · ' : '▶ 광고 보고 ') + `최고 기록 ×2 (+${fmt(total)})`; offerEl.classList.add('on');
+  offerEl.innerHTML = (m.passActive ? '패스 혜택 · ' : '<img src="img/ui/ad.webp" style="width:22px;vertical-align:-5px"> 광고 보고 ') + `최고 기록 ×2 (+${fmt(total)})`; offerEl.classList.add('on');
   clearTimeout(offerT); offerT = setTimeout(() => offerEl.classList.remove('on'), 5000);
   offerEl.onclick = async () => { offerEl.classList.remove('on'); if (!m.passActive && !(await fakeAd())) return;
     const before = Number(S.wallet); const o = await api('watchAd', { slot: 'BestDouble' }); if (o.ok) { addWallet(Number(o.state.wallet) - before); say2('최고 기록 ×2!', 300, 30); sfx.unit(); } applyState(o.state); };
