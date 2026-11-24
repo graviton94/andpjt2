@@ -5,19 +5,18 @@ const { execFileSync } = require('node:child_process');
 const { chromium } = require(process.env.SMOKE_PLAYWRIGHT || 'playwright-core');
 
 const [endpoint, phase, output, appPackage] = process.argv.slice(2);
-const appUrl = 'https://appassets.androidplatform.net/assets/game/index.html';
+const appUrl = 'https://appassets.androidplatform.net/assets/game/index.html?auto=0';
 const localUrl = 'http://127.0.0.1:8765/index.html?auto=0';
 const adb = (...args) => execFileSync('adb', args, { timeout: 15_000 });
 
 async function run() {
   const desktop = endpoint === 'desktop';
   const browser = desktop
-    ? await chromium.launch({ executablePath: process.env.SMOKE_CHROMIUM || undefined, args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+    ? await chromium.launch({ executablePath: process.env.SMOKE_CHROMIUM || undefined, args: ['--no-sandbox', '--no-proxy-server', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
     : await chromium.connectOverCDP(endpoint);
   let page;
   if (desktop) {
     page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    await page.goto(localUrl);
   } else {
     assert.equal(browser.contexts().length, 1);
     page = await browser.contexts()[0].waitForEvent('page', {
@@ -29,18 +28,41 @@ async function run() {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-  await page.waitForFunction(() => typeof S !== 'undefined' && S && S.rows.length > 0);
+  if (desktop) await page.goto(localUrl);
+  await page.locator('#stage').waitFor();
   if (!desktop) assert.equal(await page.evaluate(() => typeof window.Game.call), 'function');
-  await page.evaluate(() => { autoOn = false; });
-  const bm = () => page.evaluate(() => api('bm'));
-  const panel = () => page.evaluate(() => api('panel'));
+  const api = (method, args = {}) => page.evaluate(async ({ method, args }) => {
+    if (window.Game) return JSON.parse(window.Game.call(method, JSON.stringify(args)));
+    const q = new URLSearchParams(args);
+    return (await fetch('/api/' + method + '?' + q)).json();
+  }, { method, args });
+  const bm = () => api('bm');
+  const panel = () => api('panel');
+  const until = async (predicate, description) => {
+    const end = Date.now() + 12_000;
+    while (Date.now() < end) {
+      if (await predicate()) return;
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    assert.fail(description);
+  };
   const attr = (name, value) => page.locator(`[${name}="${value}"]`);
   const act = name => attr('data-act', name);
-  const quiet = async () => {
-    await page.waitForFunction(() => !boardBusy && !ev);
+  const close = async () => {
+    if (await page.locator('#scrim.open').count()) await page.locator('#scrim').click({ position: { x: 3, y: 3 } });
+    await page.locator('#scrim.open').waitFor({ state: 'detached' });
   };
   const open = async kind => {
-    await page.evaluate(async kind => { closeAll(); await loadPanel(); await openSheet(kind); }, kind);
+    if (await page.locator('#sheet.open').count()) await page.locator('#sheet-x').click();
+    else if (!(await page.locator('#shade.open').count())) {
+      const b = await page.locator('#stage').boundingBox();
+      const x = b.x + b.width / 2;
+      await page.mouse.move(x, b.y + b.height * .145);
+      await page.mouse.down();
+      await page.mouse.move(x, b.y + b.height * .36, { steps: 5 });
+      await page.mouse.up();
+    }
+    await page.locator('#shade.open').locator(`[data-k="${kind}"]`).click();
     await page.locator('#sheet.open').waitFor();
   };
   const pay = async (button, text, approve = true) => {
@@ -51,10 +73,7 @@ async function run() {
     await page.locator(approve ? '#cf-ok' : '#cf-no').click();
     await page.locator('#cf.on').waitFor({ state: 'hidden' });
   };
-  const waitData = expected => page.waitForFunction(async expected => {
-    const current = await api('bm');
-    return current.data === expected && P?.bm?.data === expected;
-  }, expected);
+  const waitData = expected => until(async () => (await bm()).data === expected, 'Unexpected data balance');
   const shot = async name => {
     if (desktop) {
       await page.screenshot({ path: path.join(output, name + '.png') });
@@ -86,11 +105,8 @@ async function run() {
   const premium = app => act('premium').and(attr('data-id', app));
 
   if (phase === 'purchase' || desktop) {
-    await open('attend');
-    if (!(await bm()).claimedToday) {
-      await act('attend').click();
-      await page.waitForFunction(() => P?.bm?.claimedToday);
-    }
+    await until(async () => (await bm()).claimedToday, 'The game did not claim attendance');
+    if (!(await page.locator('#sheet.open').count())) await open('attend');
     assert.equal((await bm()).streak, 1);
     await shot('00-attendance');
     await open('data');
@@ -122,7 +138,7 @@ async function run() {
 
     await open('premium');
     await premium('alarm').click(); // Voucher payment.
-    await page.waitForFunction(() => P?.bm?.premium.find(a => a.id === 'alarm').stars === 1);
+    await until(async () => (await bm()).premium.find(a => a.id === 'alarm').stars === 1, 'Voucher did not grant a star');
     const preStar = await bm();
     const memo = preStar.premium.find(a => a.id === 'memo');
     await pay(premium('memo'), memo.price);
@@ -132,31 +148,30 @@ async function run() {
 
     await open('deck');
     await attr('data-in', 'recorder').click();
-    await page.waitForFunction(() => P?.apps.some(app => app.id === 'recorder' && app.active));
+    await attr('data-out', 'recorder').waitFor();
     await shot('06-deck');
 
-    await page.evaluate(() => closeAll());
-    await quiet();
-    const swipe = await page.evaluate(async () => {
-      const s = await api('snapshot');
-      const row = byId(s.rows.find(r => r.app === 'weather' &&
-        s.rows[s.rows.indexOf(r) - 1]?.app === 'memo' &&
-        s.rows[s.rows.indexOf(r) + 1]?.app === 'memo').id);
-      const b = cv.getBoundingClientRect();
-      return { before: s.swipes, x: b.left + b.width * .75, dx: b.width * .55, y: b.top + (row.y.x + CH / 2) / H * b.height };
-    });
-    await page.mouse.move(swipe.x, swipe.y);
+    await close();
+    const s = await api('snapshot');
+    const row = s.rows.findIndex((r, i) => r.app === 'weather' &&
+      s.rows[i - 1]?.app === 'memo' && s.rows[i + 1]?.app === 'memo');
+    assert.ok(row >= 0, 'The fixed seed lost its sandwich');
+    const b = await page.locator('#stage').boundingBox();
+    const dimensions = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+    const h = Math.max(740, Math.round(390 * dimensions.h / dimensions.w));
+    const y = b.y + (206 + Math.round((h - 740) * .35) + 72 * row) / h * b.height;
+    await page.mouse.move(b.x + b.width * .75, y);
     await page.mouse.down();
-    await page.mouse.move(swipe.x - swipe.dx, swipe.y, { steps: 6 });
+    await page.mouse.move(b.x + b.width * .2, y, { steps: 6 });
     await page.mouse.up();
-    await page.waitForFunction(async before => (await api('snapshot')).swipes === before + 1, swipe.before);
-    await quiet();
+    await until(async () => (await api('snapshot')).swipes === s.swipes + 1, 'Swipe was not applied');
     assert.ok((await panel()).bestChain >= 1);
     await shot('07-chain');
     await write('before-restart');
   }
 
   if (phase === 'reset' || desktop) {
+    if (desktop) await page.reload();
     assert.deepEqual(await progress(), read('before-restart'));
     await shot('08-relaunch');
     await open('reset');
@@ -164,7 +179,7 @@ async function run() {
     await act('reset').click();
     await page.getByRole('button', { name: /정말 초기화할까요/ }).waitFor();
     await act('reset').click();
-    await page.waitForFunction(async count => (await api('panel')).resets === count + 1, pre.resets);
+    await until(async () => (await panel()).resets === pre.resets + 1, 'Factory reset did not pay');
     const post = await progress();
     assert.ok(post.files > pre.files);
     assert.equal(post.level, 1);
@@ -175,6 +190,7 @@ async function run() {
   }
 
   if (phase === 'verify' || desktop) {
+    if (desktop) await page.reload();
     assert.deepEqual(await progress(), read('after-reset'));
     await shot('10-reset-relaunch');
   }

@@ -32,8 +32,8 @@ def page_errors():
     return [l for l in log.splitlines() if " E " in l or "FATAL" in l]
 
 
-def start():
-    result = adb("shell", "am", "start", "-W", "-n", PACKAGE + "/" + ACTIVITY,
+def start(*options):
+    result = adb("shell", "am", "start", "-W", "-n", PACKAGE + "/" + ACTIVITY, *options,
                  capture_output=True, text=True, timeout=30)
     assert "Error" not in result.stdout, result.stdout
 
@@ -61,7 +61,7 @@ def run_balance_phase(phase):
                capture_output=True, text=True, timeout=10).stdout.strip()
     assert port.isdigit(), f"adb did not assign a port: {port!r}"
     endpoint = f"http://127.0.0.1:{port}"
-    url = "https://appassets.androidplatform.net/assets/game/index.html"
+    url = "https://appassets.androidplatform.net/assets/game/index.html?auto=0"
 
     def webview_ready():
         try:
@@ -84,7 +84,7 @@ def balance_flow(fixture):
         adb("shell", "-T", "run-as", PACKAGE, "tee", "files/save.json", stdin=source,
             stdout=subprocess.DEVNULL, timeout=15)
     for phase in ("purchase", "reset", "verify"):
-        start()
+        start("--ez", "balance_smoke", "true")
         try:
             run_balance_phase(phase)
         except (AssertionError, subprocess.SubprocessError):

@@ -32,7 +32,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        WebView.setWebContentsDebuggingEnabled(applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
+        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        WebView.setWebContentsDebuggingEnabled(debuggable)
+        val testQuery = if (debuggable && intent.getBooleanExtra("balance_smoke", false)) "?auto=0" else ""
         bridge = GameBridge(applicationContext)
         val assets = WebViewAssetLoader.Builder().addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this)).build()
         web = WebView(this).apply {
@@ -56,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     return true
                 }
             }
-            loadUrl("https://appassets.androidplatform.net/assets/game/index.html")
+            loadUrl("https://appassets.androidplatform.net/assets/game/index.html" + testQuery)
         }
         setContentView(web)
         // The board draws its own phone chrome (clock, battery = game battery), so the real bars stay out of the way.
