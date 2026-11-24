@@ -10,8 +10,8 @@ import java.net.URLDecoder
  * so the page can be played and screenshotted in a browser. `gradle -p core run --args="serve 8765 ../app/src/main/assets/game"`
  * Query `?seed=` on /api/new restarts with a fixed seed.
  */
-fun serve(port: Int, root: File) {
-    var session = WebSession(now = 1L)
+fun serve(port: Int, root: File, initialSave: File? = null) {
+    var session = WebSession(state = initialSave?.readText()?.let(SaveCodec::decode))
     val server = HttpServer.create(InetSocketAddress("127.0.0.1", port), 0)
     server.createContext("/api/") { ex ->
         val q = (ex.requestURI.rawQuery ?: "").split("&").filter { "=" in it }

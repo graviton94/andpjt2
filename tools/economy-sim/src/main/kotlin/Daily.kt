@@ -65,6 +65,15 @@ class Timeline {
     val unlocks = mutableListOf<Triple<Double, Double, String>>()
     val tierDay = sortedMapOf<Int, Double>()
     var lastAppDay: Double? = null
+    val levelDays = sortedMapOf<Int, Double>()
+    val level124Day get() = levelDays[124]
+    val appBuys = sortedMapOf<String, Double>()
+    val appLevels = sortedMapOf<String, MutableMap<Int, Double>>()
+    val premiumByApp = sortedMapOf<String, Int>()
+    var dataSpent = 0L
+    var dataBalance = 0L
+    var vouchers = 0
+    var vouchersEarned = 0
     val resetDays = mutableListOf<Double>()
     var credits = 0L
     var bought = 0L
@@ -117,6 +126,20 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     val ads = AdBudget(payer.adsPerDay)
     fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
+    var seenLevels: Map<String, Int>? = null
+    var highestLevel = 0
+    val milestonesToRecord = listOf(1, 3, 5, 8, 12)
+    fun observe() {
+        while (highestLevel < s.level) tl.levelDays[++highestLevel] = dayOf(t)
+        if (s.appLevels === seenLevels) return
+        seenLevels = s.appLevels
+        for ((app, level) in s.appLevels) {
+            tl.appBuys.putIfAbsent(app, dayOf(t))
+            val milestones = tl.appLevels.getOrPut(app) { sortedMapOf() }
+            for (tier in milestonesToRecord) if (level >= tier) milestones.putIfAbsent(tier, dayOf(t))
+        }
+    }
+    observe()
 
     for (day in 0 until days) {
         if (update != null && day == update.first) {
@@ -132,9 +155,11 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 s = back
                 tl.offlineP += got
                 t = begin
+                observe()
                 if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ } ?: ads.refund()
             }
             s = economy(s, t, session, payer, tl, slots, ads)
+            observe()
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             val levelAtStart = s.level
@@ -144,12 +169,14 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 t += step
                 tl.activeMin += step / 60_000.0
                 s = engine.tick(s, t)
+                observe()
                 val target = engine.bestTarget(s, t)
                 val o0 = target?.let { engine.swipe(s, it, t) }
                 if (o0 == null && System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
                 val o = o0 ?: continue
                 s = o.state
+                observe()
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
                 if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
                 if (s.energy == 0) shop.useTicket(s, CreditItem.Battery, t)?.let { s = it }
@@ -164,6 +191,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                     everLevel++
                     levels[everLevel]?.forEach { note(it) }
                 }
+                observe()
                 val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
                 tl.tierDay.putIfAbsent(tier, dayOf(t))
                 if (tl.lastAppDay == null && LAST_APP in s.appLevels) tl.lastAppDay = dayOf(t)
@@ -213,6 +241,10 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     }
     tl.credits = s.account.creditsFree
     tl.bought = s.account.creditsBought
+    tl.dataSpent = s.account.creditsSpent
+    tl.dataBalance = s.account.credits
+    tl.vouchers = s.account.starVouchers
+    tl.premiumByApp.putAll(s.account.premium)
     s.account.premium.forEach { (id, n) -> tl.stars.merge(Catalog.app(id).tier, n, Int::plus) }
     return tl
 }
@@ -234,6 +266,7 @@ class AdBudget(private val perDay: Int) {
 private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>, ads: AdBudget): GameState {
     var s = shop.claimAttendance(state, t)
     s = shop.claimMissions(s, t)
+    tl.vouchersEarned += s.account.starVouchers - state.account.starVouchers
     if (payer.pass) {
         if (!shop.passActive(s, t)) s = if (payer.speed != null) shop.buySpeedPass(s, t, payer.speed) else shop.buyPass(s, t)
         s = shop.claimPassDaily(s, t)

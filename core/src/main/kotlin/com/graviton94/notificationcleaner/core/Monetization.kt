@@ -40,6 +40,39 @@ enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, va
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
 data class AttendReward(val data: Long, val tickets: Map<CreditItem, Int> = emptyMap(), val starVouchers: Int = 0, val title: String? = null)
 
+data class DataPack(val id: String, val data: Long, val won: Int)
+
+data class CommerceOffers(
+    val packs: List<DataPack> = listOf(
+        DataPack("data_100", 100, 2_200), DataPack("data_540", 540, 5_900), DataPack("data_1200", 1_200, 12_000),
+        DataPack("data_3700", 3_700, 33_000), DataPack("data_8600", 8_600, 69_000), DataPack("data_16800", 16_800, 119_000),
+    ),
+    val firstBonusCap: Long = 1_200,
+    val starterWon: Int = 2_500,
+    val starterData: Long = 500,
+    val starterMs: Long = 48 * 3_600_000L,
+    val starterTickets: Map<CreditItem, Int> = mapOf(CreditItem.Boost to 3, CreditItem.Overclock to 3),
+    val rookieWon: Int = 3_300,
+    val rookieNow: Long = 300,
+    val rookieDaily: Long = 50,
+    val rookieDays: Int = 7,
+    val passWon: Int = 5_500,
+) {
+    val baseWonPerData: Double get() = packs.first().won.toDouble() / packs.first().data
+
+    fun dataReceived(pack: DataPack, first: Boolean): Long =
+        pack.data + if (first) minOf(pack.data, firstBonusCap) else 0
+
+    fun voucherValue(rules: RuleSet): Long = Catalog.apps.first { it.tier == 5 }.let {
+        rules.premiumCost(it, 1) + rules.premiumCost(it, 2)
+    }
+
+    fun starterValue(rules: RuleSet): Long =
+        starterData + voucherValue(rules) + starterTickets.entries.sumOf { (item, quantity) -> item.price * quantity }
+
+    fun rookieValue(rules: RuleSet): Long = rookieNow + rookieDaily * rookieDays + voucherValue(rules)
+}
+
 @Serializable
 data class Account(
     val credits: Long = 0,
@@ -64,7 +97,7 @@ data class Account(
     val challengeDay: Long = -1,
     val challengeKeys: Int = 0,
     val challengeBest: String = "0",
-    /** Recently granted claim ids (purchase tokens, ad rewards): a claim is paid once (21 platform). */
+    /** Granted purchase and ad ids, retained across saves and resets. */
     val processedClaims: List<String> = emptyList(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
@@ -128,12 +161,12 @@ class Shop(private val engine: Engine) {
 
     /**
      * Pays a store or ad reward at most once: [grant] runs only for an unseen [claimId], and the id is stored with the
-     * result so the caller saves both in one transaction before confirming to the SDK. Keeps the last 500 ids.
+     * result so the caller saves both in one transaction before confirming to the SDK. Retains previously granted ids across saves.
      */
     fun claimOnce(s: GameState, claimId: String, grant: (GameState) -> GameState?): GameState? {
-        if (claimId in s.account.processedClaims) return null
+        if (claimId.isBlank() || claimId in s.account.processedClaims) return null
         val paid = grant(s) ?: return null
-        return paid.withAccount { it.copy(processedClaims = (it.processedClaims + claimId).takeLast(500)) }
+        return paid.withAccount { it.copy(processedClaims = it.processedClaims + claimId) }
     }
 
     private fun spend(s: GameState, n: Long): GameState? =

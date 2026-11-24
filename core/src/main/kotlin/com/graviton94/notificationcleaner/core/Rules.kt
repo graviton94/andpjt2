@@ -38,6 +38,7 @@ data class RuleSet(
     val regionDigitPercent: Int = 10,
     val categoryDigitPercent: Int = 12,
     // Monetization (docs/bible/17-monetization.md)
+    val commerce: CommerceOffers = CommerceOffers(),
     val premiumMaxStars: Int = 5,
     /** Each premium star multiplies the app's value by this. */
     val premiumStepPermille: Int = 2_000,

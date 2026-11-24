@@ -34,6 +34,15 @@ class CoreRulesTest {
         assertTrue(o.overload)
         assertEquals(listOf(24L, 72L, 216L).map(::valueOf), o.beats.filterIsInstance<Beat.Wave>().map { it.cleared })
         assertEquals(valueOf(2_216), o.earned)
+        val emissions = o.beats.mapNotNull {
+            when (it) {
+                is Beat.Swiped -> it.earned
+                is Beat.Burst -> it.earned
+                is Beat.Wave -> it.earned
+                else -> null
+            }
+        }
+        assertEquals(o.earned, emissions.fold(ZERO, BigInteger::add))
     }
 
     @Test

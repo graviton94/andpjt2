@@ -181,6 +181,7 @@ fun p50(xs: List<Double>) = pct(xs, .5)
 fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 60); m < 60 -> "%.0f분".format(m); else -> "%.1f시간".format(m / 60) }
 
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "balance-report") return balanceReport(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() == "debug") return debugRun()
     if (args.firstOrNull() == "money") return monetization(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toLong() ?: 4L, profilesFor(args.getOrNull(3)))
     if (args.firstOrNull() == "daily") return daily(args.getOrNull(1)?.toInt() ?: 56, args.getOrNull(2)?.toLong() ?: 4L)

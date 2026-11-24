@@ -1,0 +1,100 @@
+package com.graviton94.notificationcleaner.core
+
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+class CommerceTest {
+    private val day = 86_400_000L
+    private val now = day * 100 + 3_600_000
+    private val engine = Engine()
+
+    private fun session() = WebSession(engine, engine.newGame(now, 11), now)
+
+    @Test fun eachPublishedDataPackQuotesAndGrantsTheSameAmount() {
+        val prices = listOf(2200, 5900, 12_000, 33_000, 69_000, 119_000)
+        val amounts = listOf(100L, 540L, 1200L, 3700L, 8600L, 16_800L)
+        for ((i, amount) in amounts.withIndex()) {
+            val w = session()
+            val bonus = minOf(1200L, amount)
+            val id = "data_$amount"
+            val packs = Json.parseToJsonElement(w.bm(now)).jsonObject.getValue("packs").jsonArray
+            val quote = packs[i].jsonObject
+            assertEquals(id, quote.getValue("id").jsonPrimitive.content)
+            assertEquals(prices[i].toLong(), quote.getValue("won").jsonPrimitive.long)
+            assertEquals(amount + bonus, quote.getValue("gets").jsonPrimitive.long)
+            w.buyData(id, "first", now)
+            w.buyData(id, "first", now)
+            assertEquals(amount + bonus, w.state.account.credits)
+            w.buyData("data_100", "second", now)
+            assertEquals(amount + bonus + 100, w.state.account.credits)
+        }
+    }
+
+    @Test fun anOldReceiptRemainsSettledAcrossSaveAndReset() {
+        val rules = engine.rules
+        val w = session()
+        for (i in 0..501) w.buyData("data_100", "receipt-$i", now)
+        val persisted = SaveCodec.decode(w.save()).copy(level = rules.resetLevel, runEarned = rules.levelP(rules.resetLevel))
+        val restored = WebSession(engine, persisted, now)
+        restored.premium("memo", false, now)
+        val account = restored.state.account
+        restored.reset(now)
+        assertTrue(restored.state.backup.files > 0)
+        assertEquals(account.premium, restored.state.account.premium)
+        restored.buyData("data_100", "receipt-0", now)
+        restored.buyData("data_100", " ", now)
+        assertEquals(account.credits, restored.state.account.credits)
+    }
+
+    @Test fun starterUsesOriginalInstallTimeAndGrantsThePublishedContentsOnce() {
+        val fresh = session()
+        val inside = WebSession(engine, SaveCodec.decode(fresh.save()), now + 2 * day - 1)
+        inside.buyStarter("starter", now + 2 * day - 1)
+        inside.buyStarter("again", now + 2 * day - 1)
+        assertEquals(500L, inside.state.account.credits)
+        assertEquals(1, inside.state.account.starVouchers)
+        assertEquals(mapOf(CreditItem.Boost to 3, CreditItem.Overclock to 3), inside.state.account.tickets)
+        val expired = WebSession(engine, SaveCodec.decode(fresh.save()), now + 2 * day)
+        expired.buyStarter("starter", now + 2 * day)
+        assertEquals(0L, expired.state.account.credits)
+    }
+
+    @Test fun rookieAndAttendanceFollowCalendarBoundariesWithoutDuplicateGrants() {
+        val w = session()
+        w.buyRookie("rookie", now)
+        for (i in 0..7) repeat(2) { w.claimRookie(now + i * day) }
+        assertEquals(650L, w.state.account.credits)
+        assertEquals(1, w.state.account.starVouchers)
+        val expired = session()
+        expired.buyRookie("late", now + 7 * day)
+        assertEquals(0L, expired.state.account.credits)
+
+        val shop = Shop(engine)
+        var state = engine.newGame(now, 11)
+        for (i in 0..29) {
+            state = shop.claimAttendance(state, now + i * day)
+            assertEquals(state, shop.claimAttendance(state, now + i * day))
+        }
+        assertEquals(30, state.account.streak)
+        assertTrue("알림 개근왕" in state.account.titles)
+        assertEquals(1, shop.claimAttendance(state, now + 30 * day).account.streak)
+        assertEquals(1, shop.claimAttendance(state, now + 31 * day).account.streak)
+    }
+
+    @Test fun oldFormatStillLoadsWithDefaultEconomyFields() {
+        val original = SaveCodec.encode(engine.newGame(now, 11))
+        val old = original.replace("\"save\":1,", "")
+        val state = SaveCodec.decode(old)
+        assertEquals(Account(), state.account)
+        assertNotNull(state.rows.firstOrNull())
+        assertFalse(state.account.installAt >= 0)
+    }
+}
