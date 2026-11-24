@@ -66,6 +66,9 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         if (done > 0) meta.upgraded(next, done, now) else s
     }
 
+    /** 알림 훈련: one tap while the drill runs (+1% income each, up to +100%). */
+    fun tapDrill(now: Long): String { state = engine.tapDrill(engine.tick(state, now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
+
     fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
 
     fun buyBackup(item: String, now: Long): String = act(now) { s ->

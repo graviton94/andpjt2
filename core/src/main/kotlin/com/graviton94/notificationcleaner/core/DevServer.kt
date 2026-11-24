@@ -24,6 +24,7 @@ fun serve(port: Int, root: File) {
             "auto" -> session.auto(now)
             "hint" -> session.hint(now)
             "panel" -> session.panel(now)
+            "drill" -> session.tapDrill(now)
             "upgradeN" -> session.upgradeN(q["app"] ?: "", q["n"] ?: "1", now)
             "setDeck" -> session.setDeck((q["apps"] ?: "").split(",").filter { it.isNotBlank() }, now)
             "buyBackup" -> session.buyBackup(q.getValue("item"), now)
