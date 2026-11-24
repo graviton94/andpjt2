@@ -10,23 +10,68 @@
 html,body{height:100%;background:#0D0907;overflow:hidden;overscroll-behavior:none}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #stage{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
-#sheet{position:fixed;left:0;right:0;bottom:0;max-height:72vh;overflow:auto;background:#1C1510;color:#F6F1EA;border-radius:22px 22px 0 0;
- padding:16px 16px 28px;font:15px/1.4 "Noto Sans KR",system-ui,sans-serif;transform:translateY(105%);transition:transform .25s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 -10px 40px #000a}
-#sheet.open{transform:none}
-#sheet h2{font:22px "Black Han Sans",sans-serif;margin:0 0 6px}
-#sheet .sec{color:#B3A89B;font-size:12px;margin:14px 0 6px}
-#sheet .line{display:flex;align-items:center;gap:10px;background:#ffffff14;border-radius:14px;padding:8px 10px;margin-bottom:6px}
-#sheet .line img{width:34px;height:34px;border-radius:9px}
-#sheet .line b{flex:1;font-weight:700}
-#sheet button{font:inherit;font-weight:800;border:0;border-radius:12px;padding:8px 12px;min-width:96px;background:#FFD66B;color:#1A0E06}
-#sheet button:disabled{background:#ffffff22;color:#ffffff66}
-#scrim{position:fixed;inset:0;background:#0008;opacity:0;pointer-events:none;transition:opacity .2s}
+
+/* ---- pull-down shade + sheets (screens-v1 Shade · Shop · Upgrade · Deck · Reset, dark) ---- */
+:root{--acc:#EFA03F;--acc2:#F6C453;--ink:#F6F1EA;--sub:#B3A89B;--line:#FFFFFF1A;--card:#FFFFFF14;--ok:#5BD68A;--bad:#FF6B5A}
+.ov{position:fixed;inset:0;color:var(--ink);font:14px/1.4 "Noto Sans KR",system-ui,sans-serif;pointer-events:none}
+.ov.open{pointer-events:auto}
+#scrim{position:fixed;inset:0;background:#000a;opacity:0;transition:opacity .22s;pointer-events:none}
 #scrim.open{opacity:1;pointer-events:auto}
+#shade{position:fixed;left:0;right:0;top:0;max-height:92vh;overflow:auto;padding:18px 16px 14px;border-radius:0 0 28px 28px;
+ background:linear-gradient(180deg,#2A2119f2,#15120Ff7);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 50px #000c;
+ transform:translateY(-104%);transition:transform .32s cubic-bezier(.2,1,.3,1)}
+#shade.open{transform:none}
+.sh-top{display:flex;align-items:baseline;justify-content:space-between}
+.sh-wallet{font:30px "Black Han Sans",sans-serif;letter-spacing:-.01em}
+.sh-wallet small{font-size:18px;color:var(--acc2)}
+.lv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:12px;color:var(--sub)}
+.lv b{background:var(--acc);color:#1E1408;border-radius:999px;padding:1px 8px;font-size:12px}
+.bar{flex:1;height:8px;border-radius:999px;background:#FFFFFF14;overflow:hidden}.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--acc2),#FFD66B)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px;margin:16px 0 8px}
+.tile{background:none;border:0;color:inherit;font:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0}
+.tile span.c{width:56px;height:56px;border-radius:999px;display:grid;place-items:center;background:#FFFFFF1F}
+.tile.hot span.c{background:var(--acc);color:#1E1408;box-shadow:0 6px 16px #EFA03F40}
+.tile.lock{opacity:.45}
+.tile b{font-size:12.5px;font-weight:700}.tile em{font-style:normal;font-size:11px;color:var(--sub);margin-top:-3px}
+.row2{display:flex;align-items:center;gap:10px;margin:10px 2px}.row2 label{font-size:12px;color:var(--sub);width:48px}
+.row2 input{flex:1;accent-color:var(--acc)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{background:#FFFFFF14;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
+.grab{width:44px;height:5px;border-radius:9px;background:#F6F1EA88;margin:12px auto 0}
+#sheet{position:fixed;left:0;right:0;bottom:0;height:88vh;display:flex;flex-direction:column;background:#17120E;border-radius:26px 26px 0 0;
+ box-shadow:0 -14px 40px #000c;transform:translateY(104%);transition:transform .3s cubic-bezier(.2,1,.3,1)}
+#sheet.open{transform:none}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 8px}
+.sheet-h h2{flex:1;margin:0;font:22px "Black Han Sans",sans-serif}
+.sheet-h .w{font-weight:800;color:var(--acc2)}
+.x{background:#FFFFFF1A;border:0;color:var(--ink);width:36px;height:36px;border-radius:999px;font-size:18px}
+.sheet-b{flex:1;overflow:auto;padding:4px 14px 30px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.seg button{flex:none;height:32px;padding:0 12px;border-radius:999px;border:0;font:inherit;font-size:12.5px;font-weight:700;background:#FFFFFF14;color:var(--ink)}
+.seg button.on{background:var(--acc);color:#1E1408}
+.it{min-height:66px;padding:10px 12px;border-radius:20px;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);margin-bottom:8px}
+.it.lock{background:#FFFFFF08}.it.lock img{filter:grayscale(1);opacity:.5}
+.it img{width:40px;height:40px;border-radius:11px;flex:none}
+.it .t{flex:1;min-width:0}.it .t b{font-size:14.5px}.it .t .m{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tier{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;color:var(--acc2)}
+.btn{flex:none;min-width:88px;height:40px;padding:0 12px;border-radius:999px;border:0;font:inherit;font-size:12.5px;font-weight:800;background:var(--acc);color:#1E1408}
+.btn:disabled{background:#FFFFFF14;color:#FFFFFF66}.btn.own{background:#5BD68A24;color:var(--ok)}
+.btn.big{width:100%;height:52px;font-size:16px;margin:6px 0 12px}
+.prog{height:6px;border-radius:999px;background:#FFFFFF14;overflow:hidden;margin-top:5px}.prog i{display:block;height:100%;border-radius:999px;background:#3867F0}.prog i.hot{background:#FF8A1F}
+.note{font-size:11.5px;color:var(--sub)}.note.hot{color:#FFB060;font-weight:700}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.slot{height:84px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--card);border:1px solid var(--line);font-size:11.5px;font-weight:700;color:inherit;font-family:inherit}
+.slot img{width:36px;height:36px;border-radius:10px}.slot.empty{background:transparent;border:1.5px dashed #FFFFFF33;color:var(--sub)}
+.syn{display:grid;grid-template-columns:96px 1fr 58px;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}.syn .v{text-align:right;font-weight:800;color:var(--acc2)}
+.hero{text-align:center;padding:14px;border-radius:22px;background:radial-gradient(circle at 50% 0,#EFA03F33,#FFFFFF0d);margin-bottom:12px}
+.hero b{display:block;font:44px "Black Han Sans",sans-serif;color:#FFD66B}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.cols div{background:var(--card);border-radius:16px;padding:10px 12px;font-size:12.5px}
+.cols h4{margin:0 0 4px;font-size:12px;color:var(--sub)}
+.h3{font-size:12.5px;color:var(--sub);margin:14px 2px 8px;font-weight:700}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="sheet"></div>
+<div id="scrim"></div><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
@@ -58,7 +103,8 @@ const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = 
 fit(); window.addEventListener('resize', fit);
 if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Noto Sans KR"'); }
 
-let sound = true, reduce = false, day = false;
+let sound = true, reduce = false, day = false, vol = 1, vibOn = true;
+const TEXTS = __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -90,7 +136,7 @@ function ac() {
     if (!A.c) {
       const c = new (window.AudioContext || window.webkitAudioContext)();
       const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = .003; comp.release.value = .12;
-      const m = c.createGain(); m.gain.value = .6;
+      const m = c.createGain(); m.gain.value = .6 * vol;
       const d = c.createDelay(.5); d.delayTime.value = .095; const fb = c.createGain(); fb.gain.value = .25;
       const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2800; const wet = c.createGain(); wet.gain.value = .2;
       m.connect(comp); m.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(wet); wet.connect(comp); comp.connect(c.destination);
@@ -149,7 +195,7 @@ const sfx = {
   stamp() { tone('sine', 120, 38, .32, 1); hiss(.16, .55, { type: 'lowpass', f0: 1400, f1: 250 }); hiss(.7, .12, { type: 'highpass', f0: 2500, f1: 7000, a: .1, at: .1 }); },
   wave(w) { hiss(.55, .32, { f0: 260, f1: 5200, q: 2, a: .06 }); tone('sine', 110 - w * 12, 32, .7, .95); const f = 196 * Math.pow(2, w * 5 / 12); tone('sawtooth', f, f * 2, .4, .08, { filt: 2200, q: 6 }); },
 };
-const buzz = p => { try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
 
 
 // ---------- phone sound layer (CC0 uisfx + self-made vibration, docs/bible/20-sound.md §7) ----------
@@ -261,7 +307,7 @@ const crackAt = (x, y, amp) => { crack = { x: x / W, y: y / H, age: 0, amp, seed
 // ---------- state ----------
 const MSG = { Social: ['새 메시지가 도착했어요', '친구가 회원님을 언급했어요', '단톡방에 새 글 99+'], Work: ['회의가 10분 뒤 시작돼요', '결재 요청이 도착했어요', '새 메일 3통'],
   Daily: ['오늘의 일정을 확인하세요', '배송이 출발했어요', '알람이 울려요'], Media: ['새 영상이 올라왔어요', '추천 콘텐츠가 도착했어요', '라이브가 시작됐어요'], Money: ['결제가 완료됐어요', '쿠폰이 곧 만료돼요', '입금 알림'] };
-const msgOf = d => d.kind === 'Spam' ? '[광고] 축하합니다! 당첨되셨습니다…' : d.kind === 'Call' ? '스팸 의심 전화 · 밀어서 거절' : d.kind === 'Event' ? '이벤트 카드 · 밀어서 받기' : d.kind === 'Alert' ? '시스템 알림 · 밀어서 처리' : d.kind === 'Wild' ? '어떤 앱 알림과도 합쳐져요' : (MSG[d.cat] || MSG.Daily)[d.id % 3];
+const msgOf = d => d.kind === 'App' && TEXTS[d.app] ? TEXTS[d.app][1][d.id % TEXTS[d.app][1].length] : d.kind === 'Spam' ? '[광고] 축하합니다! 당첨되셨습니다…' : d.kind === 'Call' ? '스팸 의심 전화 · 밀어서 거절' : d.kind === 'Event' ? '이벤트 카드 · 밀어서 받기' : d.kind === 'Alert' ? '시스템 알림 · 밀어서 처리' : d.kind === 'Wild' ? '어떤 앱 알림과도 합쳐져요' : (MSG[d.cat] || MSG.Daily)[d.id % 3];
 const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Wild' ? '와일드 알림' : d.kind === 'Spam' ? '스팸 문자' : d.kind === 'Call' ? '스팸 전화' : d.label || '알림';
 const ROW0 = 176 + Math.round(EX * .35), ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
@@ -1121,7 +1167,8 @@ function tapTile(k) {
   sfx.snap(); buzz(8);
   if (k === 'auto') { autoOn = !autoOn; say2(autoOn ? '자동 정리 켬' : '자동 정리 끔', 160, 20); }
   else if (k === 'dnd') { sound = !sound; if (sound) ac(); say2(sound ? '소리 켬' : '방해 금지 · 소리 끔', 160, 20); }
-  else openShop();
+  else if (k === 'deck') openSheet('deck');
+  else openShade();
 }
 const toBoard = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * H]; };
 cv.addEventListener('pointerdown', e => {
@@ -1183,26 +1230,134 @@ function drawHint(t) {
   if (swipes < 3) { gtext('사이 알림을 옆으로 밀어 치우면', 195, 684 + EX - 52, 15, { top: '#FFFFFF', bot: '#FFE2A0' }); gtext('같은 앱끼리 붙어서 합쳐져요 · 4개 모이면 펑!', 195, 684 + EX - 32, 15, { top: '#FFFFFF', bot: '#FFE2A0' }); }
 }
 
-// ---------- shop sheet (M3 will redo this from the mockups) ----------
-const sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim');
-const closeShop = () => { sheet.classList.remove('open'); scrim.classList.remove('open'); };
-scrim.addEventListener('click', closeShop);
-async function openShop() {
-  const st = await api('snapshot'); applyState(st);
-  const line = (id, title, price, act, can) => `<div class="line"><img src="icons/${id}.svg" onerror="this.style.visibility='hidden'"><b>${title}</b><button data-act="${act}" data-id="${id}" ${can ? '' : 'disabled'}>${price}</button></div>`;
-  const w = Number(st.wallet);
-  sheet.innerHTML = `<h2>상점</h2><div>지갑 <b>${fmt(w)} P</b></div>`
-    + `<div class="sec">새 앱 (덱에 들어오면 판에 알림이 와요)</div>` + (st.shopApps.map(a => line(a.id, `${a.name} · ${a.tier}티어`, fmt(Number(a.price)) + ' P', 'buy', w >= Number(a.price))).join('') || '<div class="sec">레벨을 올리면 새 앱이 열려요</div>')
-    + `<div class="sec">강화 (터질 때 값이 올라요)</div>` + st.deckApps.map(a => line(a.id, `${a.name} Lv ${a.level}`, fmt(Number(a.upgradePrice)) + ' P', 'upgrade', w >= Number(a.upgradePrice))).join('')
-    + (st.level >= st.resetLevel ? `<div class="sec">공장 초기화</div><div class="line"><b>백업파일 +${st.backupFilesNow}</b><button data-act="reset">초기화</button></div>` : `<div class="sec">Lv ${st.resetLevel}부터 공장 초기화(환생)</div>`);
-  sheet.classList.add('open'); scrim.classList.add('open');
+// ---------- pull-down shade and its sheets (screens-v1, M3) ----------
+const $ = id => document.getElementById(id);
+const shadeEl = $('shade'), sheetEl = $('sheet'), scrimEl = $('scrim');
+let P = null, sheetKind = null, upMode = '1', shopTier = 0, armReset = false;
+const ICONP = { shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
+  reset: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4', backup: 'M6 4h9l3 3v13H6zM9 4v5h6V4', cloud: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z', rec: 'M5 19V9M12 19V5M19 19v-7' };
+const svg = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+const ico = id => `<img src="icons/${id}.svg" alt="" onerror="this.style.visibility='hidden'">`;
+const P$ = n => fmt(Number(n)) + ' P';
+async function loadPanel() { P = await api('panel'); applyState(P.state); return P; }
+function closeAll() { shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
+scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
+async function openShade() {
+  await loadPanel(); renderShade();
+  shadeEl.classList.add('open'); scrimEl.classList.add('open'); phone('phone.wake', .25);
 }
-sheet.addEventListener('click', async e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const o = await api(b.dataset.act, b.dataset.id ? { app: b.dataset.id } : {});
-  if (o.ok) { sfx.badge(); phone('ui.bonus', .3); } else sfx.snap();
-  applyState(o.state); wallet.v = wallet.to = wallet.shown = Number(o.state.wallet); reconcile(o.state); openShop();
-});
+const openShop = openShade;  // the board's footer and pull-down both open the shade
+function renderShade() {
+  const st = P.state, w = Number(st.wallet), apps = P.apps;
+  const newApps = apps.filter(a => !a.owned && a.open && w >= Number(a.price)).length;
+  const cheap = apps.filter(a => a.active).some(a => w >= Number(a.price1));
+  const T = [
+    ['shop', '앱 상점', newApps ? `새 앱 ${newApps}` : '둘러보기', newApps > 0],
+    ['up', '강화', cheap ? '모두 강화' : '강화', cheap],
+    ['deck', '덱', `${st.deck}/${P.maxSlots}칸`, false],
+    ['board', '판 강화', '곧 열려요', false, true],
+    ['reset', '초기화', P.canReset ? `+${st.backupFilesNow} 파일` : `Lv ${st.resetLevel}부터`, P.canReset && st.backupFilesNow > 0],
+    ['backup', '백업', P.resets ? '상점' : '첫 초기화 후', false, !P.resets],
+    ['cloud', '클라우드', 'Lv 60', false, true],
+    ['rec', '기록', `최고 연쇄 ${P.bestChain}`, false],
+  ];
+  shadeEl.innerHTML = `<div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
+    <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${fmt(Number(P.nextLevelP))}</span></div>
+    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><b>${l}</b><em>${sub}</em></button>`).join('')}</div>
+    <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
+    <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
+    <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span></div>
+    <div class="grab"></div>`;
+  shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
+  $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; });
+  $('vib').addEventListener('input', e => { vibOn = e.target.value === '1'; });
+}
+// pull the shade back up
+let shadeDrag = null;
+shadeEl.addEventListener('pointerdown', e => { shadeDrag = e.clientY; });
+shadeEl.addEventListener('pointerup', e => { if (shadeDrag !== null && shadeDrag - e.clientY > 60) closeAll(); shadeDrag = null; });
+
+async function openSheet(kind) {
+  sheetKind = kind; if (!P) await loadPanel();
+  shadeEl.classList.remove('open'); scrimEl.classList.add('open');
+  renderSheet(); sheetEl.classList.add('open'); sfx.snap();
+}
+function renderSheet() {
+  const st = P.state, w = Number(st.wallet), apps = P.apps;
+  $('sheet-w').textContent = P$(st.wallet);
+  const b = $('sheet-b');
+  if (sheetKind === 'shop') {
+    $('sheet-t').textContent = '앱 상점';
+    const tiers = [...new Set(apps.map(a => a.tier))];
+    const list = apps.filter(a => !shopTier || a.tier === shopTier);
+    b.innerHTML = `<div class="seg">${[0, ...tiers].map(t => `<button class="${t === shopTier ? 'on' : ''}" data-tier="${t}">${t ? t + '티어' : '전체'}</button>`).join('')}</div>`
+      + list.map(a => {
+        const lock = !a.owned && !a.open;
+        const fx = (TEXTS[a.id] || [])[0] || '';
+        const btn = a.owned ? `<button class="btn own" disabled>보유</button>` : lock ? `<button class="btn" disabled>잠김</button>` : `<button class="btn" data-act="buy" data-id="${a.id}" ${w >= Number(a.price) ? '' : 'disabled'}>${P$(a.price)}</button>`;
+        const meta = lock ? `${a.region} · ${a.cat} · ${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel} 해금`}` : `${a.region} · ${a.cat} · ${fx}`;
+        return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
+      }).join('');
+    b.querySelectorAll('[data-tier]').forEach(x => x.addEventListener('click', () => { shopTier = +x.dataset.tier; renderSheet(); }));
+  } else if (sheetKind === 'up') {
+    $('sheet-t').textContent = '강화';
+    const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (Number(x.price1) - Number(y.price1)));
+    b.innerHTML = `<div class="seg">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
+      <button class="btn big" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
+      + mine.map(a => {
+        const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
+        const pct = Math.round((a.level - prev) / Math.max(1, next - prev) * 100), left = next - a.level, hot = left <= 5;
+        const n = upMode === 'max' ? a.maxN : +upMode, price = upMode === '10' ? a.price10 : a.price1, can = upMode === 'max' ? a.maxN > 0 : w >= Number(price);
+        const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price);
+        return `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">Lv ${a.level} → ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
+          <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `마일스톤 Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
+          <button class="btn" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
+      }).join('');
+    b.querySelectorAll('[data-mode]').forEach(x => x.addEventListener('click', () => { upMode = x.dataset.mode; renderSheet(); }));
+  } else if (sheetKind === 'deck') {
+    $('sheet-t').textContent = '덱';
+    const act = apps.filter(a => a.active), rest = apps.filter(a => a.owned && !a.active);
+    const count = (key) => { const m = {}; act.forEach(a => m[a[key]] = (m[a[key]] || 0) + 1); return Object.entries(m).filter(([, n]) => n >= 2); };
+    const synVal = (key, name, field) => { const a = act.find(x => x[key] === name); return a ? a[field] : 0; };
+    const syn = [...count('region').filter(([r]) => r !== '기본 앱').map(([r, n]) => [`${r} ${n}`, synVal('region', r, 'synRegion')]), ...count('cat').map(([c, n]) => [`${c} ${n}`, synVal('cat', c, 'synCat')])];
+    b.innerHTML = `<div class="note" style="margin:0 2px 8px">슬롯 ${act.length}/${P.maxSlots} · 최소 ${Math.max(2, P.minSlots)} · 덱에 있는 앱만 판에 알림이 와요. 눌러서 빼기/넣기</div>
+      <div class="slots">${Array.from({ length: P.maxSlots }, (_, i) => act[i] ? `<button class="slot" data-out="${act[i].id}">${ico(act[i].id)}${act[i].name}</button>` : `<div class="slot empty">빈 칸</div>`).join('')}</div>
+      <div class="h3">시너지 미리보기</div>
+      ${syn.length ? syn.map(([l, v]) => `<div class="syn"><span>${l}</span><span class="bar"><i style="width:${Math.min(100, v / 2)}%"></i></span><span class="v">+${v}%</span></div>`).join('') : '<div class="note">같은 권역·기능 앱을 2개 이상 넣으면 시너지가 붙어요</div>'}
+      <div class="syn"><span>세트 ${P.sets}개</span><span class="bar"><i style="width:${Math.min(100, P.sets * 14)}%;background:#FF8A1F"></i></span><span class="v">×${P.sets > 1 ? '1.22^' + (P.sets - 1) : '1'}</span></div>
+      <div class="h3">보유한 앱</div>
+      ${rest.length ? rest.map(a => `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${a.region} · ${a.cat} · Lv ${a.level}</div></div><button class="btn" data-in="${a.id}" ${act.length < P.maxSlots ? '' : 'disabled'}>넣기</button></div>`).join('') : '<div class="note">상점에서 앱을 사면 여기에 나와요</div>'}`;
+    const setDeck = async ids => { const o = await api('setDeck', { apps: ids.join(',') }); afterAct(o, '덱 슬롯은 최소 ' + Math.max(2, P.minSlots) + '칸이에요'); };
+    b.querySelectorAll('[data-out]').forEach(x => x.addEventListener('click', () => setDeck(act.map(a => a.id).filter(id => id !== x.dataset.out))));
+    b.querySelectorAll('[data-in]').forEach(x => x.addEventListener('click', () => setDeck([...act.map(a => a.id), x.dataset.in])));
+  } else if (sheetKind === 'reset' || sheetKind === 'backup') {
+    $('sheet-t').textContent = sheetKind === 'reset' ? '공장 초기화' : '백업 상점';
+    const files = st.backupFilesNow;
+    b.innerHTML = (sheetKind === 'reset' ? `<div class="hero">받을 백업파일<b>+${files}</b><span class="note">${P.canReset ? (files ? '지난 최고 기록을 넘긴 만큼만 받아요' : '이번 판이 지난 최고를 넘어야 받아요') : `Lv ${st.resetLevel}부터 초기화할 수 있어요 (지금 Lv ${st.level})`}</span></div>
+      <div class="cols"><div><h4>초기화되는 것</h4>P · 레벨 · 앱 · 강화 · 덱</div><div><h4>남는 것</h4>백업파일 · 백업 상점 · 데이터 · 칭호</div></div>
+      <button class="btn big" data-act="reset" ${P.canReset && files > 0 ? '' : 'disabled'}>${armReset ? '정말 초기화할까요? 한 번 더 누르기' : '공장 초기화'}</button>` : '')
+      + `<div class="h3">백업 상점 · 가진 파일 ${P.files}개</div>`
+      + P.backupShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 초기화 ${x.minResets}회 후`}</div></div><button class="btn" data-act="buyBackup" data-item="${x.id}" ${x.open && P.files >= x.price ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : x.price + '개'}</button></div>`).join('');
+  } else if (sheetKind === 'rec') {
+    $('sheet-t').textContent = '기록';
+    b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
+      <div><h4>스와이프</h4><b style="font-size:24px">${st.swipes}</b></div><div><h4>초기화</h4><b style="font-size:24px">${P.resets}회</b></div></div>`;
+  }
+  b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
+}
+async function sheetAct(x) {
+  const act = x.dataset.act;
+  if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
+  const args = act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
+  const o = await api(act, args);
+  if (act === 'reset' && o.ok) { closeAll(); say2('공장 초기화! 백업파일 받음', 300, 26); collapse(1.3); sfx.unit(); buzz([40, 30, 80]); }
+  afterAct(o);
+}
+async function afterAct(o, failMsg) {
+  if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); } else { sfx.snap(); if (failMsg) say2(failMsg, 300, 18); }
+  applyState(o.state); wallet.v = wallet.to = wallet.shown = Number(o.state.wallet); wallet.unit = split(wallet.v).unit; reconcile(o.state);
+  armReset = false; await loadPanel(); if (sheetKind) renderSheet();
+}
 
 // ---------- boot ----------
 (async () => {

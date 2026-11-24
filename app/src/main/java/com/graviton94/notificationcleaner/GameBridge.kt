@@ -41,9 +41,13 @@ class GameBridge(private val context: Context) {
             "buy" -> session.buy(a.optString("app"), t)
             "upgrade" -> session.upgrade(a.optString("app"), t)
             "reset" -> session.reset(t)
+            "panel" -> session.panel(t)
+            "upgradeN" -> session.upgradeN(a.optString("app"), a.optString("n", "1"), t)
+            "setDeck" -> session.setDeck(a.optString("apps").split(",").filter { it.isNotBlank() }, t)
+            "buyBackup" -> session.buyBackup(a.optString("item"), t)
             else -> "{}"
         }
-        if (method != "snapshot" && method != "hint") save()
+        if (method != "snapshot" && method != "hint" && method != "panel") save()
         out
     }
 

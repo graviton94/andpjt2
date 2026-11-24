@@ -55,6 +55,75 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun upgrade(appId: String, now: Long): String = act(now) { s -> engine.upgrade(s, appId).let { n -> if (n !== s) meta.upgraded(n, 1, now) else n } }
     fun reset(now: Long): String = act(now) { meta.reset(it, now) ?: it }
 
+    /** ×1, ×10 or "max" levels of one app; "all" = cheapest first across the deck (screens-v1 Upgrade). */
+    fun upgradeN(appId: String, n: String, now: Long): String = act(now) { s ->
+        val (next, done) = when (n) {
+            "max" -> engine.upgradeMax(s, appId)
+            "all" -> engine.upgradeAll(s)
+            else -> engine.upgradeMany(s, appId, n.toIntOrNull() ?: 1)
+        }
+        if (done > 0) meta.upgraded(next, done, now) else s
+    }
+
+    fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
+
+    fun buyBackup(item: String, now: Long): String = act(now) { s ->
+        BackupItem.entries.firstOrNull { it.name == item }?.let { engine.buyBackup(s, it) } ?: s
+    }
+
+    /** Everything the pull-down shade and its sheets show (screens-v1 Shade · Shop · Upgrade · Deck · Reset). */
+    fun panel(now: Long): String {
+        val s = engine.tick(state, now).also { state = it }
+        val r = engine.rules
+        val fb = s.backup.lv(BackupItem.FastBoot)
+        val lo = r.levelCeil(s.level, fb)
+        val hi = r.levelCeil(s.level + 1, fb)
+        val progress = if (hi > lo) ((s.runEarned - lo).max(BigInteger.ZERO) * BigInteger.valueOf(1000) / (hi - lo)).toInt().coerceIn(0, 1000) else 1000
+        return buildJsonObject {
+            put("state", snap(s, now))
+            put("levelProgress", progress)
+            put("nextLevelP", big(hi))
+            put("bestChain", s.bestChain)
+            put("minSlots", engine.minSlots(s))
+            put("maxSlots", engine.maxSlots(s))
+            put("sets", engine.activeSets(s))
+            putJsonArray("apps") {
+                Catalog.apps.sortedWith(compareBy({ it.tier }, { it.order })).forEach { a ->
+                    val owned = a.id in s.appLevels
+                    val open = engine.unlocked(s, a.id)
+                    if (!owned && !open && a.unlockLevel > s.level + 40 && a.minResets > s.backup.resets) return@forEach
+                    add(buildJsonObject {
+                        put("id", a.id); put("name", a.name); put("tier", a.tier)
+                        put("region", a.region.label); put("cat", a.category.label)
+                        put("owned", owned); put("active", a.id in s.active); put("open", open)
+                        put("unlockLevel", a.unlockLevel); put("minResets", a.minResets)
+                        if (owned) {
+                            val lv = s.appLevels[a.id] ?: 1
+                            put("level", lv)
+                            put("price1", big(engine.upgradePrice(s, a.id)))
+                            put("price10", big(engine.upgradeCost(s, a.id, 10)))
+                            put("maxN", engine.upgradeMax(s, a.id).second)
+                            put("nextMilestone", r.levelMilestones.firstOrNull { it > lv } ?: 0)
+                            val (rs, cs) = engine.synergy(s, a.id)
+                            put("synRegion", rs); put("synCat", cs)
+                        } else if (open) put("price", big(engine.appPrice(s, a.id)))
+                    })
+                }
+            }
+            put("canReset", s.level >= r.resetLevel)
+            put("files", s.backup.files)
+            put("resets", s.backup.resets)
+            putJsonArray("backupShop") {
+                BackupItem.entries.forEach { b ->
+                    add(buildJsonObject {
+                        put("id", b.name); put("label", b.label); put("lv", s.backup.lv(b)); put("max", engine.backupMax(s, b))
+                        put("price", engine.backupPrice(s, b)); put("open", engine.backupOpen(s, b)); put("minResets", b.minResets)
+                    })
+                }
+            }
+        }.toString()
+    }
+
     fun save(): String = SaveCodec.encode(state)
 
     private fun act(now: Long, f: (GameState) -> GameState): String {

@@ -23,6 +23,13 @@ fun serve(port: Int, root: File) {
             "swipe" -> session.swipe(q.getValue("id").toLong(), now)
             "auto" -> session.auto(now)
             "hint" -> session.hint(now)
+            "panel" -> session.panel(now)
+            "upgradeN" -> session.upgradeN(q["app"] ?: "", q["n"] ?: "1", now)
+            "setDeck" -> session.setDeck((q["apps"] ?: "").split(",").filter { it.isNotBlank() }, now)
+            "buyBackup" -> session.buyBackup(q.getValue("item"), now)
+            // dev only: jump to a level with its run P (and wallet), to try the late panels
+            "cheat" -> { val lv = q["level"]?.toInt() ?: 30; val r = session.engine.rules; val p = r.levelCeil(lv, 0)
+                session = WebSession(state = session.state.copy(level = lv, runEarned = p, wallet = p * java.math.BigInteger.valueOf((q["wallet"] ?: "3").toLong())), now = now); session.snapshot(now) }
             "buy" -> session.buy(q.getValue("app"), now)
             "upgrade" -> session.upgrade(q.getValue("app"), now)
             "reset" -> session.reset(now)
