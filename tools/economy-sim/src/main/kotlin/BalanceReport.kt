@@ -33,7 +33,9 @@ fun balanceReport(out: File) {
     val rules = simRules()
     val profiles = scenarios.flatMap { scenario -> (1L..2L).map { scenario to it } }
     val samples = profiles.parallelStream().map { (scenario, seed) ->
-        Sample(scenario, seed, playDays(seed, 84, DayPlan(), true, payer = scenario.payer))
+        val timeline = playDays(seed, 84, DayPlan(), true, payer = scenario.payer)
+        println("${scenario.payer.name} 시드 $seed 완료 · Lv124 ${fmt(timeline.level124Day).ifEmpty { "미도달" }}")
+        Sample(scenario, seed, timeline)
     }.toList()
     fun rows(s: Scenario) = samples.filter { it.scenario == s }
     fun levels(s: Scenario) = completeMean(rows(s).map { it.trace.level124Day })
@@ -79,9 +81,9 @@ fun balanceReport(out: File) {
             (rules.passDailyCredits + it.dailyData + rules.passOverclockMinutes * CreditItem.Overclock.price / 60), null)
     }
     val skuValues = sku.map { row ->
-            val price = (row[1] as Number).toDouble()
-            row + listOf(fmt((row[2] as Number).toDouble() * offers.baseWonPerData / price),
-                fmt((row[3] as Number?)?.toDouble()?.times(offers.baseWonPerData)?.div(price)))
+        val price = (row[1] as Number).toDouble()
+        row + listOf(fmt((row[2] as Number).toDouble() * offers.baseWonPerData / price),
+            fmt((row[3] as Number?)?.toDouble()?.times(offers.baseWonPerData)?.div(price)))
     }
     csv(File(out, "sku-values.csv"), listOf("sku", "won", "data_equivalent", "first_data_equivalent", "normal_x", "first_x"),
         skuValues.asSequence())
@@ -89,7 +91,7 @@ fun balanceReport(out: File) {
     val report = StringBuilder("# 본선 밸런스 판정\n\n")
     fun line(s: String = "") { report.appendLine(s) }
     line("엔진 RuleSet ${rules.version}, 레벨 비율 ${rules.levelRatioPermille}‰. 84일·시드 1/2·하루 4회 × 15분.")
-    line("Lv124 최초 도달과 마지막 앱 구매를 분리했다. 빈 시드는 관측 기간 내 미도달이며 평균 승인에서 제외하지 않는다.")
+    line("Lv124 최초 도달과 마지막 앱 구매를 분리했다. 시드 중 하나라도 관측 기간 내 미도달이면 목표 미달로 판정한다.")
     line()
     line("| 프로필 | 시드 1 / 2 Lv124 | 평균 | 목표 | 판정 | 첫 초기화 평균 | 마지막 앱 구매 평균 |")
     line("|---|---:|---:|---:|---|---:|---:|")
@@ -106,6 +108,12 @@ fun balanceReport(out: File) {
             "${fmt(completeMean(series.map { it.resetDays.firstOrNull() }))} | ${fmt(completeMean(series.map { it.lastAppDay }))} |")
     }
     line()
+    for (scenario in scenarios) for ((_, seed, trace) in rows(scenario)) {
+        val day = trace.level124Day ?: continue
+        if (day > scenario.high || day < scenario.low) {
+            line("- 개별 시드 범위 이탈 · ${scenario.payer.name} 시드 $seed · ${fmt(day)}일 · 목표 ${scenario.low.toInt()}~${scenario.high.toInt()}일")
+        }
+    }
     for ((slower, faster) in scenarios.zipWithNext()) {
         val a = levels(slower)
         val b = levels(faster)
@@ -120,7 +128,12 @@ fun balanceReport(out: File) {
             if (reversed.isEmpty()) "" else " · 순서 역전 시드 $reversed")
     }
     val reset = completeMean(rows(scenarios.first()).map { it.trace.resetDays.firstOrNull() })
-    line("- 무과금 첫 초기화 2~3일 · ${fmt(reset).ifEmpty { "미도달" }}일 · ${if (reset != null && reset in 2.0..3.0) "통과" else "미달"}")
+    val resetResult = when {
+        reset == null || reset > 3.0 -> "미달"
+        reset < 2.0 -> "과속"
+        else -> "통과"
+    }
+    line("- 무과금 첫 초기화 2~3일 · ${fmt(reset).ifEmpty { "미도달" }}일 · $resetResult")
     line()
     line("## 무과금 ★5 장바구니")
     line()
@@ -136,8 +149,9 @@ fun balanceReport(out: File) {
             val cover = List(quantity) { prices.take(rules.voucherMaxStars) }.flatten()
                 .sortedDescending().take(t.vouchersEarned).sum()
             val needed = quantity * prices.sum() - cover
+            val unlocked = Catalog.apps.count { it.tier == tier && it.unlockLevel in t.levelDays }
             line("- 시드 ${sample.seed} · ${tier}티어 ★5 ×$quantity · 필요 $needed / 무료 ${t.credits} 데이터 · " +
-                if (t.credits >= needed) "가능" else "미달")
+                if (t.credits >= needed && unlocked >= quantity) "가능" else "미달")
         }
     }
     line()

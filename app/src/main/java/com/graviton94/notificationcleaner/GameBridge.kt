@@ -1,6 +1,7 @@
 package com.graviton94.notificationcleaner
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -18,6 +19,7 @@ import java.io.File
  * Calls arrive on the WebView's bridge thread; the lock also covers saves from the UI thread.
  */
 class GameBridge(private val context: Context) {
+    private val debugTransactions = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     private val saveFile = File(context.filesDir, "save.json")
     private val prefs = context.getSharedPreferences("clock", 0)
     private val lock = Any()
@@ -29,6 +31,9 @@ class GameBridge(private val context: Context) {
     private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
 
     private fun now() = System.currentTimeMillis()
+
+    // An empty receipt is rejected by Shop.claimOnce. Billing/AdMob will supply real receipts in M6.
+    private fun debugReceipt(kind: String): String = if (debugTransactions) "$kind-${System.nanoTime()}" else ""
 
     @JavascriptInterface
     fun call(method: String, argsJson: String): String = synchronized(lock) {
@@ -46,13 +51,13 @@ class GameBridge(private val context: Context) {
             "panel" -> session.panel(t)
             "bm" -> session.bm(t)
             // M4: billing and ads are faked until the SDKs land (M6); ids keep every grant claim-once.
-            "buyData" -> session.buyData(a.optString("pack"), "fake-" + System.nanoTime(), t)
-            "buyStarter" -> session.buyStarter("fake-" + System.nanoTime(), t)
-            "buyRookie" -> session.buyRookie("fake-" + System.nanoTime(), t)
+            "buyData" -> session.buyData(a.optString("pack"), debugReceipt("fake"), t)
+            "buyStarter" -> session.buyStarter(debugReceipt("fake"), t)
+            "buyRookie" -> session.buyRookie(debugReceipt("fake"), t)
             "claimRookie" -> session.claimRookie(t)
             "buyItem" -> session.buyItem(a.optString("item"), t)
-            "watchAd" -> session.watchAd(a.optString("slot"), "fakead-" + System.nanoTime(), t)
-            "buyPass" -> session.buyPass(a.optString("kind"), "fake-" + System.nanoTime(), t)
+            "watchAd" -> session.watchAd(a.optString("slot"), debugReceipt("fakead"), t)
+            "buyPass" -> session.buyPass(a.optString("kind"), debugReceipt("fake"), t)
             "premium" -> session.premium(a.optString("app"), a.optString("voucher") == "1", t)
             "claimMissions" -> session.claimMissions(t)
             "attend" -> session.attend(t)
