@@ -72,8 +72,14 @@ def run_balance_phase(phase):
 
     try:
         wait_for(webview_ready, "Debug WebView did not expose the game page")
-        completed = subprocess.run(("node", "scripts/android-balance-smoke.cjs", endpoint, phase, str(OUTPUT), PACKAGE),
-                                   capture_output=True, text=True, timeout=90)
+        try:
+            completed = subprocess.run(("node", "scripts/android-balance-smoke.cjs", endpoint, phase, str(OUTPUT), PACKAGE),
+                                       capture_output=True, text=True, timeout=180)
+        except subprocess.TimeoutExpired as error:
+            trace = (error.stdout or b"").decode("utf-8", errors="replace")
+            print(trace, end="")
+            last_step = trace.splitlines()[-1] if trace else "CDP connection"
+            raise AssertionError(f"Timed out after {last_step}") from error
         print(completed.stdout, end="")
         if completed.returncode:
             print(completed.stderr, file=sys.stderr, end="")

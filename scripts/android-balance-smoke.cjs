@@ -8,12 +8,18 @@ const [endpoint, phase, output, appPackage] = process.argv.slice(2);
 const appUrl = 'https://appassets.androidplatform.net/assets/game/index.html?auto=0';
 const localUrl = 'http://127.0.0.1:8765/index.html?auto=0';
 const adb = (...args) => execFileSync('adb', args, { timeout: 15_000 });
+let stage = 'CDP connection';
+const checkpointStage = name => {
+  stage = name;
+  console.log(`${phase}: ${name}`);
+};
 
 async function run() {
   const desktop = endpoint === 'desktop';
   const browser = desktop
     ? await chromium.launch({ executablePath: process.env.SMOKE_CHROMIUM || undefined, args: ['--no-sandbox', '--no-proxy-server', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
-    : await chromium.connectOverCDP(endpoint, { noDefaults: true });
+    : await chromium.connectOverCDP(endpoint, { noDefaults: true, timeout: 25_000 });
+  checkpointStage("find WebView page");
   let page;
   if (desktop) {
     page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -26,6 +32,7 @@ async function run() {
     });
   }
 
+  page.setDefaultTimeout(18_000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', msg => {
@@ -56,10 +63,12 @@ async function run() {
   const attr = (name, value) => page.locator(`[${name}="${value}"]`);
   const act = name => attr('data-act', name);
   const close = async () => {
+    checkpointStage('close panel');
     if (await page.locator('#scrim.open').count()) await page.locator('#scrim').click({ position: { x: 3, y: 3 } });
     await page.locator('#scrim.open').waitFor({ state: 'detached' });
   };
   const open = async kind => {
+    checkpointStage(`open ${kind}`);
     if (await page.locator('#sheet.open').count()) await page.locator('#sheet-x').click();
     else if (!(await page.locator('#shade.open').count())) {
       const b = await page.locator('#stage').boundingBox();
@@ -73,6 +82,7 @@ async function run() {
     await page.locator('#sheet.open').waitFor();
   };
   const pay = async (button, text, approve = true) => {
+    checkpointStage(`confirm ${text} (${approve ? 'accept' : 'cancel'})`);
     await button.click();
     await page.locator('#cf.on').waitFor();
     const confirmation = (await page.locator('#cf-p').innerText()).replace(/[^0-9]/g, '');
@@ -82,6 +92,7 @@ async function run() {
   };
   const waitData = expected => until(async () => (await bm()).data === expected, 'Unexpected data balance');
   const shot = async name => {
+    checkpointStage(name);
     if (desktop) {
       await page.screenshot({ path: path.join(output, name + '.png') });
       return;
@@ -112,6 +123,7 @@ async function run() {
   const premium = app => act('premium').and(attr('data-id', app));
 
   if (phase === 'purchase' || desktop) {
+    checkpointStage('claim attendance');
     await until(async () => (await bm()).claimedToday, 'The game did not claim attendance');
     if (!(await page.locator('#sheet.open').count())) await open('attend');
     assert.equal((await bm()).streak, 1);
@@ -159,6 +171,7 @@ async function run() {
     await shot('06-deck');
 
     await close();
+    checkpointStage('swipe the seeded sandwich');
     const s = await api('snapshot');
     const row = s.rows.findIndex((r, i) => r.app === 'weather' &&
       s.rows[i - 1]?.app === 'memo' && s.rows[i + 1]?.app === 'memo');
@@ -180,6 +193,7 @@ async function run() {
   }
 
   if (phase === 'reset' || desktop) {
+    checkpointStage('restore purchase and progress');
     if (desktop) await page.reload();
     assert.deepEqual(await progress(), read('before-restart'));
     await shot('08-relaunch');
@@ -199,6 +213,7 @@ async function run() {
   }
 
   if (phase === 'verify' || desktop) {
+    checkpointStage('restore after reset');
     if (desktop) await page.reload();
     assert.deepEqual(await progress(), read('after-reset'));
     await shot('10-reset-relaunch');
@@ -210,4 +225,4 @@ async function run() {
 }
 
 // Disconnect Playwright without issuing Browser.close to the WebView.
-run().then(() => process.exit(0), error => { console.error(error); process.exit(1); });
+run().then(() => process.exit(0), error => { console.error(`${stage}: ${error.message}`); console.error(error); process.exit(1); });
