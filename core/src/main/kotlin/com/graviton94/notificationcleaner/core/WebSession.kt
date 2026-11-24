@@ -78,28 +78,50 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     // ---- M4 monetization (bible 17, bm-screens). Billing and ads are faked until M6: every grant still goes through
     // Shop.claimOnce so the real SDK callbacks can drop in with their order / ad ids.
 
-    /** Data packs (Play product ids in docs/content/play/play-console.md); the first purchase of each pays double. */
-    data class DataPack(val id: String, val data: Long, val won: Int)
-    val dataPacks = listOf(DataPack("data_100", 100, 1_200), DataPack("data_550", 550, 5_900), DataPack("data_1200", 1_200, 12_000),
-        DataPack("data_3500", 3_500, 33_000), DataPack("data_7500", 7_500, 69_000), DataPack("data_13500", 13_500, 119_000))
+    /**
+     * Data packs (Play product ids in docs/content/play/play-console.md). [base] is the smallest pack's rate (₩12 per data);
+     * bigger packs add a bonus on top, shown as "+N% 이득". The first purchase of each pack pays double.
+     */
+    data class DataPack(val id: String, val base: Long, val data: Long, val won: Int) { val bonusPct get() = ((data * 100 + base / 2) / base - 100).toInt() }
+    val dataPacks = listOf(
+        DataPack("data_100", 100, 100, 1_200), DataPack("data_540", 490, 540, 5_900), DataPack("data_1200", 1_000, 1_200, 12_000),
+        DataPack("data_3700", 2_750, 3_700, 33_000), DataPack("data_8600", 5_750, 8_600, 69_000), DataPack("data_16800", 9_900, 16_800, 119_000),
+    )
+    /** 초심자 패스: ₩3,300 within 7 days of install → 300 now + 50 a day for 7 days + one ★ voucher. */
+    val rookieWon = 3_300; val rookieNow = 300L; val rookieDaily = 50L; val rookieDays = 7
 
-    private fun firstBuy(s: GameState, id: String) = "first:$id" !in s.account.processedClaims
+    private fun firstBuy(s: GameState, id: String) = id !in s.account.firstBuys
+    private fun bought(s: GameState, id: String) = s.withAccount { it.copy(firstBuys = it.firstBuys + id) }
+    private fun installed(s: GameState, now: Long) = if (s.account.installDay >= 0) s else s.withAccount { it.copy(installDay = dayOf(now)) }
+    private fun rookieOpen(s: GameState, now: Long) = s.account.rookieDay < 0 && dayOf(now) - s.account.installDay < rookieDays
+    private fun rookieDayNo(s: GameState, now: Long) = (dayOf(now) - s.account.rookieDay).toInt()  // 0 = purchase day
 
     fun buyData(packId: String, orderId: String, now: Long): String = act(now) { s ->
         val p = dataPacks.firstOrNull { it.id == packId } ?: return@act s
         val first = firstBuy(s, p.id)
-        shop.claimOnce(s, orderId) { shop.credit(it, if (first) p.data * 2 else p.data, bought = true) }
-            ?.let { if (first) it.withMarker("first:${p.id}") else it } ?: s
+        shop.claimOnce(s, orderId) { bought(shop.credit(it, if (first) p.data * 2 else p.data, bought = true), p.id) } ?: s
     }
 
     /** 스타터 팩: data 500 + one star voucher, once ever. */
     fun buyStarter(orderId: String, now: Long): String = act(now) { s ->
         if (!firstBuy(s, "starter_pack")) return@act s
-        shop.claimOnce(s, orderId) { st -> shop.credit(st, 500, bought = true).let { it.copy(backup = it.backup.copy(cloud = it.backup.cloud.copy(account = it.account.copy(starVouchers = it.account.starVouchers + 1)))) } }
-            ?.withMarker("first:starter_pack") ?: s
+        shop.claimOnce(s, orderId) { st -> bought(shop.credit(st, 500, bought = true), "starter_pack").withAccount { it.copy(starVouchers = it.starVouchers + 1) } } ?: s
     }
 
-    private fun GameState.withMarker(m: String) = copy(backup = backup.copy(cloud = backup.cloud.copy(account = account.copy(processedClaims = (account.processedClaims + m).takeLast(500)))))
+    fun buyRookie(orderId: String, now: Long): String = act(now) { s0 ->
+        val s = installed(s0, now)
+        if (!rookieOpen(s, now)) return@act s0
+        shop.claimOnce(s, orderId) { st ->
+            shop.credit(st, rookieNow, bought = true).withAccount { it.copy(rookieDay = dayOf(now), rookieClaimDay = -1, starVouchers = it.starVouchers + 1) }
+        } ?: s0
+    }
+
+    /** The pass's daily 50: once a day for 7 days from the purchase day. */
+    fun claimRookie(now: Long): String = act(now) { s ->
+        val a = s.account
+        if (a.rookieDay < 0 || rookieDayNo(s, now) !in 0 until rookieDays || a.rookieClaimDay == dayOf(now)) s
+        else shop.credit(s, rookieDaily, bought = true).withAccount { it.copy(rookieClaimDay = dayOf(now)) }
+    }
 
     fun buyItem(item: String, now: Long): String = act(now) { s ->
         val it = CreditItem.entries.firstOrNull { c -> c.name == item } ?: return@act s
@@ -129,14 +151,20 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun claimMissions(now: Long): String = act(now) { meta.claimMissions(shop, it, now) ?: it }
 
     fun bm(now: Long): String {
-        val s = engine.tick(state, now).also { state = it }
+        val s = installed(engine.tick(state, now), now).also { state = it }
         val a = s.account
         val r = engine.rules
         return buildJsonObject {
             put("state", snap(s, now))
             put("data", a.credits)
             put("vouchers", a.starVouchers)
-            putJsonArray("packs") { dataPacks.forEach { p -> add(buildJsonObject { put("id", p.id); put("data", p.data); put("won", p.won); put("first", firstBuy(s, p.id)) }) } }
+            putJsonArray("packs") { dataPacks.forEach { p -> add(buildJsonObject { put("id", p.id); put("base", p.base); put("data", p.data); put("bonus", p.bonusPct); put("won", p.won); put("first", firstBuy(s, p.id)) }) } }
+            put("rookieOpen", rookieOpen(s, now))
+            put("rookieDaysLeft", (rookieDays - (dayOf(now) - a.installDay)).toInt().coerceAtLeast(0))
+            put("rookieBought", a.rookieDay >= 0)
+            put("rookieDay", if (a.rookieDay >= 0) rookieDayNo(s, now) + 1 else 0)
+            put("rookieCanClaim", a.rookieDay >= 0 && rookieDayNo(s, now) in 0 until rookieDays && a.rookieClaimDay != dayOf(now))
+            put("rookieWon", rookieWon); put("rookieValue", rookieNow + rookieDaily * rookieDays)
             put("starter", firstBuy(s, "starter_pack"))
             putJsonArray("items") {
                 CreditItem.entries.forEach { c -> add(buildJsonObject {

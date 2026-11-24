@@ -79,7 +79,20 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .cols h4{margin:0 0 4px;font-size:12px;color:var(--sub)}
 .h3{font-size:12.5px;color:var(--sub);margin:14px 2px 8px;font-weight:700}
 .cur{display:flex;gap:6px;flex-wrap:wrap}.cur span{display:flex;align-items:center;gap:4px;background:var(--soft);border-radius:999px;padding:3px 10px 3px 4px;font-weight:800;font-size:13px}.cur img{width:22px;height:22px}
-.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-bottom:10px;padding-top:14px}
+.pack.rec{border:2px solid #FFC23D;box-shadow:0 0 0 3px #FFC23D33}
+.pack .ros{position:absolute;right:-6px;top:18px;width:40px;height:48px;background:url(img/ui/rosette.webp) center/contain no-repeat;color:#5A2A00;font-size:10.5px;font-weight:900;line-height:36px;text-align:center;transform:rotate(12deg);z-index:2}
+.pack .base{font-size:10.5px;color:var(--sub);margin:-4px 0 4px;white-space:nowrap}
+.gain{display:inline-block;font-size:12px;font-weight:900;color:#fff;background:linear-gradient(180deg,#FF5A4E,#E0261C);border-radius:999px;padding:2px 9px;margin-bottom:6px;box-shadow:0 2px 0 #8A1010}
+.gain.base0{background:var(--soft);color:var(--sub);box-shadow:none}
+.rookie{position:relative;border-radius:20px;padding:14px 14px 12px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,#0E7A5A,#0B4A64);border:2px solid #5BD6A8;overflow:hidden}
+.rookie h3{margin:0;font:22px "Black Han Sans",sans-serif}
+.rookie ul{margin:6px 0 10px;padding-left:16px;font-size:12.5px}
+.rookie .d{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;background:#00000033;border-radius:999px;padding:2px 9px}
+.rookie .d img{width:16px;height:16px}
+.bst{position:absolute;right:8px;top:8px;width:84px;height:84px;background:url(img/ui/burst.webp) center/contain no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#B31A00;font:900 18px/1 "Noto Sans KR",sans-serif;transform:rotate(10deg);letter-spacing:-.5px}
+.bst small{font-size:11px;line-height:1.1}
+.rookie .btn,.starter .btn{min-width:130px}
 .pack{position:relative;border-radius:18px;padding:22px 6px 8px;text-align:center;background:var(--pack);border:1px solid var(--line);color:inherit;font:inherit}
 .pack img{width:64px;height:64px;object-fit:contain}.pack .n{font-weight:900;font-size:15px;margin:2px 0 6px}
 .pack .won{display:block;border-radius:999px;background:linear-gradient(180deg,#FFD66B,#F0A000);color:#2A1606;font-weight:900;padding:7px 0;font-size:13px}
@@ -87,7 +100,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .starter{display:flex;gap:10px;align-items:center;border-radius:18px;padding:12px;background:linear-gradient(90deg,#5A1E2E,#3A1A12);border:1px solid #FF8A6B55;margin-bottom:6px;color:#FFF4EC;font:inherit;text-align:left;width:100%}
 .starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:20px "Black Han Sans",sans-serif}
 .dbtn{flex:none;min-width:70px;height:38px;border-radius:12px;border:0;font:inherit;font-weight:900;background:linear-gradient(180deg,#9BE37A,#4FB43A);color:#123006;display:flex;align-items:center;justify-content:center;gap:4px}
-.dbtn img{width:18px;height:18px}.dbtn:disabled{filter:grayscale(1);opacity:.45}
+.dbtn img{width:18px;height:18px}
 .adbtn{background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff}
 .passc{border-radius:20px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;border:1px solid #FFFFFF22;color:#F6F1EA}
 .passc .btn{background:#FFD66B;color:#1E1408}
@@ -109,12 +122,13 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .skin.green{border-image-source:url(img/ui/btn-green.webp);color:#0F3306}.skin.green:active{border-image-source:url(img/ui/btn-green-pressed.webp)}
 .skin.blue{border-image-source:url(img/ui/btn-blue.webp);color:#fff;text-shadow:0 1px 0 #0B3A8A}.skin.blue:active{border-image-source:url(img/ui/btn-blue-pressed.webp)}
 .skin.claim{border-image-source:url(img/ui/btn-claim.webp);color:#fff;text-shadow:0 1px 0 #8A2200,0 0 6px #A23000}
-.skin:disabled,.skin.off{border-image-source:url(img/ui/btn-off.webp)!important;color:#5A5F6C!important;text-shadow:none;filter:none;opacity:1}
+.skin:disabled{filter:grayscale(1) brightness(1.05);opacity:.55}
+.skin.off{border-image-source:url(img/ui/btn-off.webp)!important;color:#5A5F6C!important;text-shadow:none;filter:none;opacity:1}
 .skin img{width:20px;height:20px;vertical-align:-4px}
 .ic,.it img.ic,.skin img.ic{width:16px;height:16px;border-radius:0;vertical-align:-3px;margin-right:3px;flex:none}
 .it .skin img{width:20px;height:20px;border-radius:0}
 .btn.own{display:inline-flex;align-items:center;justify-content:center}
-.rib{background:url(img/ui/ribbon.webp) center/100% 100% no-repeat!important;padding:6px 18px 9px!important;border-radius:0!important;top:-12px!important;text-shadow:0 1px 0 #8A1010}
+.rib{background:url(img/ui/ribbon.webp) center/100% 100% no-repeat!important;width:96px;padding:5px 0 8px!important;border-radius:0!important;top:-14px!important;text-shadow:0 1px 0 #8A1010;z-index:2}
 .sash{position:absolute;left:-3px;top:-3px;width:46px;height:46px;background:url(img/ui/sash.webp) 0 0/100% 100% no-repeat;z-index:1}
 .sash span{position:absolute;left:3px;top:10px;transform:rotate(-45deg);font-size:10px;font-weight:900;color:#5A3300}
 .boltt{display:inline-flex;align-items:center;justify-content:flex-end;width:78px;height:24px;background:url(img/ui/bolt.webp) left center/contain no-repeat;color:#fff;font-size:11px;font-weight:900;padding-right:9px;vertical-align:middle}
@@ -1330,7 +1344,7 @@ const ico = (id, stars = starsOf(id)) => {
   return `<span class="fr">${img} style="left:${pct(f.cx - f.s / 2)};top:${pct(f.cy - f.s / 2)};width:${pct(f.s)};height:${pct(f.s)};border-radius:${(f.r / f.s * 100).toFixed(1)}%"><img class="ring" src="img/bm/badge-frame-${Math.min(5, stars)}.webp" alt=""></span>`;
 };
 const P$ = n => fmt(Number(n)) + ' P';
-async function loadPanel() { P = await api('panel'); P.bm = await api('bm'); applyState(P.state); return P; }
+async function loadPanel() { const np = await api('panel'); np.bm = await api('bm'); P = np; applyState(P.state); return P; }  // swap in whole: a sheet may render meanwhile
 function closeAll() { shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
@@ -1369,7 +1383,7 @@ shadeEl.addEventListener('pointerdown', e => { shadeDrag = e.clientY; });
 shadeEl.addEventListener('pointerup', e => { if (shadeDrag !== null && shadeDrag - e.clientY > 60) closeAll(); shadeDrag = null; });
 
 async function openSheet(kind) {
-  sheetKind = kind; if (!P) await loadPanel();
+  sheetKind = kind; if (!P || !P.bm) await loadPanel();
   shadeEl.classList.remove('open'); scrimEl.classList.add('open');
   renderSheet(); sheetEl.classList.add('open'); sfx.snap();
 }
@@ -1446,13 +1460,32 @@ const AD_IMG = { BestDouble: 'boost-best-double', OfflineDouble: 'boost-offline-
 const won = n => '₩' + n.toLocaleString('ko-KR');
 function renderData(b) {
   const m = P.bm; $('sheet-t').textContent = '데이터 충전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
-  b.innerHTML = `<div class="packs">${m.packs.map((p, i) => `<button class="pack" data-act="buyData" data-pack="${p.id}">${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}${p.id === 'data_1200' ? '<span class="sash"><span>추천</span></span>' : ''}<img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${DIMG.replace('<img', '<img style="width:16px;height:16px;vertical-align:-3px"')} ${p.data.toLocaleString()}</div><span class="won">${won(p.won)}</span></button>`).join('')}</div>`
-    + (m.starter ? `<button class="starter" data-act="buyStarter"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b> <span class="boltt">한 번만</span><div class="note">데이터 500 · 프리미엄 ★ 선택권 1 · 한 번만</div></div></button>` : '')
-    + `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m"><img class="ic" src="img/ui/clock.webp">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
+  const di = '<img src="img/bm/currency-data.webp" style="width:15px;height:15px;vertical-align:-3px">';
+  const rate = 1200 / 100;  // ₩ per data at the smallest pack: every "이득" is measured against it
+  const times = (data, won) => (data * rate / won).toFixed(1).replace(/\.0$/, '');
+  let h = '';
+  // 초심자 패스: first 7 days only, the best value in the shop
+  if (m.rookieOpen || (m.rookieBought && m.rookieDay <= 7)) {
+    h += `<div class="rookie"><div class="bst">${times(m.rookieValue, m.rookieWon)}배<small>이득</small></div>
+      <h3>초심자 패스</h3><span class="d"><img src="img/ui/clock.webp">${m.rookieBought ? `${m.rookieDay}/7일째` : `설치 후 7일만 · ${m.rookieDaysLeft}일 남음`}</span>
+      <ul><li>지금 바로 데이터 300</li><li>7일 동안 매일 데이터 50 (총 650)</li><li>프리미엄 ★ 선택권 1장</li></ul>
+      ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? '오늘 50 받기' : '오늘 받음 · 내일 또'}</button>`
+        : `<button class="btn skin gold" data-act="buyRookie">${won(m.rookieWon)}</button> <span class="note" style="color:#CFF5E6">같은 돈으로 데이터 ${Math.round(m.rookieWon / rate)} → ${m.rookieValue}</span>`}</div>`;
+  }
+  if (m.starter) h += `<button class="starter" data-act="buyStarter" style="position:relative"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b> <span class="boltt">한 번만</span>
+      <div class="note">데이터 500 · 프리미엄 ★ 선택권 1</div></div><span class="gain">${times(500, 2500)}배 이득</span></button>`;
+  h += `<div class="packs">${m.packs.map((p, i) => `<button class="pack ${p.id === 'data_1200' ? 'rec' : ''}" data-act="buyData" data-pack="${p.id}">
+      ${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}${p.id === 'data_1200' ? '<span class="ros">추천</span>' : ''}
+      <img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${di} ${(p.first ? p.data * 2 : p.data).toLocaleString()}</div>
+      <div class="base">${p.first ? `${p.data.toLocaleString()} × 2` : p.bonus ? `기본 ${p.base.toLocaleString()} + 보너스 ${(p.data - p.base).toLocaleString()}` : '기본'}</div>
+      ${p.bonus ? `<span class="gain">+${p.bonus}% 이득</span>` : '<span class="gain base0">기본가</span>'}
+      <span class="won">${won(p.won)}</span></button>`).join('')}</div>`;
+  h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m"><img class="ic" src="img/ui/clock.webp">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
       <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
       <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '<img src="img/ui/ad.webp">광고'}</button></div>`).join('')
-    + `<div class="note" style="text-align:center;margin-top:10px">확률형 상품 없음 · 받는 것을 사기 전에 그대로 보여 드려요 · 결제는 테스트용 가짜</div>`;
+    + `<div class="note" style="text-align:center;margin-top:10px">이득은 가장 작은 팩(₩12에 데이터 1) 기준 · 확률형 상품 없음 · 결제는 테스트용 가짜</div>`;
+  b.innerHTML = h;
 }
 function renderPass(b) {
   const m = P.bm; $('sheet-t').textContent = '더 빠르게'; $('sheet-w').innerHTML = '';

@@ -27,6 +27,8 @@ fun serve(port: Int, root: File) {
             "bm" -> session.bm(now)
             "buyData" -> session.buyData(q.getValue("pack"), "fake-" + System.nanoTime(), now)
             "buyStarter" -> session.buyStarter("fake-" + System.nanoTime(), now)
+            "buyRookie" -> session.buyRookie("fake-" + System.nanoTime(), now)
+            "claimRookie" -> session.claimRookie(now)
             "buyItem" -> session.buyItem(q.getValue("item"), now)
             "watchAd" -> session.watchAd(q.getValue("slot"), "fakead-" + System.nanoTime(), now)
             "buyPass" -> session.buyPass(q.getValue("kind"), "fake-" + System.nanoTime(), now)

@@ -86,6 +86,13 @@ data class Account(
     val creditsFree: Long = 0,
     val creditsBought: Long = 0,
     val creditsSpent: Long = 0,
+    /** First day the game ran: the 초심자 패스 is sold for 7 days from here. */
+    val installDay: Long = -1,
+    /** 초심자 패스: purchase day (-1 = not bought) and the last day its daily data was taken. */
+    val rookieDay: Long = -1,
+    val rookieClaimDay: Long = -1,
+    /** Store products already bought once (first purchase pays double). */
+    val firstBuys: Set<String> = emptySet(),
 ) {
     fun stars(appId: String) = premium[appId] ?: 0
 }

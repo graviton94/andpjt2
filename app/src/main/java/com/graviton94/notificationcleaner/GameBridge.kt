@@ -46,6 +46,8 @@ class GameBridge(private val context: Context) {
             // M4: billing and ads are faked until the SDKs land (M6); ids keep every grant claim-once.
             "buyData" -> session.buyData(a.optString("pack"), "fake-" + System.nanoTime(), t)
             "buyStarter" -> session.buyStarter("fake-" + System.nanoTime(), t)
+            "buyRookie" -> session.buyRookie("fake-" + System.nanoTime(), t)
+            "claimRookie" -> session.claimRookie(t)
             "buyItem" -> session.buyItem(a.optString("item"), t)
             "watchAd" -> session.watchAd(a.optString("slot"), "fakead-" + System.nanoTime(), t)
             "buyPass" -> session.buyPass(a.optString("kind"), "fake-" + System.nanoTime(), t)
