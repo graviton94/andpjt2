@@ -356,6 +356,7 @@ function drawCard(c, r, y) {
     else { c.fillStyle = '#fff'; c.font = `22px ${FD}`; c.textAlign = 'center'; c.fillText(d.kind === 'Wild' ? '★' : d.kind === 'Event' ? '🎁' : d.kind === 'App' ? (d.name || '?')[0] : '!', 45, y + 38); }
   }
   c.fillStyle = ink; c.textAlign = 'left'; c.font = `700 14px ${FB}`; c.fillText(nameOf(d), 76, y + 26);
+  const nw = c.measureText(nameOf(d)).width; c.fillStyle = sub; c.font = `400 11.5px ${FB}`; c.fillText(d.id % 4 === 0 ? '1분' : '방금', 82 + nw, y + 26);
   c.fillStyle = sub; c.font = `400 12px ${FB}`; c.fillText(msgOf(d), 76, y + 45);
   if (d.merges) {
     // count toward the burst: filled pips + "2/4"
@@ -391,16 +392,42 @@ function shatterImg(snap, x0, y0, w, h, rad0, ix, iy, power, scale) {
 // ---------- decor: fake phone chrome that collapses on big hits and snaps back ----------
 const ink0 = () => day ? '#16181D' : '#F6F1EA';
 const pill = (x, y, w, h, text, c) => { c.fillStyle = day ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.1)'; rrc(c, x - w / 2, y - h / 2, w, h, h / 2); c.fill(); c.strokeStyle = day ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.18)'; c.lineWidth = 1; c.stroke(); c.fillStyle = ink0(); c.font = `700 12px ${FB}`; c.textAlign = 'center'; c.fillText(text, x, y + 4); };
+const ACC = '#EFA03F';
+const clock = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+// quick tiles (screens-v1 Main): 자동 정리 on/off · 방해 금지 = mute · 덱 · 배속 (shop for now)
+let autoOn = true;
+const TILES = [
+  { key: 'auto', label: '자동', on: () => autoOn, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8' },
+  { key: 'dnd', label: '방해 금지', on: () => !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
+  { key: 'deck', label: '덱', on: () => false, icon: 'M4 6h16M4 12h16M4 18h10' },
+  { key: 'speed', label: '배속', on: () => false, icon: 'M5 6l7 6-7 6zM13 6l7 6-7 6z' },
+];
+const TILEY = 100, tileX = i => 18 + (354 / 4) * (i + .5);
+const tileIcon = (c, d) => { c.save(); c.translate(-12, -12); c.lineWidth = 2; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(new Path2D(d)); c.restore(); };
 const decor = [
-  { x: 40, y: 22, draw: c => { c.fillStyle = ink0(); c.font = `700 13px ${FB}`; c.textAlign = 'center'; c.fillText('9:41', 0, 5); } },
-  { x: 312, y: 20, draw: c => { c.fillStyle = ink0(); for (let i = 0; i < 4; i++) c.fillRect(-8 + i * 4, 4 - (i + 1) * 2.5, 3, (i + 1) * 2.5); } },
-  { x: 333, y: 20, draw: c => { c.strokeStyle = ink0(); c.lineWidth = 2; c.lineCap = 'round'; [9, 6, 3].forEach(r => { c.beginPath(); c.arc(0, 5, r, -2.4, -.74); c.stroke(); }); } },
-  { x: 356, y: 20, draw: c => { c.strokeStyle = ink0(); c.lineWidth = 1.4; rrc(c, -11, -6, 20, 11, 3); c.stroke(); c.fillStyle = ink0(); c.fillRect(10, -2.5, 2, 4); if (lowBat) { c.fillStyle = Math.sin(performance.now() / 110) > 0 ? '#FF3B30' : 'rgba(255,59,48,.25)'; c.fillRect(-9, -4, 3, 7); c.strokeStyle = '#FF3B30'; rrc(c, -11, -6, 20, 11, 3); c.stroke(); } else c.fillRect(-9, -4, 13, 7); } },
-  { x: 46, y: 52, draw: c => pill(0, 0, 58, 22, 'Lv ' + (S ? S.level : 1), c) },
-  { x: 336, y: 52, draw: c => pill(0, 0, 78, 22, S ? `🔋 ${S.energy}/${S.energyCap}` : '🔋', c) },
-  { x: 72, y: 684 + EX, draw: c => pill(0, 0, 84, 30, '상점', c) },
-  { x: 318, y: 684 + EX, draw: c => pill(0, 0, 104, 30, S ? `덱 ${S.deck}/${S.slots}` : '덱', c) },
-  { x: 195, y: 724 + EX, draw: c => { c.fillStyle = day ? 'rgba(22,24,29,.5)' : 'rgba(246,241,234,.5)'; rrc(c, -60, -2.5, 120, 5, 3); c.fill(); } },
+  // status bar: real clock, the game battery is the phone battery
+  { x: 40, y: 22, draw: c => { c.fillStyle = ink0(); c.font = `700 14px ${FB}`; c.textAlign = 'center'; c.fillText(clock(), 0, 5); } },
+  { x: 262, y: 20, draw: c => { c.fillStyle = ink0(); for (let i = 0; i < 4; i++) c.fillRect(-8 + i * 4, 4 - (i + 1) * 2.5, 3, (i + 1) * 2.5); } },
+  { x: 282, y: 20, draw: c => { c.strokeStyle = ink0(); c.lineWidth = 2; c.lineCap = 'round'; [9, 6, 3].forEach(r => { c.beginPath(); c.arc(0, 5, r, -2.4, -.74); c.stroke(); }); } },
+  { x: 312, y: 20, draw: c => {
+    const f = S ? S.energy / Math.max(1, S.energyCap) : 1, low = f <= .25;
+    c.strokeStyle = ink0(); c.lineWidth = 1.4; rrc(c, -11, -6, 22, 12, 3); c.stroke(); c.fillStyle = ink0(); c.fillRect(12, -2.5, 2, 5);
+    c.fillStyle = low ? (Math.sin(performance.now() / 110) > 0 ? '#FF3B30' : 'rgba(255,59,48,.3)') : '#5BD68A'; c.fillRect(-9, -4, Math.max(2, 18 * f), 8);
+    c.fillStyle = ink0(); c.font = `700 12px ${FB}`; c.textAlign = 'left'; c.fillText(S ? `${S.energy}/${S.energyCap}` : '', 17, 4);
+  } },
+  { x: 40, y: 56, draw: c => { c.fillStyle = ACC; rrc(c, -24, -11, 48, 22, 11); c.fill(); c.fillStyle = '#1E1408'; c.font = `800 12px ${FB}`; c.textAlign = 'center'; c.fillText('Lv ' + (S ? S.level : 1), 0, 4); } },
+  { x: 350, y: 56, draw: c => { c.fillStyle = 'rgba(246,241,234,.6)'; c.font = `700 11px ${FB}`; c.textAlign = 'right'; c.fillText(S ? `덱 ${S.deck}/${S.slots}` : '', 22, 4); } },
+  ...TILES.map((tl, i) => ({ x: tileX(i), y: TILEY, tile: true, draw: c => {
+    const on = tl.on(), a = plate.phase === 'idle' ? 1 : 0;
+    if (a <= 0) return;
+    c.globalAlpha = a;
+    c.fillStyle = on ? ACC : 'rgba(255,255,255,.12)'; c.beginPath(); c.arc(0, 0, 26, 0, 6.28); c.fill();
+    c.strokeStyle = on ? '#1E1408' : '#E9E3DC'; tileIcon(c, tl.icon);
+    c.fillStyle = ink0(); c.font = `600 12px ${FB}`; c.textAlign = 'center'; c.fillText(tl.label, 0, 44);
+    c.globalAlpha = 1;
+  } })),
+  { x: 195, y: 684 + EX + 6, draw: c => { c.fillStyle = 'rgba(179,168,155,.9)'; c.font = `500 12px ${FB}`; c.textAlign = 'center'; c.fillText('아래로 끌어 상점 · 강화 · 덱', 0, 0); } },
+  { x: 195, y: 724 + EX, draw: c => { c.fillStyle = day ? 'rgba(22,24,29,.5)' : 'rgba(246,241,234,.85)'; rrc(c, -60, -2.5, 120, 5, 3); c.fill(); } },
 ].map(d => Object.assign(d, { ox: 0, oy: 0, rot: 0, vx: 0, vy: 0, vr: 0, mode: 'home', t: 0, sy: spring(0), sr: spring(0) }));
 function collapse(power) {
   decor.forEach((d, i) => {
@@ -962,11 +989,12 @@ function draw(t) {
     for (let j = 5; j >= 0; j--) { const tt = Math.max(0, o.t * o.t - j * .035), [x, y] = tokPos(o, tt), r = o.r * (1 - j * .13); const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4); g.addColorStop(0, `rgba(255,255,255,${.9 - j * .13})`); g.addColorStop(.35, rgb(o.col, .7 - j * .1)); g.addColorStop(1, rgb(o.col, 0)); ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8); }
   }
   if (S) {
-    const gy = ROW0 - 18, gw = CW * Math.min(1, S.gauge / 100);
-    ctx.fillStyle = 'rgba(255,255,255,.12)'; rr(CX0, gy, CW, 6, 3); ctx.fill();
-    const gg = ctx.createLinearGradient(CX0, 0, CX0 + CW, 0); gg.addColorStop(0, '#FFD66B'); gg.addColorStop(1, '#FF3B30');
-    ctx.fillStyle = gg; rr(CX0, gy, Math.max(6, gw), 6, 3); ctx.fill();
-    ctx.fillStyle = S.gauge >= 80 ? '#FF8A80' : 'rgba(246,241,234,.6)'; ctx.font = `700 10px ${FB}`; ctx.textAlign = 'right'; ctx.fillText(`과부하 ${S.gauge}%`, CX0 + CW, gy - 4);
+    const gy = ROW0 - 22, gx = 64, gw = 274;
+    ctx.fillStyle = '#FFD66B'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'left'; ctx.fillText('과부하', 18, gy + 8);
+    ctx.fillStyle = 'rgba(255,255,255,.08)'; rr(gx, gy, gw, 8, 4); ctx.fill();
+    const gg = ctx.createLinearGradient(gx, 0, gx + gw, 0); gg.addColorStop(0, '#F6C453'); gg.addColorStop(1, S.gauge >= 80 ? '#FF6B3D' : '#FFD66B');
+    ctx.fillStyle = gg; rr(gx, gy, Math.max(8, gw * Math.min(1, S.gauge / 100)), 8, 4); ctx.fill();
+    ctx.fillStyle = S.gauge >= 80 ? '#FF8A80' : '#B3A89B'; ctx.font = `600 12px ${FB}`; ctx.textAlign = 'right'; ctx.fillText(`${S.gauge}%`, 372, gy + 8);
   }
   if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
@@ -985,7 +1013,7 @@ function draw(t) {
   if (wallet.note) { const f = clamp(1 - wallet.note.t / 1.1, 0, 1); gtext(wallet.note.text, 300, 86, 20, { rot: -.12, appear: wallet.note.t * 5, alpha: Math.min(1, f * 3), top: '#FFFFFF', bot: '#7CE0FF', wob: 1.5, t }); }
   ctx.save(); shaken();
   const live = plate.phase !== 'idle';
-  if (plate.phase === 'chain' || plate.phase === 'merge' || !live) {
+  if (plate.phase === 'chain' || plate.phase === 'merge') {
     const m = plate.phase === 'merge' ? plate.merge : 0, e = m * m;
     ctx.globalAlpha = (live ? 1 : .4) * (1 - e * .9);
     const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
@@ -1088,23 +1116,36 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // ---------- input: drag a card sideways to clear it ----------
-const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false };
+const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0 };
+function tapTile(k) {
+  sfx.snap(); buzz(8);
+  if (k === 'auto') { autoOn = !autoOn; say2(autoOn ? '자동 정리 켬' : '자동 정리 끔', 160, 20); }
+  else if (k === 'dnd') { sound = !sound; if (sound) ac(); say2(sound ? '소리 켬' : '방해 금지 · 소리 끔', 160, 20); }
+  else openShop();
+}
 const toBoard = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * H]; };
 cv.addEventListener('pointerdown', e => {
   phoneLoad(); idleT = 0;
   const [x, y] = toBoard(e);
   if (ev) { if (EVENTS[ev.type].tap) EVENTS[ev.type].tap(ev, x, y); return; }
-  if (y > 684 + EX - 22 && y < 684 + EX + 22) { if (x < 150) openShop(); return; }
+  if (y > 684 + EX - 16) { openShop(); return; }
+  if (plate.phase === 'idle' && Math.abs(y - TILEY) < 34) {
+    const i = TILES.findIndex((_, k) => Math.abs(x - tileX(k)) < 32);
+    if (i >= 0) { tapTile(TILES[i].key); return; }
+  }
+  if (y < ROW0 - 30) { pull.y0 = y; pull.on = true; return; }
   const r = board.find(r => y >= r.y.x && y <= r.y.x + CH && !r.fly);
   if (!r || boardBusy) return;
   Object.assign(drag, { r, x0: x, y0: y, t0: performance.now(), moved: false });
   cv.setPointerCapture(e.pointerId);
 });
 cv.addEventListener('pointermove', e => {
+  if (pull.on) { const [, y] = toBoard(e); if (y - pull.y0 > 50) { pull.on = false; openShop(); } return; }
   if (!drag.r) return; const [x] = toBoard(e);
   drag.r.dx = x - drag.x0; if (Math.abs(drag.r.dx) > 6) drag.moved = true;
 });
 const release = async e => {
+  pull.on = false;
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);
   if (Math.abs(dx) > 70 || (Math.abs(dx) > 24 && Math.abs(v) > .5)) {
@@ -1120,7 +1161,7 @@ cv.addEventListener('pointercancel', release);
 // ---------- auto-clean, charge and the idle hint ----------
 async function tickGame(dt) {
   idleT += dt; hintT += dt;
-  if (!S || boardBusy || busy || drag.r || ev) return;
+  if (!S || boardBusy || busy || drag.r || ev || !autoOn) return;
   autoClock -= dt;
   if (autoClock <= 0) {
     autoClock = Math.max(.8, (S.autoIntervalMs || 5000) / 1000);
