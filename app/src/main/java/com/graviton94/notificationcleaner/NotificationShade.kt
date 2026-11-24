@@ -121,7 +121,12 @@ internal fun CleanerApp(session: GameSession, battery: Int) {
     var dragging by remember { mutableStateOf(false) }
     val latestBlocked by rememberUpdatedState(dragging || sheet != null)
     val panel = session.panel
-    val colors = if (panel.dark) night else day
+    val colors = when {
+        session.state.account.equipped && session.state.account.theme ->
+            night.copy(accent = Color(0xFF8FE7FF), gold = Color(0xFFF9B0FF), card = Color(0xFF23283F))
+        panel.dark -> night
+        else -> day
+    }
     val reduced = panel.reduceMotion || !ValueAnimator.areAnimatorsEnabled()
     val context = LocalContext.current
     val view = LocalView.current
@@ -208,7 +213,7 @@ internal fun CleanerApp(session: GameSession, battery: Int) {
                     items(session.shownRows, key = { it.id }) { notice ->
                         NotificationRow(
                             notice = notice, now = session.now, tutorial = session.state.swipes == 0 && notice.app == NoticeApp.Delivery,
-                            hint = session.state.swipes == 0 && notice.app == NoticeApp.Chat,
+                            special = session.state.account.mark == notice.id, hint = session.state.swipes == 0 && notice.app == NoticeApp.Chat,
                             strike = strike?.takeIf { it.hitsRow(notice.id) }, elapsed = elapsed,
                             blocked = session.busy || session.state.energy == 0, preview = panel.previews, reduced = reduced,
                             onSwipe = { direction, from -> session.swipe(notice.id, direction, from) },
@@ -231,7 +236,8 @@ internal fun CleanerApp(session: GameSession, battery: Int) {
                         .width(82.dp).height(3.dp).clip(CircleShape).background(colors.sub.copy(alpha = .8f))
                 )
             }
-            ImpactEffects(strike, anchor, elapsed, reduced)
+            ImpactEffects(strike, anchor, elapsed, reduced,
+                if (session.state.account.equipped) session.state.account.decor else 0)
         }
         sheet?.let { open ->
             ModalBottomSheet(
@@ -414,7 +420,7 @@ private fun ProgressLine(state: GameState, strike: Strike?, colors: ShadeColors)
 
 @Composable
 private fun NotificationRow(
-    notice: Notice, now: Long, tutorial: Boolean, hint: Boolean,
+    notice: Notice, now: Long, tutorial: Boolean, special: Boolean, hint: Boolean,
     strike: Strike?, elapsed: State<Float>, blocked: Boolean, preview: Boolean, reduced: Boolean,
     onSwipe: (Float, Float) -> Unit, onThreshold: () -> Unit, onDrag: (Boolean) -> Unit,
     colors: ShadeColors, modifier: Modifier,
@@ -518,7 +524,7 @@ private fun NotificationRow(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(notice.app.label, color = colors.label, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                        Text(timestamp, color = colors.sub, fontSize = 10.sp, maxLines = 1)
+                        Text(if (special) "중계 알림" else timestamp, color = if (special) colors.gold else colors.sub, fontSize = 10.sp, maxLines = 1)
                     }
                     val text = when {
                         tutorial -> "여기를 옆으로 밀어 연쇄를 터뜨리세요."
@@ -604,8 +610,8 @@ private fun GameBar(session: GameSession, open: (PanelSheet) -> Unit, colors: Sh
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(session.message, Modifier.weight(1f), color = colors.sub, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (state.rewardOffer > ZERO && !session.busy) TextButton(onClick = session::claim) {
-                Text("+${pretty(state.rewardOffer)} P 체험", fontSize = 11.sp)
+            if (BuildConfig.DEBUG && state.level >= 35 && !session.busy) TextButton(onClick = session::claim) {
+                Text("증폭기 테스트 광고", fontSize = 11.sp)
             }
         }
         Surface(shape = RoundedCornerShape(15.dp), color = colors.card) {

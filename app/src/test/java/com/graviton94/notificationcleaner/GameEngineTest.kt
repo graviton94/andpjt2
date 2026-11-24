@@ -18,6 +18,7 @@ class GameEngineTest {
         assertEquals(11, state.energy)
         assertEquals(2, state.level)
         assertEquals(valueOf(117_645), score.points)
+        assertEquals(valueOf(93), state.points)
         assertEquals(valueOf(14_967), score.cleared)
         assertEquals(7, state.bestCombo)
         assertEquals(0, state.pressure)
@@ -46,11 +47,11 @@ class GameEngineTest {
         val region = 120L
         val category = 124L
         val expected = listOf(8L * 160 + 300, 42L * 5 * 160, 13_230L * 8 * 160)
-            .sumOf { it * region * category * 150 / 100_000_000 }
+            .sum() * region * category * 150 / 100_000_000
         assertEquals(valueOf(expected), chat.points)
         assertEquals(35L, report.xp)
         val claimed = GameEngine.claimReward(state)
-        assertEquals(state.points * valueOf(2), claimed.points)
+        assertEquals(state.points, claimed.points)
         assertEquals(state.bestScore, claimed.bestScore)
         assertEquals(claimed, GameEngine.claimReward(claimed))
     }
@@ -100,7 +101,7 @@ class GameEngineTest {
         val bought = GameEngine.buy(fresh, NoticeApp.Inbox)
         val upgraded = GameEngine.upgrade(bought, NoticeApp.Chat)
         val next = GameEngine.swipe(upgraded, 4, now)!!.state
-        assertEquals(valueOf(50), upgraded.points)
+        assertEquals(valueOf(925), upgraded.points)
         assertEquals(valueOf(160), GameEngine.appPercent(upgraded, NoticeApp.Chat))
         assertEquals(valueOf(100), GameEngine.appPercent(upgraded, NoticeApp.Inbox))
         val advanced = upgraded.copy(appLevels = mapOf(NoticeApp.Chat to 12), points = BigInteger.TEN.pow(22))

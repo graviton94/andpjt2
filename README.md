@@ -8,7 +8,7 @@
 |---|---|
 | 코어 | 한 손 스와이프 → 같은 앱 묶음 → 실물 폭발 → 과부하 → 알림창 붕괴·자동 복구. 플레이어의 다음 입력은 같은 알림창에서 이어짐 |
 | 성장 | 점수는 과부하 파동에서 자릿수가 뛰고, 앱 강화·권역·카테고리·이벤트가 곱해짐. 앱 고유값은 앱별 한 번 가산. P·XP·행동력의 진행 목표는 각각 관리 |
-| 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 광고 두 배 보상은 선택형이며 완료 거래에서 P만 지급. 경쟁 기록은 동일 조건으로 분리 |
+| 조작과 보상 | 직접·자동 스와이프, 경험치 기반 무한 진행, P로 앱 구매·강화. 레벨 35의 선택형 테스트 광고는 완료 시 증폭기를 지급. 경쟁 기록은 동일 조건으로 분리 |
 | UI와 손맛 | 기본 화면은 Android 알림창처럼 읽히게, 충돌과 결과는 히트스톱·셰이크·섬광·반동·파티클·SFX·햅틱을 같은 박자에 적용. 움직임 줄이기와 독립적인 소리·진동 옵션 제공 |
 
 1. [개발계획서 2·3장](docs/notification-cleaner-production-plan.md#2-첫-3분과-오래-남는-루프)을 읽고 첫 3분과 점수 공식을 티켓에 반영합니다. 결정이 필요한 성장값은 코드에 흩어 두기 전에 같은 시드의 경제 시뮬레이션으로 비교합니다.
@@ -26,9 +26,9 @@ JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 
 
 생성 파일은 `app/build/outputs/apk/debug/app-debug.apk`입니다. [Android test build](https://github.com/graviton94/andpjt2/actions/workflows/android.yml)에는 APK와 에뮬레이터 스모크 결과가 남습니다.
 
-1. 첫 화면의 **문앞왔**을 옆으로 밀면 같은 앱 세 쌍이 충돌해 과부하가 이어집니다. 시연판 기준 **7연쇄 · 14,967개 처리 · 117,645 P**입니다.
+1. 첫 화면의 **문앞왔**을 옆으로 밀면 같은 앱 세 쌍이 충돌해 과부하가 이어집니다. **7연쇄 · 14,967개 처리 · 기본 117,645점 · 93 P**를 얻습니다.
 2. **자동 꺼짐**을 눌러 자동 정리를 켜거나, **앱 상점**에서 새 앱을 사고 강화합니다. **최고점 기록**에서 연쇄와 권역·카테고리 배율을 확인합니다.
-3. **모의 재난문자**에서는 60초 동안 탭해 배율을 올립니다. 시연판의 두 배 보상은 체험 버튼이고, 최고점은 기기에 저장됩니다.
+3. **모의 재난문자**에서는 60초 동안 탭해 배율을 올립니다. 개인 최고점과 게임 진행은 기기에 저장됩니다.
 
 네트워크·기기 연결·손전등은 앱 안에서 재현합니다. 밝기 슬라이더는 앱 화면 밝기를 바꿉니다. 설정에서 **움직임 줄이기**, 효과음과 진동을 각각 조절합니다.
 
@@ -37,3 +37,5 @@ JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 
 - [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)로 Compose 화면 정보 계층과 접근성을 검토합니다. [pixelfx](https://github.com/patch-gg/pixelfx) 타임라인을 참고하고 시연 앱의 Hit spark·Critical hit 스프라이트를 활용합니다.
 - [Kenney Game Icons](https://kenney.nl/assets/game-icons)는 CC0입니다. 시연판 스프라이트와 아이콘의 출처는 [APK 에셋 라이선스](app/src/main/assets/licenses)에 있습니다.
 - [초기 마스터플랜](docs/notification-cleaner-master-plan.md) · [파쇄 콘셉트 보드](docs/notification-cleaner-concept-board.png) · [자동 연쇄와 배율 콘셉트 보드](docs/notification-cleaner-score-concept-board.png)
+
+[게임 경제·상품 규칙과 백테스트 재현](docs/balance-implementation.md)

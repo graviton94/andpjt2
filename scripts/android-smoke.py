@@ -16,13 +16,14 @@ def adb(*args, **options):
     return subprocess.run(("adb", *args), check=True, **options)
 
 
-def wait_node(label):
-    deadline = time.monotonic() + 35
+def wait_node(label, *, partial=False, seconds=35):
+    deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         adb("shell", "uiautomator", "dump", REMOTE_DUMP, stdout=subprocess.DEVNULL)
         xml = adb("exec-out", "cat", REMOTE_DUMP, stdout=subprocess.PIPE).stdout
         for node in ET.fromstring(xml).iter("node"):
-            if label in (node.get("text"), node.get("content-desc")):
+            labels = (node.get("text", ""), node.get("content-desc", ""))
+            if any(label in text if partial else label == text for text in labels):
                 return tuple(map(int, re.findall(r"\d+", node.attrib["bounds"])))
         time.sleep(0.5)
     raise AssertionError(f"Android screen did not show {label!r}")
@@ -49,10 +50,45 @@ def swipe_and_record():
         adb("shell", "input", "swipe", str(width * 2 // 3), y, str(width // 6), y, "320")
         if recording.wait(timeout=40) != 0:
             raise RuntimeError("Android screen recording failed")
-    wait_node("11.7만 P")
+    wait_node("93 P")
     wait_node("레벨 2")
     screenshot("after-first-chain.png")
     adb("pull", REMOTE_RECORDING, str(OUTPUT / "first-chain.mp4"))
+
+
+def tap(label):
+    x1, y1, x2, y2 = wait_node(label)
+    adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+
+
+def find_shop_item(label):
+    for _ in range(5):
+        try:
+            return wait_node(label, seconds=3)
+        except AssertionError:
+            adb("shell", "input", "swipe", "350", "1250", "350", "820", "300")
+    raise AssertionError(f"Store did not show {label!r}")
+
+
+def test_store():
+    tap("앱 상점")
+    label = "유료재화 100 · 500원 테스트"
+    x1, y1, x2, y2 = find_shop_item(label)
+    adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+    tap("취소")
+    x1, y1, x2, y2 = find_shop_item(label)
+    adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+    tap("테스트 승인")
+    adb("shell", "am", "force-stop", PACKAGE)
+    start()
+    tap("앱 상점")
+    wait_node("유료재화 100", partial=True)
+    tap("증폭기 · 100")
+    wait_node("증폭기 1", partial=True)
+    tap("증폭기 준비")
+    wait_node("증폭기 해제")
+    print("Verified test purchase cancellation, credit persistence, redemption, and equipment UI.")
+
 
 
 def main(apk):
@@ -71,9 +107,10 @@ def main(apk):
     swipe_and_record()
     adb("shell", "am", "force-stop", PACKAGE)
     start()
-    wait_node("11.7만 P")
+    wait_node("93 P")
     wait_node("블루투스 켜짐")
     print("Verified quick settings, first seven-hit overload, and persisted points on Android.")
+    test_store()
 
 
 if __name__ == "__main__":

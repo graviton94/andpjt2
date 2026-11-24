@@ -92,11 +92,15 @@ private data class Chip(val vector: Offset, val speed: Float, val size: Float, v
 private data class Sprite(val image: ImageBitmap, val cell: IntSize, val pivot: Offset, val frames: Int, val columns: Int)
 
 @Composable
-internal fun ImpactEffects(strike: Strike?, anchor: Offset?, elapsed: State<Float>, reduced: Boolean) {
+internal fun ImpactEffects(strike: Strike?, anchor: Offset?, elapsed: State<Float>, reduced: Boolean, decor: Int) {
     val spark = ImageBitmap.imageResource(R.drawable.fx_hit_spark)
     val critical = ImageBitmap.imageResource(R.drawable.fx_crit_hit)
     if (strike == null) return
-    val tint = strike.tint()
+    val tint = when {
+        decor >= 80 -> Color(0xFFF9B0FF)
+        decor >= 40 -> Color(0xFF8FE7FF)
+        else -> strike.tint()
+    }
     val chips = remember(strike) {
         val random = Random(strike.frame.target.id xor (strike.frame.combo * 51L))
         List(18 + strike.tier * 12) {
@@ -180,7 +184,7 @@ internal fun ImpactEffects(strike: Strike?, anchor: Offset?, elapsed: State<Floa
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("${pretty(strike.frame.cleared)}개 처리", color = tint, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        "+${pretty(strike.frame.earned)} P", color = Color(0xFFFDF6FF), fontSize = 13.sp,
+                        "+${pretty(strike.frame.earned)}점", color = Color(0xFFFDF6FF), fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }

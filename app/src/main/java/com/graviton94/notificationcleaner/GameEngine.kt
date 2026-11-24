@@ -32,9 +32,9 @@ enum class NoticeApp(
     Chat("톡탁톡", "조용한 단톡방에 메시지가 쌓였어요.", Category.Social, Region.Domestic, uniqueBonus = 3),
     Delivery("문앞왔", "도착 2분 전이라고 한 지 8분 됐어요.", Category.Daily, Region.Domestic),
     Photo("피드또봐", "이미 본 피드를 다시 추천합니다.", Category.Media, Region.Global, 2, uniqueBonus = 2),
-    Inbox("밀린메일", "전부 읽기까지 1,024통 남았어요.", Category.Social, Region.Domestic, 2, 1_200, 2),
-    Music("비트서랍", "한 곡만 더 듣는 중이에요.", Category.Media, Region.NorthAmerica, 3, 4_800, 3),
-    Payment("페이한칸", "결제 기억은 나중에 떠오릅니다.", Category.Daily, Region.NorthAmerica, 4, 16_000, 4),
+    Inbox("밀린메일", "전부 읽기까지 1,024통 남았어요.", Category.Social, Region.Domestic, 2, 475, 2),
+    Music("비트서랍", "한 곡만 더 듣는 중이에요.", Category.Media, Region.NorthAmerica, 3, 1_800, 3),
+    Payment("페이한칸", "결제 기억은 나중에 떠오릅니다.", Category.Daily, Region.NorthAmerica, 4, 6_000, 4),
     Spam("스팸", "광고 알림 · 다른 알림을 두 번 밀면 복제", null, null),
     Call("전화", "발신번호 표시 제한 · 자동 정리 잠시 대기", null, null),
     Drill("모의 재난문자", "훈련 알림 · 60초 동안 탭해서 배율을 올리세요.", null, null);
@@ -60,6 +60,8 @@ data class Score(
     val cleared: BigInteger,
     val appScores: List<AppScore>,
     val eventPercent: Int,
+    val personal: BigInteger = points,
+    val bonuses: Map<String, BigInteger> = emptyMap(),
 )
 
 data class GameState(
@@ -89,6 +91,7 @@ data class GameState(
     val lastTapAt: Long = 0,
     val nextId: Long = 8,
     val random: Long = 471,
+    val account: Account = Account(),
 )
 
 enum class ImpactKind { Swipe, Merge, Burst, Overflow, Finish }
@@ -102,6 +105,7 @@ data class ChainFrame(
     val combo: Int = 0,
     val earned: BigInteger = ZERO,
     val cleared: BigInteger = ZERO,
+    val weighted: BigInteger? = null,
 )
 
 data class SwipeResult(val state: GameState, val frames: List<ChainFrame>)
@@ -145,7 +149,7 @@ object GameEngine {
     }
 
     fun upgradePrice(state: GameState, app: NoticeApp): BigInteger =
-        valueOf(750) * three.pow(2 * (state.appLevels.getOrDefault(app, 1) - 1))
+        valueOf(600) * three.pow(2 * (state.appLevels.getOrDefault(app, 1) - 1))
 
     fun regionPercent(total: BigInteger): Int = 100 + ((total.bitLength() - 2).coerceAtLeast(0) * 10)
 
@@ -241,20 +245,22 @@ object GameEngine {
                 rows = collapsed.rows,
                 energy = current.energy - 1,
                 nextChargeAt = if (current.nextChargeAt == 0L) now + CHARGE_MS else current.nextChargeAt,
-                points = current.points + report.points,
+                points = current.points + EconomyRules.p(report) * valueOf(10 + minOf(10, current.account.tokens)) / valueOf(10),
                 lastScore = report,
                 bestScore = maxOf(current.bestScore, report.points),
                 bestCombo = maxOf(current.bestCombo, report.combo),
                 bestCleared = maxOf(current.bestCleared, report.cleared),
                 pressure = if (overload) 0 else pressure,
-                rewardOffer = if (report.combo >= 4) maxOf(report.points, current.rewardOffer) else current.rewardOffer,
+                rewardOffer = ZERO,
                 swipes = current.swipes + 1,
                 pauseUntil = if (removed.app == NoticeApp.Call) 0 else current.pauseUntil,
                 regions = regions,
                 categories = categories,
             ), report.xp,
         )
-        return SwipeResult(fill(progressed, now), frames)
+        val filled = fill(progressed, now)
+        val (account, personal) = EconomyRules.settle(current, filled, report, frames, now)
+        return SwipeResult(filled.copy(account = account, lastScore = personal), frames)
     }
 
     private fun overflow(collapse: Collapse, depth: Int): List<ChainFrame> {
@@ -262,15 +268,20 @@ object GameEngine {
         val bursts = collapse.breaks.map { it.target }
         var backlog = bursts.fold(ZERO) { total, notice -> total + notice.count }
         val beats = minOf(depth, 9)
+        var preceding = bursts.size
         return List(beats) { i ->
             val steps = depth / beats + if (i >= beats - depth % beats) 1 else 0
             val growth = valueOf(3L + 2L * i)
             val factor = growth.pow(steps)
             // A beat can cover several consecutive waves at high levels. Drain their full geometric sum.
             val cleared = backlog * growth * (factor - ONE) / (growth - ONE)
+            val delta = growth - ONE
+            val weighted = cleared * valueOf(preceding + 1L) +
+                backlog * growth * (ONE + factor * (valueOf(steps.toLong()) * delta - ONE)) / delta.pow(2)
+            preceding += steps
             backlog *= factor
             val app = bursts[i % bursts.size]
-            ChainFrame(collapse.rows, ImpactKind.Overflow, app.copy(count = cleared), steps = steps)
+            ChainFrame(collapse.rows, ImpactKind.Overflow, app.copy(count = cleared), steps = steps, weighted = weighted)
         }
     }
 
@@ -278,7 +289,7 @@ object GameEngine {
         state: GameState, removed: Notice, frames: List<ChainFrame>, now: Long,
     ): Pair<Score, List<ChainFrame>> {
         val appScores = linkedMapOf<NoticeApp, BigInteger>()
-        val awardedUnique = mutableSetOf<NoticeApp>()
+        val numerators = mutableMapOf<NoticeApp, BigInteger>()
         val event = eventPercent(state, now)
         var earned = removed.count
         var cleared = removed.count
@@ -287,15 +298,18 @@ object GameEngine {
             if (frame.kind == ImpactKind.Burst || frame.kind == ImpactKind.Overflow) {
                 val (app, count) = frame.target.let { it.app to it.count }
                 combo += frame.steps
-                val bonus = if (state.level >= 3 && awardedUnique.add(app)) {
+                val bonus = if (state.level >= 3 && app !in numerators) {
                     weight(state.level) * valueOf(app.uniqueBonus.toLong()) * hundred
                 } else ZERO
-                val base = count * valueOf(combo + 1L) * appPercent(state, app) + bonus
+                val base = (frame.weighted ?: (count * valueOf(combo + 1L))) * appPercent(state, app) + bonus
                 val region = regionPercent(state.regions[app.region] ?: ZERO)
                 val category = categoryPercent(state.categories[app.category] ?: ZERO)
-                val points = base * valueOf(region.toLong() * category * event) / pointDivisor
-                appScores[app] = appScores.getOrDefault(app, ZERO) + points
-                earned += points
+                val numerator = numerators.getOrDefault(app, ZERO) +
+                    base * valueOf(region.toLong()) * valueOf(category.toLong()) * valueOf(event.toLong())
+                numerators[app] = numerator
+                val points = numerator / pointDivisor
+                earned += points - appScores.getOrDefault(app, ZERO)
+                appScores[app] = points
                 cleared += count
             }
             frame.copy(combo = combo, earned = earned, cleared = cleared)
