@@ -133,6 +133,7 @@ fun firstReset(): Pair<GameState, GameState> {
 fun main(args: Array<String> = emptyArray()) {
     if (args.firstOrNull() == "content") return print(contentDoc())
     if (args.firstOrNull() == "bench") return bench()
+    if (args.firstOrNull() == "serve") return serve(args.getOrNull(1)?.toInt() ?: 8765, java.io.File(args.getOrNull(2) ?: "../app/src/main/assets/game"))
     for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (게이지 80, 깊이 3)" to overload(),
         "4 강화 후 같은 스와이프" to upgraded(), "5 점화제" to igniter(), "7 와일드" to wildMerge(), "8 @모두 공지" to allHands())) {
         val (s, o) = pair
