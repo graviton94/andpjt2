@@ -95,7 +95,8 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .rookie .btn,.starter .btn{min-width:130px}
 .pack{position:relative;border-radius:18px;padding:22px 6px 8px;text-align:center;background:var(--pack);border:1px solid var(--line);color:inherit;font:inherit}
 .pack img{width:64px;height:64px;object-fit:contain}.pack .n{font-weight:900;font-size:15px;margin:2px 0 6px}
-.pack .won{display:block;border-radius:999px;background:linear-gradient(180deg,#FFD66B,#F0A000);color:#2A1606;font-weight:900;padding:7px 0;font-size:13px}
+.pack .won{display:block;height:36px;line-height:32px;font-weight:900;font-size:13.5px}
+.pack .basep{display:block;height:18px;font-size:11px;color:var(--sub);margin:-2px 0 4px;white-space:nowrap}
 .rib{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#FF3B30;color:#fff;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:0 0 9px 9px;white-space:nowrap}
 .starter{display:flex;gap:10px;align-items:center;border-radius:18px;padding:12px;background:linear-gradient(90deg,#5A1E2E,#3A1A12);border:1px solid #FF8A6B55;margin-bottom:6px;color:#FFF4EC;font:inherit;text-align:left;width:100%}
 .starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:20px "Black Han Sans",sans-serif}
@@ -112,7 +113,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .day{position:relative;border-radius:12px;background:var(--card);border:1px solid var(--line);min-height:66px;padding:4px 2px;text-align:center;font-size:11px}
 .day i{position:absolute;left:5px;top:3px;font-style:normal;font-size:10px;color:var(--sub)}
 .day img{width:28px;height:28px;margin-top:10px}.day b{display:block;font-size:12px}
-.day.got{opacity:.55}.day.got::after{content:"출석";position:absolute;right:3px;bottom:3px;border:2px solid #FF3B30;color:#FF3B30;border-radius:6px;font-size:10px;font-weight:900;padding:0 3px;transform:rotate(-12deg)}
+.day.got{opacity:.55}
 .day.now{border:2px solid var(--gold);box-shadow:0 0 14px #FFC23D66;opacity:1}
 .day.big{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;background:var(--bigday);border-color:#FFC23D66;min-height:54px}
 .day.big img{margin:0;width:36px;height:36px}.day.big b{font:20px "Black Han Sans",sans-serif;color:var(--gold)}
@@ -135,7 +136,22 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .x{background:url(img/ui/close.webp) center/contain no-repeat!important;font-size:0!important}
 .newb{position:absolute;top:-6px;right:2px;width:34px;height:30px;background:url(img/ui/bubble.webp) center/contain no-repeat;color:#fff;font-size:9px;font-weight:900;font-style:normal;line-height:26px;text-align:center}
 .tile{position:relative}
-.day.got::after{content:"출석"!important;border:0!important;width:40px;height:40px;right:-4px!important;bottom:-6px!important;background:url(img/ui/stamp.webp) center/contain no-repeat;color:#fff!important;line-height:38px;text-align:center;padding:0!important;font-size:10px!important}
+
+.stk{position:absolute;display:block;background-position:center;background-size:100% 100%;background-repeat:no-repeat;z-index:3;pointer-events:none}
+.stk .lbl{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible;white-space:nowrap;line-height:.95;
+ font-family:"Black Han Sans",sans-serif;font-weight:400;letter-spacing:-.02em;paint-order:stroke fill;-webkit-text-stroke:var(--sw,3px) var(--sc,#3A0A00)}
+.stk .lbl small{font-size:.62em;margin-top:.08em}
+.stk-ribbon{--sc:#7A0A0A;color:#fff}.stk-rosette{--sc:#FFF3C0;--sw:2px;color:#8A3A00}.stk-burst{--sc:#fff;color:#D0140A}
+.stk-bolt{--sc:#4A1E9A;color:#fff}.stk-bubble{--sc:#0E6A2E;color:#fff}.stk-stamp{--sc:#8A0A0A;color:#fff}
+#cf{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;font:15px/1.45 "Noto Sans KR",sans-serif;color:var(--ink)}
+#cf.on{display:grid}
+#cf .box{width:min(320px,86vw);background:var(--sheet);border:1px solid var(--line);border-radius:24px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px #000a}
+#cf h3{margin:0 0 6px;font:22px "Black Han Sans",sans-serif}
+#cf .what{color:var(--sub);font-size:13px;margin-bottom:6px}
+#cf .price{font:26px "Black Han Sans",sans-serif;margin:6px 0 14px}
+#cf .row{display:flex;gap:8px}#cf .row button{flex:1;height:50px;font:inherit;font-weight:900;font-size:15px}
+#cf .no{border:0;border-radius:999px;background:var(--soft2);color:var(--ink)}
+.cd{font-variant-numeric:tabular-nums}
 #adov{position:fixed;inset:0;background:#000;color:#fff;display:none;place-items:center;text-align:center;font:16px "Noto Sans KR",sans-serif;z-index:50}
 #adov.on{display:grid}#adov b{display:block;font:28px "Black Han Sans",sans-serif;margin-bottom:8px}
 #offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;height:52px;padding:0 24px 4px;white-space:nowrap;font:800 15px "Noto Sans KR",sans-serif;
@@ -146,7 +162,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="cf"><div class="box"><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button class="btn skin gold" id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -1368,11 +1384,12 @@ function renderShade() {
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${fmt(w)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${fmt(Number(P.nextLevelP))}</span></div>
-    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? '<i class="newb">NEW</i>' : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
+    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? sticker('bubble', 'NEW', 34, 'top:-8px;right:4px') : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
     <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span><span class="chip">최고 연쇄 ${P.bestChain}</span></div>
     <div class="grab"></div>`;
+  requestAnimationFrame(() => fitStickers(shadeEl));
   shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
   $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; });
   $('vib').addEventListener('input', e => { vibOn = e.target.value === '1'; });
@@ -1453,38 +1470,75 @@ function renderSheet() {
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
+  requestAnimationFrame(() => fitStickers(b));
 }
 const DIMG = '<img src="img/bm/currency-data.webp">';
+// promo stickers: the text sits in each asset's measured blank area (tools/game-page/ui-boxes.json) and is shrunk to fit
+const UIBOX = {"ribbon": {"x": 0.198, "y": 0.16, "w": 0.594, "h": 0.489, "ar": 2.043}, "rosette": {"x": 0.233, "y": 0.224, "w": 0.534, "h": 0.417, "ar": 0.849}, "burst": {"x": 0.219, "y": 0.258, "w": 0.542, "h": 0.484, "ar": 1.011}, "bolt": {"x": 0.328, "y": 0.302, "w": 0.589, "h": 0.547, "ar": 1.811}, "stamp": {"x": 0.156, "y": 0.268, "w": 0.688, "h": 0.461, "ar": 1.011}, "bubble": {"x": 0.156, "y": 0.186, "w": 0.682, "h": 0.605, "ar": 1.085}, "flame": {"x": 0.177, "y": 0.511, "w": 0.641, "h": 0.319, "ar": 1.021}};
+function sticker(kind, lines, w, style = '') {
+  const b = UIBOX[kind], h = Math.round(w / b.ar), pc = v => (v * 100).toFixed(1) + '%';
+  const t = Array.isArray(lines) ? lines[0] + (lines[1] ? `<small>${lines[1]}</small>` : '') : lines;
+  return `<span class="stk stk-${kind}" style="width:${w}px;height:${h}px;background-image:url(img/ui/${kind}.webp);${style}"><span class="lbl" style="left:${pc(b.x)};top:${pc(b.y)};width:${pc(b.w)};height:${pc(b.h)}">${t}</span></span>`;
+}
+function fitStickers(root = document) {
+  root.querySelectorAll('.stk .lbl').forEach(l => {
+    const lines = l.querySelector('small') ? 1.55 : 1;
+    let f = Math.min(l.clientHeight / lines * .92, 40);
+    l.style.fontSize = f + 'px';
+    while (f > 6 && (l.scrollWidth > l.clientWidth + .5 || l.scrollHeight > l.clientHeight + .5)) { f -= .5; l.style.fontSize = f + 'px'; }
+    l.style.setProperty('--sw', Math.max(1.5, f / 7).toFixed(1) + 'px');
+  });
+}
 const ITEM_IMG = { Boost: 'boost-income-boost', Warp: 'boost-time-warp', Battery: 'boost-power-bank', BackupBoost: 'boost-backup-boost', Overclock: 'boost-best-double' };
 const AD_IMG = { BestDouble: 'boost-best-double', OfflineDouble: 'boost-offline-double', Boost: 'boost-income-boost', Warp: 'boost-time-warp', Overclock: 'boost-best-double', Battery: 'boost-power-bank', CreditBox: 'boost-data-box', FreeUpgrade: 'boost-free-upgrade' };
 const won = n => '₩' + n.toLocaleString('ko-KR');
+// value against the smallest pack (₩22 per data, priced to be skipped): what every "N배 이득" means
+const gainX = (data, wonAmt) => data * P.bm.baseWon / wonAmt;
+const xStr = v => (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+let starterAt = 0;
+const hms = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return [Math.floor(t / 3600), Math.floor(t / 60) % 60, t % 60].map(v => String(v).padStart(2, '0')).join(':'); };
+setInterval(() => {
+  if (!P || !P.bm) return;
+  const left = P.bm.starterLeftMs - (Date.now() - starterAt);
+  document.querySelectorAll('.cd').forEach(e => { e.textContent = hms(left); });
+  if (left <= 0 && P.bm.starterLeftMs > 0 && sheetKind === 'data') { P.bm.starterLeftMs = 0; renderSheet(); }
+}, 1000);
 function renderData(b) {
-  const m = P.bm; $('sheet-t').textContent = '데이터 충전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
+  const m = P.bm; starterAt = Date.now();
+  $('sheet-t').textContent = '데이터 충전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
   const di = '<img src="img/bm/currency-data.webp" style="width:15px;height:15px;vertical-align:-3px">';
-  const rate = 1200 / 100;  // ₩ per data at the smallest pack: every "이득" is measured against it
-  const times = (data, won) => (data * rate / won).toFixed(1).replace(/\.0$/, '');
   let h = '';
-  // 초심자 패스: first 7 days only, the best value in the shop
-  if (m.rookieOpen || (m.rookieBought && m.rookieDay <= 7)) {
-    h += `<div class="rookie"><div class="bst">${times(m.rookieValue, m.rookieWon)}배<small>이득</small></div>
-      <h3>초심자 패스</h3><span class="d"><img src="img/ui/clock.webp">${m.rookieBought ? `${m.rookieDay}/7일째` : `설치 후 7일만 · ${m.rookieDaysLeft}일 남음`}</span>
-      <ul><li>지금 바로 데이터 300</li><li>7일 동안 매일 데이터 50 (총 650)</li><li>프리미엄 ★ 선택권 1장</li></ul>
-      ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? '오늘 50 받기' : '오늘 받음 · 내일 또'}</button>`
-        : `<button class="btn skin gold" data-act="buyRookie">${won(m.rookieWon)}</button> <span class="note" style="color:#CFF5E6">같은 돈으로 데이터 ${Math.round(m.rookieWon / rate)} → ${m.rookieValue}</span>`}</div>`;
+  if (m.starterLeftMs > 0) {
+    const x = gainX(m.starterValue, m.starterWon);
+    h += `<button class="starter" data-act="buyStarter" style="position:relative;padding-right:96px">${sticker('burst', [xStr(x) + '배', '이득'], 84, 'right:4px;top:50%;transform:translateY(-50%) rotate(8deg)')}
+      <img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ${won(m.starterWon)}</b>
+      <div style="position:relative;height:46px;margin:0 0 2px">${sticker('bolt', '<span class="cd">' + hms(m.starterLeftMs) + '</span>', 84, 'left:0;top:0')}</div>
+      <div class="note">데이터 ${m.starterData} · ★ 선택권 1장 (데이터 ${m.voucherData} 가치)<br>수입 부스트 3회 · 오버클럭 3회</div></div></button>`;
   }
-  if (m.starter) h += `<button class="starter" data-act="buyStarter" style="position:relative"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b> <span class="boltt">한 번만</span>
-      <div class="note">데이터 500 · 프리미엄 ★ 선택권 1</div></div><span class="gain">${times(500, 2500)}배 이득</span></button>`;
-  h += `<div class="packs">${m.packs.map((p, i) => `<button class="pack ${p.id === 'data_1200' ? 'rec' : ''}" data-act="buyData" data-pack="${p.id}">
-      ${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}${p.id === 'data_1200' ? '<span class="ros">추천</span>' : ''}
-      <img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${di} ${(p.first ? p.data * 2 : p.data).toLocaleString()}</div>
-      <div class="base">${p.first ? `${p.data.toLocaleString()} × 2` : p.bonus ? `기본 ${p.base.toLocaleString()} + 보너스 ${(p.data - p.base).toLocaleString()}` : '기본'}</div>
-      ${p.bonus ? `<span class="gain">+${p.bonus}% 이득</span>` : '<span class="gain base0">기본가</span>'}
-      <span class="won">${won(p.won)}</span></button>`).join('')}</div>`;
+  if (m.rookieOpen || (m.rookieBought && m.rookieDay <= 7)) {
+    const x = gainX(m.rookieValue, m.rookieWon);
+    h += `<div class="rookie">${m.rookieBought ? '' : sticker('burst', [xStr(x) + '배', '이득'], 84, 'right:6px;top:6px;transform:rotate(10deg)')}
+      <h3>초심자 패스</h3><span class="d"><img src="img/ui/clock.webp">${m.rookieBought ? `${m.rookieDay}/7일째` : `설치 후 7일만 · ${m.rookieDaysLeft}일 남음`}</span>
+      <ul><li>지금 바로 데이터 300</li><li>7일 동안 매일 데이터 50 (총 650)</li><li>프리미엄 ★ 선택권 1장 (데이터 ${m.voucherData} 가치)</li></ul>
+      ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? '오늘 50 받기' : '오늘 받음 · 내일 또'}</button>`
+        : `<button class="btn skin gold" data-act="buyRookie">${won(m.rookieWon)}</button>`}</div>`;
+  }
+  if (m.firstData) h += `<div class="note" style="text-align:center;margin:4px 0 0;font-weight:800;color:var(--hot)">첫 데이터 구매 1번만 2배 (보너스 최대 +${m.firstBonusCap.toLocaleString()}) · 어느 팩이든</div>`;
+  h += `<div class="packs" style="padding-top:22px">${m.packs.map((p, i) => {
+      const x = gainX(p.gets, p.won), bonus = p.gets - p.data;
+      const rib = m.firstData ? sticker('ribbon', bonus >= p.data ? '첫 구매 2배' : `첫 구매 +${bonus.toLocaleString()}`, 112, 'left:50%;top:-24px;transform:translateX(-50%)') : '';
+      const ros = p.id === 'data_1200' ? sticker('rosette', '추천', 44, 'right:-8px;top:14px;transform:rotate(12deg)') : '';
+      const bst = x >= 1.05 ? sticker('burst', [xStr(x) + '배', '이득'], 58, 'left:-8px;top:14px;transform:rotate(-10deg)') : '';
+      return `<button class="pack ${p.id === 'data_1200' ? 'rec' : ''}" data-act="buyData" data-pack="${p.id}">${rib}${ros}${bst}
+        <img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${di} ${p.gets.toLocaleString()}</div>
+        <span class="basep">${bonus ? `${p.data.toLocaleString()} + ${bonus.toLocaleString()}` : x < 1.05 ? '기본가' : `기본가보다 ${xStr(x)}배`}</span>
+        <span class="won skin gold">${won(p.won)}</span></button>`;
+    }).join('')}</div>`;
   h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m"><img class="ic" src="img/ui/clock.webp">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
       <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
       <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '<img src="img/ui/ad.webp">광고'}</button></div>`).join('')
-    + `<div class="note" style="text-align:center;margin-top:10px">이득은 가장 작은 팩(₩12에 데이터 1) 기준 · 확률형 상품 없음 · 결제는 테스트용 가짜</div>`;
+    + `<div class="note" style="text-align:center;margin-top:10px">N배 이득 = 데이터 100 (₩2,200) 기준 · ★ 선택권·부스트는 데이터 가격으로 환산 · 확률형 상품 없음 · 결제는 테스트용 가짜</div>`;
   b.innerHTML = h;
 }
 function renderPass(b) {
@@ -1511,7 +1565,7 @@ function renderAttend(b) {
     const n = i + 1, big = n % 10 === 0, cls = `day ${big ? 'big' : ''} ${n <= got ? 'got' : ''} ${n === (m.claimedToday ? m.streak : m.today) ? 'now' : ''}`;
     const what = d.tickets.length ? `${d.tickets[0].label.split(' ')[0]} ×${d.tickets[0].n}` : '';
     if (big) return `<div class="${cls}"><i>${n}</i><img src="img/ui/gift.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
-    return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b></div>`;
+    return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b>${n <= got ? sticker('stamp', '출석', 38, 'right:-6px;bottom:-6px;transform:rotate(-12deg)') : ''}</div>`;
   };
   b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:22px 'Black Han Sans';color:var(--gold)">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
     <div class="board">${m.board.map(cell).join('')}</div>
@@ -1520,8 +1574,27 @@ function renderAttend(b) {
     ${m.missions.map(x => `<div class="mis"><span style="flex:1">${x.label}</span><span class="bar" style="flex:1"><i style="width:${x.now / x.goal * 100}%"></i></span><span class="note">${x.now}/${x.goal}</span></div>`).join('')}
     <button class="btn big skin claim" data-act="claimMissions" ${m.missionsDone ? '' : 'disabled'}>미션 보상 받기</button>`;
 }
+function confirmPay(title, what, price) {
+  return new Promise(res => {
+    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = price; $('cf').classList.add('on'); sfx.snap();
+    const done = v => { $('cf').classList.remove('on'); $('cf-ok').onclick = $('cf-no').onclick = null; res(v); };
+    $('cf-ok').onclick = () => done(true); $('cf-no').onclick = () => done(false);
+  });
+}
+function payPrompt(x) {
+  const m = P.bm, act = x.dataset.act, D = n => `${DIMG.replace('<img', '<img style="width:22px;vertical-align:-4px"')} ${Number(n).toLocaleString()}`;
+  if (act === 'buyData') { const p = m.packs.find(q => q.id === x.dataset.pack); return ['데이터 충전', `데이터 ${p.gets.toLocaleString()}${p.gets > p.data ? ` (첫 구매 +${(p.gets - p.data).toLocaleString()} 포함)` : ''}`, won(p.won) + ' 결제']; }
+  if (act === 'buyStarter') return ['스타터 팩', `데이터 ${m.starterData} · ★ 선택권 1 · 부스트·오버클럭 각 3`, won(m.starterWon) + ' 결제'];
+  if (act === 'buyRookie') return ['초심자 패스', '즉시 300 + 7일 매일 50 + ★ 선택권 1', won(m.rookieWon) + ' 결제'];
+  if (act === 'buyPass') return [{ month: '월간 패스', Turbo: '터보 패스', Ultra: '울트라 패스' }[x.dataset.kind], '30일 · 자동 갱신 · 언제든 해지', won({ month: 5500, Turbo: 33000, Ultra: 99000 }[x.dataset.kind]) + ' / 30일 결제'];
+  if (act === 'buyItem') { const it = m.items.find(q => q.id === x.dataset.item); return it.tickets ? null : [it.label, `오늘 ${it.left}번 남음`, D(it.price) + ' 사용']; }
+  if (act === 'premium' && x.dataset.voucher !== '1') { const a = m.premium.find(q => q.id === x.dataset.id); return [`${a.name} 프리미엄 ★${a.stars + 1}`, `가치 ×${(a.permille * 2 / 1000)}로`, D(a.price) + ' 사용']; }
+  return null;
+}
 async function sheetAct(x) {
   const act = x.dataset.act;
+  const ask = payPrompt(x);
+  if (ask && !(await confirmPay(...ask))) return;
   if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
   if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd())) return; }
   const args = act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
