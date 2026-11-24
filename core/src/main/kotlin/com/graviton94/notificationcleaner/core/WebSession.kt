@@ -75,6 +75,111 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         BackupItem.entries.firstOrNull { it.name == item }?.let { engine.buyBackup(s, it) } ?: s
     }
 
+    // ---- M4 monetization (bible 17, bm-screens). Billing and ads are faked until M6: every grant still goes through
+    // Shop.claimOnce so the real SDK callbacks can drop in with their order / ad ids.
+
+    /** Data packs (Play product ids in docs/content/play/play-console.md); the first purchase of each pays double. */
+    data class DataPack(val id: String, val data: Long, val won: Int)
+    val dataPacks = listOf(DataPack("data_100", 100, 1_200), DataPack("data_550", 550, 5_900), DataPack("data_1200", 1_200, 12_000),
+        DataPack("data_3500", 3_500, 33_000), DataPack("data_7500", 7_500, 69_000), DataPack("data_13500", 13_500, 119_000))
+
+    private fun firstBuy(s: GameState, id: String) = "first:$id" !in s.account.processedClaims
+
+    fun buyData(packId: String, orderId: String, now: Long): String = act(now) { s ->
+        val p = dataPacks.firstOrNull { it.id == packId } ?: return@act s
+        val first = firstBuy(s, p.id)
+        shop.claimOnce(s, orderId) { shop.credit(it, if (first) p.data * 2 else p.data, bought = true) }
+            ?.let { if (first) it.withMarker("first:${p.id}") else it } ?: s
+    }
+
+    /** 스타터 팩: data 500 + one star voucher, once ever. */
+    fun buyStarter(orderId: String, now: Long): String = act(now) { s ->
+        if (!firstBuy(s, "starter_pack")) return@act s
+        shop.claimOnce(s, orderId) { st -> shop.credit(st, 500, bought = true).let { it.copy(backup = it.backup.copy(cloud = it.backup.cloud.copy(account = it.account.copy(starVouchers = it.account.starVouchers + 1)))) } }
+            ?.withMarker("first:starter_pack") ?: s
+    }
+
+    private fun GameState.withMarker(m: String) = copy(backup = backup.copy(cloud = backup.cloud.copy(account = account.copy(processedClaims = (account.processedClaims + m).takeLast(500)))))
+
+    fun buyItem(item: String, now: Long): String = act(now) { s ->
+        val it = CreditItem.entries.firstOrNull { c -> c.name == item } ?: return@act s
+        shop.useTicket(s, it, now) ?: shop.buyItem(s, it, now) ?: s
+    }
+
+    /** A rewarded placement; [adId] is the ad network's reward id (faked for now). With a month pass no ad is shown. */
+    fun watchAd(slot: String, adId: String, now: Long): String = act(now) { s ->
+        val a = AdSlot.entries.firstOrNull { it.name == slot } ?: return@act s
+        val offer = if (a == AdSlot.BestDouble) s.lastEarned else BigInteger.ZERO
+        shop.claimOnce(s, adId) { shop.watchAd(it, a, now, offer) } ?: s
+    }
+
+    fun buyPass(kind: String, orderId: String, now: Long): String = act(now) { s ->
+        shop.claimOnce(s, orderId) {
+            when (kind) { "month" -> shop.buyPass(it, now); "Turbo" -> shop.buySpeedPass(it, now, SpeedPass.Turbo); "Ultra" -> shop.buySpeedPass(it, now, SpeedPass.Ultra); else -> null }
+        } ?: s
+    }
+
+    fun premium(appId: String, voucher: Boolean, now: Long): String = act(now) { s ->
+        (if (voucher) shop.useStarVoucher(s, appId) else shop.upgradePremium(s, appId)) ?: s
+    }
+
+    /** Daily check-in on the 30-day board (also done on return from away). ok = claimed just now. */
+    fun attend(now: Long): String = act(now) { shop.claimAttendance(it, now) }
+
+    fun claimMissions(now: Long): String = act(now) { meta.claimMissions(shop, it, now) ?: it }
+
+    fun bm(now: Long): String {
+        val s = engine.tick(state, now).also { state = it }
+        val a = s.account
+        val r = engine.rules
+        return buildJsonObject {
+            put("state", snap(s, now))
+            put("data", a.credits)
+            put("vouchers", a.starVouchers)
+            putJsonArray("packs") { dataPacks.forEach { p -> add(buildJsonObject { put("id", p.id); put("data", p.data); put("won", p.won); put("first", firstBuy(s, p.id)) }) } }
+            put("starter", firstBuy(s, "starter_pack"))
+            putJsonArray("items") {
+                CreditItem.entries.forEach { c -> add(buildJsonObject {
+                    put("id", c.name); put("label", c.label); put("price", c.price); put("left", shop.shopLeft(s, c, now)); put("tickets", a.tickets[c] ?: 0)
+                }) }
+            }
+            putJsonArray("ads") { AdSlot.entries.forEach { ad -> add(buildJsonObject { put("id", ad.name); put("label", ad.label); put("left", shop.adsLeft(s, ad, now)); put("daily", ad.daily) }) } }
+            put("passActive", shop.passActive(s, now))
+            put("passDaysLeft", ((a.passUntil - now).coerceAtLeast(0) / 86_400_000L).toInt())
+            put("speedPass", a.speedPass?.name ?: "")
+            put("speedDaysLeft", ((a.speedPassUntil - now).coerceAtLeast(0) / 86_400_000L).toInt())
+            put("boostLeftMin", ((a.boostUntil - now).coerceAtLeast(0) / 60_000L).toInt())
+            put("overclockLeftMin", ((a.overclockUntil - now).coerceAtLeast(0) / 60_000L).toInt())
+            put("backupBoost", a.backupBoost)
+            putJsonArray("premium") {
+                s.appLevels.keys.map { Catalog.app(it) }.sortedByDescending { it.tier * 100 + it.order }.forEach { app ->
+                    val stars = a.stars(app.id)
+                    add(buildJsonObject {
+                        put("id", app.id); put("name", app.name); put("tier", app.tier); put("stars", stars); put("max", r.premiumMaxStars)
+                        put("open", shop.premiumOpen(s, app.id)); put("price", if (stars < r.premiumMaxStars) shop.premiumPrice(s, app.id) else 0)
+                        put("permille", r.premiumPermille(stars)); put("voucherOk", stars < r.voucherMaxStars)
+                    })
+                }
+            }
+            // 30-day board: today's check-in day, the streak, what each day pays
+            put("streak", a.streak)
+            put("today", shop.attendanceDay(s, now))
+            put("claimedToday", a.attendDay == dayOf(now))
+            putJsonArray("board") {
+                r.attendanceBoard.forEach { d -> add(buildJsonObject {
+                    put("data", d.data); put("vouchers", d.starVouchers); d.title?.let { put("title", it) }
+                    putJsonArray("tickets") { d.tickets.forEach { (k, v) -> add(buildJsonObject { put("id", k.name); put("label", k.label); put("n", v) }) } }
+                }) }
+            }
+            putJsonArray("missions") {
+                meta.missionsFor(now).forEach { m -> add(buildJsonObject { put("label", m.label); put("goal", m.goal); put("now", minOf(m.goal, meta.missionProgress(s, m, now))) }) }
+            }
+            put("missionsDone", meta.missionsDone(s, now))
+            put("missionReward", r.missionCredits)
+            put("titles", JsonArray(a.titles.map { JsonPrimitive(it) }))
+        }.toString()
+    }
+
     /** Everything the pull-down shade and its sheets show (screens-v1 Shade · Shop · Upgrade · Deck · Reset). */
     fun panel(now: Long): String {
         val s = engine.tick(state, now).also { state = it }

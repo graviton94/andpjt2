@@ -42,13 +42,23 @@ class GameBridge(private val context: Context) {
             "upgrade" -> session.upgrade(a.optString("app"), t)
             "reset" -> session.reset(t)
             "panel" -> session.panel(t)
+            "bm" -> session.bm(t)
+            // M4: billing and ads are faked until the SDKs land (M6); ids keep every grant claim-once.
+            "buyData" -> session.buyData(a.optString("pack"), "fake-" + System.nanoTime(), t)
+            "buyStarter" -> session.buyStarter("fake-" + System.nanoTime(), t)
+            "buyItem" -> session.buyItem(a.optString("item"), t)
+            "watchAd" -> session.watchAd(a.optString("slot"), "fakead-" + System.nanoTime(), t)
+            "buyPass" -> session.buyPass(a.optString("kind"), "fake-" + System.nanoTime(), t)
+            "premium" -> session.premium(a.optString("app"), a.optString("voucher") == "1", t)
+            "claimMissions" -> session.claimMissions(t)
+            "attend" -> session.attend(t)
             "drill" -> session.tapDrill(t)
             "upgradeN" -> session.upgradeN(a.optString("app"), a.optString("n", "1"), t)
             "setDeck" -> session.setDeck(a.optString("apps").split(",").filter { it.isNotBlank() }, t)
             "buyBackup" -> session.buyBackup(a.optString("item"), t)
             else -> "{}"
         }
-        if (method != "snapshot" && method != "hint" && method != "panel" && method != "drill") save()
+        if (method != "snapshot" && method != "hint" && method != "panel" && method != "drill" && method != "bm") save()
         out
     }
 

@@ -21,4 +21,5 @@ for f in (ROOT / "docs/design/app-icons").glob("*.svg"): shutil.copy(f, OUT / "i
 shutil.copytree(ROOT / "tools/brand/fonts/black-han-sans", OUT / "fonts/black-han-sans")
 (OUT / "img").mkdir()
 shutil.copy(ROOT / "docs/design/ui-assets/tutorial/hand-swipe.png", OUT / "img/hand-swipe.png")
+shutil.copytree(ROOT / "docs/design/bm-screens/img", OUT / "img/bm")
 print("built", OUT, len(page), "bytes,", len(colors), "colours,", len(list((OUT / "icons").glob("*.svg"))), "icons")

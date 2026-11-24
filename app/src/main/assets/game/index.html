@@ -67,11 +67,42 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.cols div{background:var(--card);border-radius:16px;padding:10px 12px;font-size:12.5px}
 .cols h4{margin:0 0 4px;font-size:12px;color:var(--sub)}
 .h3{font-size:12.5px;color:var(--sub);margin:14px 2px 8px;font-weight:700}
+.cur{display:flex;gap:6px;flex-wrap:wrap}.cur span{display:flex;align-items:center;gap:4px;background:#FFFFFF14;border-radius:999px;padding:3px 10px 3px 4px;font-weight:800;font-size:13px}.cur img{width:22px;height:22px}
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.pack{position:relative;border-radius:18px;padding:22px 6px 8px;text-align:center;background:linear-gradient(180deg,#3A2A1C,#21170F);border:1px solid #FFFFFF14;color:inherit;font:inherit}
+.pack img{width:64px;height:64px;object-fit:contain}.pack .n{font-weight:900;font-size:15px;margin:2px 0 6px}
+.pack .won{display:block;border-radius:999px;background:linear-gradient(180deg,#FFD66B,#F0A000);color:#2A1606;font-weight:900;padding:7px 0;font-size:13px}
+.rib{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#FF3B30;color:#fff;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:0 0 9px 9px;white-space:nowrap}
+.starter{display:flex;gap:10px;align-items:center;border-radius:18px;padding:12px;background:linear-gradient(90deg,#5A1E2E,#3A1A12);border:1px solid #FF8A6B55;margin-bottom:6px;color:inherit;font:inherit;text-align:left;width:100%}
+.starter img{width:64px;height:64px}.starter b{font:20px "Black Han Sans",sans-serif}
+.dbtn{flex:none;min-width:70px;height:38px;border-radius:12px;border:0;font:inherit;font-weight:900;background:linear-gradient(180deg,#9BE37A,#4FB43A);color:#123006;display:flex;align-items:center;justify-content:center;gap:4px}
+.dbtn img{width:18px;height:18px}.dbtn:disabled{filter:grayscale(1);opacity:.45}
+.adbtn{background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff}
+.passc{border-radius:20px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;border:1px solid #FFFFFF22}
+.passc .big{font:34px "Black Han Sans",sans-serif;color:#fff;width:74px;text-align:center}.passc img{width:74px}
+.passc ul{margin:6px 0 8px;padding-left:16px;font-size:12px;color:#E9E3DC}.passc h3{margin:0;font:18px "Black Han Sans",sans-serif}
+.on-tag{background:#5BD68A;color:#0E3B1F;border-radius:999px;font-size:11px;font-weight:900;padding:2px 8px;margin-left:6px}
+.stars img{width:16px;height:16px}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.day{position:relative;border-radius:12px;background:#FFFFFF12;border:1px solid #FFFFFF14;min-height:66px;padding:4px 2px;text-align:center;font-size:11px}
+.day i{position:absolute;left:5px;top:3px;font-style:normal;font-size:10px;color:var(--sub)}
+.day img{width:28px;height:28px;margin-top:10px}.day b{display:block;font-size:12px}
+.day.got{opacity:.55}.day.got::after{content:"출석";position:absolute;right:3px;bottom:3px;border:2px solid #FF3B30;color:#FF3B30;border-radius:6px;font-size:10px;font-weight:900;padding:0 3px;transform:rotate(-12deg)}
+.day.now{border:2px solid #FFD66B;box-shadow:0 0 14px #FFD66B66;opacity:1}
+.day.big{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;background:linear-gradient(90deg,#4A3212,#2A1C0E);border-color:#FFD66B55;min-height:54px}
+.day.big img{margin:0;width:36px;height:36px}.day.big b{font:20px "Black Han Sans",sans-serif;color:#FFD66B}
+.mis{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}.mis .bar{height:6px}
+#adov{position:fixed;inset:0;background:#000;color:#fff;display:none;place-items:center;text-align:center;font:16px "Noto Sans KR",sans-serif;z-index:50}
+#adov.on{display:grid}#adov b{display:block;font:28px "Black Han Sans",sans-serif;margin-bottom:8px}
+#offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;border:0;border-radius:999px;padding:12px 18px;font:800 15px "Noto Sans KR",sans-serif;
+ background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff;box-shadow:0 8px 24px #2F7BF566;z-index:20}
+#offer.on{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
+
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -964,6 +995,7 @@ function slam() { // end of the count-up: the screen glass takes the hit
   spawn('CORE', 195, REVEAL_Y - 18, 0, 0, .22, [255, 210, 120], 220);
   if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
   if (plate.record) after(.08, () => sfx.badge());
+  if (plate.record) after(1.2, () => offerDouble(plate.total));
   if (plate.capMode) after(.1, overheatSeq);
   if (plate.k >= 8 || plate.wmul > 1) after(.03, () => collapse(1 + Math.min(plate.k, 12) * .04));
 }
@@ -1183,7 +1215,7 @@ function tapTile(k) {
   if (k === 'auto') { autoOn = !autoOn; say2(autoOn ? '자동 정리 켬' : '자동 정리 끔', 160, 20); }
   else if (k === 'dnd') { sound = !sound; if (sound) ac(); say2(sound ? '소리 켬' : '방해 금지 · 소리 끔', 160, 20); }
   else if (k === 'deck') openSheet('deck');
-  else openShade();
+  else openSheet('pass');
 }
 const toBoard = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * H]; };
 cv.addEventListener('pointerdown', e => {
@@ -1253,12 +1285,12 @@ function drawHint(t) {
 const $ = id => document.getElementById(id);
 const shadeEl = $('shade'), sheetEl = $('sheet'), scrimEl = $('scrim');
 let P = null, sheetKind = null, upMode = '1', shopTier = 0, armReset = false;
-const ICONP = { shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
+const ICONP = { data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
   reset: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4', backup: 'M6 4h9l3 3v13H6zM9 4v5h6V4', cloud: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z', rec: 'M5 19V9M12 19V5M19 19v-7' };
 const svg = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
 const ico = id => `<img src="icons/${id}.svg" alt="" onerror="this.style.visibility='hidden'">`;
 const P$ = n => fmt(Number(n)) + ' P';
-async function loadPanel() { P = await api('panel'); applyState(P.state); return P; }
+async function loadPanel() { P = await api('panel'); P.bm = await api('bm'); applyState(P.state); return P; }
 function closeAll() { shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
@@ -1274,18 +1306,18 @@ function renderShade() {
     ['shop', '앱 상점', newApps ? `새 앱 ${newApps}` : '둘러보기', newApps > 0],
     ['up', '강화', cheap ? '모두 강화' : '강화', cheap],
     ['deck', '덱', `${st.deck}/${P.maxSlots}칸`, false],
-    ['board', '판 강화', '곧 열려요', false, true],
+    ['data', '데이터 충전', `${fmt(P.bm ? P.bm.data : 0)}`, false],
     ['reset', '초기화', P.canReset ? `+${st.backupFilesNow} 파일` : `Lv ${st.resetLevel}부터`, P.canReset && st.backupFilesNow > 0],
-    ['backup', '백업', P.resets ? '상점' : '첫 초기화 후', false, !P.resets],
-    ['cloud', '클라우드', 'Lv 60', false, true],
-    ['rec', '기록', `최고 연쇄 ${P.bestChain}`, false],
+    ['pass', '더 빠르게', P.bm && P.bm.passActive ? `패스 ${P.bm.passDaysLeft}일` : '패스', false],
+    ['premium', '프리미엄', P.bm && P.bm.vouchers ? `선택권 ${P.bm.vouchers}` : '★ 강화', P.bm && P.bm.vouchers > 0],
+    ['attend', '매일 들르기', P.bm ? (P.bm.claimedToday ? `${P.bm.streak}일째` : '출석하기') : '출석', P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
-  shadeEl.innerHTML = `<div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
+  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${fmt(w)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${fmt(Number(P.nextLevelP))}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
-    <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span></div>
+    <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span><span class="chip">최고 연쇄 ${P.bestChain}</span></div>
     <div class="grab"></div>`;
   shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
   $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; });
@@ -1362,15 +1394,80 @@ function renderSheet() {
     b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
       <div><h4>스와이프</h4><b style="font-size:24px">${st.swipes}</b></div><div><h4>초기화</h4><b style="font-size:24px">${P.resets}회</b></div></div>`;
   }
+  else if (sheetKind === 'data') renderData(b);
+  else if (sheetKind === 'pass') renderPass(b);
+  else if (sheetKind === 'premium') renderPremium(b);
+  else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
+}
+const DIMG = '<img src="img/bm/currency-data.webp">';
+const ITEM_IMG = { Boost: 'boost-income-boost', Warp: 'boost-time-warp', Battery: 'boost-power-bank', BackupBoost: 'boost-backup-boost', Overclock: 'boost-best-double' };
+const AD_IMG = { BestDouble: 'boost-best-double', OfflineDouble: 'boost-offline-double', Boost: 'boost-income-boost', Warp: 'boost-time-warp', Overclock: 'boost-best-double', Battery: 'boost-power-bank', CreditBox: 'boost-data-box', FreeUpgrade: 'boost-free-upgrade' };
+const won = n => '₩' + n.toLocaleString('ko-KR');
+function renderData(b) {
+  const m = P.bm; $('sheet-t').textContent = '데이터 충전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
+  b.innerHTML = `<div class="packs">${m.packs.map((p, i) => `<button class="pack" data-act="buyData" data-pack="${p.id}">${p.first ? '<span class="rib">첫 구매 2배</span>' : ''}<img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${DIMG.replace('<img', '<img style="width:16px;height:16px;vertical-align:-3px"')} ${p.data.toLocaleString()}</div><span class="won">${won(p.won)}</span></button>`).join('')}</div>`
+    + (m.starter ? `<button class="starter" data-act="buyStarter"><img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ₩2,500</b><div class="note">데이터 500 · 프리미엄 ★ 선택권 1 · 한 번만</div></div></button>` : '')
+    + `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
+      <button class="dbtn" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
+    + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
+      <button class="dbtn adbtn" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '▶ 광고'}</button></div>`).join('')
+    + `<div class="note" style="text-align:center;margin-top:10px">확률형 상품 없음 · 받는 것을 사기 전에 그대로 보여 드려요 · 결제는 테스트용 가짜</div>`;
+}
+function renderPass(b) {
+  const m = P.bm; $('sheet-t').textContent = '더 빠르게'; $('sheet-w').innerHTML = '';
+  const card = (kind, bg, head, lines, price, active) => `<div class="passc" style="background:${bg}">${head}<div style="flex:1"><h3>${kind === 'month' ? '월간 패스' : kind === 'Turbo' ? '터보 패스' : '울트라 패스'}${active ? `<span class="on-tag">이용 중</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul><button class="btn" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>`;
+  b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', ['광고 없이 광고 보상 즉시', '매일 데이터 60 + 즉시 300', '매일 오버클럭 3시간'], '₩5,500 / 30일', m.passActive && !m.speedPass)
+    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×3.5', '백업파일·GB ×1.75'], '₩33,000 / 30일', m.speedPass === 'Turbo')
+    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×8', '백업파일·GB ×4', '매일 데이터 +200'], '₩99,000 / 30일', m.speedPass === 'Ultra')
+    + `<div class="note" style="text-align:center">자동 갱신 · 언제든 해지 · 남은 기간은 그대로 · 상위 패스로 바꾸면 차액만 · 결제는 테스트용 가짜</div>`;
+}
+function renderPremium(b) {
+  const m = P.bm; $('sheet-t').textContent = '프리미엄 버전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
+  const stars = n => `<span class="stars">${Array.from({ length: 5 }, (_, i) => `<img src="img/bm/badge-star-${i < n ? 'on' : 'off'}.webp">`).join('')}</span>`;
+  b.innerHTML = (m.vouchers ? `<div class="it" style="border-color:#FFD66B66"><img src="img/bm/badge-star-on.webp"><div class="t"><b>★ 선택권 ${m.vouchers}장</b><div class="m">아무 앱 ★2까지 무료로 · 아래에서 "선택권" 누르기</div></div></div>` : '')
+    + m.premium.map(a => `<div class="it ${a.open ? '' : 'lock'}">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">${a.tier}티어 · 가치 ×${(a.permille / 1000).toFixed(a.permille % 1000 ? 1 : 0)}</span><div>${stars(a.stars)}</div></div>
+      ${a.stars >= a.max ? '<b style="color:#FFD66B">MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
+    + `<div class="note" style="text-align:center;margin-top:8px">★마다 그 앱 가치 ×2 · 초기화·동기화해도 남아요 · 높은 티어일수록 효율이 좋아요</div>`;
+}
+function renderAttend(b) {
+  const m = P.bm; $('sheet-t').textContent = '매일 들르기'; $('sheet-w').innerHTML = '';
+  const got = m.claimedToday ? m.streak : m.today - 1;
+  const ticketImg = t => t.length ? ITEM_IMG[t[0].id] : 'currency-data';
+  const cell = (d, i) => {
+    const n = i + 1, big = n % 10 === 0, cls = `day ${big ? 'big' : ''} ${n <= got ? 'got' : ''} ${n === (m.claimedToday ? m.streak : m.today) ? 'now' : ''}`;
+    const what = d.tickets.length ? `${d.tickets[0].label.split(' ')[0]} ×${d.tickets[0].n}` : '';
+    if (big) return `<div class="${cls}"><i>${n}</i><img src="img/bm/meta-attendance-day7.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
+    return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b></div>`;
+  };
+  b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:22px 'Black Han Sans';color:#FFD66B">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
+    <div class="board">${m.board.map(cell).join('')}</div>
+    ${m.claimedToday ? '' : `<button class="btn big" data-act="attend">${m.today}일차 출석하기</button>`}
+    <div class="h3">오늘의 미션 · 모두 하면 데이터 ${m.missionReward}</div>
+    ${m.missions.map(x => `<div class="mis"><span style="flex:1">${x.label}</span><span class="bar" style="flex:1"><i style="width:${x.now / x.goal * 100}%"></i></span><span class="note">${x.now}/${x.goal}</span></div>`).join('')}
+    <button class="btn big" data-act="claimMissions" ${m.missionsDone ? '' : 'disabled'}>미션 보상 받기</button>`;
 }
 async function sheetAct(x) {
   const act = x.dataset.act;
   if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
-  const args = act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
+  if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd())) return; }
+  const args = act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
   if (act === 'reset' && o.ok) { closeAll(); say2('공장 초기화! 백업파일 받음', 300, 26); collapse(1.3); sfx.unit(); buzz([40, 30, 80]); }
   afterAct(o);
+}
+const offerEl = $('offer');
+let offerT = null;
+async function offerDouble(total) {
+  const m = await api('bm'); const ad = m.ads.find(a => a.id === 'BestDouble'); if (!ad || ad.left <= 0 || m.state.level < 20) return;
+  offerEl.textContent = (m.passActive ? '패스 혜택 · ' : '▶ 광고 보고 ') + `최고 기록 ×2 (+${fmt(total)})`; offerEl.classList.add('on');
+  clearTimeout(offerT); offerT = setTimeout(() => offerEl.classList.remove('on'), 5000);
+  offerEl.onclick = async () => { offerEl.classList.remove('on'); if (!m.passActive && !(await fakeAd())) return;
+    const before = Number(S.wallet); const o = await api('watchAd', { slot: 'BestDouble' }); if (o.ok) { addWallet(Number(o.state.wallet) - before); say2('최고 기록 ×2!', 300, 30); sfx.unit(); } applyState(o.state); };
+}
+function fakeAd() {
+  return new Promise(res => { const ov = $('adov'); let n = 3; $('adt').textContent = n; ov.classList.add('on');
+    const iv = setInterval(() => { n--; $('adt').textContent = n; if (n <= 0) { clearInterval(iv); ov.classList.remove('on'); res(true); } }, 1000); });
 }
 async function afterAct(o, failMsg) {
   if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); } else { sfx.snap(); if (failMsg) say2(failMsg, 300, 18); }
@@ -1386,6 +1483,8 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
   const st = await api('snapshot');
   applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = Number(st.wallet); wallet.unit = split(wallet.v).unit;
   reconcile(st); board.forEach((r, i) => { r.y.x = rowY(i) - 60 - i * 30; r.a = 0; });
+  // daily check-in on the 30-day board: claim and show it once a day
+  setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600);
 })();
 // back from away: the app paid the time away (AwayClock) and hands the result here
 window.onOffline = o => {
