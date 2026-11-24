@@ -110,6 +110,7 @@ def main(apk, fixture=None):
     OUTPUT.mkdir(parents=True, exist_ok=True)
     wait_for(lambda: adb("shell", "getprop", "sys.boot_completed", capture_output=True,
                          text=True, timeout=5).stdout.strip() == "1", "Android never finished booting")
+    adb("shell", "svc", "power", "stayon", "true", timeout=10)
     adb("install", "-r", apk, timeout=90)
     adb("logcat", "-c")
     start()
