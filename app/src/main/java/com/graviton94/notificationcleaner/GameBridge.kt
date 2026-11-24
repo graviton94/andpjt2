@@ -9,6 +9,7 @@ import android.webkit.JavascriptInterface
 import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.WebSession
+import com.graviton94.notificationcleaner.core.account
 import org.json.JSONObject
 import java.io.File
 
@@ -33,6 +34,7 @@ class GameBridge(private val context: Context) {
     fun call(method: String, argsJson: String): String = synchronized(lock) {
         val a = runCatching { JSONObject(argsJson) }.getOrDefault(JSONObject())
         val t = now()
+        val previousPassDay = session.state.account.passDay
         val out = when (method) {
             "snapshot" -> session.snapshot(t)
             "swipe" -> session.swipe(a.optString("id").toLong(), t)
@@ -60,7 +62,11 @@ class GameBridge(private val context: Context) {
             "buyBackup" -> session.buyBackup(a.optString("item"), t)
             else -> "{}"
         }
-        if (method != "snapshot" && method != "hint" && method != "panel" && method != "drill" && method != "bm") save()
+        val changesState = when (method) {
+            "snapshot", "hint", "panel", "drill", "bm" -> false
+            else -> true
+        }
+        if (changesState || previousPassDay != session.state.account.passDay) save()
         out
     }
 

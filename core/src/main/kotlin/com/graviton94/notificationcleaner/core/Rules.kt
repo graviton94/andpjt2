@@ -48,7 +48,7 @@ data class RuleSet(
     val premiumStarShare: List<Int> = listOf(50, 100, 170, 280, 400),
     /**
      * 30-day consecutive attendance board (missed day → day 1). Currencies alternate; days 10, 20, 30 are big.
-     * About 1,300 data a board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
+     * 1,520 data per board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
      */
     val attendanceBoard: List<AttendReward> = run {
         val B = CreditItem.Battery; val Bo = CreditItem.Boost; val W = CreditItem.Warp; val O = CreditItem.Overclock; val BB = CreditItem.BackupBoost
@@ -187,7 +187,7 @@ data class RuleSet(
     fun minSlots(level: Int) = step(minSlotSteps, level)
     fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) + backup.cloud.lv(CloudItem.CloudEventSlot) else 0
 
-    /** XP to leave [level], in hundredths of a point. ⌈5 × L^1.4 × 1.09^(L−1)⌉ points. */
+    /** Cumulative run P for each level. BigDecimal division rounds each step half-even at scale zero. */
     private val levelTable: List<BigInteger> by lazy {
         val t = mutableListOf(BigInteger.ZERO, BigInteger.ZERO) // index = level; level 1 is free
         var q = java.math.BigDecimal(levelPBase)

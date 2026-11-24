@@ -72,8 +72,13 @@ def run_balance_phase(phase):
 
     try:
         wait_for(webview_ready, "Debug WebView did not expose the game page")
-        subprocess.run(("node", "scripts/android-balance-smoke.cjs", endpoint, phase, str(OUTPUT), PACKAGE),
-                       check=True, timeout=90)
+        completed = subprocess.run(("node", "scripts/android-balance-smoke.cjs", endpoint, phase, str(OUTPUT), PACKAGE),
+                                   capture_output=True, text=True, timeout=90)
+        print(completed.stdout, end="")
+        if completed.returncode:
+            print(completed.stderr, file=sys.stderr, end="")
+            reason = completed.stderr.splitlines()[0] if completed.stderr else "Playwright failed"
+            raise AssertionError(reason)
     finally:
         adb("forward", "--remove", f"tcp:{port}", check=False, timeout=10)
 
@@ -87,8 +92,10 @@ def balance_flow(fixture):
         start("--ez", "balance_smoke", "true")
         try:
             run_balance_phase(phase)
-        except (AssertionError, subprocess.SubprocessError):
+        except (AssertionError, subprocess.SubprocessError) as error:
             screenshot(f"failure-{phase}.png")
+            message = str(error).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error title=WebView balance {phase}::{message}")
             raise
         stop()
 

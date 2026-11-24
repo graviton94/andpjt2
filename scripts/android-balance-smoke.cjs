@@ -27,7 +27,13 @@ async function run() {
 
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
+  page.on('console', msg => {
+    if (msg.type() !== 'error') return;
+    const source = msg.location().url;
+    // Chromium asks for a browser-tab icon on desktop, which the app asset does not provide.
+    if (desktop && source.endsWith('/favicon.ico')) return;
+    errors.push(`${msg.text()} (${source})`);
+  });
   if (desktop) await page.goto(localUrl);
   await page.locator('#stage').waitFor();
   if (!desktop) assert.equal(await page.evaluate(() => typeof window.Game.call), 'function');
@@ -160,7 +166,9 @@ async function run() {
     const dimensions = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
     const h = Math.max(740, Math.round(390 * dimensions.h / dimensions.w));
     const y = b.y + (206 + Math.round((h - 740) * .35) + 72 * row) / h * b.height;
-    await page.mouse.move(b.x + b.width * .75, y);
+    const x = b.x + b.width * .75;
+    await page.waitForFunction(({ x, y }) => document.elementFromPoint(x, y)?.id === 'stage', { x, y });
+    await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.move(b.x + b.width * .2, y, { steps: 6 });
     await page.mouse.up();

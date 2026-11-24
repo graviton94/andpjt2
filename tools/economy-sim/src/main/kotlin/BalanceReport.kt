@@ -15,7 +15,7 @@ private val scenarios = listOf(
 )
 private fun fmt(n: Double?) = n?.let { String.format(Locale.ROOT, "%.2f", it) }.orEmpty()
 private fun completeMean(values: List<Double?>) = if (values.any { it == null }) null else values.filterNotNull().average()
-private fun csv(file: File, fields: List<String>, rows: Sequence<List<Any?>>) {
+internal fun csv(file: File, fields: List<String>, rows: Sequence<List<Any?>>) {
     file.bufferedWriter().use { out ->
         out.appendLine(fields.joinToString(","))
         rows.forEach { row ->

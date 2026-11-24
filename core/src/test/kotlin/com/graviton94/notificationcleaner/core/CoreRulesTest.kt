@@ -15,6 +15,19 @@ class CoreRulesTest {
     private val now = 1_000_000L
 
     @Test
+    fun levelThresholdsUseRunPAndMatchThePublishedCurve() {
+        val r = e.rules
+        assertEquals(listOf(30L, 70L, 163L).map(::valueOf), (2..4).map(r::levelP))
+        for (level in listOf(2, 24, 25, 26, 124)) {
+            for (fastBoot in listOf(0, 1, 5)) {
+                val threshold = r.levelCeil(level, fastBoot)
+                assertEquals(level - 1, r.levelFor(threshold - BigInteger.ONE, fastBoot))
+                assertEquals(level, r.levelFor(threshold, fastBoot))
+            }
+        }
+    }
+
+    @Test
     fun firstSwipeIsOneSmallBurst() {
         val (_, o) = firstSwipe()
         assertEquals(1, o.chain)

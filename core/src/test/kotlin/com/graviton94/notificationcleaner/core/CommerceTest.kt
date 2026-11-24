@@ -89,6 +89,23 @@ class CommerceTest {
         assertEquals(1, shop.claimAttendance(state, now + 31 * day).account.streak)
     }
 
+    @Test fun subscriptionsDeliverDailyEntitlementsInTheAppSession() {
+        for ((kind, extra) in listOf("month" to 0L, "Turbo" to 0L, "Ultra" to 200L)) {
+            val w = session()
+            w.buyPass(kind, "order", now)
+            w.buyPass(kind, "order", now)
+            assertEquals(360L + extra, w.state.account.credits)
+            assertEquals(now + 3 * 3_600_000L, w.state.account.overclockUntil)
+            val tomorrow = now + day
+            val restored = WebSession(engine, SaveCodec.decode(w.save()), tomorrow)
+            restored.snapshot(tomorrow)
+            restored.bm(tomorrow)
+            assertEquals(420L + 2 * extra, restored.state.account.credits)
+            restored.panel(now + 30 * day)
+            assertEquals(420L + 2 * extra, restored.state.account.credits)
+        }
+    }
+
     @Test fun oldFormatStillLoadsWithDefaultEconomyFields() {
         val original = SaveCodec.encode(engine.newGame(now, 11))
         val old = original.replace("\"save\":1,", "")

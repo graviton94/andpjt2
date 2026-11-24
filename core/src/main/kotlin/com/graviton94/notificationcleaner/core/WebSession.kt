@@ -20,35 +20,40 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     var state: GameState = installed(state ?: engine.newGame(now, now), now)
         private set
 
+    private fun tick(now: Long): GameState {
+        state = shop.claimPassDaily(engine.tick(state, now), now)
+        return state
+    }
+
     /** Board, HUD and shop data. */
-    fun snapshot(now: Long): String { state = engine.tick(state, now); return snap(state, now).toString() }
+    fun snapshot(now: Long): String = snap(tick(now), now).toString()
 
     /** A player swipe (or the auto-cleaner's). Null outcome = refused (no battery, row gone). */
     fun swipe(rowId: Long, now: Long, auto: Boolean = false): String {
-        val prevLast = engine.tick(state, now).lastEarned
-        val o = engine.swipe(state, rowId, now, if (auto) Actor.Auto else Actor.Player)
-            ?: return buildJsonObject { put("ok", false); put("reason", if (engine.tick(state, now).energy <= 0) "battery" else "gone"); put("state", snap(engine.tick(state, now), now)) }.toString()
+        val current = tick(now)
+        val o = engine.swipe(current, rowId, now, if (auto) Actor.Auto else Actor.Player)
+            ?: return buildJsonObject { put("ok", false); put("reason", if (current.energy <= 0) "battery" else "gone"); put("state", snap(current, now)) }.toString()
         state = meta.record(o.state, o, now)
-        return outcome(o, now, prevLast).toString()
+        return outcome(o, now, current.lastEarned).toString()
     }
 
     /** The auto-cleaner's move if it is due, else just the refreshed state. */
     fun auto(now: Long): String {
-        state = engine.tick(state, now)
+        tick(now)
         if (now < state.autoPausedUntil) return buildJsonObject { put("ok", false); put("state", snap(state, now)) }.toString()
         val target = engine.autoTarget(state, now) ?: return buildJsonObject { put("ok", false); put("state", snap(state, now)) }.toString()
         return swipe(target, now, auto = true)
     }
 
     /** The row the auto-cleaner would pick: the tutorial glove points at it. */
-    fun hint(now: Long): String = buildJsonObject { put("id", engine.autoTarget(engine.tick(state, now), now)) }.toString()
+    fun hint(now: Long): String = buildJsonObject { put("id", engine.autoTarget(tick(now), now)) }.toString()
 
     fun autoIntervalMs(now: Long): Long = engine.autoIntervalMs(state, now)
 
     /** Away time → offline pay (the host measures the time with [AwayClock]). */
     fun offline(awayMs: Long, now: Long): String {
         val (next, paid) = engine.settleOffline(state, awayMs, now)
-        state = shop.claimAttendance(next, now)
+        state = shop.claimPassDaily(shop.claimAttendance(next, now), now)
         return buildJsonObject { put("paid", paid.toString()); put("paidShort", short(paid)); put("state", snap(state, now)) }.toString()
     }
 
@@ -67,7 +72,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     }
 
     /** 알림 훈련: one tap while the drill runs (+1% income each, up to +100%). */
-    fun tapDrill(now: Long): String { state = engine.tapDrill(engine.tick(state, now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
+    fun tapDrill(now: Long): String { state = engine.tapDrill(tick(now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
 
     fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
 
@@ -137,7 +142,13 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     fun buyPass(kind: String, orderId: String, now: Long): String = act(now) { s ->
         shop.claimOnce(s, orderId) {
-            when (kind) { "month" -> shop.buyPass(it, now); "Turbo" -> shop.buySpeedPass(it, now, SpeedPass.Turbo); "Ultra" -> shop.buySpeedPass(it, now, SpeedPass.Ultra); else -> null }
+            val subscribed = when (kind) {
+                "month" -> shop.buyPass(it, now)
+                "Turbo" -> shop.buySpeedPass(it, now, SpeedPass.Turbo)
+                "Ultra" -> shop.buySpeedPass(it, now, SpeedPass.Ultra)
+                else -> return@claimOnce null
+            }
+            shop.claimPassDaily(subscribed, now)
         } ?: s
     }
 
@@ -151,7 +162,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun claimMissions(now: Long): String = act(now) { meta.claimMissions(shop, it, now) ?: it }
 
     fun bm(now: Long): String {
-        val s = installed(engine.tick(state, now), now).also { state = it }
+        val s = tick(now)
         val a = s.account
         val r = engine.rules
         return buildJsonObject {
@@ -214,7 +225,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     /** Everything the pull-down shade and its sheets show (screens-v1 Shade · Shop · Upgrade · Deck · Reset). */
     fun panel(now: Long): String {
-        val s = engine.tick(state, now).also { state = it }
+        val s = tick(now)
         val r = engine.rules
         val fb = s.backup.lv(BackupItem.FastBoot)
         val lo = r.levelCeil(s.level, fb)
@@ -268,8 +279,8 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun save(): String = SaveCodec.encode(state)
 
     private fun act(now: Long, f: (GameState) -> GameState): String {
-        val before = state
-        state = f(engine.tick(state, now))
+        val before = tick(now)
+        state = f(before)
         return buildJsonObject { put("ok", state !== before); put("state", snap(state, now)) }.toString()
     }
 
