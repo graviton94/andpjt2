@@ -15,7 +15,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
+import androidx.webkit.WebViewFeature
 
 /**
  * The game screen is the approved FX demo page (assets/game) running the real core engine through [GameBridge] (22 §0).
@@ -32,11 +34,14 @@ class MainActivity : ComponentActivity() {
         bridge = GameBridge(applicationContext)
         val assets = WebViewAssetLoader.Builder().addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this)).build()
         web = WebView(this).apply {
-            setBackgroundColor(Color.rgb(13, 9, 7))
+            val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            setBackgroundColor(if (night) Color.rgb(13, 9, 7) else Color.rgb(238, 241, 247))
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false
             settings.allowFileAccess = false
+            // The page themes itself from prefers-color-scheme (system day/night); never let WebView auto-darken it.
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
             isHapticFeedbackEnabled = false
             overScrollMode = WebView.OVER_SCROLL_NEVER
             addJavascriptInterface(bridge, "Game")
