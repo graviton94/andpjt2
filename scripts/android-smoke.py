@@ -29,7 +29,7 @@ def alive():
 
 def page_errors():
     log = adb("logcat", "-d", "-s", "GamePage:E", "AndroidRuntime:E", stdout=subprocess.PIPE, text=True, check=False).stdout
-    return [l for l in log.splitlines() if " E " in l or "FATAL" in l]
+    return [l for l in log.splitlines() if (" E " in l or "FATAL" in l) and "/favicon.ico" not in l]
 
 
 def start(*options):

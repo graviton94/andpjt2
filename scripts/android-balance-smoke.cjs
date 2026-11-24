@@ -38,8 +38,8 @@ async function run() {
   page.on('console', msg => {
     if (msg.type() !== 'error') return;
     const source = msg.location().url;
-    // Chromium asks for a browser-tab icon on desktop, which the app asset does not provide.
-    if (desktop && source.endsWith('/favicon.ico')) return;
+    // The test page has no browser-tab icon. Check every other resource and script error.
+    if (source.endsWith('/favicon.ico')) return;
     errors.push(`${msg.text()} (${source})`);
   });
   if (desktop) await page.goto(localUrl);
@@ -229,7 +229,7 @@ async function run() {
     await shot('10-reset-relaunch');
   }
 
-  assert.deepEqual(errors, []);
+  if (errors.length) throw new Error(`WebView errors: ${errors.join(' | ')}`);
   console.log(`Verified balance flow: ${phase}`);
   if (desktop) await browser.close();
 }
