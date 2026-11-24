@@ -441,7 +441,7 @@ const pill = (x, y, w, h, text, c) => { c.fillStyle = day ? 'rgba(255,255,255,.6
 const ACC = '#EFA03F';
 const clock = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 // quick tiles (screens-v1 Main): 자동 정리 on/off · 방해 금지 = mute · 덱 · 배속 (shop for now)
-let autoOn = true;
+let autoOn = !/[?&]auto=0/.test(location.search);  // tests start with the auto-cleaner off
 const TILES = [
   { key: 'auto', label: '자동', on: () => autoOn, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8' },
   { key: 'dnd', label: '방해 금지', on: () => !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
@@ -531,11 +531,10 @@ Object.assign(sfx, {
 });
 function startEvent(type) {
   if (busy || ev) return;
-  busy = true; ev = { type, t: 0, d: {} }; EVENTS[type].start(ev);
+  busy = true; ev = { type, t: 0, d: Object.assign({}, arguments[1] || {}) }; EVENTS[type].start(ev);
 }
 function endEvent() {
   ev = null; busy = false; fxT.sat = 1; fxT.bright = 1; lowBat = false;
-  const p = pending.shift(); if (p) after(.15, () => runChain(...p));
 }
 const say = (text, y, size, top, bot, life = 1.2) => pops.push({ x: 195, y, text, t: 0, life, rot: (rnd() - .5) * .1, size, col0: [top, bot] });
 function panel(x, y, w, h, r, fill, edge) {
@@ -703,7 +702,7 @@ const EVENTS = {
       const d = e.d; sstep(d.y, dt, 160, 17);
       if (d.phase === 'ring') {
         d.ringT -= dt; if (d.ringT <= 0) { d.ringT = .62; sfx.ring(); phone('phone.buzz', .6); buzz(160); if (!reduce) shake = 3.2; }
-        if (e.t > 3.4) this.tap(e, 120, 590);
+        if (e.t > 6) this.tap(e, 120, 590);
       } else if (e.t > d.endT + 1.3) endEvent();
     },
     draw(c, y0, t) {
@@ -729,6 +728,7 @@ const EVENTS = {
       shatterImg(s, 14, ROW0, 362, 492, 28, x, y, 1.7, 2.4);
       crackAt(x, y, .9); ripple(x, y, .055); chroma = .02; sfx.smash(); buzz([40, 30, 90]); if (!reduce) shake = 7;
       say('차단!', 420, 64, '#FFFFFF', '#FF3B30', 1.2);
+      if (d.rowId) api('swipe', { id: d.rowId }).then(o => { if (o.ok) { swipes++; play(o, true); } else { applyState(o.state); reconcile(o.state); } });
     },
     world(e, t) { if (e.d.phase === 'ring') this.draw(ctx, ROW0 + e.d.y.x, t); },
     ui(e) {
@@ -760,7 +760,7 @@ const EVENTS = {
   },
   // lotto: slot reel; jackpot = gold shower + glass break, miss = deflate + sad trombone
   lotto: {
-    start(e) { lottoCount++; Object.assign(e.d, { val: 1, iv: .035, acc: 0, spin: 1.7, res: lottoCount === 1 ? 47 : rnd() < .5 ? 0 : 1 + Math.floor(rnd() * 60), phase: 'spin', bs: spring(0) }); e.d.bs.t = 1; },
+    start(e) { lottoCount++; Object.assign(e.d, { val: 1, iv: .035, acc: 0, spin: 1.7, res: e.d.force != null ? e.d.force : lottoCount === 1 ? 47 : rnd() < .5 ? 0 : 1 + Math.floor(rnd() * 60), phase: 'spin', bs: spring(0) }); e.d.bs.t = 1; },
     update(e, dt) {
       const d = e.d; sstep(d.bs, dt, 300, 12);
       if (d.phase === 'spin') {
@@ -821,7 +821,7 @@ async function api(method, args = {}) {
   const q = new URLSearchParams(args).toString();
   return (await fetch('/api/' + method + (q ? '?' + q : ''))).json();
 }
-let boardBusy = false, idleT = 0, hintId = null, hintT = 0, autoClock = 1.5, swipes = 0;
+let pendingCall = null, boardBusy = false, idleT = 0, hintId = null, hintT = 0, autoClock = 1.5, swipes = 0;
 const say2 = (text, y, size = 26) => say(text, y, size, '#FFFFFF', '#FFD66B', 1.3);
 
 /** Replace the board with the engine's rows: known rows keep their springs, new ones drop in from the top. */
@@ -836,6 +836,7 @@ function reconcile(st, arrivals = []) {
       const k = arrivals.indexOf(d.id); drop++;
       r = mkRow(d, rowY(0) - ROWH * (1.2 + drop * .55)); r.a = 0;
       if (k >= 0) after(.06 * drop, () => { ping(d); kick(r.sc, 2); });
+      if (d.kind === 'Call') pendingCall = d.id;
     }
     board.push(r);
   });
@@ -846,6 +847,18 @@ function applyState(st) {
   if (Math.abs(w - wallet.v) > 1e-6 * Math.max(1, w) && plate.phase === 'idle') { wallet.v = wallet.to = w; if (wallet.t >= 1) wallet.shown = w; }
 }
 
+const CARD_LINE = { Update: '업데이트 설치!', AllHands: '@모두 공지 · 다음 알림 5개가 샌드위치로!', Otp: '인증번호 · 직전 한 방 ×10!', Sale: '앱스토어 세일 · 다음 앱 반값!',
+  GroupText: '단체 문자 · 모든 줄 +1!', Firmware: '펌웨어 · 덱 전체 +1 레벨!', Birthday: '생일 축하 보너스!', Drill: '알림 훈련 시작! 연타!', Dnd: '방해 금지 · 조용한 밤' };
+const ALERT_LINE = { LowBattery: '절전 모드 · 배터리 +4', Storage: '저장공간 정리 완료', Crash: '앱 재시작 · 다음 폭발 ×2' };
+/** Event cards, alerts and the lucky alert get their own moment (the demo's event set, results from the engine). */
+function specialSwipe(b, o) {
+  if (b.event === 'Lotto') { o.lotto = true; busy = false; startEvent('lotto', { force: b.x || 0 }); return; }
+  const line = b.event ? CARD_LINE[b.event] : b.alert ? ALERT_LINE[b.alert] : null;
+  if (!line) return;
+  say(line, 330, 26, '#FFFFFF', b.alert ? '#7CE0FF' : '#FFD66B', 1.5); sfx.badge(); phone(b.alert ? 'phone.connect' : 'ui.bonus', .45); buzz([20, 30, 40]);
+  ripple(195, 330, .03); kick(zoom, .5); if (!reduce) shake = Math.max(shake, 2.5);
+  for (let i = 0; i < 22; i++) { const a = rnd() * 6.28, sp = 150 + rnd() * 300; spawn('GLASS', 195, 330, Math.cos(a) * sp, Math.sin(a) * sp - 80, .9, b.alert ? [140, 220, 255] : [255, 214, 107], 3 + rnd() * 4); }
+}
 /** Replays one engine outcome: the swiped card leaves, neighbours touch, merge, burst one by one, waves, payoff. */
 function play(o, quiet = false) {
   if (plate.phase !== 'idle') finishPlate();
@@ -856,6 +869,7 @@ function play(o, quiet = false) {
   for (const b of o.beats) {
     if (b.t === 'swiped') {
       const r = byId(b.id);
+      specialSwipe(b, o);
       if (r) { r.fly = r.dx < 0 ? -1 : 1; if (!quiet) sfx.whoosh(); }
       after(t + .05, () => { const i = board.indexOf(r); if (i >= 0) board.splice(i, 1); layout(); });
       const e = Number(b.earned);
@@ -885,7 +899,7 @@ function play(o, quiet = false) {
   }
   after(t + .12, () => { reconcile(o.state, arrivals); boardBusy = false; });
   if (o.chain > 0) after(t + .38, payoff);
-  else after(t + .2, () => { busy = false; applyState(o.state); if (Number(o.earned) > 0) addWallet(Number(o.earned)); });
+  else after(t + (o.lotto ? 2.2 : .2), () => { if (!ev) busy = false; applyState(o.state); if (Number(o.earned) > 0) addWallet(Number(o.earned)); });
   S = o.state;
 }
 function burstRow(b, k, quiet) {
@@ -1208,6 +1222,10 @@ cv.addEventListener('pointercancel', release);
 // ---------- auto-clean, charge and the idle hint ----------
 async function tickGame(dt) {
   idleT += dt; hintT += dt;
+  if (pendingCall && S && !boardBusy && !busy && !ev && plate.phase === 'idle') {
+    const id = pendingCall; pendingCall = null;
+    if (byId(id)) { startEvent('call', { rowId: id }); return; }
+  }
   if (!S || boardBusy || busy || drag.r || ev || !autoOn) return;
   autoClock -= dt;
   if (autoClock <= 0) {
@@ -1358,6 +1376,9 @@ async function afterAct(o, failMsg) {
   applyState(o.state); wallet.v = wallet.to = wallet.shown = Number(o.state.wallet); wallet.unit = split(wallet.v).unit; reconcile(o.state);
   armReset = false; await loadPanel(); if (sheetKind) renderSheet();
 }
+
+// test hook for tools/game-page/*.js (browser only; the app has window.Game)
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }) };
 
 // ---------- boot ----------
 (async () => {

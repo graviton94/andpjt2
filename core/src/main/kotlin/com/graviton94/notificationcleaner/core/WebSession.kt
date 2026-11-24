@@ -25,10 +25,11 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     /** A player swipe (or the auto-cleaner's). Null outcome = refused (no battery, row gone). */
     fun swipe(rowId: Long, now: Long, auto: Boolean = false): String {
+        val prevLast = engine.tick(state, now).lastEarned
         val o = engine.swipe(state, rowId, now, if (auto) Actor.Auto else Actor.Player)
             ?: return buildJsonObject { put("ok", false); put("reason", if (engine.tick(state, now).energy <= 0) "battery" else "gone"); put("state", snap(engine.tick(state, now), now)) }.toString()
         state = meta.record(o.state, o, now)
-        return outcome(o, now).toString()
+        return outcome(o, now, prevLast).toString()
     }
 
     /** The auto-cleaner's move if it is due, else just the refreshed state. */
@@ -185,18 +186,23 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         }
     }
 
-    private fun outcome(o: SwipeOutcome, now: Long): JsonObject = buildJsonObject {
+    private fun outcome(o: SwipeOutcome, now: Long, prevLast: BigInteger): JsonObject = buildJsonObject {
         put("ok", true)
         put("earned", big(o.earned))
         put("chain", o.chain)
         put("overload", o.overload)
         put("capped", big(o.capped))
-        put("beats", JsonArray(o.beats.map { beat(it) }))
+        put("beats", JsonArray(o.beats.map { beat(it, prevLast) }))
         put("state", snap(state, now))
     }
 
-    private fun beat(b: Beat): JsonObject = when (b) {
-        is Beat.Swiped -> buildJsonObject { put("t", "swiped"); put("id", b.row.id); put("earned", big(b.earned)) }
+    private fun beat(b: Beat, prevLast: BigInteger): JsonObject = when (b) {
+        is Beat.Swiped -> buildJsonObject {
+            put("t", "swiped"); put("id", b.row.id); put("earned", big(b.earned)); put("kind", b.row.kind.name)
+            b.row.event?.let { put("event", it.name) }; b.row.alert?.let { put("alert", it.name) }
+            // 행운 알림: the multiplier the engine rolled (0 = miss), so the page spins to the real result
+            if (b.row.event == EventCard.Lotto) put("x", if (b.earned.signum() > 0 && prevLast.signum() > 0) (b.earned / prevLast).toInt() else 0)
+        }
         is Beat.Merged -> buildJsonObject { put("t", "merged"); put("into", row(b.into)); put("from", b.fromId) }
         is Beat.Burst -> buildJsonObject {
             put("t", "burst"); put("row", row(b.row)); put("chain", b.chain); put("earned", big(b.earned))
