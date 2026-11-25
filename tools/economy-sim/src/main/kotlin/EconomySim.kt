@@ -186,6 +186,7 @@ fun main(args: Array<String>) {
     if (args.firstOrNull() == "challenge-star-audit") return challengeStarAudit(java.io.File(args.getOrNull(1) ?: error("Choose a CSV output file")))
     if (args.firstOrNull() == "challenge-star-proposal") return challengeStarProposal(java.io.File(args.getOrNull(1) ?: error("Choose a CSV output file")))
     if (args.firstOrNull() == "offline-upgrade-audit") return offlineUpgradeAudit(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
+    if (args.firstOrNull() == "growth-tail-audit") return growthTailAudit(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() == "balance-commerce") return balanceCommerce(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() in setOf("balance-report", "balance-audit")) return balanceAudit(
         java.io.File(args.getOrNull(1) ?: error("Choose an output directory")),

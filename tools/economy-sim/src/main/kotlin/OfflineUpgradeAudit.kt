@@ -44,10 +44,11 @@ fun offlineUpgradeAudit(output: File) {
         CapacityCase("backup_2", 1, 2, 0, 3),
         CapacityCase("mixed_4", 35, 3, 1, 2),
         CapacityCase("max_14", 35, 10, 4, 3),
+        CapacityCase("tail_25", 35, 20, 5, 3),
     )
     val profiles = listOf("free", "pass", "ultra", "overclock_12h")
     val rows = sequence {
-        for (plan in configurations) for (profile in profiles) for (awayMinutes in listOf(360, 705, 720, 960, 1680, 2160)) {
+        for (plan in configurations) for (profile in profiles) for (awayMinutes in listOf(360, 705, 720, 960, 1680, 2160, 4320)) {
             val away = awayMinutes * MINUTE_MS
             val accountState = engine.newGame(AUDIT_NOW, 17, Backup(items = mapOf(BackupItem.Offline to plan.backupRank),
                 cloud = Cloud(items = mapOf(CloudItem.CloudOffline to plan.cloudRank))))
@@ -59,26 +60,31 @@ fun offlineUpgradeAudit(output: File) {
                 else -> accountState
             }
             val cap = engine.offlineCapMs(state)
-            val exMinutes = 2 * plan.sets * (plan.backupRank + plan.cloudRank)
+            val exMinutes = minOf(84, 2 * plan.sets * (plan.backupRank + plan.cloudRank))
             val exCap = cap + exMinutes * MINUTE_MS
-            val neutral = limitedSettlement(windowEngine, state, away, cap)
-            val current = engine.settleOfflineWithBonus(state, away, AUDIT_NOW).paid
-            val enriched = state.copy(earnRate = RATE * BigInteger.valueOf(10_800L) / BPS)
+            val efficiencyRank = minOf(plan.backupRank, BackupItem.Offline.max)
+            val rateState = state.copy(backup = state.backup.copy(items = mapOf(BackupItem.Offline to efficiencyRank)))
+            val neutral = limitedSettlement(windowEngine, rateState, away, cap)
+            val legacy = plan.backupRank <= BackupItem.Offline.max && plan.cloudRank <= CloudItem.CloudOffline.max
+            val current = if (legacy) engine.settleOfflineWithBonus(state, away, AUDIT_NOW).paid else null
+            val enriched = rateState.copy(earnRate = RATE * BigInteger.valueOf(10_800L) / BPS)
             val exRaw = if (plan.sets == 0) neutral else limitedSettlement(windowEngine, enriched, away, exCap)
             val limit = neutral * BigInteger.valueOf(11_000L) / BPS
             val paid = exRaw.min(limit)
             check(paid >= neutral && paid <= limit)
-            check(neutral <= current)
-            if (profile != "overclock_12h" || away <= cap) check(neutral == current)
+            if (current != null) {
+                check(neutral <= current)
+                if (profile != "overclock_12h" || away <= cap) check(neutral == current)
+            }
             yield(listOf(plan.name, profile, plan.level, plan.backupRank, plan.cloudRank, plan.sets, awayMinutes,
                 cap / MINUTE_MS, exMinutes, exCap / MINUTE_MS, minOf(away, cap) / MINUTE_MS,
-                minOf(away, exCap) / MINUTE_MS, state.account.overclockUntil, current, neutral,
+                minOf(away, exCap) / MINUTE_MS, engine.offlinePercent(rateState), state.account.overclockUntil, current, neutral,
                 exRaw, paid, paid - neutral, exRaw > limit))
         }
     }
     csv(File(output, "offline-settlements.csv"), listOf("stage", "profile", "level", "backup_rank", "cloud_rank",
         "sets", "away_minutes", "base_cap_minutes", "ex_extra_cap_minutes", "ex_cap_minutes", "base_eligible_minutes",
-        "ex_eligible_minutes", "overclock_until", "current_paid_p", "capped_window_base_p", "ex_p_before_budget",
+        "ex_eligible_minutes", "candidate_efficiency_percent", "overclock_until", "current_paid_p", "capped_window_base_p", "ex_p_before_budget",
         "ex_p_after_budget", "ex_extra_p", "ex_budget_clipped"), rows)
     val edge = engine.newGame(AUDIT_NOW, 1).copy(level = 35, runEarned = rules.levelP(35))
     val day = 24 * 60 * MINUTE_MS
