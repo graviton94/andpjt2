@@ -89,6 +89,17 @@ def cache_rules(core):
     rules.write_text(source)
 
 
+def protect_first_goal(daily, level):
+    source = daily.read_text()
+    source = replace(source, "            val gb = engine.cloudGbNow(s)\n", (
+        "            val gb = engine.cloudGbNow(s)\n"
+        f"            val allowPrestige = s.level < {level} || tl.level124Day != null\n"
+    ))
+    for expression in ("resets && gb > 0", "resets && s.level >= engine.rules.resetLevel"):
+        source = replace(source, f"if ({expression}", f"if (allowPrestige && {expression}")
+    daily.write_text(source)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
@@ -98,6 +109,8 @@ def main():
     parser.add_argument("--profiles", default="all")
     parser.add_argument("--cases", default="all")
     parser.add_argument("--through-day", type=int, choices=(0, 56), default=56)
+    parser.add_argument("--protect-level", type=int, choices=range(1, 124), metavar="LEVEL",
+                        help="Diagnostic replay: postpone prestige at this level or above until first Lv124")
     parser.add_argument("--uncached", action="store_true", help="Run the unmodified core arithmetic without memoization")
     args = parser.parse_args()
     sim = Path(__file__).resolve().parent
@@ -121,6 +134,7 @@ def main():
         "profiles": args.profiles,
         "cases": args.cases,
         "through_day": args.through_day,
+        "protect_level": args.protect_level,
         "cached": not args.uncached,
     }
     manifest_path = out / "manifest.json"
@@ -142,6 +156,8 @@ def main():
         shutil.copy2(sim / "precheck/ExExperiment.kt", core)
         shutil.copy2(sim / "precheck/ExPrecheckCli.kt", project / "src/main/kotlin")
         instrument(core)
+        if args.protect_level is not None:
+            protect_first_goal(project / "src/main/kotlin/Daily.kt", args.protect_level)
         if not args.uncached:
             cache_rules(core)
         subprocess.run([str(repo / "gradlew"), "-p", str(project), "installDist"], check=True, env=env)

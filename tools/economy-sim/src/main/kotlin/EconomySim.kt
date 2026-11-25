@@ -183,6 +183,7 @@ fun p50(xs: List<Double>) = pct(xs, .5)
 fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 60); m < 60 -> "%.0f분".format(m); else -> "%.1f시간".format(m / 60) }
 
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "challenge-star-audit") return challengeStarAudit(java.io.File(args.getOrNull(1) ?: error("Choose a CSV output file")))
     if (args.firstOrNull() == "balance-commerce") return balanceCommerce(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() in setOf("balance-report", "balance-audit")) return balanceAudit(
         java.io.File(args.getOrNull(1) ?: error("Choose an output directory")),
