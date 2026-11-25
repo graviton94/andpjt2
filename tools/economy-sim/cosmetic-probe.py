@@ -10,7 +10,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--bonus-permille", type=int, default=30, choices=range(31), metavar="0–30")
-    parser.add_argument("--profiles", help="Comma-separated simulator profiles")
+    parser.add_argument("--profiles", default="all", help="Comma-separated simulator profiles")
+    parser.add_argument("--available-rewards", action="store_true", help="Use only ad placements exposed by the screen")
     opts = parser.parse_args()
     output = opts.output.resolve()
     sim = Path(__file__).resolve().parent
@@ -32,9 +33,9 @@ def main():
         adjustment = (f"        earned = earned * BigInteger.valueOf({1000 + opts.bonus_permille}L)"
                       " / BigInteger.valueOf(1000L)\n")
         engine.write_text(source.replace(anchor, adjustment + anchor))
-        arguments = f'balance-report "{output}"'
-        if opts.profiles:
-            arguments += f' "{opts.profiles}"'
+        arguments = f'balance-report "{output}" "{opts.profiles}"'
+        if opts.available_rewards:
+            arguments += " available-rewards"
         subprocess.run([str(repo / "gradlew"), "-p", str(project), "run", f"--args={arguments}"], check=True)
 
 

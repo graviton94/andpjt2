@@ -20,7 +20,10 @@ private fun median(days: List<Double?>): Double? {
 
 fun balanceAudit(output: File, profiles: String?, availableRewardsOnly: Boolean) {
     output.mkdirs()
-    val payers = profiles?.split(",")?.map(Payer::valueOf) ?: Payer.entries
+    val payers = when (profiles) {
+        null, "all" -> Payer.entries
+        else -> profiles.split(",").map(Payer::valueOf)
+    }
     val slots = if (availableRewardsOnly) AdSlot.entries.toSet() - AdSlot.OfflineDouble else AdSlot.entries.toSet()
     val jobs = payers.flatMap { payer -> (1L..AUDIT_SEEDS.toLong()).map { seed -> payer to seed } }
     val rows = jobs.parallelStream().map { (payer, seed) ->
