@@ -1,6 +1,6 @@
 # 유료 EX 구현 착수 전 검증
 
-이 문서는 초기 조건의 30시드 결과다. 이후 사용자 결정과 예비 검증은 [EX 조건·오프라인 시간·도전 ★ 개정안](ex-revision.md)과 [무한 강화안](infinite-growth-precheck.md)에 반영했다.
+이 문서는 초기 조건의 30시드 결과다. 후속 실험은 [EX 조건·오프라인 시간·도전 ★ 개정안](ex-revision.md), [무한 강화안](infinite-growth-precheck.md), [최신 통합 30시드 검증](INTEGRATED-REPORT.md)에서 이어진다.
 
 ## 판정
 
