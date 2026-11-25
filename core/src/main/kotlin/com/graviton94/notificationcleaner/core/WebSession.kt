@@ -69,6 +69,13 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     /** 알림 훈련: one tap while the drill runs (+1% income each, up to +100%). */
     fun tapDrill(now: Long): String { state = engine.tapDrill(engine.tick(state, now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
 
+    /** 클라우드 동기화 (2nd prestige) and its shop: GB survives everything. */
+    fun sync(now: Long): String = act(now) { meta.sync(it, now) ?: it }
+
+    fun buyCloud(item: String, now: Long): String = act(now) { s ->
+        CloudItem.entries.firstOrNull { it.name == item }?.let { engine.buyCloud(s, it) } ?: s
+    }
+
     fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
 
     fun buyBackup(item: String, now: Long): String = act(now) { s ->
@@ -266,6 +273,19 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
                 }
             }
             put("canReset", s.level >= r.resetLevel)
+            put("syncLevel", r.syncLevel)
+            put("canSync", s.level >= r.syncLevel)
+            put("gbNow", engine.cloudGbNow(s))
+            put("gb", s.backup.cloud.gb)
+            put("syncs", s.backup.cloud.syncs)
+            putJsonArray("cloudShop") {
+                CloudItem.entries.filter { it.pack == null || it.pack in Catalog.packs }.forEach { c ->
+                    add(buildJsonObject {
+                        put("id", c.name); put("label", c.label); put("lv", s.backup.cloud.lv(c)); put("max", c.max)
+                        put("price", r.cloudPrice(c, s.backup.cloud.lv(c))); put("open", engine.cloudOpen(s, c)); put("minSyncs", c.minSyncs)
+                    })
+                }
+            }
             put("files", s.backup.files)
             put("resets", s.backup.resets)
             putJsonArray("backupShop") {

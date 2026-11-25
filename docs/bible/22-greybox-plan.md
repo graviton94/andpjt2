@@ -3,6 +3,8 @@
 > **11-24 결정: 게임 화면 = 승인된 시연판(HTML/WebGL) + 실제 core 엔진.** Compose 그레이박스(M1·M2 1차)는 시안·시연판과 달라 폐기(`app/legacy/greybox`). 페이지 원본 `tools/game-page/game.tpl.html` → `build.py` → `app/src/main/assets/game`. 앱은 WebView(AssetLoader) + `GameBridge`(window.Game) → core `WebSession`. 브라우저에서는 `gradle -p core run --args="serve 8765 ../app/src/main/assets/game"` 후 `node tools/game-page/playtest.js`로 손가락처럼 플레이·캡처해 확인하고 넘긴다. 아래 Compose 기준 내용은 참고용.
 >
 > **진행(11-24)**: M1·M2(판·손맛) → 시연판+엔진, M3 셰이드·시트 5종(상점·강화·덱·초기화/백업·기록), 특수 줄(스팸 전화·행운 알림·알림 훈련·이벤트 카드·시스템 알림), M4 수익화 화면(데이터 충전·더 빠르게·프리미엄 ★·매일 들르기·미션·광고 지면, 결제·광고는 가짜 + claimOnce) 완료. 브라우저 점검: playtest · paneltest · eventtest · bmtest. 남은 것: M5 AGSL→(웹이라 이미 WebGL), M6 실제 SDK(Billing·AdMob)·원격 설정·분석.
+>
+> **11-25**: 조작 부품을 안드로이드 Material 3로(버튼·칩·분할 버튼·배지·대화상자·스위치·바텀시트, 시스템 테마 토큰), 아이템 그림·판촉 딱지는 일러스트 유지. 설정 화면(소리·진동·움직임 줄이기 저장, 게임 데이터 초기화, 약관 링크). 환생 연출(공장 초기화·클라우드 동기화: 판이 깨지고 장식 붕괴, 받은 백업파일·GB 카운트업 → 백업·클라우드 상점으로)과 클라우드 상점. 큰 수: 화면은 금액을 실수로 바꾸지 않음(log10 + BigInt), 밸런스 브랜치의 …Short·can… 계약을 우선 사용. 점검 스크립트: bignumtest · settingstest · prestigetest.
 
 목표: **core 엔진을 그대로 쓰는 실제 안드로이드 앱**으로 "밀고 → 터지고 → 정산 쾅"의 손맛과 하루 루프(출석·오프라인·초기화)를 폰에서 확인한다. 그림은 회색 상자여도 되지만 **타격감과 숫자 연출은 시연판 수준**이어야 한다(이 게임은 손맛 원툴).
 
