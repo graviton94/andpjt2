@@ -213,8 +213,13 @@ data class OfflineBonusStatus(
     val ultraLeftMs: Long,
 ) {
     val rewardActive get() = adLeftMs > 0 || passLeftMs > 0
-    val multiplierPermille get() = 1_000 + (if (rewardActive) rewardBonusPermille else 0) +
-        (if (ultraLeftMs > 0) ultraBonusPermille else 0)
+    val ultraWithPassMultiplierPermille get() =
+        ((1_000L + rewardBonusPermille) * (1_000L + ultraBonusPermille) / 1_000L).toInt()
+    val multiplierPermille get() = when {
+        ultraLeftMs > 0 -> ultraWithPassMultiplierPermille
+        rewardActive -> 1_000 + rewardBonusPermille
+        else -> 1_000
+    }
 }
 
 data class OfflineSettlement(
@@ -876,7 +881,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L
     fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 2 * s.backup.lv(BackupItem.Offline)
 
-    /** Eligibility at return time. A watched ad and a pass share one reward; Ultra adds its own bonus. */
+    /** Eligibility at return time. A watched ad and a pass share one reward; Ultra multiplies that payout. */
     fun offlineBonus(s: GameState, now: Long): OfflineBonusStatus {
         val acc = s.account
         val today = dayOf(now)

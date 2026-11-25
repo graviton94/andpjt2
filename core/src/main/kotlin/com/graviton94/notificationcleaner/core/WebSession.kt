@@ -315,6 +315,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     private fun bonusJson(bonus: OfflineBonusStatus): JsonObject = buildJsonObject {
         put("rewardBonusPermille", bonus.rewardBonusPermille)
         put("ultraBonusPermille", bonus.ultraBonusPermille)
+        put("ultraWithPassMultiplierPermille", bonus.ultraWithPassMultiplierPermille)
         put("adActive", bonus.adLeftMs > 0)
         put("adLeftMs", bonus.adLeftMs)
         put("passActive", bonus.passLeftMs > 0)

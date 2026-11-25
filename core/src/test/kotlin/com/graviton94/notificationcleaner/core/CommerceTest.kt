@@ -176,12 +176,12 @@ class CommerceTest {
         val reference = Engine(engine.rules.copy(ultraOfflinePermille = 1_000, adWatchOfflinePermille = 1_000))
         val away = 60_000L
         val s = engine.newGame(now, 11).copy(earnRate = BigInteger.valueOf(10_000))
-        for ((kind, multiplier) in listOf(SpeedPass.Turbo to 17L, SpeedPass.Ultra to 22L)) {
+        for ((kind, multiplier) in listOf(SpeedPass.Turbo to 1_700L, SpeedPass.Ultra to 2_550L)) {
             val active = Shop(engine).buySpeedPass(s, now - 1, kind)
             val result = engine.settleOfflineWithBonus(active, away, now)
             val base = reference.settleOffline(active, away, now).second
             assertEquals(base, result.basePaid)
-            assertEquals(base * BigInteger.valueOf(multiplier) / BigInteger.TEN, result.paid)
+            assertEquals(base * BigInteger.valueOf(multiplier) / BigInteger.valueOf(1_000), result.paid)
             assertEquals(reference.chargeMs(active, now), engine.chargeMs(active, now))
             assertEquals(reference.prestigePermille(active, now), engine.prestigePermille(active, now))
             val expiration = active.account.speedPassUntil
@@ -207,7 +207,8 @@ class CommerceTest {
         assertEquals(47 * 3_600_000L, bonus.getValue("adLeftMs").jsonPrimitive.long)
         assertEquals(30 * day, bonus.getValue("passLeftMs").jsonPrimitive.long)
         assertEquals(30 * day, bonus.getValue("ultraLeftMs").jsonPrimitive.long)
-        assertEquals(2_200L, bonus.getValue("multiplierPermille").jsonPrimitive.long)
+        assertEquals(2_550L, bonus.getValue("multiplierPermille").jsonPrimitive.long)
+        assertEquals(2_550L, bonus.getValue("ultraWithPassMultiplierPermille").jsonPrimitive.long)
         fun amount(key: String) = BigInteger(settlement.getValue(key).jsonPrimitive.content)
         assertTrue(amount("bonusPaid").signum() > 0)
         assertEquals(amount("paid"), amount("basePaid") + amount("bonusPaid"))

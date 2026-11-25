@@ -227,6 +227,31 @@ async function run() {
     if (desktop) await page.reload();
     assert.deepEqual(await progress(), read('after-reset'));
     await shot('10-reset-relaunch');
+
+    checkpointStage('read offline rewards through the game API');
+    const initial = (await bm()).offlineBonus;
+    assert.equal(initial.multiplierPermille, 1000);
+    assert.equal(initial.rewardActive, false);
+    assert.equal(initial.rewardBonusPermille, 700);
+    assert.equal(initial.ultraBonusPermille, 500);
+    assert.equal((await api('watchAd', { slot: 'CreditBox' })).ok, true);
+    const ad = (await bm()).offlineBonus;
+    assert.equal(ad.adActive, true);
+    assert.ok(ad.adLeftMs > 0 && ad.adLeftMs <= 48 * 3_600_000);
+    assert.equal(ad.multiplierPermille, 1700);
+    assert.equal((await api('buyPass', { kind: 'month' })).ok, true);
+    const pass = (await api('snapshot')).offlineBonus;
+    assert.equal(pass.passActive, true);
+    assert.ok(pass.passLeftMs > 0);
+    assert.equal(pass.multiplierPermille, 1700);
+    assert.equal((await api('buyPass', { kind: 'Ultra' })).ok, true);
+    const ultra = (await bm()).offlineBonus;
+    assert.equal(ultra.ultraActive, true);
+    assert.ok(ultra.ultraLeftMs > 0);
+    assert.equal(ultra.multiplierPermille, 2550);
+    assert.equal(ultra.multiplierPermille, initial.ultraWithPassMultiplierPermille);
+    fs.writeFileSync(path.join(output, 'offline-bonus-api.json'),
+      JSON.stringify({ initial, ad, pass, ultra }, null, 2));
   }
 
   if (errors.length) throw new Error(`WebView errors: ${errors.join(' | ')}`);
