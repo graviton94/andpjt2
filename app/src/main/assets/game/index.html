@@ -217,6 +217,26 @@ const split = n => {
   return { num: String(Math.floor(x * f) / f), unit: SUF(g) };
 };
 const fmt = n => { const s = split(n); return s.num + s.unit; };
+// ---- P amounts: exact values arrive as decimal strings and are never turned into floats (10^308 overflow).
+// Inside the page an amount is its log10 (−Infinity = 0), which stays small even at 10^2000; exact compares use BigInt.
+const L = s => { s = String(s == null ? '0' : s).replace(/^0+/, ''); if (!s || s[0] === '-') return -Infinity; const lead = s.slice(0, 15); return Math.log10(Number(lead)) + (s.length - lead.length); };
+const Ladd = (a, b) => a === -Infinity ? b : b === -Infinity ? a : Math.max(a, b) + Math.log10(1 + Math.pow(10, -Math.abs(a - b)));
+const Lsub = (a, b) => b === -Infinity ? a : a <= b ? -Infinity : a + Math.log10(1 - Math.pow(10, b - a));
+// linear interpolation of the amounts themselves, done in log space
+const lerpL = (a, b, e) => e <= 0 ? a : e >= 1 ? b : b >= a ? Ladd(a, Lsub(b, a) + Math.log10(e)) : Lsub(a, Lsub(a, b) + Math.log10(e));
+// same notation as core short(): 3 significant digits rounded down, K M B T aa…zz, then 1.23e+N
+const splitL = l => {
+  if (!(l > -Infinity)) return { num: '0', unit: '' };
+  if (l < 3) return { num: String(Math.floor(Math.pow(10, l) + 1e-7)), unit: '' };
+  const g = Math.floor(l / 3 + 1e-12);
+  if (g - 5 >= 676) { const e = Math.floor(l + 1e-12); return { num: (Math.floor(Math.pow(10, l - e) * 100 + 1e-7) / 100) + 'e+' + e, unit: '' }; }
+  const x = Math.pow(10, l - 3 * g), d = x >= 100 ? 0 : x >= 10 ? 1 : 2, f = Math.pow(10, d);
+  return { num: String(Math.floor(x * f + 1e-7) / f), unit: SUF(g) };
+};
+const fmtL = l => { const v = splitL(l); return v.num + v.unit; };
+const shortOf = (exact, short) => short || fmtL(L(exact));
+const BI = v => { try { return BigInt(String(v == null ? '0' : v)); } catch (e) { return 0n; } };
+const geq = (a, b) => BI(a) >= BI(b);
 const fmtMult = m => m >= 1000 ? fmt(m) : String(Math.round(m * 10) / 10);
 const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; };
 
@@ -407,9 +427,9 @@ const board = [];  // what is on screen: engine rows + springs
 const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
 const byId = id => board.find(r => r.id === id);
 const layout = () => board.forEach((r, i) => { r.y.t = rowY(i); });
-const wallet = { v: 0, shown: 0, from: 0, to: 0, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '', tick: 0, note: null };
+const wallet = { v: -Infinity, shown: -Infinity, from: -Infinity, to: -Infinity, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '', tick: 0, note: null };
 const CHIPX = 118, MULTX = 272, BOXY = 129, REVEAL_Y = 360 + Math.round(EX * .35);
-const plate = { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
+const plate = { chips: -Infinity, chipsShown: -Infinity, chipSum: -Infinity, total: -Infinity, totalShown: -Infinity, earned: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
 const mult = () => plate.base * plate.syn * plate.wmul;
 const parts = [], shards = [], tokens = [], pops = [], timeline = [];
 let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
@@ -666,7 +686,7 @@ function strokeBolt(pts, a) {
 
 // overheat: heat up -> boil over -> steam vent + ice flash -> count down -> stamp
 function overheatSeq() {
-  Object.assign(plate, { hot: .001, hotT: 0, capFrom: plate.total, capTo: plate.total * .4, capD: 9, beep: 0, vented: false });
+  Object.assign(plate, { hot: .001, hotT: 0, capFrom: plate.total, capTo: plate.total + Math.log10(.4), capD: 9, beep: 0, vented: false });
   after(.75, () => {
     sfx.boil(); ripple(195, REVEAL_Y - 20, .03); if (!reduce) shake = 6;
     for (let i = 0; i < (reduce ? 10 : 40); i++) spawn('DROP', 195 + (rnd() - .5) * 220, REVEAL_Y - 46, (rnd() - .5) * 380, -220 - rnd() * 280, 1.2, [255, 90 + Math.floor(rnd() * 90), 20], 3 + rnd() * 4);
@@ -692,7 +712,7 @@ function updateOverheat(dt, t) {
   }
   if (plate.capD < 1) {
     plate.capD = Math.min(1, plate.capD + dt / .4); const e = 1 - Math.pow(1 - plate.capD, 3);
-    plate.totalShown = plate.capFrom + (plate.capTo - plate.capFrom) * e;
+    plate.totalShown = lerpL(plate.capFrom, plate.capTo, e);
     plate.tick -= dt; if (plate.tick <= 0) { sfx.coin(.9 - plate.capD * .9); plate.tick = .04; }
     if (plate.capD >= 1) plate.total = plate.totalShown = plate.capTo;
   }
@@ -712,7 +732,7 @@ function drawOverheatUI(t) {
   ctx.fillStyle = c; rr(x - 6, y0 + h * (1 - fill), 12, h * fill + 6, 6); ctx.fill(); ctx.beginPath(); ctx.arc(x, y0 + h + 10, 11, 0, 6.28); ctx.fill();
   ctx.restore();
   if (plate.vented) {
-    const s = fmt(plate.capFrom);
+    const s = fmtL(plate.capFrom);
     gtext(s, 195, REVEAL_Y - 64, 24, { top: '#C9C2BA', bot: '#8A8178' });
     ctx.font = `24px ${FD}`; const w = ctx.measureText(s).width;
     ctx.strokeStyle = '#FF3B30'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(195 - w / 2 - 6, REVEAL_Y - 70); ctx.lineTo(195 + w / 2 + 6, REVEAL_Y - 76); ctx.stroke();
@@ -935,8 +955,8 @@ function reconcile(st, arrivals = []) {
   layout();
 }
 function applyState(st) {
-  S = st; const w = Number(st.wallet);
-  if (Math.abs(w - wallet.v) > 1e-6 * Math.max(1, w) && plate.phase === 'idle') { wallet.v = wallet.to = w; if (wallet.t >= 1) wallet.shown = w; }
+  S = st; const w = L(st.wallet);
+  if (w !== wallet.v && plate.phase === 'idle') { wallet.v = wallet.to = w; if (wallet.t >= 1) wallet.shown = w; }
 }
 
 const CARD_LINE = { Update: '업데이트 설치!', AllHands: '@모두 공지 · 다음 알림 5개가 샌드위치로!', Otp: '인증번호 · 직전 한 방 ×10!', Sale: '앱스토어 세일 · 다음 앱 반값!',
@@ -956,8 +976,8 @@ function specialSwipe(b, o) {
 function play(o, quiet = false) {
   if (plate.phase !== 'idle') finishPlate();
   boardBusy = true; busy = true;
-  Object.assign(plate, { chips: 0, chipsShown: 0, base: 1, syn: 1, wmul: 1, multShown: 1, phase: o.chain > 0 ? 'chain' : 'idle', merge: 0, k: 0, capMode: o.beats.some(b => b.t === 'capped'), capT: 9 });
-  plate.earned = Number(o.earned); plate.chipSum = 0;
+  Object.assign(plate, { chips: -Infinity, chipsShown: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, phase: o.chain > 0 ? 'chain' : 'idle', merge: 0, k: 0, capMode: o.beats.some(b => b.t === 'capped'), capT: 9 });
+  plate.earned = L(o.earned); plate.earnedExact = o.earned; plate.chipSum = -Infinity; plate.newBest = !!o.newBestSwipe;
   let t = 0, k = 0; const arrivals = [];
   for (const b of o.beats) {
     if (b.t === 'swiped') {
@@ -965,8 +985,8 @@ function play(o, quiet = false) {
       specialSwipe(b, o);
       if (r) { r.fly = r.dx < 0 ? -1 : 1; if (!quiet) sfx.whoosh(); }
       after(t + .05, () => { const i = board.indexOf(r); if (i >= 0) board.splice(i, 1); layout(); });
-      const e = Number(b.earned);
-      if (e > 0 && o.chain === 0) after(t + .08, () => pops.push({ x: 300, y: (r ? r.y.x : 300) + 10, text: '+' + fmt(e), t: 0, life: .8, rot: -.1, size: 22 }));
+      const e = L(b.earned), es = shortOf(b.earned, b.earnedShort);
+      if (e > -Infinity && o.chain === 0) after(t + .08, () => pops.push({ x: 300, y: (r ? r.y.x : 300) + 10, text: '+' + es, t: 0, life: .8, rot: -.1, size: 22 }));
       t += .16;
     } else if (b.t === 'merged') {
       const tt = t;
@@ -992,7 +1012,7 @@ function play(o, quiet = false) {
   }
   after(t + .12, () => { reconcile(o.state, arrivals); boardBusy = false; });
   if (o.chain > 0) after(t + .38, payoff);
-  else after(t + (o.lotto ? 2.2 : .2), () => { if (!ev) busy = false; applyState(o.state); if (Number(o.earned) > 0) addWallet(Number(o.earned)); });
+  else after(t + (o.lotto ? 2.2 : .2), () => { if (!ev) busy = false; applyState(o.state); if (L(o.earned) > -Infinity) addWallet(L(o.earned)); });
   S = o.state;
 }
 function burstRow(b, k, quiet) {
@@ -1006,11 +1026,11 @@ function burstRow(b, k, quiet) {
   for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
   for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
   spawn('CORE', ix, iy, 0, 0, .12, pal[3], 70 + k * 5);
-  const val = Number(b.chips);
-  pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + fmt(val), t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
+  const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
+  pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
   while (pops.length > 8) pops.shift();
-  tokens.push({ x0: 318, y0: cy, cx: 60 + rnd() * 60, cy: cy - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: [120, 190, 255], r: 7, done: () => { plate.chips += val; plate.chipSum += val; kick(plate.cs, 14); if (!quiet) sfx.chip(k); ripple(CHIPX, BOXY, .006); } });
+  tokens.push({ x0: 318, y0: cy, cx: 60 + rnd() * 60, cy: cy - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: [120, 190, 255], r: 7, done: () => { plate.chips = Ladd(plate.chips, val); plate.chipSum = Ladd(plate.chipSum, val); kick(plate.cs, 14); if (!quiet) sfx.chip(k); ripple(CHIPX, BOXY, .006); } });
   plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); if (!quiet) sfx.mult(k);
   plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
   stop = Math.max(stop, T.stop / 1000);
@@ -1037,14 +1057,15 @@ function waveHit(w) {
 function payoff() {
   plate.phase = 'merge'; plate.merge = 0; sfx.whoosh();
   after(.16, () => {
-    plate.total = plate.earned; const ch = Math.max(1, plate.chipSum); plate.eq = `${fmt(ch)} × ${fmtMult(plate.total / ch)}`;
+    plate.total = plate.earned; const ch = Math.max(0, plate.chipSum); plate.eq = `${fmtL(ch)} × ${fmtMult(Math.pow(10, Math.min(12, plate.total - ch)))}`;
     plate.phase = 'show'; plate.showT = 0; plate.count = 0; plate.landed = false; plate.vented = false; plate.hot = 0; plate.capD = 9; plate.ts.x = .6; kick(plate.ts, 12);
-    plate.record = S && Number(S.bestSwipe) <= plate.total && plate.total > 0 && swipes > 3;
+    // record: the core's exact verdict when it sends one, else the exact compare of the new best with this payout
+    plate.record = swipes > 3 && plate.total > -Infinity && (plate.newBest || (S && plate.earnedExact != null && geq(plate.earnedExact, S.bestSwipe)));
     ripple(195, BOXY, .02);
   });
   after(.16 + .62 + (plate.capMode ? 2.35 : .6), () => {
     plate.phase = 'fly';
-    tokens.push({ x0: 195, y0: REVEAL_Y, cx: 380, cy: 160, x1: 195, y1: 52, t: 0, dur: .4, col: [255, 214, 107], r: 10, big: fmt(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; if (S) { wallet.to = wallet.v = Number(S.wallet); } } });
+    tokens.push({ x0: 195, y0: REVEAL_Y, cx: 380, cy: 160, x1: 195, y1: 52, t: 0, dur: .4, col: [255, 214, 107], r: 10, big: fmtL(plate.total), done: () => { addWallet(plate.total); plate.phase = 'idle'; busy = false; if (S) { wallet.to = wallet.v = L(S.wallet); } } });
   });
 }
 function slam() { // end of the count-up: the screen glass takes the hit
@@ -1061,7 +1082,7 @@ function slam() { // end of the count-up: the screen glass takes the hit
   if (plate.k >= 8 || plate.wmul > 1) after(.03, () => collapse(1 + Math.min(plate.k, 12) * .04));
 }
 function addWallet(x) {
-  wallet.from = wallet.shown; wallet.to = wallet.v + x; wallet.v = wallet.to; wallet.t = 0; wallet.dur = x > wallet.from ? .7 : .4; wallet.tick = 0;
+  wallet.from = wallet.shown; wallet.to = Ladd(wallet.v, x); wallet.v = wallet.to; wallet.t = 0; wallet.dur = .7; wallet.tick = 0;
   kick(wallet.s, 9); sfx.land(); ripple(195, 52, .02);
   for (let i = 0; i < 14; i++) spawn('SPARK', 195, 52, (rnd() - .5) * 600, (rnd() - .2) * 300, .25, [255, 214, 107], 2.4);
 }
@@ -1159,7 +1180,7 @@ function draw(t) {
 
   // ---- score layer: always on top, never distorted ----
   ctx = uctx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ui.width, ui.height); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const ws = split(wallet.shown);
+  const ws = splitL(wallet.shown);
   ctx.font = `30px ${FD}`; const nw = ctx.measureText(ws.num).width; ctx.font = `24px ${FD}`; const uw = ctx.measureText(ws.unit + ' P').width;
   const wx = 195 - (nw + uw + 1) / 2;
   gtext(ws.num, wx, 62, 30, { align: 'left', scale: wallet.s.x, top: '#FFFFFF', bot: '#FFE2A0' });
@@ -1173,17 +1194,17 @@ function draw(t) {
     const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
     box(cxp, BOXY, 132, 40, '#5AA2FF', '#1F5FE0', plate.cs.x);
     box(mxp, BOXY, 132, 40, '#FF6B5A', '#D81E2A', plate.ms.x);
-    gtext(fmt(plate.chipsShown), cxp, BOXY + 9, 24, { scale: plate.cs.x, top: '#FFFFFF', bot: '#CFE4FF', wob: live ? .8 : 0, t });
+    gtext(fmtL(plate.chipsShown), cxp, BOXY + 9, 24, { scale: plate.cs.x, top: '#FFFFFF', bot: '#CFE4FF', wob: live ? .8 : 0, t });
     gtext('×' + fmtMult(plate.multShown), mxp, BOXY + 9, 24, { scale: plate.ms.x, top: '#FFFFFF', bot: '#FFD3CC', wob: live ? .8 : 0, t });
     gtext('×', 195, BOXY + 8, 22, { top: '#FFFFFF', bot: '#FFD66B', scale: plate.xs.x });
     ctx.globalAlpha = 1;
     if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
   if (plate.phase === 'show') {
-    const a = Math.min(1, plate.showT * 6), big = clamp(Math.log10(Math.max(1, plate.total / 1e6)) / 3, 0, 1);
+    const a = Math.min(1, plate.showT * 6), big = clamp((plate.total - 6) / 3, 0, 1);
     if (!plate.vented) gtext('합계', 195, REVEAL_Y - 104, 16, { top: '#FFE7B0', bot: '#FFB020', alpha: a });
     if (!plate.vented) gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
-    const num = fmt(plate.totalShown), size = 58 + big * 14;
+    const num = fmtL(plate.totalShown), size = 58 + big * 14;
     ctx.font = `${size}px ${FD}`; const mw = ctx.measureText(num).width, sc = Math.min(1, 340 / mw);
     if (plate.landed && !reduce && !plate.vented) flames(195, REVEAL_Y - size * .3, mw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
     const hot = plate.hot || 0, jx = hot ? (rnd() - .5) * hot * 9 : 0, jy = hot ? (rnd() - .5) * hot * 5 : 0;
@@ -1246,19 +1267,19 @@ function frame(now) {
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
   if (plate.phase === 'show' && !plate.landed) {
     plate.count = Math.min(1, plate.showT / .62); const e = 1 - Math.pow(1 - plate.count, 2.2);
-    plate.totalShown = plate.total * e; kick(plate.ts, .25);
+    plate.totalShown = e > 0 ? plate.total + Math.log10(e) : -Infinity; kick(plate.ts, .25);
     plate.tick -= dt; if (plate.tick <= 0) { sfx.coin(plate.count * .9); plate.tick = .04; }
     if (plate.count >= 1) { plate.totalShown = plate.total; slam(); }
   }
-  plate.chipsShown += (plate.chips - plate.chipsShown) * Math.min(1, dt * 16);
+  plate.chipsShown = lerpL(plate.chipsShown, plate.chips, Math.min(1, dt * 16));
   plate.multShown += (mult() - plate.multShown) * Math.min(1, dt * 16);
   for (let i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t >= pops[i].life) pops.splice(i, 1); }
   if (wallet.t < 1) {
     wallet.t = Math.min(1, wallet.t + dt / wallet.dur);
-    const e = 1 - Math.pow(1 - wallet.t, 3); wallet.shown = wallet.from + (wallet.to - wallet.from) * e;
+    const e = 1 - Math.pow(1 - wallet.t, 3); wallet.shown = lerpL(wallet.from, wallet.to, e);
     wallet.tick -= dt; if (wallet.tick <= 0) { sfx.coin(e); wallet.tick = .045; kick(wallet.s, 1.5); }
     if (wallet.t >= 1) {
-      wallet.shown = wallet.to; const u = split(wallet.to).unit;
+      wallet.shown = wallet.to; const u = splitL(wallet.to).unit;
       if (u !== wallet.unit) { wallet.unit = u; kick(wallet.us, 26); sfx.unit(); phone('ui.levelup', .4); buzz([40, 30, 80]); wallet.note = { text: `1${u} 돌파!`, t: 0 }; ripple(250, 40, .04); chroma = .015; for (let i = 0; i < 20; i++) { const a = rnd() * 6.28, sp = 100 + rnd() * 260; spawn('GLASS', 250, 40, Math.cos(a) * sp, Math.sin(a) * sp, .8, [255, 230, 150], 3 + rnd() * 4); } }
       else kick(wallet.s, 5);
     }
@@ -1359,7 +1380,7 @@ const ico = (id, stars = starsOf(id)) => {
   const f = FRAME[Math.min(5, stars)], pct = v => (v * 100).toFixed(2) + '%';
   return `<span class="fr">${img} style="left:${pct(f.cx - f.s / 2)};top:${pct(f.cy - f.s / 2)};width:${pct(f.s)};height:${pct(f.s)};border-radius:${(f.r / f.s * 100).toFixed(1)}%"><img class="ring" src="img/bm/badge-frame-${Math.min(5, stars)}.webp" alt=""></span>`;
 };
-const P$ = n => fmt(Number(n)) + ' P';
+const P$ = (n, short) => shortOf(n, short) + ' P';
 async function loadPanel() { const np = await api('panel'); np.bm = await api('bm'); P = np; applyState(P.state); return P; }  // swap in whole: a sheet may render meanwhile
 function closeAll() { shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
@@ -1369,9 +1390,10 @@ async function openShade() {
 }
 const openShop = openShade;  // the board's footer and pull-down both open the shade
 function renderShade() {
-  const st = P.state, w = Number(st.wallet), apps = P.apps;
-  const newApps = apps.filter(a => !a.owned && a.open && w >= Number(a.price)).length;
-  const cheap = apps.filter(a => a.active).some(a => w >= Number(a.price1));
+  const st = P.state, w = L(st.wallet), apps = P.apps;
+  const canBuy = a => a.canBuy != null ? a.canBuy : geq(st.wallet, a.price), canUp = a => a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, a.price1);
+  const newApps = apps.filter(a => !a.owned && a.open && canBuy(a)).length;
+  const cheap = apps.filter(a => a.active).some(canUp);
   const T = [
     ['shop', '앱 상점', newApps ? `새 앱 ${newApps}` : '둘러보기', newApps > 0],
     ['up', '강화', cheap ? '모두 강화' : '강화', cheap],
@@ -1382,8 +1404,8 @@ function renderShade() {
     ['premium', '프리미엄', P.bm && P.bm.vouchers ? `선택권 ${P.bm.vouchers}` : '★ 강화', P.bm && P.bm.vouchers > 0],
     ['attend', '매일 들르기', P.bm ? (P.bm.claimedToday ? `${P.bm.streak}일째` : '출석하기') : '출석', P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
-  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${fmt(w)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${fmt(w).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
-    <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${fmt(Number(P.nextLevelP))}</span></div>
+  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
+    <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? sticker('bubble', 'NEW', 34, 'top:-8px;right:4px') : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
@@ -1405,7 +1427,7 @@ async function openSheet(kind) {
   renderSheet(); sheetEl.classList.add('open'); sfx.snap();
 }
 function renderSheet() {
-  const st = P.state, w = Number(st.wallet), apps = P.apps;
+  const st = P.state, apps = P.apps;
   $('sheet-w').textContent = P$(st.wallet);
   const b = $('sheet-b');
   if (sheetKind === 'shop') {
@@ -1416,21 +1438,21 @@ function renderSheet() {
       + list.map(a => {
         const lock = !a.owned && !a.open;
         const fx = (TEXTS[a.id] || [])[0] || '';
-        const btn = a.owned ? `<span class="btn own"><img class="ic" src="img/ui/check.webp">보유</span>` : lock ? `<button class="btn skin off" disabled><img class="ic" src="img/ui/lock.webp">잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${w >= Number(a.price) ? '' : 'disabled'}>${P$(a.price)}</button>`;
+        const btn = a.owned ? `<span class="btn own"><img class="ic" src="img/ui/check.webp">보유</span>` : lock ? `<button class="btn skin off" disabled><img class="ic" src="img/ui/lock.webp">잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${(a.canBuy != null ? a.canBuy : geq(st.wallet, a.price)) ? '' : 'disabled'}>${P$(a.price, a.priceShort)}</button>`;
         const meta = lock ? `${a.region} · ${a.cat} · ${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel} 해금`}` : `${a.region} · ${a.cat} · ${fx}`;
         return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
       }).join('');
     b.querySelectorAll('[data-tier]').forEach(x => x.addEventListener('click', () => { shopTier = +x.dataset.tier; renderSheet(); }));
   } else if (sheetKind === 'up') {
     $('sheet-t').textContent = '강화';
-    const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (Number(x.price1) - Number(y.price1)));
+    const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (L(x.price1) - L(y.price1)));
     b.innerHTML = `<div class="seg">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
       <button class="btn big skin claim" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
       + mine.map(a => {
         const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
         const pct = Math.round((a.level - prev) / Math.max(1, next - prev) * 100), left = next - a.level, hot = left <= 5;
-        const n = upMode === 'max' ? a.maxN : +upMode, price = upMode === '10' ? a.price10 : a.price1, can = upMode === 'max' ? a.maxN > 0 : w >= Number(price);
-        const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price);
+        const n = upMode === 'max' ? a.maxN : +upMode, price = upMode === '10' ? a.price10 : a.price1, can = upMode === 'max' ? a.maxN > 0 : upMode === '10' ? (a.canUpgrade10 != null ? a.canUpgrade10 : geq(st.wallet, price)) : (a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, price));
+        const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price, upMode === '10' ? a.price10Short : a.price1Short);
         return `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">Lv ${a.level} → ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
           <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `마일스톤 Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
           <button class="btn skin gold" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
@@ -1606,10 +1628,10 @@ const offerEl = $('offer');
 let offerT = null;
 async function offerDouble(total) {
   const m = await api('bm'); const ad = m.ads.find(a => a.id === 'BestDouble'); if (!ad || ad.left <= 0 || m.state.level < 20) return;
-  offerEl.innerHTML = (m.passActive ? '패스 혜택 · ' : '<img src="img/ui/ad.webp" style="width:22px;vertical-align:-5px"> 광고 보고 ') + `최고 기록 ×2 (+${fmt(total)})`; offerEl.classList.add('on');
+  offerEl.innerHTML = (m.passActive ? '패스 혜택 · ' : '<img src="img/ui/ad.webp" style="width:22px;vertical-align:-5px"> 광고 보고 ') + `최고 기록 ×2 (+${fmtL(total)})`; offerEl.classList.add('on');
   clearTimeout(offerT); offerT = setTimeout(() => offerEl.classList.remove('on'), 5000);
   offerEl.onclick = async () => { offerEl.classList.remove('on'); if (!m.passActive && !(await fakeAd())) return;
-    const before = Number(S.wallet); const o = await api('watchAd', { slot: 'BestDouble' }); if (o.ok) { addWallet(Number(o.state.wallet) - before); say2('최고 기록 ×2!', 300, 30); sfx.unit(); } applyState(o.state); };
+    const before = L(S.wallet); const o = await api('watchAd', { slot: 'BestDouble' }); if (o.ok) { addWallet(Lsub(L(o.state.wallet), before)); say2('최고 기록 ×2!', 300, 30); sfx.unit(); } applyState(o.state); };
 }
 function fakeAd() {
   return new Promise(res => { const ov = $('adov'); let n = 3; $('adt').textContent = n; ov.classList.add('on');
@@ -1617,7 +1639,7 @@ function fakeAd() {
 }
 async function afterAct(o, failMsg) {
   if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); } else { sfx.snap(); if (failMsg) say2(failMsg, 300, 18); }
-  applyState(o.state); wallet.v = wallet.to = wallet.shown = Number(o.state.wallet); wallet.unit = split(wallet.v).unit; reconcile(o.state);
+  applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);
   armReset = false; await loadPanel(); if (sheetKind) renderSheet();
 }
 
@@ -1628,14 +1650,14 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
 // ---------- boot ----------
 (async () => {
   const st = await api('snapshot');
-  applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = Number(st.wallet); wallet.unit = split(wallet.v).unit;
+  applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = L(st.wallet); wallet.unit = splitL(wallet.v).unit;
   reconcile(st); board.forEach((r, i) => { r.y.x = rowY(i) - 60 - i * 30; r.a = 0; });
   // daily check-in on the 30-day board: claim and show it once a day
   setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600);
 })();
 // back from away: the app paid the time away (AwayClock) and hands the result here
 window.onOffline = o => {
-  if (Number(o.paid) > 0) { addWallet(Number(o.paid)); say2('자리 비운 동안 정리했어요', 300, 22); phone('ui.bonus', .4); }
+  if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); say2('자리 비운 동안 정리했어요', 300, 22); phone('ui.bonus', .4); }
   applyState(o.state); reconcile(o.state);
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) api('snapshot').then(st => { applyState(st); reconcile(st); }); });

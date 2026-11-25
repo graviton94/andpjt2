@@ -46,6 +46,9 @@ fun serve(port: Int, root: File) {
                     Alert.entries.any { it.name == k } -> Row(id, RowKind.Alert, alert = Alert.valueOf(k))
                     else -> Row(id, RowKind.Event, event = EventCard.valueOf(k)) }
                 session = WebSession(state = st.copy(rows = listOf(row) + st.rows.drop(1), nextId = id + 1, lastEarned = st.lastEarned.max(java.math.BigInteger.TEN)), now = now); session.snapshot(now) }
+            // dev only: a huge wallet (10^digits) to check the screen never turns amounts into floats
+            "bigWallet" -> { val d = q["digits"]?.toInt() ?: 400
+                session = WebSession(state = session.state.copy(wallet = java.math.BigInteger.TEN.pow(d) + java.math.BigInteger.valueOf(123_456_789)), now = now); session.snapshot(now) }
             // dev only: jump to a level with its run P (and wallet), to try the late panels
             "cheat" -> { val lv = q["level"]?.toInt() ?: 30; val r = session.engine.rules; val p = r.levelCeil(lv, 0)
                 session = WebSession(state = session.state.copy(level = lv, runEarned = p, wallet = p * java.math.BigInteger.valueOf((q["wallet"] ?: "3").toLong())), now = now); session.snapshot(now) }
