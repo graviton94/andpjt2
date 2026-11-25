@@ -118,22 +118,12 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .day.big{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;background:var(--bigday);border-color:#FFC23D66;min-height:54px}
 .day.big img{margin:0;width:36px;height:36px}.day.big b{font:20px "Black Han Sans",sans-serif;color:var(--gold)}
 .mis{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}.mis .bar{height:6px}
-.skin{border:0;border-style:solid;background:none!important;border-image-slice:62 78 62 78 fill;border-image-width:17px 21px 17px 21px;border-image-repeat:stretch;padding:0 14px 3px;text-shadow:none}
-.skin.gold{border-image-source:url(img/ui/btn-gold.webp);color:#3A1E02}.skin.gold:active{border-image-source:url(img/ui/btn-gold-pressed.webp)}
-.skin.green{border-image-source:url(img/ui/btn-green.webp);color:#0F3306}.skin.green:active{border-image-source:url(img/ui/btn-green-pressed.webp)}
-.skin.blue{border-image-source:url(img/ui/btn-blue.webp);color:#fff;text-shadow:0 1px 0 #0B3A8A}.skin.blue:active{border-image-source:url(img/ui/btn-blue-pressed.webp)}
-.skin.claim{border-image-source:url(img/ui/btn-claim.webp);color:#fff;text-shadow:0 1px 0 #8A2200,0 0 6px #A23000}
-.skin:disabled{filter:grayscale(1) brightness(1.05);opacity:.55}
-.skin.off{border-image-source:url(img/ui/btn-off.webp)!important;color:#5A5F6C!important;text-shadow:none;filter:none;opacity:1}
-.skin img{width:20px;height:20px;vertical-align:-4px}
 .ic,.it img.ic,.skin img.ic{width:16px;height:16px;border-radius:0;vertical-align:-3px;margin-right:3px;flex:none}
-.it .skin img{width:20px;height:20px;border-radius:0}
-.btn.own{display:inline-flex;align-items:center;justify-content:center}
+.it .btn.own{display:inline-flex;align-items:center;justify-content:center}
 .rib{background:url(img/ui/ribbon.webp) center/100% 100% no-repeat!important;width:96px;padding:5px 0 8px!important;border-radius:0!important;top:-14px!important;text-shadow:0 1px 0 #8A1010;z-index:2}
 .sash{position:absolute;left:-3px;top:-3px;width:46px;height:46px;background:url(img/ui/sash.webp) 0 0/100% 100% no-repeat;z-index:1}
 .sash span{position:absolute;left:3px;top:10px;transform:rotate(-45deg);font-size:10px;font-weight:900;color:#5A3300}
 .boltt{display:inline-flex;align-items:center;justify-content:flex-end;width:78px;height:24px;background:url(img/ui/bolt.webp) left center/contain no-repeat;color:#fff;font-size:11px;font-weight:900;padding-right:9px;vertical-align:middle}
-.x{background:url(img/ui/close.webp) center/contain no-repeat!important;font-size:0!important}
 .newb{position:absolute;top:-6px;right:2px;width:34px;height:30px;background:url(img/ui/bubble.webp) center/contain no-repeat;color:#fff;font-size:9px;font-weight:900;font-style:normal;line-height:26px;text-align:center}
 .tile{position:relative}
 
@@ -158,11 +148,91 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
  background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff;box-shadow:0 8px 24px #2F7BF566;z-index:20}
 #offer.on{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
 
+
+/* ==== Material 3 controls: the game imitates an Android phone, so every control looks like the system's own ====
+   Tokens follow the system theme (dark = amber seed #EFA03F, light = blue seed #3867F0). Item art and promo stickers keep
+   their illustrated style; only buttons, chips, segmented buttons, badges, dialogs, switches and sheets are M3. */
+:root{--m-primary:#FFB86C;--m-on-primary:#4A2800;--m-primary-c:#6A3B00;--m-on-primary-c:#FFDCBC;
+ --m-sec-c:#5A4330;--m-on-sec-c:#FDDDC5;--m-ter:#8FD694;--m-on-ter:#003910;--m-ter-c:#0F5223;--m-on-ter-c:#AAF2AE;
+ --m-info:#A8C8FF;--m-on-info:#002F65;
+ --m-surface:#19120C;--m-s-low:#221A13;--m-s:#261E17;--m-s-high:#31281F;--m-s-highest:#3C3229;
+ --m-on-surface:#EEE0D6;--m-on-sv:#D6C3B4;--m-outline:#9F8D80;--m-outline-v:#51443A;--m-error:#FFB4AB;--m-on-error:#690005;--m-badge:#F2B8B5;--m-on-badge:#601410;
+ --font:"Noto Sans KR",Roboto,system-ui,sans-serif}
+@media (prefers-color-scheme: light){:root{--m-primary:#2F5BD3;--m-on-primary:#FFFFFF;--m-primary-c:#DCE1FF;--m-on-primary-c:#00174B;
+ --m-sec-c:#DDE1F9;--m-on-sec-c:#161B2C;--m-ter:#1E7A34;--m-on-ter:#FFFFFF;--m-ter-c:#A6F5AE;--m-on-ter-c:#00210A;
+ --m-info:#0B61A4;--m-on-info:#FFFFFF;
+ --m-surface:#FBF8FF;--m-s-low:#F5F2FA;--m-s:#EFEDF4;--m-s-high:#E9E7EF;--m-s-highest:#E3E1E9;
+ --m-on-surface:#1A1B21;--m-on-sv:#45464F;--m-outline:#757680;--m-outline-v:#C5C6D0;--m-error:#BA1A1A;--m-on-error:#FFFFFF;--m-badge:#B3261E;--m-on-badge:#FFFFFF}}
+:root{--acc:var(--m-primary);--on-acc:var(--m-on-primary);--ink:var(--m-on-surface);--sub:var(--m-on-sv);--line:var(--m-outline-v);
+ --card:var(--m-s);--soft:var(--m-s-high);--soft2:var(--m-s-highest);--sheet:var(--m-s-low);--dis:color-mix(in srgb,var(--m-on-surface) 12%,transparent);
+ --dis-ink:color-mix(in srgb,var(--m-on-surface) 38%,transparent)}
+#sheet,#shade,#cf{font-family:var(--font)}
+/* buttons: filled (P · ₩), tertiary green (데이터), info blue (광고), full-width filled (받기·모두 강화), disabled per M3 */
+.btn,.dbtn,.won{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;
+ min-width:72px;height:40px;padding:0 20px;border:0;border-radius:20px;font:500 14px/1 var(--font);letter-spacing:.1px;
+ background:var(--m-primary);color:var(--m-on-primary);text-shadow:none;box-shadow:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dbtn,.skin.green{background:var(--m-ter);color:var(--m-on-ter)}
+.skin.blue{background:var(--m-info);color:var(--m-on-info)}
+.btn.big,.skin.claim{width:100%;height:56px;border-radius:16px;font-size:16px;margin:8px 0 12px}
+.btn:disabled,.dbtn:disabled,.skin.off{background:var(--dis);color:var(--dis-ink);filter:none;opacity:1;cursor:default}
+.btn.own{background:var(--m-sec-c);color:var(--m-on-sec-c)}
+.btn img,.dbtn img{width:18px;height:18px;border-radius:0}
+.pack .won{display:flex;width:100%;height:36px;min-width:0;padding:0 8px;font-size:13px;line-height:1}
+/* state layer + ripple */
+.btn::before,.dbtn::before,.won::before,.x::before,.seg button::before,.chip::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .15s;pointer-events:none;border-radius:inherit}
+.btn:active::before,.dbtn:active::before,.won:active::before,.x:active::before,.seg button:active::before{opacity:.12}
+.rip{position:absolute;border-radius:50%;background:currentColor;opacity:.22;transform:scale(0);animation:rip .45s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+/* icon button (close) */
+.x{position:relative;overflow:hidden;width:40px;height:40px;border:0;border-radius:20px;background:transparent;color:var(--m-on-sv);font:400 22px/1 var(--font);display:grid;place-items:center}
+/* filter chips (tiers) and segmented buttons (×1 · ×10 · Max) */
+.seg{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.seg button{position:relative;overflow:hidden;flex:none;height:32px;padding:0 16px;border-radius:8px;border:1px solid var(--m-outline);background:transparent;color:var(--m-on-sv);font:500 14px/1 var(--font)}
+.seg button.on{background:var(--m-sec-c);color:var(--m-on-sec-c);border-color:transparent;padding-left:10px}
+.seg button.on::after{content:"✓";margin-left:-2px;order:-1}
+.seg button.on{display:inline-flex;align-items:center;gap:6px}
+.seg.segm{gap:0;display:inline-flex;border:1px solid var(--m-outline);border-radius:20px;padding:0;margin-bottom:12px;overflow:hidden}
+.seg.segm button{height:40px;min-width:72px;border:0;border-radius:0;border-right:1px solid var(--m-outline);justify-content:center}
+.seg.segm button:last-child{border-right:0}
+/* assist chips */
+.chip{position:relative;overflow:hidden;display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--m-outline-v);background:transparent;color:var(--m-on-sv);font:500 13px/1 var(--font)}
+/* badge (NEW) like a launcher badge */
+.m3b{position:absolute;top:-2px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--m-badge);color:var(--m-on-badge);font:500 11px/16px var(--font);text-align:center;letter-spacing:.3px}
+.tile{position:relative}
+/* bottom sheet + drag handle, list items */
+#sheet{background:var(--m-s-low);color:var(--m-on-surface);border-radius:28px 28px 0 0}
+#sheet::before{content:"";display:block;width:32px;height:4px;border-radius:2px;background:var(--m-on-sv);opacity:.4;margin:16px auto 0}
+.sheet-h{padding:8px 12px 8px 24px}
+.sheet-h h2{font:400 22px/28px var(--font);color:var(--m-on-surface)}
+.sheet-h .w{font:500 14px var(--font);color:var(--m-on-sv)}
+.it{background:var(--m-s);border:0;border-radius:16px;min-height:72px}
+.it .t b{font:500 16px/24px var(--font)}.it .t .m{font-size:13px;color:var(--m-on-sv)}
+.h3{font:500 14px/20px var(--font);color:var(--m-primary);margin:20px 4px 8px}
+.note{color:var(--m-on-sv)}
+.tier{color:var(--m-primary);font-weight:500}
+.prog{background:var(--m-s-highest)}.prog i{background:var(--m-primary)}
+.bar{background:var(--m-s-highest)}.bar i{background:var(--m-primary)}
+/* dialog */
+#cf{background:rgba(0,0,0,.32)}
+#cf .box{background:var(--m-s-high);border:0;border-radius:28px;padding:24px;text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#cf h3{font:400 24px/32px var(--font);margin:0 0 16px;color:var(--m-on-surface)}
+#cf .what{font:400 14px/20px var(--font);color:var(--m-on-sv);margin:0 0 4px}
+#cf .price{font:500 22px/28px var(--font);color:var(--m-on-surface);margin:0 0 24px}
+#cf .row{justify-content:flex-end;gap:8px}
+#cf .row button{flex:none;min-width:64px;height:40px;padding:0 12px;border-radius:20px;background:transparent;color:var(--m-primary);font:500 14px var(--font);border:0}
+#cf .row button#cf-ok{background:var(--m-primary);color:var(--m-on-primary);padding:0 24px}
+/* switch */
+.sw{position:relative;flex:none;width:52px;height:32px;border-radius:16px;border:2px solid var(--m-outline);background:var(--m-s-highest);cursor:pointer;transition:.2s}
+.sw::after{content:"";position:absolute;top:6px;left:6px;width:16px;height:16px;border-radius:50%;background:var(--m-outline);transition:.2s}
+.sw.on{background:var(--m-primary);border-color:var(--m-primary)}
+.sw.on::after{left:22px;top:2px;width:24px;height:24px;background:var(--m-on-primary)}
+input[type=range]{accent-color:var(--m-primary)}
+.row2{min-height:48px}.row2 label{font:400 14px var(--font);color:var(--m-on-surface);flex:1;width:auto}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="cf"><div class="box"><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button class="btn skin gold" id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="cf"><div class="box"><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -1406,15 +1476,15 @@ function renderShade() {
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
-    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? sticker('bubble', 'NEW', 34, 'top:-8px;right:4px') : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
+    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
-    <div class="row2"><label>진동</label><input id="vib" type="range" min="0" max="1" step="1" value="${vibOn ? 1 : 0}"></div>
+    <div class="row2"><label>진동</label><button class="sw ${vibOn ? 'on' : ''}" id="vib" role="switch" aria-checked="${vibOn}" aria-label="진동"></button></div>
     <div class="chips"><span class="chip">백업파일 ${P.files}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span><span class="chip">최고 연쇄 ${P.bestChain}</span></div>
     <div class="grab"></div>`;
   requestAnimationFrame(() => fitStickers(shadeEl));
   shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
   $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; });
-  $('vib').addEventListener('input', e => { vibOn = e.target.value === '1'; });
+  $('vib').addEventListener('click', e => { vibOn = !vibOn; e.currentTarget.classList.toggle('on', vibOn); e.currentTarget.setAttribute('aria-checked', vibOn); if (vibOn) buzz(20); });
 }
 // pull the shade back up
 let shadeDrag = null;
@@ -1446,7 +1516,7 @@ function renderSheet() {
   } else if (sheetKind === 'up') {
     $('sheet-t').textContent = '강화';
     const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (L(x.price1) - L(y.price1)));
-    b.innerHTML = `<div class="seg">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
+    b.innerHTML = `<div class="seg segm">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
       <button class="btn big skin claim" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
       + mine.map(a => {
         const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
@@ -1644,6 +1714,13 @@ async function afterAct(o, failMsg) {
 }
 
 lightQ.addEventListener('change', e => { day = e.matches; });
+// M3 ripple: a circle grows from the touch point inside the pressed control
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.btn,.dbtn,.won,.x,.seg button,.chip,#cf .row button'); if (!el || el.disabled) return;
+  const r = el.getBoundingClientRect(), d = Math.hypot(r.width, r.height) * 2, c = document.createElement('span');
+  c.className = 'rip'; Object.assign(c.style, { width: d + 'px', height: d + 'px', left: (e.clientX - r.left - d / 2) + 'px', top: (e.clientY - r.top - d / 2) + 'px' });
+  el.appendChild(c); setTimeout(() => c.remove(), 500);
+}, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade() };
 
