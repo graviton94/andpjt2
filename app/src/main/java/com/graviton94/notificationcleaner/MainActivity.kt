@@ -47,6 +47,12 @@ class MainActivity : ComponentActivity() {
             addJavascriptInterface(bridge, "Game")
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? = assets.shouldInterceptRequest(request.url)
+                // privacy policy / terms links open in the browser, the game page stays in the app
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (request.url.host == "appassets.androidplatform.net") return false
+                    runCatching { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)) }
+                    return true
+                }
             }
             webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(m: ConsoleMessage): Boolean {

@@ -265,7 +265,9 @@ fit(); window.addEventListener('resize', fit);
 if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Noto Sans KR"'); }
 
 const lightQ = matchMedia('(prefers-color-scheme: light)');
-let sound = true, reduce = false, day = lightQ.matches, vol = 1, vibOn = true;
+const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
+let sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
+const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce })); } catch (e) {} };
 const TEXTS = __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -1474,7 +1476,7 @@ function renderShade() {
     ['premium', '프리미엄', P.bm && P.bm.vouchers ? `선택권 ${P.bm.vouchers}` : '★ 강화', P.bm && P.bm.vouchers > 0],
     ['attend', '매일 들르기', P.bm ? (P.bm.claimedToday ? `${P.bm.streak}일째` : '출석하기') : '출석', P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
-  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="chip">🔋 ${st.energy}/${st.energyCap}</div></div>
+  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${P.files}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div style="display:flex;align-items:center;gap:4px"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="설정">${svg('M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4z')}</button></div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
@@ -1483,8 +1485,9 @@ function renderShade() {
     <div class="grab"></div>`;
   requestAnimationFrame(() => fitStickers(shadeEl));
   shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
-  $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; });
-  $('vib').addEventListener('click', e => { vibOn = !vibOn; e.currentTarget.classList.toggle('on', vibOn); e.currentTarget.setAttribute('aria-checked', vibOn); if (vibOn) buzz(20); });
+  $('gear').addEventListener('click', () => openSheet('settings'));
+  $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; savePrefs(); });
+  $('vib').addEventListener('click', e => { vibOn = !vibOn; e.currentTarget.classList.toggle('on', vibOn); e.currentTarget.setAttribute('aria-checked', vibOn); if (vibOn) buzz(20); savePrefs(); });
 }
 // pull the shade back up
 let shadeDrag = null;
@@ -1557,12 +1560,52 @@ function renderSheet() {
     b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
       <div><h4>스와이프</h4><b style="font-size:24px">${st.swipes}</b></div><div><h4>초기화</h4><b style="font-size:24px">${P.resets}회</b></div></div>`;
   }
+  else if (sheetKind === 'settings') renderSettings(b);
   else if (sheetKind === 'data') renderData(b);
   else if (sheetKind === 'pass') renderPass(b);
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
   requestAnimationFrame(() => fitStickers(b));
+}
+let wipeArm = 0, appInfo = null;
+const SITE = 'https://graviton94.github.io/notificationcleaner/';
+async function renderSettings(b) {
+  $('sheet-t').textContent = '설정'; $('sheet-w').textContent = '';
+  if (!appInfo) appInfo = await api('info').catch(() => ({}));
+  const row = (id, title, sub, on) => `<div class="it" style="min-height:64px"><div class="t"><b>${title}</b><div class="m">${sub}</div></div><button class="sw ${on ? 'on' : ''}" data-sw="${id}" role="switch" aria-checked="${on}" aria-label="${title}"></button></div>`;
+  b.innerHTML = `<div class="h3">소리와 진동</div>
+    ${row('sound', '효과음', '연쇄·정산·알림 소리', sound)}
+    <div class="it" style="min-height:64px"><div class="t"><b>효과음 크기</b><input id="vol2" type="range" min="0" max="100" value="${Math.round(vol * 100)}" style="width:100%"></div></div>
+    ${row('vib', '진동', '터질 때 손끝 반동', vibOn)}
+    <div class="h3">화면</div>
+    ${row('reduce', '움직임 줄이기', '화면 흔들림·번쩍임·파편을 줄여요', reduce)}
+    <div class="it"><div class="t"><b>테마</b><div class="m">휴대폰 설정(라이트·다크)을 따라가요 · 지금 ${day ? '라이트' : '다크'}</div></div></div>
+    <div class="h3">정보</div>
+    <div class="it"><div class="t"><b>알림 청소부</b><div class="m">버전 ${appInfo.version || '-'}</div></div></div>
+    <a class="it" href="${SITE}privacy/" style="text-decoration:none;color:inherit"><div class="t"><b>개인정보처리방침</b><div class="m">수집 항목과 삭제 방법</div></div><span class="note">›</span></a>
+    <a class="it" href="${SITE}terms/" style="text-decoration:none;color:inherit"><div class="t"><b>이용약관</b><div class="m">결제·환불 안내 포함</div></div><span class="note">›</span></a>
+    <div class="h3" style="color:var(--m-error)">데이터</div>
+    <div class="it"><div class="t"><b>게임 데이터 초기화</b><div class="m" style="white-space:normal">이 기기의 진행·재화·출석·설정을 모두 지우고 처음부터 시작해요. 되돌릴 수 없어요.</div></div></div>
+    <button class="btn big" id="wipe" style="background:var(--m-error);color:var(--m-on-error)">${wipeArm ? '정말 지울까요? 한 번 더 누르기' : '게임 데이터 초기화'}</button>`;
+  b.querySelectorAll('[data-sw]').forEach(x => x.addEventListener('click', () => {
+    const k = x.dataset.sw;
+    if (k === 'sound') { sound = !sound; if (sound) { ac(); if (vol === 0) vol = 1; } }
+    if (k === 'vib') { vibOn = !vibOn; if (vibOn) buzz(20); }
+    if (k === 'reduce') reduce = !reduce;
+    savePrefs(); renderSettings(b); sfx.snap();
+  }));
+  $('vol2').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; savePrefs(); });
+  $('wipe').addEventListener('click', async () => {
+    if (!wipeArm) { wipeArm = 1; renderSettings(b); sfx.snap(); return; }
+    wipeArm = 0;
+    const ok = await confirmPay('게임 데이터 초기화', '모든 진행과 재화가 지워져요. 구매한 상품은 Play 구매 기록으로 다시 받을 수 있어요.', '지금 지우기');
+    if (!ok) { renderSettings(b); return; }
+    try { localStorage.removeItem('prefs'); } catch (e) {}
+    const st = await api('wipe'); closeAll(); P = null;
+    applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = L(st.wallet); wallet.unit = splitL(wallet.v).unit;
+    board.length = 0; reconcile(st); swipes = 0; say2('처음부터 다시 시작해요', 300, 24);
+  });
 }
 const DIMG = '<img src="img/bm/currency-data.webp">';
 // promo stickers: the text sits in each asset's measured blank area (tools/game-page/ui-boxes.json) and is shrunk to fit
@@ -1668,7 +1711,7 @@ function renderAttend(b) {
 }
 function confirmPay(title, what, price) {
   return new Promise(res => {
-    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = price; $('cf').classList.add('on'); sfx.snap();
+    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = price; $('cf-ok').textContent = /지우기/.test(price) ? '지우기' : /사용/.test(price) ? '사용' : '결제'; $('cf').classList.add('on'); sfx.snap();
     const done = v => { $('cf').classList.remove('on'); $('cf-ok').onclick = $('cf-no').onclick = null; res(v); };
     $('cf-ok').onclick = () => done(true); $('cf-no').onclick = () => done(false);
   });

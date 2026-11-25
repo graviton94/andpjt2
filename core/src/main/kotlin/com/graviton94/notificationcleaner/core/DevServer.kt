@@ -20,6 +20,8 @@ fun serve(port: Int, root: File) {
         val body = when (ex.requestURI.path.removePrefix("/api/")) {
             "new" -> { val seed = q["seed"]?.toLongOrNull() ?: now; session = WebSession(state = Engine().newGame(now, seed), now = now); session.snapshot(now) }
             "snapshot" -> session.snapshot(now)
+            "info" -> """{"version":"dev","package":"devserver"}"""
+            "wipe" -> { session = WebSession(now = now); session.snapshot(now) }
             "swipe" -> session.swipe(q.getValue("id").toLong(), now)
             "auto" -> session.auto(now)
             "hint" -> session.hint(now)

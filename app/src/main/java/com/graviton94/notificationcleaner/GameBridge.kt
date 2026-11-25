@@ -20,7 +20,8 @@ class GameBridge(private val context: Context) {
     private val saveFile = File(context.filesDir, "save.json")
     private val prefs = context.getSharedPreferences("clock", 0)
     private val lock = Any()
-    private val session: WebSession = synchronized(lock) {
+    // var: 설정의 "게임 데이터 초기화" replaces the whole session (privacy policy §데이터 삭제)
+    private var session: WebSession = synchronized(lock) {
         val saved = runCatching { SaveCodec.decode(saveFile.readText()) }.getOrNull()
         WebSession(state = saved, now = now())
     }
@@ -35,6 +36,8 @@ class GameBridge(private val context: Context) {
         val t = now()
         val out = when (method) {
             "snapshot" -> session.snapshot(t)
+            "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).toString()
+            "wipe" -> { saveFile.delete(); File(saveFile.path + ".tmp").delete(); prefs.edit().clear().apply(); session = WebSession(now = t); session.snapshot(t) }
             "swipe" -> session.swipe(a.optString("id").toLong(), t)
             "auto" -> session.auto(t)
             "hint" -> session.hint(t)
