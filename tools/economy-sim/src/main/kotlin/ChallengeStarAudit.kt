@@ -44,3 +44,31 @@ fun challengeStarAudit(output: File) {
     csv(output, listOf("utc_epoch_day", "challenge_apps_with_stars", "plain_account_score", "starred_account_score",
         "positive_control_app", "positive_control_no_stars_p", "positive_control_injected_stars_p"), rows)
 }
+
+fun challengeStarProposal(output: File) {
+    val engine = Engine()
+    val meta = Meta(engine)
+    val rows = sequence {
+        for (day in 20_000L..20_006L) {
+            val now = day * 86_400_000L
+            val account = engine.newGame(now, 17)
+            val baseline = checkNotNull(meta.startChallenge(account, now)).second
+            val baseScore = playMinute(engine, baseline, now).runEarned
+            for (stars in listOf(0, 1, 5, 10, 20, 30, 40)) {
+                val premium = Catalog.apps.mapIndexedNotNull { index, app ->
+                    val inApp = (stars - index * 5).coerceIn(0, 5)
+                    if (inApp > 0) app.id to inApp else null
+                }.toMap()
+                val starred = account.withAccount { it.copy(premium = premium) }
+                val (used, board) = checkNotNull(meta.startChallenge(starred, now))
+                val score = playMinute(engine, board, now).runEarned
+                check(score == baseScore)
+                val bp = 10 * used.account.premium.values.sum().coerceIn(0, 30)
+                val final = score * BigInteger.valueOf(10_000L + bp) / BigInteger.valueOf(10_000L)
+                check(final >= score && final <= score * BigInteger.valueOf(103L) / BigInteger.valueOf(100L))
+                yield(listOf(day, stars, bp, score, final, final - score))
+            }
+        }
+    }
+    csv(output, listOf("utc_epoch_day", "owned_stars_start", "bonus_bp", "raw_score", "proposed_score", "extra_score"), rows)
+}
