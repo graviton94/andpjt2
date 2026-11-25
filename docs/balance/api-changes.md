@@ -26,3 +26,54 @@
 디버그 APK에서 WebView CDP와 가짜 결제·광고 영수증을 활성화한다. 검증 스크립트는 서비스 화면의 버튼과 게임 브리지에 연결한다.
 
 저장 내부의 광고 지급 번호는 버전 1에 선택 필드로 추가했다. 기존 `fakead-` 지급 번호는 첫 로드 때 최근 기록만 광고 원장으로 옮긴다. 결제 및 출처를 분류할 수 없는 기존 번호는 구입 원장에 남는다.
+
+## 무한 성장 후보의 큰 수 계약
+
+화면은 `…Short` 값을 그대로 표시한다. 정확값이 필요한 저장·공유용 데이터는 십진 문자열로 받는다. 사용 가능 여부와 기록 경신은 코어가 정확 정수끼리 비교해 불리언으로 내보낸다. `…Short`가 생기기 전의 화면은 기존 문자열을 소수로 바꾸지 않고 앞 세 자리와 문자열 길이로 표시할 수 있다.
+
+| 응답 | 표시할 문자열 | 코어 판정 |
+|---|---|---|
+| `snapshot` | `walletShort`, `runEarnedShort`, `bestSwipeShort`, `filesShort`, `backupFilesNowShort`, `gbShort`, `cloudGbNowShort` | `canReset`, `canSync` |
+| `snapshot.deckApps[]`, `snapshot.shopApps[]` | `upgradePriceShort`, `priceShort` | `canUpgrade`, `canBuy` |
+| `panel.apps[]`, `panel.backupShop[]`, `panel.cloudShop[]` | `priceShort`, `price1Short`, `price10Short` | `canBuy`, `canUpgrade`, `canUpgrade10` |
+| `panel()` | `nextLevelPShort`, `filesShort`, `gbShort` | 이미 계산된 숫자형 `levelProgress` |
+| 스와이프와 비트 | `earnedShort`, `cappedShort`, `chipsShort`, `lostShort` | `newBestSwipe` |
+| 복귀 정산 | `paidShort`, `basePaidShort`, `bonusPaidShort` | 실제 인정 시간과 EX 추가 정산은 아래 필드를 사용 |
+
+기존 숫자 필드는 호환 범위를 유지하고, 파일·GB·그 가격처럼 이전에 숫자형이었던 필드의 정확값은 `filesExact`, `gbExact`, `priceExact`처럼 별도로 담는다. 화면은 이 값들을 문자열로 읽는다. 표기는 3유효숫자를 내림하며 기존 K·M·B·T·aa…zz를 사용한다. zz 뒤의 표기는 `1.23e+2043`처럼 십진 지수 문자열이다.
+
+```json
+{
+  "walletShort": "1.23cn",
+  "backupFilesNowShort": "2.4ab",
+  "gbShort": "5.1M",
+  "canReset": true,
+  "canSync": false,
+  "deckApps": [{"id": "memo", "upgradePriceShort": "1.24cn", "canUpgrade": false}]
+}
+```
+
+### EX 상품 적용 후 추가할 계약
+
+스와이프는 `exExtraP`와 `exExtraPShort`, 복귀는 `exExtraP`, `exExtraPShort`, `baseEligibleMs`, `eligibleMs`, `exExtraEligibleMs`를 낸다. 환생은 `paidFilesExact`, `paidFilesShort`, `exExtraFilesExact`, `exExtraFilesShort`를, GB 동기화는 `paidGbExact`, `paidGbShort`, `exExtraGbExact`, `exExtraGbShort`를 낸다. `exExtra…`는 동일 행동·상태에서 EX 없이 지급할 양과의 차이다. 이 수치에 이후의 복리 효과는 포함하지 않는다.
+
+```json
+{
+  "earned": "1280000",
+  "earnedShort": "1.28M",
+  "exExtraP": "280000",
+  "exExtraPShort": "280K",
+  "newBestSwipe": true
+}
+```
+
+```json
+{
+  "paidFilesExact": "1840000",
+  "paidFilesShort": "1.84M",
+  "exExtraFilesExact": "340000",
+  "exExtraFilesShort": "340K"
+}
+```
+
+위 큰 수 계약은 검증 후보용이다. EX 추가 지급의 계정 연동은 효과 축 선택과 사용자 확인 뒤에 진행한다.

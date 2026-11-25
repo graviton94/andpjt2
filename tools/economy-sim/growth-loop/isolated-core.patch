@@ -1,0 +1,449 @@
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/ContentDoc.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/ContentDoc.kt
+index 7012ec6..236e895 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/ContentDoc.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/ContentDoc.kt
+@@ -21 +21,6 @@ fun short(n: BigInteger): String {
+-    val group = (n.toString().length - 1) / 3
++    val digits = n.toString()
++    val group = (digits.length - 1) / 3
++    if (group > 680) {
++        val fraction = digits.substring(1, 3).trimEnd('0')
++        return digits[0].toString() + (if (fraction.isEmpty()) "" else "." + fraction) + "e+" + (digits.length - 1)
++    }
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+index 6777267..b02989d 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -48,0 +49,2 @@ data class Backup(
++    /** Entitlement earned before prestige multipliers. Absent in old saves. */
++    val baseFilesClaimed: BigInteger? = null,
+@@ -106,0 +109 @@ data class GameState(
++    val upgradePriceIndexPermille: BigInteger? = null,
+@@ -189,0 +193 @@ data class SwipeOutcome(
++    val exExtraP: BigInteger = BigInteger.ZERO,
+@@ -233,0 +238,3 @@ data class OfflineSettlement(
++    val exExtraP: BigInteger = BigInteger.ZERO,
++    val baseEligibleMs: Long = 0,
++    val eligibleMs: Long = 0,
+@@ -238,0 +246,6 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    private fun exIncome(s: GameState, base: BigInteger) =
++        if (s.challengeStarsAtStart != null) base else rules.growthOffer?.income(base, s.account.ownedEx) ?: base
++
++    private fun exPrice(s: GameState, base: BigInteger) = rules.growthOffer?.price(base, s.account.ownedEx) ?: base
++    private fun exPrestige(s: GameState, base: BigInteger) = rules.growthOffer?.prestige(base, s.account.ownedEx) ?: base
++
+@@ -424,0 +438,5 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            upgradePriceIndexPermille = if (rules.indexUpgradePricesOnReset) {
++                val (value, unit) = rules.baseValue(Catalog.app("memo"), 1, backup)
++                // The mature opener keeps roughly a third of inherited buying power.
++                (value * BigInteger.valueOf(100_000) / (unit * BigInteger.valueOf(302))).max(BigInteger.valueOf(1_000))
++            } else null,
+@@ -430,0 +449,6 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    fun factoryResetPaid(s: GameState, now: Long, withEx: Boolean): BigInteger {
++        val base = backupFilesNow(s).let { f -> if (s.account.backupBoost) scalePermille(f, 10L * (100 + rules.backupBoostPercent)) else f }
++            .let { f -> scalePermille(f, prestigePermille(s, now)) }
++        return if (withEx) exPrestige(s, base) else base
++    }
++
+@@ -433,2 +457,3 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val files = backupFilesNow(s).let { f -> if (s.backup.cloud.account.backupBoost) scalePermille(f, 10L * (100 + rules.backupBoostPercent)) else f }
+-            .let { f -> scalePermille(f, prestigePermille(s, now)) }
++        val files = factoryResetPaid(s, now, withEx = true)
++        val claimed = if (rules.growthOffer == null) s.backup.baseFilesClaimed
++            else (s.backup.baseFilesClaimed ?: s.backup.lifetime) + backupFilesNow(s)
+@@ -438 +463 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
++            lifetime = s.backup.lifetime + files, baseFilesClaimed = claimed, bestLevel = maxOf(s.backup.bestLevel, s.level),
+@@ -446,2 +471,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-    fun backupPrice(s: GameState, item: BackupItem): BigInteger =
+-        (rules.backupPrice(item, s.backup.lv(item)) * BigInteger.valueOf(10L - s.backup.cloud.lv(CloudItem.Discount)) / BigInteger.TEN).max(BigInteger.ONE)
++    fun backupPrice(s: GameState, item: BackupItem): BigInteger {
++        val base = (rules.backupPrice(item, s.backup.lv(item)) * BigInteger.valueOf(10L - s.backup.cloud.lv(CloudItem.Discount)) / BigInteger.TEN).max(BigInteger.ONE)
++        return if (item.max == Int.MAX_VALUE) exPrice(s, base) else base
++    }
++
++    fun cloudPrice(s: GameState, item: CloudItem): BigInteger {
++        val base = rules.cloudPrice(item, s.backup.cloud.lv(item))
++        return if (item.max == Int.MAX_VALUE) exPrice(s, base) else base
++    }
+@@ -474,0 +507,5 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    fun syncPaid(s: GameState, now: Long, withEx: Boolean): BigInteger {
++        val base = scalePermille(cloudGbNow(s), prestigePermille(s, now))
++        return if (withEx) exPrestige(s, base) else base
++    }
++
+@@ -481 +518 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            gb = c.gb + scalePermille(gb, prestigePermille(s, now)), syncs = c.syncs + if (gb.signum() > 0) 1 else 0, lifetime = c.lifetime + gb,
++            gb = c.gb + syncPaid(s, now, withEx = true), syncs = c.syncs + if (gb.signum() > 0) 1 else 0, lifetime = c.lifetime + gb,
+@@ -499 +536 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val price = rules.cloudPrice(item, owned)
++        val price = cloudPrice(s, item)
+@@ -759,0 +797,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        val neutralEarned = earned.min(room)
++        earned = exIncome(s, earned)
+@@ -769,0 +809,5 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        fun updateRate(old: BigInteger, gain: BigInteger): BigInteger {
++            val normalized = if (now < s.account.boostUntil)
++                gain * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else gain
++            return (old * BigInteger.valueOf(9) + normalized * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN
++        }
+@@ -789 +833,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            earnRate = (s.earnRate * BigInteger.valueOf(9) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
++            earnRate = updateRate(s.earnRate, earned),
++            exNeutralRate = if (rules.growthOffer != null) updateRate(s.exNeutralRate ?: s.earnRate, neutralEarned) else s.exNeutralRate,
+@@ -808 +853 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return SwipeOutcome(next, beats, earned, chain, cleared, overload, capped)
++        return SwipeOutcome(next, beats, earned, chain, cleared, overload, capped, earned - neutralEarned)
+@@ -925,0 +971,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        val offer = rules.growthOffer
++        val duration = normalTime + (offer?.offlineMinutes(s.account.ownedEx) ?: 0) * 60_000L
+@@ -936,0 +984 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            if (offer != null) return quote(duration, s.earnRate, multiplier)
+@@ -948 +996,4 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return OfflineSettlement(next, p, basePaid, bonus)
++        val withoutOffer = if (offer == null) p
++            else quote(normalTime, s.exNeutralRate ?: s.earnRate, bonus.multiplierPermille)
++        return OfflineSettlement(next, p, basePaid, bonus, (p - withoutOffer).max(ZERO),
++            minOf(away, normalTime), minOf(away, duration))
+@@ -1009,0 +1061 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        s.upgradePriceIndexPermille?.let { p = p * it / BigInteger.valueOf(1_000) }
+@@ -1011 +1063 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return p
++        return exPrice(s, p)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/GrowthOffer.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/GrowthOffer.kt
+new file mode 100644
+index 0000000..c9f8e72
+--- /dev/null
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/GrowthOffer.kt
+@@ -0,0 +1,30 @@
++package com.graviton94.notificationcleaner.core
++
++import java.math.BigInteger
++
++/** Exact factor composition for the two review offers. Runtime selection follows user review. */
++enum class GrowthOffer(val sku: GrowthEffect, val set: GrowthEffect, val complete: GrowthEffect) {
++    Prestige(GrowthEffect(1_075, 1_020, 1_000), GrowthEffect(1_160, 1_060, 1_000), GrowthEffect(1_080, 1_100, 1_000)),
++    Discount(GrowthEffect(1_070, 1_000, 975, 8), GrowthEffect(1_130, 1_000, 965, 25), GrowthEffect(1_150, 1_000, 970));
++
++    fun income(base: BigInteger, owned: Set<String>) = scale(base, owned, GrowthEffect::income)
++    fun prestige(base: BigInteger, owned: Set<String>) = scale(base, owned, GrowthEffect::prestige)
++    fun price(base: BigInteger, owned: Set<String>) = scale(base, owned, GrowthEffect::price).max(BigInteger.ONE)
++    fun offlineMinutes(owned: Set<String>): Int {
++        val n = ExOffers.ids.count { it in owned }
++        return sku.offlineMinutes * n + set.offlineMinutes * ExOffers.completed(owned) +
++            if (n == ExOffers.ids.size) complete.offlineMinutes else 0
++    }
++
++    private fun scale(base: BigInteger, owned: Set<String>, factor: (GrowthEffect) -> Int): BigInteger {
++        val n = ExOffers.ids.count { it in owned }
++        val groups = ExOffers.completed(owned)
++        val all = if (n == ExOffers.ids.size) 1 else 0
++        val multiplier = big(factor(sku)).pow(n) * big(factor(set)).pow(groups) * big(factor(complete)).pow(all)
++        return base * multiplier / big(1_000).pow(n + groups + all)
++    }
++
++    private fun big(n: Int) = BigInteger.valueOf(n.toLong())
++}
++
++data class GrowthEffect(val income: Int, val prestige: Int, val price: Int, val offlineMinutes: Int = 0)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+index 4b3a481..71c1e65 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -127,0 +128,3 @@ data class RuleSet(
++    val appRankValuePermille: Int? = null,
++    val indexUpgradePricesOnReset: Boolean = false,
++    val growthOffer: GrowthOffer? = null,
+@@ -213,2 +216,5 @@ data class RuleSet(
+-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * passive * big(2).pow(sync) * big(3).pow(ai)
+-        val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
++        val rankGain = appRankValuePermille
++        val rankNumerator = if (rankGain == null) big(level.toLong()) else big(rankGain.toLong()).pow(level - 1)
++        val rankDenominator = if (rankGain == null) ONE else big(1_000).pow(level - 1)
++        val num = big(tierBase).pow(app.tier - 1) * rankNumerator * big(20 + k).pow(m) * big(5).pow(v) * passive * big(2).pow(sync) * big(3).pow(ai)
++        val den = rankDenominator * TEN.pow(m) * big(4).pow(v) * big(1_000_000)
+@@ -253 +259 @@ data class RuleSet(
+-        return (total - backup.lifetime).max(BigInteger.ZERO)
++        return (total - (backup.baseFilesClaimed ?: backup.lifetime)).max(BigInteger.ZERO)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+index 987ab9b..bfa625d 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+@@ -5,0 +6 @@ import kotlinx.serialization.json.JsonObject
++import kotlinx.serialization.json.JsonObjectBuilder
+@@ -39 +40 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        return outcome(o, now, current.lastEarned).toString()
++        return outcome(o, now, current.lastEarned, current.bestSwipe).toString()
+@@ -61,5 +62,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("paid", big(settlement.paid))
+-            put("paidShort", short(settlement.paid))
+-            put("basePaid", big(settlement.basePaid))
+-            put("bonusPaid", big(bonusPaid))
+-            put("bonusPaidShort", short(bonusPaid))
++            money("paid", settlement.paid)
++            money("basePaid", settlement.basePaid)
++            money("bonusPaid", bonusPaid)
++            money("exExtraP", settlement.exExtraP)
++            put("baseEligibleMs", settlement.baseEligibleMs)
++            put("eligibleMs", settlement.eligibleMs)
++            put("exExtraEligibleMs", settlement.eligibleMs - settlement.baseEligibleMs)
+@@ -73 +76,16 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-    fun reset(now: Long): String = act(now) { meta.reset(it, now) ?: it }
++    fun reset(now: Long): String = prestige(now, sync = false)
++    fun sync(now: Long): String = prestige(now, sync = true)
++
++    private fun prestige(now: Long, sync: Boolean): String {
++        val before = tick(now)
++        val next = if (sync) meta.sync(before, now) else meta.reset(before, now)
++        if (next != null) state = next
++        val base = if (sync) engine.syncPaid(before, now, false) else engine.factoryResetPaid(before, now, false)
++        val paid = if (sync) state.backup.cloud.gb - before.backup.cloud.gb else state.backup.files - before.backup.files
++        return buildJsonObject {
++            put("ok", next != null)
++            put("state", snap(state, now))
++            legacyAmount(if (sync) "paidGb" else "paidFiles", paid)
++            legacyAmount(if (sync) "exExtraGb" else "exExtraFiles", (paid - base).max(BigInteger.ZERO))
++        }.toString()
++    }
+@@ -249 +267 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("nextLevelP", big(hi))
++            money("nextLevelP", hi)
+@@ -267,2 +285,6 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-                            put("price1", big(engine.upgradePrice(s, a.id)))
+-                            put("price10", big(engine.upgradeCost(s, a.id, 10)))
++                            val price1 = engine.upgradePrice(s, a.id)
++                            val price10 = engine.upgradeCost(s, a.id, 10)
++                            money("price1", price1)
++                            money("price10", price10)
++                            put("canUpgrade", s.wallet >= price1)
++                            put("canUpgrade10", s.wallet >= price10)
+@@ -273 +295,4 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-                        } else if (open) put("price", big(engine.appPrice(s, a.id)))
++                        } else if (open) {
++                            money("price", engine.appPrice(s, a.id))
++                            put("canBuy", engine.canBuy(s, a.id))
++                        }
+@@ -278 +303,2 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("files", legacyMoney(s.backup.files)); put("filesExact", s.backup.files.toString())
++            legacyAmount("files", s.backup.files)
++            legacyAmount("gb", s.backup.cloud.gb)
+@@ -284 +310,17 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-                        put("price", legacyMoney(engine.backupPrice(s, b))); put("priceExact", engine.backupPrice(s, b).toString()); put("open", engine.backupOpen(s, b)); put("minResets", b.minResets)
++                        val price = engine.backupPrice(s, b)
++                        val open = engine.backupOpen(s, b)
++                        legacyAmount("price", price)
++                        put("open", open); put("minResets", b.minResets)
++                        put("canBuy", open && s.backup.files >= price)
++                    })
++                }
++            }
++            putJsonArray("cloudShop") {
++                CloudItem.entries.filter { it != CloudItem.ValueCap }.forEach { c ->
++                    val price = engine.cloudPrice(s, c)
++                    val open = engine.cloudOpen(s, c)
++                    add(buildJsonObject {
++                        put("id", c.name); put("label", c.label); put("lv", s.backup.cloud.lv(c))
++                        put("max", c.max); put("open", open)
++                        legacyAmount("price", price)
++                        put("canBuy", open && s.backup.cloud.gb >= price)
+@@ -302,0 +345,11 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
++    private fun JsonObjectBuilder.money(key: String, amount: BigInteger) {
++        put(key, big(amount))
++        put(key + "Short", short(amount))
++    }
++
++    private fun JsonObjectBuilder.legacyAmount(key: String, amount: BigInteger) {
++        put(key, legacyMoney(amount))
++        put(key + "Exact", amount.toString())
++        put(key + "Short", short(amount))
++    }
++
+@@ -333 +386,4 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("wallet", big(s.wallet))
++        money("wallet", s.wallet)
++        money("runEarned", s.runEarned)
++        put("canReset", s.level >= engine.rules.resetLevel)
++        put("canSync", s.level >= engine.rules.syncLevel)
+@@ -343 +399 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("bestSwipe", big(s.bestSwipe))
++        money("bestSwipe", s.bestSwipe)
+@@ -347,2 +403,4 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("backupFilesNow", legacyMoney(engine.backupFilesNow(s))); put("backupFilesNowExact", engine.backupFilesNow(s).toString())
+-        put("files", legacyMoney(s.backup.files)); put("filesExact", s.backup.files.toString())
++        legacyAmount("backupFilesNow", engine.backupFilesNow(s))
++        legacyAmount("cloudGbNow", engine.cloudGbNow(s))
++        legacyAmount("files", s.backup.files)
++        legacyAmount("gb", s.backup.cloud.gb)
+@@ -355 +413,3 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-                    put("upgradePrice", big(engine.upgradePrice(s, id)))
++                    val price = engine.upgradePrice(s, id)
++                    money("upgradePrice", price)
++                    put("canUpgrade", s.wallet >= price)
+@@ -362 +422,5 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-                    add(buildJsonObject { put("id", a.id); put("name", a.name); put("tier", a.tier); put("price", big(engine.appPrice(s, a.id))) })
++                    add(buildJsonObject {
++                        put("id", a.id); put("name", a.name); put("tier", a.tier)
++                        money("price", engine.appPrice(s, a.id))
++                        put("canBuy", engine.canBuy(s, a.id))
++                    })
+@@ -367 +431 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-    private fun outcome(o: SwipeOutcome, now: Long, prevLast: BigInteger): JsonObject = buildJsonObject {
++    private fun outcome(o: SwipeOutcome, now: Long, prevLast: BigInteger, previousBest: BigInteger): JsonObject = buildJsonObject {
+@@ -369 +433,3 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("earned", big(o.earned))
++        money("earned", o.earned)
++        money("exExtraP", o.exExtraP)
++        put("newBestSwipe", o.earned > previousBest)
+@@ -372 +438 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("capped", big(o.capped))
++        money("capped", o.capped)
+@@ -379 +445 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("t", "swiped"); put("id", b.row.id); put("earned", big(b.earned)); put("kind", b.row.kind.name)
++            put("t", "swiped"); put("id", b.row.id); money("earned", b.earned); put("kind", b.row.kind.name)
+@@ -386 +452 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("t", "burst"); put("row", row(b.row)); put("chain", b.chain); put("earned", big(b.earned))
++            put("t", "burst"); put("row", row(b.row)); put("chain", b.chain); money("earned", b.earned)
+@@ -388 +454 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("chips", big(b.earned / BigInteger.valueOf(1L + b.chain)))
++            money("chips", b.earned / BigInteger.valueOf(1L + b.chain))
+@@ -390 +456 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        is Beat.Wave -> buildJsonObject { put("t", "wave"); put("index", b.index); put("chain", b.chain); put("earned", big(b.earned)) }
++        is Beat.Wave -> buildJsonObject { put("t", "wave"); put("index", b.index); put("chain", b.chain); money("earned", b.earned) }
+@@ -394 +460 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        is Beat.Capped -> buildJsonObject { put("t", "capped"); put("lost", big(b.lost)) }
++        is Beat.Capped -> buildJsonObject { put("t", "capped"); money("lost", b.lost) }
+diff --git a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/HugeNumberContractTest.kt b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/HugeNumberContractTest.kt
+new file mode 100644
+index 0000000..6f6424a
+--- /dev/null
++++ b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/HugeNumberContractTest.kt
+@@ -0,0 +1,129 @@
++package com.graviton94.notificationcleaner.core
++
++import java.math.BigInteger
++import kotlinx.serialization.json.Json
++import kotlinx.serialization.json.boolean
++import kotlinx.serialization.json.jsonArray
++import kotlinx.serialization.json.jsonObject
++import kotlinx.serialization.json.jsonPrimitive
++import kotlin.test.Test
++import kotlin.test.assertEquals
++import kotlin.test.assertFalse
++import kotlin.test.assertTrue
++
++class HugeNumberContractTest {
++    @Test
++    fun bigQuotesAndAffordabilityUseExactIntegerValues() {
++        val engine = Engine()
++        val now = 2_000_000L
++        val huge = BigInteger.TEN.pow(400)
++        val start = engine.newGame(now, 17, Backup(files = huge, resets = 5, cloud = Cloud(gb = huge, syncs = 4)))
++        val states = start.copy(level = 800, runEarned = engine.rules.levelP(800),
++            appLevels = start.appLevels + ("memo" to 3_100), bestSwipe = huge)
++        val exactPrice = engine.upgradePrice(states, "memo")
++        assertTrue(exactPrice.toString().length > 308)
++        val below = WebSession(engine, states.copy(wallet = exactPrice - BigInteger.ONE), now)
++        val exact = WebSession(engine, states.copy(wallet = exactPrice), now)
++        fun row(session: WebSession, list: String, id: String) =
++            Json.parseToJsonElement(session.panel(now)).jsonObject.getValue(list).jsonArray
++                .map { it.jsonObject }.first { it.getValue("id").jsonPrimitive.content == id }
++        val app = row(exact, "apps", "memo")
++        assertEquals(exactPrice.toString(), app.getValue("price1").jsonPrimitive.content)
++        assertEquals(short(exactPrice), app.getValue("price1Short").jsonPrimitive.content)
++        assertTrue(app.getValue("canUpgrade").jsonPrimitive.boolean)
++        assertFalse(row(below, "apps", "memo").getValue("canUpgrade").jsonPrimitive.boolean)
++        assertTrue(row(exact, "cloudShop", "CloudOffline").getValue("canBuy").jsonPrimitive.boolean)
++        val snap = Json.parseToJsonElement(exact.snapshot(now)).jsonObject
++        for (name in listOf("files", "gb")) {
++            assertEquals(huge.toString(), snap.getValue(name + "Exact").jsonPrimitive.content)
++            assertEquals(short(huge), snap.getValue(name + "Short").jsonPrimitive.content)
++        }
++        assertEquals(short(huge), snap.getValue("bestSwipeShort").jsonPrimitive.content)
++        assertFalse(snap.toString().contains("Infinity"))
++    }
++
++    @Test
++    fun suffixStaysAsciiAndTruncatedBeyondTwoLetters() {
++        assertEquals("999zz", short(BigInteger.TEN.pow(2_042) * BigInteger.valueOf(999) / BigInteger.valueOf(100)))
++        assertEquals("1.23e+2043", short(BigInteger.TEN.pow(2_041) * BigInteger.valueOf(123)))
++    }
++    @Test
++    fun offersComposeExactlyAndIncreaseWithSetCompletion() {
++        val base = BigInteger.TEN.pow(400)
++        val sets = listOf(
++            emptySet(), setOf(ExOffers.ids[0]), setOf(ExOffers.ids[0], ExOffers.ids[3], ExOffers.ids[6]),
++            ExOffers.ids.take(3).toSet(), ExOffers.ids.take(6).toSet(), ExOffers.ids.toSet(),
++        )
++        for (offer in GrowthOffer.entries) {
++            assertEquals(base, offer.income(base, sets.first()))
++            assertEquals(base, offer.prestige(base, sets.first()))
++            assertEquals(base, offer.price(base, sets.first()))
++            for ((before, after) in sets.zipWithNext()) {
++                assertTrue(offer.income(base, after) > offer.income(base, before))
++                assertTrue(offer.prestige(base, after) >= offer.prestige(base, before))
++                assertTrue(offer.price(base, after) <= offer.price(base, before))
++            }
++        }
++        assertEquals(147, GrowthOffer.Discount.offlineMinutes(sets.last()))
++        assertEquals(0, GrowthOffer.Prestige.offlineMinutes(sets.last()))
++    }
++    @Test
++    fun rankValueAndPriceStayGeometricBeyondExistingMilestones() {
++        val r = RuleSet(appRankValuePermille = 1_200)
++        val memo = Catalog.app("memo")
++        val (firstNum, firstDen) = r.baseValue(memo, 801, Backup())
++        val (secondNum, secondDen) = r.baseValue(memo, 802, Backup())
++        assertEquals(secondNum * firstDen * BigInteger.valueOf(5), firstNum * secondDen * BigInteger.valueOf(6))
++        val price = r.upgradePrice(memo, 801)
++        val next = r.upgradePrice(memo, 802)
++        val rounding = (next * BigInteger.TEN - price * BigInteger.valueOf(13)).abs()
++        assertTrue(rounding < BigInteger.valueOf(13))
++    }
++    @Test
++    fun experimentalOffersReachActualSwipePrestigeAndReturnSettlement() {
++        val now = 700_000_000L
++        val owned = ExOffers.ids.toSet()
++        val engine = Engine(RuleSet(growthOffer = GrowthOffer.Prestige))
++        val base = engine.newGame(now, 17)
++        val equipped = base.withAccount { it.copy(ownedEx = owned) }
++        val target = requireNotNull(engine.bestTarget(base, now))
++        val noEx = requireNotNull(engine.swipe(base, target, now))
++        val swipe = WebSession(engine, equipped, now).swipe(target, now)
++        val result = Json.parseToJsonElement(swipe).jsonObject
++        val paid = BigInteger(result.getValue("earned").jsonPrimitive.content)
++        assertTrue(paid > noEx.earned)
++        assertEquals((paid - noEx.earned).toString(), result.getValue("exExtraP").jsonPrimitive.content)
++
++        val high = equipped.copy(level = 110, runEarned = engine.rules.levelP(110))
++        val reset = WebSession(engine, high, now)
++        val payout = Json.parseToJsonElement(reset.reset(now)).jsonObject
++        assertTrue(BigInteger(payout.getValue("exExtraFilesExact").jsonPrimitive.content).signum() > 0)
++        val restored = SaveCodec.decode(reset.save())
++        assertEquals(owned, restored.account.ownedEx)
++        val repeated = restored.copy(level = high.level, runEarned = high.runEarned)
++        assertEquals(BigInteger.ZERO, engine.factoryResetPaid(repeated, now, true))
++        val synced = Json.parseToJsonElement(WebSession(engine, repeated, now).sync(now)).jsonObject
++        assertTrue(BigInteger(synced.getValue("exExtraGbExact").jsonPrimitive.content).signum() > 0)
++
++        val discount = Engine(RuleSet(growthOffer = GrowthOffer.Discount))
++        val returning = high.copy(earnRate = BigInteger.valueOf(100_000), appLevels = high.appLevels + ("memo" to 100))
++        val offline = discount.settleOfflineWithBonus(returning, 15L * 3_600_000, now)
++        assertEquals(147L * 60_000, offline.eligibleMs - offline.baseEligibleMs)
++        assertTrue(offline.exExtraP.signum() > 0)
++        assertTrue(discount.upgradePrice(returning, "memo") < discount.upgradePrice(returning.withAccount { it.copy(ownedEx = emptySet()) }, "memo"))
++    }
++    @Test
++    fun quoteStartsFromInheritedValueAndStaysFixedInsideTheRun() {
++        val engine = Engine(RuleSet(appRankValuePermille = 1_200, indexUpgradePricesOnReset = true))
++        val now = 700_000_000L
++        val plain = engine.newGame(now, 17)
++        val inherited = Backup(cloud = Cloud(items = mapOf(CloudItem.SyncValue to 12)))
++        val strong = engine.newGame(now, 17, inherited)
++        val oldQuote = engine.upgradePrice(plain, "memo")
++        val incurred = engine.upgradePrice(strong, "memo")
++        assertTrue(incurred > oldQuote)
++        assertTrue(incurred < oldQuote * BigInteger.TWO.pow(12))
++        assertEquals(incurred, engine.upgradePrice(strong.copy(backup = Backup()), "memo"))
++        assertEquals(incurred, engine.upgradePrice(SaveCodec.decode(SaveCodec.encode(strong)), "memo"))
++    }
++}
