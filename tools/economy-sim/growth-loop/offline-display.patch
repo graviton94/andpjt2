@@ -1,0 +1,24 @@
+diff --git a/tools/game-page/game.tpl.html b/tools/game-page/game.tpl.html
+index a3f9873..19eddce 100644
+--- a/tools/game-page/game.tpl.html
++++ b/tools/game-page/game.tpl.html
+@@ -160,0 +161,2 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
++#offline-ex-summary{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);display:grid;gap:5px;width:max-content;max-width:calc(100% - 24px);padding:13px 16px;border:1px solid #b99561;border-radius:14px;background:#232027;color:#fff4da;z-index:99;font:600 14px system-ui,sans-serif;pointer-events:none;box-shadow:0 4px 14px #120d15aa}
++#offline-ex-summary span{font-size:12px;color:#f2dfbb;overflow-wrap:anywhere}
+@@ -1638,0 +1641,16 @@ window.onOffline = o => {
++  if (o.exExtraOfflineCapMs > 0) {
++    const capMin = Math.floor(o.exExtraOfflineCapMs / 60000);
++    const paidMin = Math.floor(o.exExtraEligibleMs / 60000);
++    const previous = document.getElementById('offline-ex-summary');
++    if (previous) previous.remove();
++    const summary = document.createElement('aside');
++    summary.id = 'offline-ex-summary';
++    summary.setAttribute('role', 'status');
++    const cap = document.createElement('strong');
++    cap.textContent = 'EX 정산 상한 +' + capMin + '분';
++    const credit = document.createElement('span');
++    credit.textContent = '이번 추가 인정 ' + paidMin + '분 · +' + o.exExtraPShort + ' P';
++    summary.append(cap, credit);
++    document.body.append(summary);
++    setTimeout(() => summary.remove(), 6000);
++  }

@@ -1,0 +1,326 @@
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+index b02989d..a13c5fb 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -50,0 +51,2 @@ data class Backup(
++    val qualifiedAppPeaks: Map<String, Int> = emptyMap(),
++    val playedPrestigeMs: Long = 0,
+@@ -64,0 +67,2 @@ data class Cloud(
++    val claimedGbRecord: BigInteger? = null,
++    val retainedRecordFiles: BigInteger = ZERO,
+@@ -109,0 +114,2 @@ data class GameState(
++    val frontierPricePermille: BigInteger? = null,
++    val prestigePlayMs: Long = 0,
+@@ -304 +310,38 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-    fun backupFilesNow(s: GameState) = rules.backupFiles(s.runEarned, s.level, s.backup)
++    private fun recordFiles(s: GameState) = rules.backupFiles(s.runEarned, s.level, s.backup)
++    fun backupFilesNow(s: GameState): BigInteger = recordFiles(s).max(fileActivityQuote(s))
++
++    private fun fileActivityQuote(s: GameState): BigInteger {
++        if (!rules.productivePrestige || s.level < rules.resetLevel || s.prestigePlayMs < 12 * 60_000) return ZERO
++        var quote = s.withAccount { it.copy(ownedEx = emptySet()) }
++        quote = quote.copy(backup = quote.backup.copy(resets = quote.backup.resets + 1))
++        var budget = ZERO
++        repeat(3) {
++            val pick = BackupItem.entries.filter { it.max == Int.MAX_VALUE && backupOpen(quote, it) }
++                .minByOrNull { backupPrice(quote, it) } ?: return budget
++            budget += backupPrice(quote, pick)
++            val b = quote.backup
++            quote = quote.copy(backup = b.copy(items = b.items + (pick to (b.lv(pick)+1))))
++        }
++        return budget
++    }
++
++    private fun enoughSyncPlay(s: GameState) = s.prestigePlayMs + s.backup.playedPrestigeMs >= 25 * 60_000
++
++    fun canSync(s: GameState): Boolean = s.level >= rules.syncLevel ||
++        (rules.repeatSync && s.backup.cloud.syncs > 0 && s.level >= rules.resetLevel && enoughSyncPlay(s))
++
++    private fun gbActivityQuote(s: GameState): BigInteger {
++        if (!rules.productivePrestige || !canSync(s) || !enoughSyncPlay(s)) return ZERO
++        var quote = s.withAccount { it.copy(ownedEx = emptySet()) }
++        val saved = quote.backup.cloud
++        quote = quote.copy(backup = quote.backup.copy(cloud = saved.copy(syncs = saved.syncs + 1)))
++        var budget = ZERO
++        repeat(2) {
++            val pick = CloudItem.entries.filter { it.max == Int.MAX_VALUE && it.pack == null && cloudOpen(quote, it) }
++                .minByOrNull { cloudPrice(quote, it) } ?: return budget
++            budget += cloudPrice(quote, pick)
++            val c = quote.backup.cloud
++            quote = quote.copy(backup = quote.backup.copy(cloud = c.copy(items = c.items + (pick to (c.lv(pick)+1)))))
++        }
++        return budget
++    }
+@@ -432,0 +476,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        val frontier = if (rules.frontierPrices) {
++            val (value, unit) = rules.baseValue(Catalog.app("memo"), 1, backup)
++            val thousand = BigInteger.valueOf(1_000)
++            val factor = (value * BigInteger.valueOf(100_000_000) / (unit * BigInteger.valueOf(302))).sqrt().max(thousand)
++            val allowance = rules.frontierBudgetPerDigit
++            if (allowance > 0) {
++                val digits = (factor.toString().length - 3).coerceAtLeast(1)
++                factor.min(thousand + BigInteger.valueOf(allowance.toLong() * digits))
++            } else factor
++        } else null
+@@ -433,0 +487 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            frontierPricePermille = frontier,
+@@ -450 +504 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val base = backupFilesNow(s).let { f -> if (s.account.backupBoost) scalePermille(f, 10L * (100 + rules.backupBoostPercent)) else f }
++        val base = recordFiles(s).let { f -> if (s.account.backupBoost) scalePermille(f, 10L * (100 + rules.backupBoostPercent)) else f }
+@@ -452 +506,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return if (withEx) exPrestige(s, base) else base
++        val award = base.max(fileActivityQuote(s))
++        return if (withEx) exPrestige(s, award) else award
+@@ -458,2 +513,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val claimed = if (rules.growthOffer == null) s.backup.baseFilesClaimed
+-            else (s.backup.baseFilesClaimed ?: s.backup.lifetime) + backupFilesNow(s)
++        val claimed = if (rules.growthOffer == null && !rules.productivePrestige) s.backup.baseFilesClaimed
++            else (s.backup.baseFilesClaimed ?: s.backup.lifetime) + recordFiles(s)
+@@ -461,0 +517,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            qualifiedAppPeaks = payingPeaks(s, files),
++            playedPrestigeMs = s.backup.playedPrestigeMs + if (rules.productivePrestige && files.signum() > 0) s.prestigePlayMs else 0,
+@@ -469,0 +527,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    private fun payingPeaks(s: GameState, payment: BigInteger): Map<String, Int> {
++        val old = s.backup.qualifiedAppPeaks
++        if (!rules.frontierPrices || payment.signum() <= 0) return old
++        return old.toMutableMap().also { levels ->
++            s.appLevels.forEach { (id, level) -> levels[id] = maxOf(levels[id] ?: 1, level) }
++        }
++    }
++
+@@ -497 +562 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-    fun cloudGbNow(s: GameState): BigInteger {
++    private fun recordGb(s: GameState): BigInteger {
+@@ -500 +565,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return (rules.cloudTotal(cycle.max(s.backup.cloud.bestCycleFiles)) - s.backup.cloud.lifetime).max(ZERO)
++        val c = s.backup.cloud
++        return (rules.cloudTotal(cycle.max(c.bestCycleFiles)) - (c.claimedGbRecord ?: c.lifetime)).max(ZERO)
+@@ -501,0 +568 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    fun cloudGbNow(s: GameState): BigInteger = recordGb(s).max(gbActivityQuote(s))
+@@ -508 +575 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val base = scalePermille(cloudGbNow(s), prestigePermille(s, now))
++        val base = scalePermille(recordGb(s), prestigePermille(s, now)).max(gbActivityQuote(s))
+@@ -513 +580 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        if (s.level < rules.syncLevel) return null
++        if (!canSync(s)) return null
+@@ -519,0 +587,4 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            claimedGbRecord = if (rules.productivePrestige) (c.claimedGbRecord ?: c.lifetime) + recordGb(s) else c.claimedGbRecord,
++            retainedRecordFiles = if (rules.inheritRecordIncome && gb.signum() > 0)
++                c.retainedRecordFiles.max((s.backup.baseFilesClaimed ?: s.backup.lifetime) + recordFiles(s))
++            else c.retainedRecordFiles,
+@@ -521 +592,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
++        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level),
++            qualifiedAppPeaks = payingPeaks(s, gb), cloud = cloud))
+@@ -835,0 +908,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            prestigePlayMs = s.prestigePlayMs + if (rules.productivePrestige && actor == Actor.Player)
++                dt.coerceAtMost(12_000L) else 0,
+@@ -1060 +1134,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        var p = rules.upgradePrice(app, s.appLevels[appId] ?: 1)
++        val rank = s.appLevels[appId] ?: 1
++        var p = rules.upgradePrice(app, rank)
++        val frontier = maxOf(25, s.backup.qualifiedAppPeaks[appId] ?: 0)
++        val steps = (rank - frontier).coerceIn(0, 24).toLong()
++        val factor = s.frontierPricePermille
++        if (steps > 0 && factor != null) {
++            val volume = 24L * 24 * 24
++            val smooth = steps * steps * (3 * 24 - 2 * steps)
++            val base = BigInteger.valueOf(1_000 * volume)
++            p = p * (base + (factor - BigInteger.valueOf(1_000)) * BigInteger.valueOf(smooth)) / base
++        }
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/IntegratedGrowth.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/IntegratedGrowth.kt
+index 42ba12e..143b403 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/IntegratedGrowth.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/IntegratedGrowth.kt
+@@ -93,4 +93,11 @@ internal object ExactGrowth {
+-        val scale = number(rules.backupBase).pow(5)
+-        val numerator = if (p <= anchor * transition) scale * p.pow(2) / anchor.pow(2)
+-            else scale * transition * p / anchor
+-        return nthRoot(numerator, 5)
++        val scale = number(rules.backupBase)
++        if (p <= anchor * transition) return nthRoot(scale.pow(5) * p.pow(2) / anchor.pow(2), 5)
++        val (numerator, denominator) = when (rules.fileTailExponentPermille) {
++            200 -> 1 to 5
++            220 -> 11 to 50
++            240 -> 6 to 25
++            else -> error("Unsupported file-tail test exponent")
++        }
++        val pivot = anchor * transition
++        return nthRoot(scale.pow(denominator) * transition.pow(denominator * 2 / 5) *
++            p.pow(numerator) / pivot.pow(numerator), denominator)
+@@ -107 +113,0 @@ internal object ExactGrowth {
+-        check(rules.cloudExponentPermille == 500)
+@@ -110 +116,8 @@ internal object ExactGrowth {
+-        return (number(rules.cloudBase).pow(2) * files / anchor).sqrt()
++        val (numerator, denominator) = when (rules.cloudExponentPermille) {
++            500 -> 1 to 2
++            550 -> 11 to 20
++            600 -> 3 to 5
++            else -> error("Unsupported GB test exponent")
++        }
++        return nthRoot(number(rules.cloudBase).pow(denominator) *
++            files.pow(numerator) / anchor.pow(numerator), denominator)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+index 71c1e65..4ec9fa9 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -129,0 +130,7 @@ data class RuleSet(
++    val frontierPrices: Boolean = false,
++    val frontierBudgetPerDigit: Int = 0,
++    val productivePrestige: Boolean = false,
++    val repeatSync: Boolean = false,
++    val inheritRecordIncome: Boolean = false,
++    val fileTailExponentPermille: Int = 200,
++    val cloudGrowthScalePermille: Int = 1_000,
+@@ -213 +220,7 @@ data class RuleSet(
+-        val passive = ExactGrowth.passive(this, backup.lifetime)
++        val basePassive = ExactGrowth.passive(this, backup.lifetime)
++        val million = big(1_000_000)
++        val passive = if (inheritRecordIncome && backup.cloud.retainedRecordFiles.signum() > 0) {
++            val oldBonus = ExactGrowth.passive(this, backup.cloud.retainedRecordFiles)
++            val inherited = (oldBonus * million.pow(3)).sqrt().sqrt()
++            basePassive * inherited / million
++        } else basePassive
+@@ -264,2 +277,6 @@ data class RuleSet(
+-    fun cloudPrice(item: CloudItem, owned: Int): BigInteger =
+-        ExactGrowth.price(item.base, item.growthPermille, owned)
++    fun cloudPrice(item: CloudItem, owned: Int): BigInteger {
++        val growth = if (item.max == Int.MAX_VALUE)
++            1_000 + (item.growthPermille - 1_000) * cloudGrowthScalePermille / 1_000
++        else item.growthPermille
++        return ExactGrowth.price(item.base, growth, owned)
++    }
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+index bfa625d..cf41eb4 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+@@ -57,0 +58,2 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
++        val baseCap = engine.offlineCapMs(state)
++        val extraCap = (engine.rules.growthOffer?.offlineMinutes(state.account.ownedEx) ?: 0) * 60_000L
+@@ -68,0 +71,3 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
++            put("baseOfflineCapMs", baseCap)
++            put("offlineCapMs", baseCap + extraCap)
++            put("exExtraOfflineCapMs", extraCap)
+@@ -389 +394 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-        put("canSync", s.level >= engine.rules.syncLevel)
++        put("canSync", engine.canSync(s))
+diff --git a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CadenceContractTest.kt b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CadenceContractTest.kt
+new file mode 100644
+index 0000000..9cae472
+--- /dev/null
++++ b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CadenceContractTest.kt
+@@ -0,0 +1,114 @@
++package com.graviton94.notificationcleaner.core
++
++import java.math.BigInteger
++import kotlinx.serialization.json.Json
++import kotlinx.serialization.json.jsonObject
++import kotlinx.serialization.json.jsonPrimitive
++import kotlin.test.Test
++import kotlin.test.assertEquals
++import kotlin.test.assertTrue
++
++class CadenceContractTest {
++    @Test
++    fun pricesKeepTheEarlierBandAndTheFrozenQuoteSurvivesSave() {
++        val engine = Engine(RuleSet(frontierPrices = true))
++        val now = 10_000_000L
++        val start = engine.newGame(now, 17, Backup(qualifiedAppPeaks = mapOf("memo" to 80),
++            cloud = Cloud(items = mapOf(CloudItem.SyncValue to 20))))
++        fun price(level: Int): BigInteger {
++            val copy = start.copy(appLevels = start.appLevels + ("memo" to level))
++            val saved = SaveCodec.decode(SaveCodec.encode(copy))
++            assertEquals(start.frontierPricePermille, saved.frontierPricePermille)
++            return engine.upgradePrice(saved, "memo")
++        }
++        val memo = Catalog.app("memo")
++        assertEquals(engine.rules.upgradePrice(memo, 80), price(80))
++        assertTrue(price(104) > engine.rules.upgradePrice(memo, 104))
++        assertTrue((80..103).all { price(it + 1) >= price(it) })
++    }
++
++    @Test
++    fun productiveFloorNeedsFreshPlayAndDoesNotDebitTheRecordAmount() {
++        val engine = Engine(RuleSet(productivePrestige = true, growthOffer = GrowthOffer.Discount))
++        val now = 10_000_000L
++        val p = engine.rules.levelP(25)
++        val before = engine.newGame(now, 9, Backup(bestRunP = p, lifetime = BigInteger.TEN,
++            baseFilesClaimed = BigInteger.TEN)).copy(level = 25, runEarned = p, prestigePlayMs = 720_000)
++        val beforeRecord = before.backup.baseFilesClaimed
++        assertTrue(engine.factoryResetPaid(before, now, true).signum() > 0)
++        val after = checkNotNull(engine.factoryReset(before, now))
++        assertEquals(beforeRecord, after.backup.baseFilesClaimed)
++        val repeated = SaveCodec.decode(SaveCodec.encode(after)).copy(level = 25, runEarned = p)
++        assertEquals(BigInteger.ZERO, engine.factoryResetPaid(repeated, now, true))
++    }
++
++    @Test
++    fun offlineReturnsCapacityAndCreditedTimeIndependently() {
++        val engine = Engine(RuleSet(growthOffer = GrowthOffer.Discount))
++        val now = 800_000_000L
++        val start = engine.newGame(now, 1).copy(level = 36, runEarned = engine.rules.levelP(36),
++            earnRate = BigInteger.valueOf(1_000_000)).withAccount { it.copy(ownedEx = ExOffers.ids.toSet()) }
++        val upgraded = start.copy(backup = start.backup.copy(items = mapOf(BackupItem.Offline to 12),
++            cloud = start.backup.cloud.copy(items = mapOf(CloudItem.CloudOffline to 7))))
++        assertEquals(19 * 3_600_000L, engine.offlineCapMs(upgraded) - engine.offlineCapMs(start))
++        assertEquals(engine.offlineCapMs(upgraded), engine.offlineCapMs(SaveCodec.decode(SaveCodec.encode(upgraded))))
++        fun settle(hours: Long) = Json.parseToJsonElement(WebSession(engine, start, now)
++            .offline(hours * 3_600_000L, now)).jsonObject
++        for ((hours, credited) in listOf(6L to 0L, 15L to 8_820_000L)) {
++            val response = settle(hours)
++            assertEquals("43200000", response.getValue("baseOfflineCapMs").jsonPrimitive.content)
++            assertEquals("8820000", response.getValue("exExtraOfflineCapMs").jsonPrimitive.content)
++            assertEquals(credited.toString(), response.getValue("exExtraEligibleMs").jsonPrimitive.content)
++            assertTrue("exExtraPShort" in response)
++            System.getenv("NC_OFFLINE_UI_OUT")?.let { target ->
++                val dir = java.io.File(target).also { it.mkdirs() }
++                java.io.File(dir, "return-${hours}h.json").writeText(response.toString() + "\n")
++            }
++        }
++    }
++    @Test
++    fun repeatSyncRequiresAFirstSyncAndFreshQualifiedActivity() {
++        val engine = Engine(RuleSet(repeatSync = true, productivePrestige = true))
++        val now = 80_000_000L
++        fun state(syncs: Int) = engine.newGame(now, 17, Backup(playedPrestigeMs = 1_500_000,
++            cloud = Cloud(syncs = syncs))).copy(level = 25, runEarned = engine.rules.levelP(25))
++        assertTrue(!engine.canSync(state(0)))
++        val before = state(1)
++        assertTrue(engine.canSync(before))
++        assertTrue(engine.syncPaid(before, now, true).signum() > 0)
++        val after = checkNotNull(engine.sync(before, now)).copy(level = 25)
++        assertTrue(!engine.canSync(after))
++        assertEquals(BigInteger.ZERO, engine.syncPaid(after, now, true))
++    }
++    @Test
++    fun cloudRetainsOnlyTheLargestFileRecordAndRestoresTheIncome() {
++        val engine = Engine(RuleSet(productivePrestige = true, repeatSync = true, inheritRecordIncome = true))
++        val now = 80_000_000L
++        val record = BigInteger.TEN.pow(8)
++        val previous = engine.newGame(now, 17, Backup(playedPrestigeMs = 1_500_000,
++            baseFilesClaimed = record, cloud = Cloud(syncs = 1))).copy(level = 25)
++        val after = checkNotNull(engine.sync(previous, now))
++        val decoded = SaveCodec.decode(SaveCodec.encode(after))
++        assertEquals(record, decoded.backup.cloud.retainedRecordFiles)
++        val memo = Catalog.app("memo")
++        val (n,d) = engine.rules.baseValue(memo, 1, decoded.backup)
++        val (n0,d0) = RuleSet().baseValue(memo, 1, decoded.backup)
++        assertTrue(n * d0 > n0 * d)
++        val again = decoded.copy(level = 25, prestigePlayMs = 1_500_000)
++        assertEquals(record, checkNotNull(engine.sync(again, now)).backup.cloud.retainedRecordFiles)
++    }
++    @Test
++    fun theSoftFrontierStillRaisesNewBandPrices() {
++        val now = 80_000_000L
++        val inherited = Backup(qualifiedAppPeaks = mapOf("memo" to 25),
++            cloud = Cloud(items = mapOf(CloudItem.SyncValue to 35)))
++        val hard = Engine(RuleSet(frontierPrices = true)).newGame(now, 17, inherited)
++        val soft = Engine(RuleSet(frontierPrices = true, frontierBudgetPerDigit = 5))
++        val state = soft.newGame(now, 17, inherited)
++        val bounded = checkNotNull(state.frontierPricePermille)
++        assertTrue(bounded > BigInteger.valueOf(1_000))
++        assertTrue(bounded < checkNotNull(hard.frontierPricePermille))
++        val high = state.copy(appLevels = state.appLevels + ("memo" to 49))
++        assertTrue(soft.upgradePrice(high, "memo") > soft.rules.upgradePrice(Catalog.app("memo"), 49))
++    }
++}

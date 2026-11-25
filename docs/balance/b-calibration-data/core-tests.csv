@@ -1,0 +1,6 @@
+suite,tests,failures,errors,skipped
+com.graviton94.notificationcleaner.core.CadenceContractTest,6,0,0,0
+com.graviton94.notificationcleaner.core.CommerceTest,12,0,0,0
+com.graviton94.notificationcleaner.core.CoreRulesTest,64,0,0,0
+com.graviton94.notificationcleaner.core.HugeNumberContractTest,6,0,0,0
+com.graviton94.notificationcleaner.core.WebSessionTest,3,0,0,0

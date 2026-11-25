@@ -1,0 +1,32 @@
+[
+  {
+    "version": "current",
+    "hours": 6,
+    "actual": [],
+    "expectedExtraP": "0"
+  },
+  {
+    "version": "current",
+    "hours": 15,
+    "actual": [],
+    "expectedExtraP": "1.76M"
+  },
+  {
+    "version": "candidate",
+    "hours": 6,
+    "actual": [
+      "EX 정산 상한 +147분",
+      "이번 추가 인정 0분 · +0 P"
+    ],
+    "expectedExtraP": "0"
+  },
+  {
+    "version": "candidate",
+    "hours": 15,
+    "actual": [
+      "EX 정산 상한 +147분",
+      "이번 추가 인정 147분 · +1.76M P"
+    ],
+    "expectedExtraP": "1.76M"
+  }
+]

@@ -1,0 +1,288 @@
+{
+  "base": "d14f4c27ac96d111996564725dc8361b2c87a40e",
+  "files": {
+    "FocusPilot/Loop/daily.csv.gz": {
+      "csv_sha256": "eece8251d3236fb27343b2e021794494d423376279d0ae59134ba85320084fca",
+      "rows": 3024
+    },
+    "FocusPilot/Loop/prestige.csv.gz": {
+      "csv_sha256": "6543d2c43b580caa3a9193a8326e8305de11bbf65a0d61910161dbd78d77789c",
+      "rows": 3654
+    },
+    "FocusPilot/Loop/reaches.csv.gz": {
+      "csv_sha256": "2722f81938a9e2703d63bee37b116ff55c12370b97679256d73ed0cc394748f3",
+      "rows": 7446
+    },
+    "InheritPilot/Loop/daily.csv.gz": {
+      "csv_sha256": "0b761c05c28ac5781dafd90d9be09747f86aea71fde591b7f7edd36b03b615f7",
+      "rows": 3024
+    },
+    "InheritPilot/Loop/prestige.csv.gz": {
+      "csv_sha256": "264c1be1565a17af967d9420ece9189659b246a9c3df5d6d2f50fbbcfbb8970f",
+      "rows": 4591
+    },
+    "InheritPilot/Loop/reaches.csv.gz": {
+      "csv_sha256": "9633b230823537e7b409cf29b3f6e623d40e39bafd4b06c0920f2ffa75f68a0a",
+      "rows": 9591
+    },
+    "Merit/Light3/daily.csv.gz": {
+      "csv_sha256": "93759068174762d6ba86967cf996f61495e2ebef798bac259c24c27ae5f508b3",
+      "rows": 30240
+    },
+    "Merit/Light3/prestige.csv.gz": {
+      "csv_sha256": "3a45008be1951abc2db30a86fe77adc8439afb855a866ce7fe4998b01b2f0167",
+      "rows": 1677
+    },
+    "Merit/Light3/reaches.csv.gz": {
+      "csv_sha256": "cab99ba8f4c9ccc80cba4c7d70cdfae9f3a08dafbfca28ee9566e83b15df12f6",
+      "rows": 3887
+    },
+    "Merit/Light45/daily.csv.gz": {
+      "csv_sha256": "ed1cfe611c16f688af361ebbbf8fceaf1db26df8ba8e3896c86d3cd59c049430",
+      "rows": 30240
+    },
+    "Merit/Light45/prestige.csv.gz": {
+      "csv_sha256": "368d9e0b7c49a29b78fd6e5358fcf6c6f937949f7c4ff320e5d17ae006ea5a30",
+      "rows": 4075
+    },
+    "Merit/Light45/reaches.csv.gz": {
+      "csv_sha256": "ad49698a9d3197d9484f70464856629241747f6dc894bcd2ae20fccaa5428943",
+      "rows": 8846
+    },
+    "Merit/Loop/daily.csv.gz": {
+      "csv_sha256": "7ca56f0d1ad9774b2323fe15eb6afd2a95a4856caf44ad8207bcd680cd8d183c",
+      "rows": 60480
+    },
+    "Merit/Loop/prestige.csv.gz": {
+      "csv_sha256": "4637a3ed291f130c476d8d411c65d947db773404fc55c880b119a2691129e201",
+      "rows": 76079
+    },
+    "Merit/Loop/reaches.csv.gz": {
+      "csv_sha256": "30c2353e4792eb67a7a7f3a0d2fb9d46834c23be9a910e719d8c574fdc446b2f",
+      "rows": 154407
+    },
+    "Merit/Quarter/daily.csv.gz": {
+      "csv_sha256": "04722cb17859fee8bdfb7033602f078d1d574e5b9a192b1c3d56359a3503af37",
+      "rows": 30240
+    },
+    "Merit/Quarter/prestige.csv.gz": {
+      "csv_sha256": "a15102850925d223a0b3912ed5e74d1345702c1e051dc02fdf29685c9281d2ee",
+      "rows": 17049
+    },
+    "Merit/Quarter/reaches.csv.gz": {
+      "csv_sha256": "69fdb95a60c2973b7fb87136149eb924efb939adb968d988a2ed04c1fbd7029b",
+      "rows": 45277
+    },
+    "ModeratePilot/Loop/daily.csv.gz": {
+      "csv_sha256": "1f8fc2e64a06c52c3403f8f2cf9f61eab6d43daf9879ec83f217bda5e00098b7",
+      "rows": 1344
+    },
+    "ModeratePilot/Loop/prestige.csv.gz": {
+      "csv_sha256": "403c46d89e2a5e68b9b9c0768dc8cae2c5957d89576b34b73fcec10280e89e82",
+      "rows": 633
+    },
+    "ModeratePilot/Loop/reaches.csv.gz": {
+      "csv_sha256": "4490faa1c457564f5a3b331d433596d8d3416ca9ed312183b72d18d2ac2e4851",
+      "rows": 1309
+    },
+    "Replay/Loop/daily.csv.gz": {
+      "csv_sha256": "2c4f3e6be80587b77042831e36e66ccc49e3cd02cbd7fbd3522ecbdfd07f9e1d",
+      "rows": 60480
+    },
+    "Replay/Loop/prestige.csv.gz": {
+      "csv_sha256": "f57232a13c8999db9df4d79d6650cc7d1519a48f2774daacbb3a4f3e9749948c",
+      "rows": 126599
+    },
+    "Replay/Loop/reaches.csv.gz": {
+      "csv_sha256": "3f80676f0f9558499393ad141cbfb6788c70734e15dd03267430a505b2236364",
+      "rows": 312245
+    },
+    "ReplayPilot/Loop/daily.csv.gz": {
+      "csv_sha256": "2d1c246628f4d88bb60dfc683f9441831528b781b14c85258fcde74a3f01d9ce",
+      "rows": 3024
+    },
+    "ReplayPilot/Loop/prestige.csv.gz": {
+      "csv_sha256": "93b926a81a0321ce6823fa7eb9e3a10971b818d9604aa2043565c46099b07924",
+      "rows": 4415
+    },
+    "ReplayPilot/Loop/reaches.csv.gz": {
+      "csv_sha256": "9ac6f64e7e2eaa14e9fe85e5f6ef712cab53f7cfe7a09772034ac3410f1d8aa8",
+      "rows": 9002
+    },
+    "SoftReplay/Light3/daily.csv.gz": {
+      "csv_sha256": "93759068174762d6ba86967cf996f61495e2ebef798bac259c24c27ae5f508b3",
+      "rows": 30240
+    },
+    "SoftReplay/Light3/prestige.csv.gz": {
+      "csv_sha256": "3a45008be1951abc2db30a86fe77adc8439afb855a866ce7fe4998b01b2f0167",
+      "rows": 1677
+    },
+    "SoftReplay/Light3/reaches.csv.gz": {
+      "csv_sha256": "cab99ba8f4c9ccc80cba4c7d70cdfae9f3a08dafbfca28ee9566e83b15df12f6",
+      "rows": 3887
+    },
+    "SoftReplay/Light45/daily.csv.gz": {
+      "csv_sha256": "7d503ac473ec5591c56d438c7748d25c4ea78e5890f60b80e3a4f244fda9affe",
+      "rows": 30240
+    },
+    "SoftReplay/Light45/prestige.csv.gz": {
+      "csv_sha256": "9b818cfac6ba5e8ed5c237a1200a34819dc41a08e2e2a6205a34f18fbe39d5af",
+      "rows": 5071
+    },
+    "SoftReplay/Light45/reaches.csv.gz": {
+      "csv_sha256": "98ea854506270057394f3089aa80e557e8f76f985fb111ea1db32747d80ca4bb",
+      "rows": 10878
+    },
+    "SoftReplay/Loop/daily.csv.gz": {
+      "csv_sha256": "6acc20d2d476c748b8f0a3899d85557b77d595d0b0e22ed23071d0375412995a",
+      "rows": 60480
+    },
+    "SoftReplay/Loop/prestige.csv.gz": {
+      "csv_sha256": "271f4e5ab91e8fbaf22f43507a1184033d509dc974219c3f891ff74b394383be",
+      "rows": 126659
+    },
+    "SoftReplay/Loop/reaches.csv.gz": {
+      "csv_sha256": "5116893b090dd917cfb0803e63f61a34402a602b55425b29b1b2bf19e17818c2",
+      "rows": 312705
+    },
+    "SoftReplay/Quarter/daily.csv.gz": {
+      "csv_sha256": "f166a19042d595a2057874ab2f757988736fd23f2aaa3de233e6d0e3a3bcf88a",
+      "rows": 30240
+    },
+    "SoftReplay/Quarter/prestige.csv.gz": {
+      "csv_sha256": "0d1f6fee13c0108061fec072b6c5c08691a9e33c896277ac21a49651936f7890",
+      "rows": 17085
+    },
+    "SoftReplay/Quarter/reaches.csv.gz": {
+      "csv_sha256": "26294aeb689f53c248706cbdcf696c5f66872370f3f6ae57d89008cb9ee55a20",
+      "rows": 45233
+    }
+  },
+  "runs": {
+    "FocusPilot": {
+      "Loop": {
+        "arms": 2,
+        "cases": 36,
+        "days": 84,
+        "economy": "Focus",
+        "profiles": 6,
+        "seeds": 3
+      }
+    },
+    "InheritPilot": {
+      "Loop": {
+        "arms": 2,
+        "cases": 36,
+        "days": 84,
+        "economy": "Inherit",
+        "profiles": 6,
+        "seeds": 3
+      }
+    },
+    "Merit": {
+      "Light3": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "Merit",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Light45": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "Merit",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Loop": {
+        "arms": 2,
+        "cases": 360,
+        "days": 168,
+        "economy": "Merit",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Quarter": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "Merit",
+        "profiles": 6,
+        "seeds": 30
+      }
+    },
+    "ModeratePilot": {
+      "Loop": {
+        "arms": 2,
+        "cases": 24,
+        "days": 56,
+        "economy": "Moderate",
+        "profiles": 6,
+        "seeds": 2
+      }
+    },
+    "Replay": {
+      "Loop": {
+        "arms": 2,
+        "cases": 360,
+        "days": 168,
+        "economy": "Replay",
+        "profiles": 6,
+        "seeds": 30
+      }
+    },
+    "ReplayPilot": {
+      "Loop": {
+        "arms": 2,
+        "cases": 36,
+        "days": 84,
+        "economy": "Replay",
+        "profiles": 6,
+        "seeds": 3
+      }
+    },
+    "SoftReplay": {
+      "Light3": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "SoftReplay",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Light45": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "SoftReplay",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Loop": {
+        "arms": 2,
+        "cases": 360,
+        "days": 168,
+        "economy": "SoftReplay",
+        "profiles": 6,
+        "seeds": 30
+      },
+      "Quarter": {
+        "arms": 3,
+        "cases": 540,
+        "days": 56,
+        "economy": "SoftReplay",
+        "profiles": 6,
+        "seeds": 30
+      }
+    }
+  },
+  "source_sha256": {
+    "tools/economy-sim/growth-loop/CadenceProbe.kt": "ae9c6ce04f33b2a8ca203b8456035b0d67c7a56c1d91281e63d6e4e350ad067b",
+    "tools/economy-sim/growth-loop/analyze-cadence.py": "ddb3994f191bfd7811a49ab6771cc6f6c63f5e89852274869522eb7b3177ffad",
+    "tools/economy-sim/growth-loop/cadence-core.patch": "5be224f5e4f740b43612d4711ffdfbad5840fc4b722a3bc7aa59f4f6a5dbce87",
+    "tools/economy-sim/growth-loop/offline-display-test.js": "c8b3c286af38ed65d73d1223583e8d79076f53a0ec4f31c9eb361d1c33c0b268",
+    "tools/economy-sim/growth-loop/offline-display.patch": "1ddc66e56bf4e87a697f4b553437daf9f1971fbd1dfbbeddd6dcdf43b0daeb6b"
+  }
+}

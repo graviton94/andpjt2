@@ -1,5 +1,7 @@
 # 무한 증분·환생 가속과 유료 EX 재검증
 
+이 보고서는 A·B 선택 전 검증이다. 승인된 B안과 새 합격선에 따른 결과는 [B안 · 새 강화 구간과 환생 대기 재검증](B-CALIBRATION-REPORT.md)과 [갱신된 daily-growth.csv](daily-growth.csv)에 있다.
+
 **그래프 원본**에는 프로필·일자별 누적 P와 지갑의 log₁₀, 현재 회차·초기화·동기화 수, 누적 파일·GB, 최고 Lv가 있다. 같은 그래프에서 none, one_set, full을 고르면 미보유·1세트·풀세트가 비교된다. [daily-growth.csv](growth-loop-data/indexed/daily-growth.csv) · [시드별 daily-seeds.csv.gz](growth-loop-data/indexed/daily-seeds.csv.gz) · [가격 대조의 daily-growth.csv](growth-loop-data/record/daily-growth.csv)
 
 **결론.** 첫 회차부터 성장 상한을 여는 설계에서, 수입을 따라가는 가격이 P 강화 시간을 안정화했다. 실제 가벼운 플레이에서는 EX의 0.5자리·1자리 효과가 부족했고, 백업·GB 강화에는 지급 간격 병목이 남았다. 두 지표를 다음 이식 판단의 기준으로 삼는다. Lv124는 중간 관측값이다. [다른 세션용 리뷰·결정 요청서](growth-loop-review-prompt.md)

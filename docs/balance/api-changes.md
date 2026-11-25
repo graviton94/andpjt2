@@ -76,4 +76,22 @@
 }
 ```
 
-위 큰 수 계약은 검증 후보용이다. EX 추가 지급의 계정 연동은 효과 축 선택과 사용자 확인 뒤에 진행한다.
+위 큰 수 계약은 검증 후보용이다. 사용자가 선택한 B안의 EX 계정 연동은 운영 이식 승인 뒤 진행한다. [B안 검증 결과](B-CALIBRATION-REPORT.md)
+
+## B안 복귀 표시 후보
+
+`offline(awayMs, now)`의 `baseOfflineCapMs`, `offlineCapMs`, `exExtraOfflineCapMs`는 복귀 직전 상태에서 계산한 기본 상한, B 포함 상한, 둘의 차이다. `baseEligibleMs`와 `eligibleMs`는 실제 부재와 상한의 최솟값이며, `exExtraEligibleMs`는 이번 복귀에 추가로 인정된 시간이다. `exExtraPShort`는 정수 정산과 회차 지급 상한을 거친 실제 추가 지급의 표시 문자열이다.
+
+```json
+{
+  "baseOfflineCapMs": 43200000,
+  "offlineCapMs": 52020000,
+  "exExtraOfflineCapMs": 8820000,
+  "baseEligibleMs": 43200000,
+  "eligibleMs": 52020000,
+  "exExtraEligibleMs": 8820000,
+  "exExtraPShort": "1.76M"
+}
+```
+
+15시간 부재의 시험 응답이다. 화면 후보는 `EX 정산 상한 +147분`과 `이번 추가 인정 147분 · +1.76M P`를 표시했다. 6시간 부재는 같은 상한과 `이번 추가 인정 0분 · +0 P`였다. 기존 화면과 후보의 복귀 핸들러를 동일 응답으로 Chromium에서 비교했다. [화면 패치](../../tools/economy-sim/growth-loop/offline-display.patch) · [실측 결과](b-calibration-data/screen/rendered.json)
