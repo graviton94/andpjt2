@@ -13,6 +13,7 @@ object ExExperiment {
     private val days = listOf(0, 1, 3, 7, 14, 28)
     private val basis = BigInteger.valueOf(10_000)
     val current = ThreadLocal<Run>()
+    var integrated = false
 
     data class Scenario(val name: String, val owned: Int, val staged: Boolean = false, val alternative: Boolean = false,
         val revised: Boolean = false, val activeRecovery: Boolean = false)
@@ -43,6 +44,8 @@ object ExExperiment {
     class Run(val scenario: Scenario) {
         val samples = Array(2) { Array(days.size) { Sample() } }
         val collects = scenario.name == "full" || scenario.revised
+        val revised = integrated || scenario.revised
+        val activeRecovery = integrated || scenario.activeRecovery
         var shadowCountdown = 1
         var shadowAttempted = 0L
         var validPrestige = false
@@ -116,16 +119,22 @@ object ExExperiment {
         return if (scenario.alternative) base + base * 60 / 10_000 else base
     }
 
-    fun revisedConditions() = current.get()?.scenario?.revised == true
+    fun revisedConditions() = current.get()?.revised == true
+
+    fun projectedOwnership(now: Long): Int = current.get()?.let { owned(it.scenario, now) } ?: 0
+
+    fun completedSets(owned: Int): Int =
+        (if (owned and prism == prism) 1 else 0) + (if (owned and reboot == reboot) 1 else 0) +
+            (if (owned and studio == studio) 1 else 0)
 
     private fun lateConditions(run: Run, s: GameState, now: Long, resetLevel: Int,
         directApp: String?, burstApps: List<String>): Int {
-        val active = if (run.scenario.revised) {
+        val active = if (run.revised) {
             val firstCategory = burstApps.firstOrNull()?.let { Catalog.app(it).category }
             listOf(
                 run.validPrestige,
-                if (run.scenario.activeRecovery) run.recoverySwipes > 0 else s.level in resetLevel until resetLevel + 10,
-                if (run.scenario.activeRecovery) run.syncPlayMs > 0
+                if (run.activeRecovery) run.recoverySwipes > 0 else s.level in resetLevel until resetLevel + 10,
+                if (run.activeRecovery) run.syncPlayMs > 0
                 else run.lastValidSyncAt?.let { now - it in 0 until 30 * 60_000L } ?: false,
                 firstCategory != null && burstApps.any { Catalog.app(it).category != firstCategory },
                 directApp?.let { s.account.stars(it) > 0 } ?: false,
@@ -154,8 +163,7 @@ object ExExperiment {
         if (owned and 0b111111000 != 0) {
             conditions = conditions or (lateConditions(run, s, now, resetLevel, directApp, burstApps) and owned)
         }
-        val sets = (if (owned and prism == prism) 1 else 0) + (if (owned and reboot == reboot) 1 else 0) +
-            (if (owned and studio == studio) 1 else 0)
+        val sets = completedSets(owned)
         val bp = 50 * Integer.bitCount(owned) + 25 * Integer.bitCount(conditions) +
             sets * (if (run.scenario.alternative) 40 else 75) + (if (owned == FULL) 100 else 0)
         val adjusted = earned * BigInteger.valueOf(10_000L + bp) / basis

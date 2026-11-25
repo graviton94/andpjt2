@@ -21,8 +21,8 @@ def main():
         parser.error("No shard manifests found")
     manifests = [json.loads((shard / "manifest.json").read_text()) for shard in shards]
     keys = ("revision", "source_sha256", "runner_sha256", "through_day", "cached")
-    common = {key: manifests[0][key] for key in keys}
-    if any(any(manifest[key] != value for key, value in common.items()) for manifest in manifests):
+    common = {key: manifests[0][key] for key in (*keys, "integrated_patch_sha256") if key in manifests[0]}
+    if any(any(manifest.get(key) != common.get(key) for key in (*keys, "integrated_patch_sha256")) for manifest in manifests):
         parser.error("The shards disagree about the source files, day coverage or arithmetic")
     args.output.mkdir(parents=True, exist_ok=True)
     expected = {(scenario, seed, profile) for scenario in SCENARIOS for seed in range(1, 31)

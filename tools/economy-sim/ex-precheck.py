@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 from tempfile import TemporaryDirectory
@@ -15,20 +16,36 @@ def replace(source, anchor, updated):
     return source.replace(anchor, updated)
 
 
-def instrument(core):
+def instrument(core, integrated):
     engine = core / "Engine.kt"
     source = engine.read_text()
     anchor = "        val room = jackpotRoom(s, rules.swipeLevelCap)\n"
-    source = replace(source, anchor, anchor + (
-        "        val exBurstApps = if (ExExperiment.revisedConditions()) bursts.map { valueApp(s, it) } else emptyList()\n"
-        "        earned = ExExperiment.adjust(earned, room, s, now, actor, chain, overload, beats, rules.resetLevel,\n"
-        "            removed.app.takeIf { removed.kind == RowKind.App }, exBurstApps)\n"
-    ))
-    cap = "(rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L"
-    engine.write_text(replace(source, cap, f"ExExperiment.offlineCap({cap})"))
+    adjustment = (
+        "val exBurstApps = if (ExExperiment.revisedConditions()) bursts.map { valueApp(s, it) } else emptyList()\n"
+        "earned = ExExperiment.adjust(earned, room, s, now, actor, chain, overload, beats, rules.resetLevel,\n"
+        "    removed.app.takeIf { removed.kind == RowKind.App }, exBurstApps)\n"
+    )
+    if integrated:
+        source = replace(source, anchor, anchor + "        val neutralP = earned.min(room)\n" +
+                         "        if (s.challengeStarsAtStart == null) {\n" +
+                         "".join(f"            {line}\n" for line in adjustment.splitlines()) + "        }\n")
+        rate = re.search(r"^            earnRate = (.+),$", source, re.MULTILINE)[1]
+        neutral = rate.replace("s.earnRate", "(s.exNeutralRate ?: s.earnRate)").replace("earned", "neutralP")
+        source = replace(source, f"            earnRate = {rate},\n",
+                         f"            earnRate = {rate},\n            exNeutralRate = {neutral},\n")
+        source = replace(source, "        val result = settleOfflineWithBonus(s, awayMs, now)\n", (
+            "        val projected = ExExperiment.projectedOwnership(now)\n"
+            "        val result = if (ExExperiment.current.get() == null) settleOfflineWithBonus(s, awayMs, now) else\n"
+            "            settleOfflineWithBonus(s, awayMs, now, ExExperiment.completedSets(projected), projected != 0)\n"
+        ))
+    else:
+        source = replace(source, anchor, anchor + "".join(f"        {line}\n" for line in adjustment.splitlines()))
+        cap = "(rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L"
+        source = replace(source, cap, f"ExExperiment.offlineCap({cap})")
+    engine.write_text(source)
 
 
-def cache_rules(core):
+def cache_rules(core, integrated):
     """Memoize pure quotes and thresholds. Keep the engine's arithmetic and ordering."""
     rules = core / "Rules.kt"
     source = rules.read_text()
@@ -50,7 +67,8 @@ def cache_rules(core):
         var l = 1
         while (l + 1 < levelTable.size && boosted >= levelTable[l + 1]) l++
         return l"""
-    source = replace(source, old_level, """        val ceilings = auditCeils.computeIfAbsent(fastBoot) { boot ->
+    if not integrated:
+        source = replace(source, old_level, """        val ceilings = auditCeils.computeIfAbsent(fastBoot) { boot ->
             Array(levelTable.size) { rawLevelCeil(it, boot) }
         }
         var low = 1
@@ -60,13 +78,13 @@ def cache_rules(core):
             if (runEarned >= ceilings[middle]) low = middle else high = middle - 1
         }
         return low""")
-    source = replace(source, "fun levelCeil(level: Int, fastBoot: Int): BigInteger =", (
-        "private val auditCeils = java.util.concurrent.ConcurrentHashMap<Int, Array<BigInteger>>()\n"
-        "    fun levelCeil(level: Int, fastBoot: Int): BigInteger = auditCeils.computeIfAbsent(fastBoot) { boot ->\n"
-        "        Array(levelTable.size) { rawLevelCeil(it, boot) }\n"
-        "    }[level.coerceIn(1, levelTable.lastIndex)]\n\n"
-        "    private fun rawLevelCeil(level: Int, fastBoot: Int): BigInteger ="
-    ))
+        source = replace(source, "fun levelCeil(level: Int, fastBoot: Int): BigInteger =", (
+            "private val auditCeils = java.util.concurrent.ConcurrentHashMap<Int, Array<BigInteger>>()\n"
+            "    fun levelCeil(level: Int, fastBoot: Int): BigInteger = auditCeils.computeIfAbsent(fastBoot) { boot ->\n"
+            "        Array(levelTable.size) { rawLevelCeil(it, boot) }\n"
+            "    }[level.coerceIn(1, levelTable.lastIndex)]\n\n"
+            "    private fun rawLevelCeil(level: Int, fastBoot: Int): BigInteger ="
+        ))
     base = "fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger>"
     source = replace(source, base, """private class AuditBaseCache {
         var backupItems: Map<BackupItem, Int>? = null
@@ -88,6 +106,8 @@ def cache_rules(core):
     }
 
     private """ + base.replace("fun baseValue", "fun rawBaseValue"))
+    if integrated:
+        source = replace(source, "var lifetime = -1L", "var lifetime: BigInteger? = null")
     rules.write_text(source)
 
 
@@ -111,9 +131,12 @@ def main():
     parser.add_argument("--profiles", default="all")
     parser.add_argument("--cases", default="all")
     parser.add_argument("--through-day", type=int, choices=(0, 56), default=56)
+    parser.add_argument("--days", type=int, choices=(84, 168), default=84)
     parser.add_argument("--protect-level", type=int, choices=range(1, 124), metavar="LEVEL",
                         help="Diagnostic replay: postpone prestige at this level or above until first Lv124")
     parser.add_argument("--uncached", action="store_true", help="Run the unmodified core arithmetic without memoization")
+    parser.add_argument("--integrated", action="store_true", help="Apply the reviewed candidate to the isolated engine copy")
+    parser.add_argument("--audit-only", action="store_true", help="Run the integrated lifecycle fixture instead of the matrix")
     args = parser.parse_args()
     sim = Path(__file__).resolve().parent
     repo = sim.parents[1]
@@ -139,6 +162,15 @@ def main():
         "protect_level": args.protect_level,
         "cached": not args.uncached,
     }
+    candidate = sim / "precheck/integrated-core.patch"
+    if args.integrated:
+        manifest["integrated_patch_sha256"] = hashlib.sha256(candidate.read_bytes()).hexdigest()
+    if args.audit_only and not args.integrated:
+        parser.error("--audit-only requires the integrated candidate")
+    if args.audit_only:
+        manifest["audit_only"] = True
+    if args.days != 84:
+        manifest["days"] = args.days
     manifest_path = out / "manifest.json"
     if manifest_path.exists() and json.loads(manifest_path.read_text()) != manifest:
         parser.error("The output directory contains checkpoints made with a different run configuration")
@@ -153,22 +185,33 @@ def main():
         shutil.copytree(sim / "src", project / "src")
         core_sources = scratch / "core/src/main/kotlin"
         shutil.copytree(repo / "core/src/main/kotlin", core_sources)
+        if args.integrated:
+            subprocess.run(["git", "apply", "--unidiff-zero", str(candidate)], cwd=scratch, check=True)
         engine, = core_sources.rglob("Engine.kt")
         core = engine.parent
         shutil.copy2(sim / "precheck/ExExperiment.kt", core)
-        shutil.copy2(sim / "precheck/ExPrecheckCli.kt", project / "src/main/kotlin")
-        instrument(core)
+        cli = project / "src/main/kotlin/ExPrecheckCli.kt"
+        shutil.copy2(sim / "precheck/ExPrecheckCli.kt", cli)
+        if args.integrated:
+            text = cli.read_text().replace("else 0L\n", "else BigInteger.ZERO\n")
+            for field in ("paidFiles", "paidGb"):
+                text = text.replace(f"BigInteger.valueOf({field})", field).replace(f"{field} > 0", f"{field}.signum() > 0")
+            cli.write_text(text)
+        instrument(core, args.integrated)
         if args.protect_level is not None:
             protect_first_goal(project / "src/main/kotlin/Daily.kt", args.protect_level)
         if not args.uncached:
-            cache_rules(core)
+            cache_rules(core, args.integrated)
         subprocess.run([str(repo / "gradlew"), "-p", str(project), "installDist"], check=True, env=env)
         java = str(Path(env["JAVA_HOME"]) / "bin/java") if env.get("JAVA_HOME") else "java"
         libs, = (project / "build/install").glob("*/lib")
-        subprocess.run([java, "-Xmx4g", "-Dfile.encoding=UTF-8", "-cp", str(libs / "*"), "ExPrecheckCli",
-                        str(out), str(args.seeds), str(args.jobs), args.profiles, args.cases, str(args.through_day),
-                        str(args.first_seed)],
-                       check=True, env=env)
+        command = [java, "-Xmx4g", "-Dfile.encoding=UTF-8", "-cp", str(libs / "*")]
+        if args.audit_only:
+            command += ["IntegratedAudit", str(out)]
+        else:
+            command += ["ExPrecheckCli", str(out), str(args.seeds), str(args.jobs), args.profiles, args.cases,
+                        str(args.through_day), str(args.first_seed), str(args.integrated).lower(), str(args.days)]
+        subprocess.run(command, check=True, env=env)
 
 
 if __name__ == "__main__":
