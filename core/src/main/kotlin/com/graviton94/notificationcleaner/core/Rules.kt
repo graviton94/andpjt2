@@ -149,9 +149,9 @@ data class RuleSet(
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
     val offlineEfficiencyPercent: Int = 3,
-    /** Additional offline earnings multiplier while Ultra is active. */
+    /** Offline multiplier for Ultra alone. Stacks additively with the pass reward. */
     val ultraOfflinePermille: Int = 1_500,
-    /** Offline reward multiplier through the UTC day following a watched rewarded ad. */
+    /** Offline multiplier for an active pass or through the UTC day following a watched rewarded ad. */
     val adWatchOfflinePermille: Int = 1_700,
     val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */

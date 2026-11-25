@@ -205,6 +205,25 @@ internal class Rng(var seed: Long) {
     }
 }
 
+data class OfflineBonusStatus(
+    val rewardBonusPermille: Int,
+    val ultraBonusPermille: Int,
+    val adLeftMs: Long,
+    val passLeftMs: Long,
+    val ultraLeftMs: Long,
+) {
+    val rewardActive get() = adLeftMs > 0 || passLeftMs > 0
+    val multiplierPermille get() = 1_000 + (if (rewardActive) rewardBonusPermille else 0) +
+        (if (ultraLeftMs > 0) ultraBonusPermille else 0)
+}
+
+data class OfflineSettlement(
+    val state: GameState,
+    val paid: BigInteger,
+    val basePaid: BigInteger,
+    val bonus: OfflineBonusStatus,
+)
+
 class Engine(val rules: RuleSet = RuleSet()) {
     private val hundred = BigInteger.valueOf(100)
 
@@ -857,36 +876,53 @@ class Engine(val rules: RuleSet = RuleSet()) {
         (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L
     fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 2 * s.backup.lv(BackupItem.Offline)
 
+    /** Eligibility at return time. A watched ad and a pass share one reward; Ultra adds its own bonus. */
+    fun offlineBonus(s: GameState, now: Long): OfflineBonusStatus {
+        val acc = s.account
+        val today = dayOf(now)
+        val adLeftMs = if (acc.lastAdWatchDay >= 0 && acc.lastAdWatchDay in (today - 1)..today)
+            (acc.lastAdWatchDay + 2) * DAY_MS - now else 0
+        val speedLeftMs = if (acc.speedPass != null) (acc.speedPassUntil - now).coerceAtLeast(0) else 0
+        return OfflineBonusStatus(
+            rewardBonusPermille = rules.adWatchOfflinePermille - 1_000,
+            ultraBonusPermille = rules.ultraOfflinePermille - 1_000,
+            adLeftMs = adLeftMs,
+            passLeftMs = maxOf(0, acc.passUntil - now, speedLeftMs),
+            ultraLeftMs = if (acc.speedPass == SpeedPass.Ultra) speedLeftMs else 0,
+        )
+    }
+
+    fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
+        val result = settleOfflineWithBonus(s, awayMs, now)
+        return result.state to result.paid
+    }
+
     /**
      * Returning after [awayMs]: pays the recent income rate for the capped time at the offline efficiency,
      * in P; the level follows. The battery refills through [tick] as usual.
      */
-    fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
+    fun settleOfflineWithBonus(s: GameState, awayMs: Long, now: Long): OfflineSettlement {
         // 오버클럭 time inside the away window counts that many times over.
         val from = now - awayMs
         val acc = s.backup.cloud.account
-        val sub = if (acc.speedPass != null && acc.speedPassUntil >= now) acc.speedPass.speedPermille.toLong() else 1_000L
+        val sub = if (acc.speedPass != null && now < acc.speedPassUntil) acc.speedPass.speedPermille.toLong() else 1_000L
         val until = acc.overclockUntil
         val boosted = if (until <= 0L || sub >= rules.overclockPermille) 0L else maxOf(0L, minOf(now, until) - from)
         val effective = minOf(awayMs, offlineCapMs(s)) * sub / 1_000 + boosted * (rules.overclockPermille - 1_000) / 1_000
         val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
         val income = s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong())
-        val today = dayOf(now)
-        val multiplier = when {
-            acc.speedPass == SpeedPass.Ultra && acc.speedPassUntil >= now -> rules.ultraOfflinePermille
-            acc.passUntil <= now && acc.lastAdWatchDay >= 0 && acc.lastAdWatchDay in (today - 1)..today -> rules.adWatchOfflinePermille
-            else -> 1_000
-        }
-        val gross = if (multiplier == 1_000) income / BigInteger.valueOf(100_000)
-            else income * BigInteger.valueOf(multiplier.toLong()) / BigInteger.valueOf(100_000_000)
-        val p = gross
-            .min(jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt()))  // paid speed isn't thrown away by 과열 보호
+        val bonus = offlineBonus(s, now)
+        val cap = jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt())
+        val basePaid = (income / BigInteger.valueOf(100_000)).min(cap)
+        val multiplier = bonus.multiplierPermille
+        val p = if (multiplier == 1_000) basePaid else
+            (income * BigInteger.valueOf(multiplier.toLong()) / BigInteger.valueOf(100_000_000)).min(cap)
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0,
             returnBurst = true, returnSwipes = 3, nightSwipes = if (Math.floorMod(now / 3_600_000L + 9, 24L) !in 7..21) 3 else 0))  // KST 22~7시
-        return next to p
+        return OfflineSettlement(next, p, basePaid, bonus)
     }
 
     // Targeting ------------------------------------------------------------------------------

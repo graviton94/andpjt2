@@ -140,7 +140,7 @@ data class Account(
 val GameState.account: Account get() = backup.cloud.account
 fun GameState.withAccount(f: (Account) -> Account): GameState = copy(backup = backup.copy(cloud = backup.cloud.copy(account = f(backup.cloud.account))))
 
-private const val DAY_MS = 86_400_000L
+internal const val DAY_MS = 86_400_000L
 private const val AD_CLAIM_DAYS = 7
 private val AD_CLAIM_LIMIT = AD_CLAIM_DAYS * AdSlot.entries.sumOf { it.daily }
 private val rewardIdEncoding = Base64.getUrlEncoder().withoutPadding()

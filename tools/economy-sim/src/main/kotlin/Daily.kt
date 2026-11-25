@@ -86,6 +86,10 @@ class Timeline {
     /** Best level when the update arrived (update mode). */
     var updateLevel = 0
     val bestLevelByWeek = sortedMapOf<Int, Int>()
+    val runPeakByWeek = sortedMapOf<Int, Int>()
+    var finalLevel = 1
+    var lastResetLevel: Int? = null
+    var lastSyncLevel: Int? = null
     val digitsByWeek = sortedMapOf<Int, Int>()
     var activeMin = 0.0
     var lifetimeFiles = 0L
@@ -131,8 +135,10 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
     var seenLevels: Map<String, Int>? = null
     var highestLevel = 0
+    var weekRunPeak = 1
     val milestonesToRecord = listOf(1, 3, 5, 8, 12)
     fun observe() {
+        weekRunPeak = maxOf(weekRunPeak, s.level)
         while (highestLevel < s.level) tl.levelDays[++highestLevel] = dayOf(t)
         if (s.appLevels === seenLevels) return
         seenLevels = s.appLevels
@@ -220,6 +226,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             val gb = engine.cloudGbNow(s)
             if (resets && gb > 0 && sinceReset >= 4 && stallSessions >= 2) {
                 if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
+                tl.lastSyncLevel = s.level
                 s = engine.sync(s, t)!!
                 tl.syncDays += dayOf(t)
                 everSyncs++
@@ -231,6 +238,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             }
             if (resets && s.level >= engine.rules.resetLevel && offer > 0 && (gain >= 1.6 || stallSessions >= 3)) {
                 if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
+                tl.lastResetLevel = s.level
                 s = shop.useTicket(s, CreditItem.BackupBoost, t) ?: if (payer.monthlyData > 0) shop.buyItem(s, CreditItem.BackupBoost, t) ?: s else s
                 s = engine.factoryReset(s, t)!!
                 tl.resetDays += dayOf(t)
@@ -244,9 +252,12 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
         tl.runDigitsByDay[day + 1] = s.runEarned.toString().length
         val week = day / 7 + 1
         tl.bestLevelByWeek[week] = maxOf(s.backup.bestLevel, s.level, tl.bestLevelByWeek[week] ?: 0)
+        tl.runPeakByWeek[week] = weekRunPeak
+        if (day % 7 == 6) weekRunPeak = 1
         tl.digitsByWeek[week] = s.bestSwipe.toString().length
         tl.lifetimeByWeek[week] = s.backup.lifetime
     }
+    tl.finalLevel = s.level
     tl.credits = s.account.creditsFree
     tl.bought = s.account.creditsBought
     tl.dataSpent = s.account.creditsSpent

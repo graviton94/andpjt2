@@ -1,6 +1,8 @@
 package com.graviton94.notificationcleaner.core
 
+import java.math.BigInteger
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -149,39 +151,76 @@ class CommerceTest {
         assertEquals(1, shop.claimAttendance(state, now + 31 * day).account.streak)
     }
 
-    @Test fun watchedAdsCanIncreaseOfflinePThroughTheFollowingUtcDay() {
-        val tuned = engine
+    @Test fun watchedAdsAndAnActivePassBothGrantOneSharedOfflineReward() {
         val reference = Engine(engine.rules.copy(adWatchOfflinePermille = 1_000))
-        val shop = Shop(tuned)
+        val shop = Shop(engine)
         val away = 60_000L
-        val s = tuned.newGame(now, 11).copy(earnRate = java.math.BigInteger.valueOf(10_000))
+        val s = engine.newGame(now, 11).copy(earnRate = BigInteger.valueOf(10_000))
         val watched = assertNotNull(shop.watchAd(s, AdSlot.CreditBox, now))
-        val claimedWithPass = assertNotNull(shop.watchAd(shop.buyPass(s, now), AdSlot.CreditBox, now))
-        val base = reference.settleOffline(watched, away, now + day).second
-        assertEquals(base * java.math.BigInteger.valueOf(17) / java.math.BigInteger.TEN,
-            tuned.settleOffline(watched, away, now + day).second)
-        for (state in listOf(s, claimedWithPass)) {
-            assertEquals(reference.settleOffline(state, away, now + day), tuned.settleOffline(state, away, now + day))
+        val paid = shop.buyPass(s, now)
+        val claimedWithPass = assertNotNull(shop.watchAd(paid, AdSlot.CreditBox, now))
+        assertEquals(-1L, claimedWithPass.account.lastAdWatchDay)
+        val passAndAd = watched.withAccount { it.copy(passUntil = paid.account.passUntil) }
+        for (state in listOf(watched, paid, claimedWithPass, passAndAd)) {
+            val base = reference.settleOffline(state, away, now + day).second
+            assertEquals(base * BigInteger.valueOf(17) / BigInteger.TEN,
+                engine.settleOffline(state, away, now + day).second)
         }
         assertEquals(reference.settleOffline(watched, away, now + 2 * day),
-            tuned.settleOffline(watched, away, now + 2 * day))
+            engine.settleOffline(watched, away, now + 2 * day))
+        assertEquals(reference.settleOffline(paid, away, paid.account.passUntil),
+            engine.settleOffline(paid, away, paid.account.passUntil))
     }
 
-    @Test fun ultraOfflineCalibrationLeavesOtherEntitlementsAlone() {
-        val reference = Engine(engine.rules.copy(ultraOfflinePermille = 1_000))
+    @Test fun speedPassesIncludeTheSharedRewardAndOnlyUltraStacksAnExtraBonus() {
+        val reference = Engine(engine.rules.copy(ultraOfflinePermille = 1_000, adWatchOfflinePermille = 1_000))
         val away = 60_000L
-        val s = engine.newGame(now, 11).copy(earnRate = java.math.BigInteger.valueOf(10_000))
-        val active = s.withAccount { it.copy(speedPass = SpeedPass.Ultra, speedPassUntil = now + day) }
-        val before = reference.settleOffline(active, away, now).second
-        assertEquals(before * java.math.BigInteger.valueOf(3) / java.math.BigInteger.TWO,
-            engine.settleOffline(active, away, now).second)
-        val turbo = active.withAccount { it.copy(speedPass = SpeedPass.Turbo) }
-        val expired = active.withAccount { it.copy(speedPassUntil = now - 1) }
-        for (state in listOf(s, turbo, expired)) {
-            assertEquals(reference.settleOffline(state, away, now), engine.settleOffline(state, away, now))
+        val s = engine.newGame(now, 11).copy(earnRate = BigInteger.valueOf(10_000))
+        for ((kind, multiplier) in listOf(SpeedPass.Turbo to 17L, SpeedPass.Ultra to 22L)) {
+            val active = Shop(engine).buySpeedPass(s, now - 1, kind)
+            val result = engine.settleOfflineWithBonus(active, away, now)
+            val base = reference.settleOffline(active, away, now).second
+            assertEquals(base, result.basePaid)
+            assertEquals(base * BigInteger.valueOf(multiplier) / BigInteger.TEN, result.paid)
+            assertEquals(reference.chargeMs(active, now), engine.chargeMs(active, now))
+            assertEquals(reference.prestigePermille(active, now), engine.prestigePermille(active, now))
+            val expiration = active.account.speedPassUntil
+            assertEquals(reference.settleOffline(active, away, expiration), engine.settleOffline(active, away, expiration))
         }
-        assertEquals(reference.chargeMs(active, now), engine.chargeMs(active, now))
-        assertEquals(reference.prestigePermille(active, now), engine.prestigePermille(active, now))
+    }
+
+    @Test fun offlineBonusIsConsistentInSnapshotShopAndSettlement() {
+        val base = engine.newGame(now, 11).copy(earnRate = BigInteger.valueOf(10_000))
+        val bought = Shop(engine).buySpeedPass(base, now, SpeedPass.Ultra)
+        val watched = bought.withAccount { it.copy(lastAdWatchDay = dayOf(now)) }
+        val w = WebSession(engine, watched, now)
+        val snapshot = Json.parseToJsonElement(w.snapshot(now)).jsonObject
+        val bm = Json.parseToJsonElement(w.bm(now)).jsonObject
+        val settlement = Json.parseToJsonElement(w.offline(60_000L, now)).jsonObject
+        val bonus = snapshot.getValue("offlineBonus").jsonObject
+        assertEquals(bonus, bm.getValue("offlineBonus"))
+        assertEquals(bonus, bm.getValue("state").jsonObject.getValue("offlineBonus"))
+        assertEquals(bonus, settlement.getValue("offlineBonus"))
+        assertTrue(bonus.getValue("adActive").jsonPrimitive.boolean)
+        assertTrue(bonus.getValue("passActive").jsonPrimitive.boolean)
+        assertTrue(bonus.getValue("ultraActive").jsonPrimitive.boolean)
+        assertEquals(47 * 3_600_000L, bonus.getValue("adLeftMs").jsonPrimitive.long)
+        assertEquals(30 * day, bonus.getValue("passLeftMs").jsonPrimitive.long)
+        assertEquals(30 * day, bonus.getValue("ultraLeftMs").jsonPrimitive.long)
+        assertEquals(2_200L, bonus.getValue("multiplierPermille").jsonPrimitive.long)
+        fun amount(key: String) = BigInteger(settlement.getValue(key).jsonPrimitive.content)
+        assertTrue(amount("bonusPaid").signum() > 0)
+        assertEquals(amount("paid"), amount("basePaid") + amount("bonusPaid"))
+    }
+
+    @Test fun offlineLevelCapCanReduceTheCreditedBonusToZero() {
+        val level = engine.rules.jackpotCapFrom
+        val base = engine.newGame(now, 11).copy(level = level, runEarned = engine.rules.levelP(level),
+            earnRate = BigInteger.TEN.pow(400))
+        val result = engine.settleOfflineWithBonus(Shop(engine).buyPass(base, now), 60_000, now)
+        assertEquals(1_700, result.bonus.multiplierPermille)
+        assertTrue(result.paid.signum() > 0)
+        assertEquals(result.basePaid, result.paid)
     }
 
     @Test fun subscriptionsDeliverDailyEntitlementsInTheAppSession() {

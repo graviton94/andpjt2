@@ -1,6 +1,5 @@
 import com.graviton94.notificationcleaner.core.AdSlot
 import java.io.File
-import java.math.BigInteger
 
 private const val AUDIT_DAYS = 84
 private const val AUDIT_SEEDS = 10
@@ -30,10 +29,15 @@ fun balanceAudit(output: File, profiles: String?, availableRewardsOnly: Boolean)
         Triple(payer, seed, result)
     }.toList()
     csv(File(output, "audit-seeds.csv"), listOf("profile", "seed", "lv124_day", "first_reset_day", "first_sync_day",
-        "record_p", "cosmetic_record_5pct", "cosmetic_lv124_day"), rows.asSequence().map { (payer, seed, trace) ->
-        val record = trace.bestSwipeP
-        listOf(payer.name, seed, trace.level124Day, trace.resetDays.firstOrNull(), trace.syncDays.firstOrNull(),
-            record, record * BigInteger.valueOf(105) / BigInteger.valueOf(100), trace.level124Day)
+        "record_p"), rows.asSequence().map { (payer, seed, trace) ->
+        listOf(payer.name, seed, trace.level124Day, trace.resetDays.firstOrNull(), trace.syncDays.firstOrNull(), trace.bestSwipeP)
+    })
+    csv(File(output, "audit-stalls.csv"), listOf("profile", "seed", "highest_level", "highest_first_day",
+        "week10_run_peak", "week11_run_peak", "week12_run_peak", "final_level", "last_reset_day", "last_reset_level",
+        "last_sync_day", "last_sync_level"), rows.asSequence().filter { it.third.level124Day == null }.map { (payer, seed, t) ->
+        val high = t.levelDays.lastKey()
+        listOf(payer.name, seed, high, t.levelDays[high], t.runPeakByWeek[10], t.runPeakByWeek[11], t.runPeakByWeek[12],
+            t.finalLevel, t.resetDays.lastOrNull(), t.lastResetLevel, t.syncDays.lastOrNull(), t.lastSyncLevel)
     })
     csv(File(output, "audit-gates.csv"), listOf("profile", "median_days", "in_band", "seeds", "min_day", "max_day",
         "low", "high", "verdict"), payers.asSequence().map { payer ->

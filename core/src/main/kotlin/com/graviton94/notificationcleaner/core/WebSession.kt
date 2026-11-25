@@ -52,9 +52,18 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     /** Away time → offline pay (the host measures the time with [AwayClock]). */
     fun offline(awayMs: Long, now: Long): String {
-        val (next, paid) = engine.settleOffline(state, awayMs, now)
-        state = shop.claimPassDaily(shop.claimAttendance(next, now), now)
-        return buildJsonObject { put("paid", paid.toString()); put("paidShort", short(paid)); put("state", snap(state, now)) }.toString()
+        val settlement = engine.settleOfflineWithBonus(state, awayMs, now)
+        state = shop.claimPassDaily(shop.claimAttendance(settlement.state, now), now)
+        val bonusPaid = settlement.paid - settlement.basePaid
+        return buildJsonObject {
+            put("paid", big(settlement.paid))
+            put("paidShort", short(settlement.paid))
+            put("basePaid", big(settlement.basePaid))
+            put("bonusPaid", big(bonusPaid))
+            put("bonusPaidShort", short(bonusPaid))
+            put("offlineBonus", bonusJson(settlement.bonus))
+            put("state", snap(state, now))
+        }.toString()
     }
 
     fun buy(appId: String, now: Long): String = act(now) { engine.buy(it, appId) }
@@ -167,6 +176,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         val r = engine.rules
         return buildJsonObject {
             put("state", snap(s, now))
+            put("offlineBonus", bonusJson(engine.offlineBonus(s, now)))
             put("data", a.credits)
             put("vouchers", a.starVouchers)
             putJsonArray("packs") { offers.packs.forEach { p -> add(buildJsonObject { put("id", p.id); put("data", p.data); put("gets", packGets(s, p)); put("won", p.won) }) } }
@@ -302,7 +312,21 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         r.alert?.let { put("alert", it.name); put("label", it.label) }
     }
 
+    private fun bonusJson(bonus: OfflineBonusStatus): JsonObject = buildJsonObject {
+        put("rewardBonusPermille", bonus.rewardBonusPermille)
+        put("ultraBonusPermille", bonus.ultraBonusPermille)
+        put("adActive", bonus.adLeftMs > 0)
+        put("adLeftMs", bonus.adLeftMs)
+        put("passActive", bonus.passLeftMs > 0)
+        put("passLeftMs", bonus.passLeftMs)
+        put("ultraActive", bonus.ultraLeftMs > 0)
+        put("ultraLeftMs", bonus.ultraLeftMs)
+        put("rewardActive", bonus.rewardActive)
+        put("multiplierPermille", bonus.multiplierPermille)
+    }
+
     private fun snap(s: GameState, now: Long): JsonObject = buildJsonObject {
+        put("offlineBonus", bonusJson(engine.offlineBonus(s, now)))
         put("wallet", big(s.wallet))
         put("level", s.level)
         put("gauge", s.gauge)
