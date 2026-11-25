@@ -1,0 +1,7 @@
+scope,suite,tests,failures,errors,skipped
+operating_core,com.graviton94.notificationcleaner.core.CommerceTest,12,0,0,0
+operating_core,com.graviton94.notificationcleaner.core.CoreRulesTest,62,0,0,0
+operating_core,com.graviton94.notificationcleaner.core.WebSessionTest,3,0,0,0
+isolated_candidate,com.graviton94.notificationcleaner.core.CommerceTest,12,0,0,0
+isolated_candidate,com.graviton94.notificationcleaner.core.CoreRulesTest,64,0,0,0
+isolated_candidate,com.graviton94.notificationcleaner.core.WebSessionTest,3,0,0,0

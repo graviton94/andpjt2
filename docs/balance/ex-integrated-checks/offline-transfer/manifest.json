@@ -1,0 +1,14 @@
+{
+  "cached": true,
+  "cases": "offline_cap",
+  "first_seed": 1,
+  "integrated_patch_sha256": "42394eb14f1f10283703de8b3e603bacb63325a4f2fbc90f5f2d293b3a8e0bb8",
+  "offline_transfer": true,
+  "profiles": "all",
+  "protect_level": null,
+  "revision": "ee81d68a2bf9fa2959a2a746fe04b34fce339c44",
+  "runner_sha256": "2673b797cebb488427af407377d73a55ec1dbc74081d5209a333e88027e1cff3",
+  "seeds": 6,
+  "source_sha256": "59ea87c69faf64fe1f419795f932bc1ffd58061f39f8fa80c8016764595a0944",
+  "through_day": 56
+}
