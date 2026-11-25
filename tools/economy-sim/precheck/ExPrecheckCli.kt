@@ -7,7 +7,6 @@ import com.graviton94.notificationcleaner.core.SwipeOutcome
 import java.io.File
 import java.math.BigInteger
 import java.util.concurrent.Executors
-import kotlin.math.log10
 
 private val observedDays = setOf(7, 14, 28, 56)
 private val statuses = listOf("summary", "checkpoints", "prestige", "samples", "conditions")
@@ -55,7 +54,7 @@ private fun logP(p: BigInteger): Double {
     if (p.signum() <= 0) return 0.0
     val digits = p.toString()
     val prefix = digits.take(15)
-    return digits.length - prefix.length + log10(prefix.toDouble())
+    return digits.length - prefix.length + StrictMath.log10(prefix.toDouble())
 }
 
 private fun runCase(dir: File, scenario: ExExperiment.Scenario, policy: Policy, seed: Long, through: Int) {
@@ -96,14 +95,15 @@ object ExPrecheckCli {
         val seeds = args[1].toInt()
         val workers = args[2].toInt()
         val through = args[5].toInt()
+        val firstSeed = args[6].toLong()
         val allPolicies = Payer.entries.map { Policy(it.name, it) } +
             Policy("PassVisible", Payer.Pass, AdSlot.entries.toSet() - AdSlot.OfflineDouble)
         val policies = allPolicies.filter { args[3] == "all" || it.name in args[3].split(",") }
         val scenarios = ExExperiment.scenarios.filter { args[4] == "all" || it.name in args[4].split(",") }
-        require(seeds > 0 && workers > 0 && policies.isNotEmpty() && scenarios.isNotEmpty() && through in 0..56)
+        require(seeds > 0 && firstSeed > 0 && workers > 0 && policies.isNotEmpty() && scenarios.isNotEmpty() && through in 0..56)
         val cases = File(output, "cases")
         val jobs = scenarios.flatMap { scenario ->
-            (1L..seeds.toLong()).flatMap { seed -> policies.map { Triple(scenario, it, seed) } }
+            (firstSeed until firstSeed + seeds).flatMap { seed -> policies.map { Triple(scenario, it, seed) } }
         }
         val executor = Executors.newFixedThreadPool(workers)
         try {

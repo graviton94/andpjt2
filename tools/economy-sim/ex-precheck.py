@@ -93,6 +93,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--seeds", type=int, default=30, help="Use consecutive seeds from 1")
+    parser.add_argument("--first-seed", type=int, default=1)
     parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument("--profiles", default="all")
     parser.add_argument("--cases", default="all")
@@ -116,6 +117,7 @@ def main():
         "source_sha256": digest.hexdigest(),
         "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "seeds": args.seeds,
+        "first_seed": args.first_seed,
         "profiles": args.profiles,
         "cases": args.cases,
         "through_day": args.through_day,
@@ -146,7 +148,8 @@ def main():
         java = str(Path(env["JAVA_HOME"]) / "bin/java") if env.get("JAVA_HOME") else "java"
         libs, = (project / "build/install").glob("*/lib")
         subprocess.run([java, "-Xmx4g", "-Dfile.encoding=UTF-8", "-cp", str(libs / "*"), "ExPrecheckCli",
-                        str(out), str(args.seeds), str(args.jobs), args.profiles, args.cases, str(args.through_day)],
+                        str(out), str(args.seeds), str(args.jobs), args.profiles, args.cases, str(args.through_day),
+                        str(args.first_seed)],
                        check=True, env=env)
 
 

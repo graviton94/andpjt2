@@ -43,7 +43,8 @@ object ExExperiment {
         var shadowCountdown = 1
         var shadowAttempted = 0L
 
-        fun record(actor: Actor, now: Long, conditionMask: Int, bp: Int, base: BigInteger, added: BigInteger, marginal: BigInteger) {
+        fun record(actor: Actor, now: Long, conditionMask: Int, bp: Int, base: BigInteger, added: BigInteger,
+            marginal: BigInteger, capBlocked: Boolean) {
             val actorIndex = actor.ordinal
             val dayIndex = days.indexOf(((now - START) / DAY).toInt() + 1)
             val actual = ratio(added, base)
@@ -52,7 +53,7 @@ object ExExperiment {
                 sample.swipes++
                 sample.noExPaid += base
                 sample.exPaid += added
-                if (base.signum() > 0 && added.signum() == 0 && bp > 0) sample.cappedToZero++
+                if (capBlocked) sample.cappedToZero++
                 sample.paidBp += actual
                 sample.nominalBp += bp.toLong()
                 var mask = conditionMask
@@ -134,7 +135,7 @@ object ExExperiment {
             val paid = adjusted.min(room)
             val marginal = if (conditions == 0) BigInteger.ZERO
                 else paid - (earned * BigInteger.valueOf(10_000L + bp - 25) / basis).min(room)
-            run.record(actor, now, conditions, bp, base, paid - base, marginal)
+            run.record(actor, now, conditions, bp, base, paid - base, marginal, earned >= room && adjusted > earned)
         }
         return adjusted
     }

@@ -1,0 +1,79 @@
+name: EX pre-implementation evidence
+
+on:
+  push:
+    branches: [ccr-balance-port]
+    paths: ['.github/workflows/ex-precheck.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 24
+      matrix:
+        profile: [Free, Ads, Pass, Spend30, Spend100, PassVisible]
+        first_seed: [1, 7, 13, 19, 25]
+        scenarios: [effect, purchase]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+      - name: Run deterministic shard
+        env:
+          PROFILE: ${{ matrix.profile }}
+          FIRST_SEED: ${{ matrix.first_seed }}
+          SCENARIOS: ${{ matrix.scenarios }}
+        run: |
+          if [ "$SCENARIOS" = effect ]; then
+            cases=none,full,one_set,offline_cap
+          else
+            cases=one,spread_three,two_sets,staged
+          fi
+          python3 tools/economy-sim/ex-precheck.py build/ex-evidence \
+            --jobs "$(nproc)" --seeds 6 --first-seed "$FIRST_SEED" \
+            --profiles "$PROFILE" --cases "$cases"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ex-precheck-${{ matrix.profile }}-${{ matrix.first_seed }}-${{ matrix.scenarios }}
+          path: |
+            build/ex-evidence/*.csv
+            build/ex-evidence/manifest.json
+          if-no-files-found: error
+
+  publish-evidence:
+    needs: shard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ex-precheck-*
+          path: build/ex-shards
+      - name: Merge and verify source evidence
+        run: python3 tools/economy-sim/precheck/merge-shards.py build/ex-shards docs/balance/ex-precheck-data
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ex-evidence-merged
+          path: docs/balance/ex-precheck-data/
+          if-no-files-found: error
+      - name: Save evidence to the balance branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/balance/ex-precheck-data
+          git commit -m 'EX 착수 전 30시드 원자료와 해시 기록'
+          git fetch origin ccr-balance-port
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/ccr-balance-port
