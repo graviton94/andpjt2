@@ -1,0 +1,149 @@
+name: Recover EX evidence shards
+
+on:
+  push:
+    branches: [ccr-balance-port]
+    paths: ['.github/workflows/ex-precheck-recovery.yml']
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    outputs:
+      original: ${{ steps.original.outputs.id }}
+      revision: ${{ steps.original.outputs.revision }}
+      missing: ${{ steps.missing.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Identify the original run and let completed shards finish
+        id: original
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          original=$(gh run list --workflow ex-precheck.yml --branch ccr-balance-port --limit 1 --json databaseId,headSha)
+          run_id=$(jq -er '.[0].databaseId' <<< "$original")
+          revision=$(jq -er '.[0].headSha' <<< "$original")
+          printf 'id=%s\nrevision=%s\n' "$run_id" "$revision" >> "$GITHUB_OUTPUT"
+          status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .status)
+          until [ "$status" = completed ]; do
+            sleep 30
+            status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .status)
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ steps.original.outputs.id }}
+          github-token: ${{ github.token }}
+          pattern: ex-precheck-*
+          path: build/ex-shards
+      - name: Plan only missing shards
+        id: missing
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          groups = {
+              "effect": "none,full,one_set,offline_cap",
+              "purchase": "one,spread_three,two_sets,staged",
+          }
+          missing = []
+          for profile in ("Free", "Ads", "Pass", "Spend30", "Spend100", "PassVisible"):
+              for first_seed in range(1, 31, 6):
+                  for group, cases in groups.items():
+                      artifact = f"ex-precheck-{profile}-{first_seed}-{group}"
+                      if not (Path("build/ex-shards") / artifact / "manifest.json").is_file():
+                          missing.append(dict(profile=profile, first_seed=first_seed, cases=cases, artifact=artifact))
+          print(f"Missing shards: {len(missing)}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"matrix={json.dumps(missing, separators=(',', ':'))}", file=output)
+          PY
+
+  repair:
+    needs: discover
+    if: needs.discover.outputs.missing != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        include: ${{ fromJson(needs.discover.outputs.missing) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.discover.outputs.revision }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+      - name: Resume the exact shard with two workers
+        env:
+          PROFILE: ${{ matrix.profile }}
+          FIRST_SEED: ${{ matrix.first_seed }}
+          CASES: ${{ matrix.cases }}
+        run: |
+          run_shard() {
+            python3 tools/economy-sim/ex-precheck.py build/ex-evidence \
+              --jobs 2 --seeds 6 --first-seed "$FIRST_SEED" --profiles "$PROFILE" --cases "$CASES"
+          }
+          if ! run_shard > "$RUNNER_TEMP/ex-shard.log" 2>&1; then
+            tail -30 "$RUNNER_TEMP/ex-shard.log"
+            if ! run_shard > "$RUNNER_TEMP/ex-shard.log" 2>&1; then
+              tail -40 "$RUNNER_TEMP/ex-shard.log"
+              last_error=$(grep -E 'Caused by:|Exception|Error:|^> ' "$RUNNER_TEMP/ex-shard.log" | tail -5 || true)
+              printf '::error title=Shard replay failed::%s\n' "${last_error//$'\n'/%0A}"
+              exit 1
+            fi
+          fi
+          tail -8 "$RUNNER_TEMP/ex-shard.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            build/ex-evidence/*.csv
+            build/ex-evidence/manifest.json
+          if-no-files-found: error
+
+  publish-evidence:
+    needs: [discover, repair]
+    if: always() && needs.discover.result == 'success' && (needs.repair.result == 'success' || needs.repair.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.discover.outputs.original }}
+          github-token: ${{ github.token }}
+          pattern: ex-precheck-*
+          path: build/ex-shards
+      - uses: actions/download-artifact@v4
+        if: needs.repair.result == 'success'
+        with:
+          pattern: ex-precheck-*
+          path: build/ex-shards
+      - name: Verify merged evidence
+        run: python3 tools/economy-sim/precheck/merge-shards.py build/ex-shards docs/balance/ex-precheck-data
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ex-evidence-merged
+          path: docs/balance/ex-precheck-data/
+      - name: Save evidence to the balance branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/balance/ex-precheck-data
+          git commit -m 'EX 착수 전 30시드 원자료와 해시 기록'
+          git fetch origin ccr-balance-port
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/ccr-balance-port
