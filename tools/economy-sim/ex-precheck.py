@@ -118,8 +118,40 @@ def protect_first_goal(daily, level):
         f"            val allowPrestige = s.level < {level} || tl.level124Day != null\n"
     ))
     for expression in ("resets && gb > 0", "resets && s.level >= engine.rules.resetLevel"):
-        source = replace(source, f"if ({expression}", f"if (allowPrestige && {expression}")
+        current = expression if f"if ({expression}" in source else expression.replace("gb > 0", "gb.signum() > 0")
+        source = replace(source, f"if ({current}", f"if (allowPrestige && {current}")
     daily.write_text(source)
+
+
+def delay_growth_expansion(core):
+    """Pre-124 control: reuse the opening shop limits, then unlock the candidate tail."""
+    engine = core / "Engine.kt"
+    source = engine.read_text()
+    source = replace(source, "    fun backupMax(s: GameState, item: BackupItem) = item.max", """    fun backupMax(s: GameState, item: BackupItem): Int {
+        if (maxOf(s.level, s.backup.bestLevel) >= 124) return item.max
+        return when (item) {
+            BackupItem.Value -> 50 + 10 * s.backup.cloud.lv(CloudItem.ValueCap)
+            BackupItem.StartFunds, BackupItem.Offline, BackupItem.ChainBoost, BackupItem.Milestone -> 10
+            else -> item.max
+        }
+    }""")
+    source = replace(source, "        if (item == CloudItem.ValueCap || owned >= item.max || c.syncs < item.minSyncs) return false",
+                     """        val expanded = maxOf(s.level, s.backup.bestLevel) >= 124
+        val max = if (expanded) item.max else when (item) {
+            CloudItem.SyncValue, CloudItem.Compression -> 30
+            CloudItem.CloudOffline -> 4
+            CloudItem.CloudChain -> 5
+            CloudItem.AiBoost -> 10
+            else -> item.max
+        }
+        if ((expanded && item == CloudItem.ValueCap) || owned >= max || c.syncs < item.minSyncs) return false""")
+    engine.write_text(source)
+    rules = core / "Rules.kt"
+    source = rules.read_text()
+    source = replace(source, "        return (total - backup.lifetime).max(BigInteger.ZERO)",
+                     """        val payable = if (maxOf(level, backup.bestLevel) >= 124) total else total.min(BigInteger.valueOf(FILE_LIMIT))
+        return (payable - backup.lifetime).max(BigInteger.ZERO)""")
+    rules.write_text(source)
 
 
 def main():
@@ -136,6 +168,8 @@ def main():
                         help="Diagnostic replay: postpone prestige at this level or above until first Lv124")
     parser.add_argument("--uncached", action="store_true", help="Run the unmodified core arithmetic without memoization")
     parser.add_argument("--integrated", action="store_true", help="Apply the reviewed candidate to the isolated engine copy")
+    parser.add_argument("--expansion-after-124", action="store_true",
+                        help="Diagnostic: preserve opening shop and file caps until first Lv124")
     parser.add_argument("--audit-only", action="store_true", help="Run the integrated lifecycle fixture instead of the matrix")
     args = parser.parse_args()
     sim = Path(__file__).resolve().parent
@@ -167,10 +201,14 @@ def main():
         manifest["integrated_patch_sha256"] = hashlib.sha256(candidate.read_bytes()).hexdigest()
     if args.audit_only and not args.integrated:
         parser.error("--audit-only requires the integrated candidate")
+    if args.expansion_after_124 and not args.integrated:
+        parser.error("--expansion-after-124 requires the integrated candidate")
     if args.audit_only:
         manifest["audit_only"] = True
     if args.days != 84:
         manifest["days"] = args.days
+    if args.expansion_after_124:
+        manifest["expansion_after_124"] = True
     manifest_path = out / "manifest.json"
     if manifest_path.exists() and json.loads(manifest_path.read_text()) != manifest:
         parser.error("The output directory contains checkpoints made with a different run configuration")
@@ -198,6 +236,8 @@ def main():
                 text = text.replace(f"BigInteger.valueOf({field})", field).replace(f"{field} > 0", f"{field}.signum() > 0")
             cli.write_text(text)
         instrument(core, args.integrated)
+        if args.expansion_after_124:
+            delay_growth_expansion(core)
         if args.protect_level is not None:
             protect_first_goal(project / "src/main/kotlin/Daily.kt", args.protect_level)
         if not args.uncached:
