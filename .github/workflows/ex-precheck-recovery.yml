@@ -1,4 +1,4 @@
-name: Recover EX evidence shards
+name: Recover integrated evidence shards
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 65
     outputs:
       original: ${{ steps.original.outputs.id }}
       revision: ${{ steps.original.outputs.revision }}
@@ -24,7 +24,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          original=$(gh run list --workflow ex-precheck.yml --branch ccr-balance-port --limit 1 --json databaseId,headSha)
+          original=$(gh run list --workflow ex-integrated-precheck.yml --branch ccr-balance-port --limit 1 --json databaseId,headSha)
           run_id=$(jq -er '.[0].databaseId' <<< "$original")
           revision=$(jq -er '.[0].headSha' <<< "$original")
           printf 'id=%s\nrevision=%s\n' "$run_id" "$revision" >> "$GITHUB_OUTPUT"
@@ -37,7 +37,7 @@ jobs:
         with:
           run-id: ${{ steps.original.outputs.id }}
           github-token: ${{ github.token }}
-          pattern: ex-precheck-*
+          pattern: ex-integrated-*
           path: build/ex-shards
       - name: Plan only missing shards
         id: missing
@@ -55,7 +55,7 @@ jobs:
           for profile in ("Free", "Ads", "Pass", "Spend30", "Spend100", "PassVisible"):
               for first_seed in range(1, 31, 6):
                   for group, cases in groups.items():
-                      artifact = f"ex-precheck-{profile}-{first_seed}-{group}"
+                      artifact = f"ex-integrated-{profile}-{first_seed}-{group}"
                       if not (Path("build/ex-shards") / artifact / "manifest.json").is_file():
                           missing.append(dict(profile=profile, first_seed=first_seed, cases=cases, artifact=artifact))
           print(f"Missing shards: {len(missing)}")
@@ -89,16 +89,17 @@ jobs:
           PROFILE: ${{ matrix.profile }}
           FIRST_SEED: ${{ matrix.first_seed }}
           CASES: ${{ matrix.cases }}
+          GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.project.kotlin.compiler.execution.strategy=in-process
         run: |
           run_shard() {
             python3 tools/economy-sim/ex-precheck.py build/ex-evidence \
-              --jobs 2 --seeds 6 --first-seed "$FIRST_SEED" --profiles "$PROFILE" --cases "$CASES"
+              --integrated --jobs 2 --seeds 6 --first-seed "$FIRST_SEED" --profiles "$PROFILE" --cases "$CASES"
           }
           if ! run_shard > "$RUNNER_TEMP/ex-shard.log" 2>&1; then
             tail -30 "$RUNNER_TEMP/ex-shard.log"
             if ! run_shard > "$RUNNER_TEMP/ex-shard.log" 2>&1; then
               tail -40 "$RUNNER_TEMP/ex-shard.log"
-              last_error=$(grep -E 'Caused by:|Exception|Error:|^> ' "$RUNNER_TEMP/ex-shard.log" | tail -5 || true)
+              last_error=$(grep -E 'Caused by:|Exception|Error:|Could not |Failed to |disappeared|What went wrong' "$RUNNER_TEMP/ex-shard.log" | tail -10 || true)
               printf '::error title=Shard replay failed::%s\n' "${last_error//$'\n'/%0A}"
               exit 1
             fi
@@ -125,25 +126,25 @@ jobs:
         with:
           run-id: ${{ needs.discover.outputs.original }}
           github-token: ${{ github.token }}
-          pattern: ex-precheck-*
+          pattern: ex-integrated-*
           path: build/ex-shards
       - uses: actions/download-artifact@v4
         if: needs.repair.result == 'success'
         with:
-          pattern: ex-precheck-*
+          pattern: ex-integrated-*
           path: build/ex-shards
       - name: Verify merged evidence
-        run: python3 tools/economy-sim/precheck/merge-shards.py build/ex-shards docs/balance/ex-precheck-data
+        run: python3 tools/economy-sim/precheck/merge-shards.py build/ex-shards docs/balance/ex-integrated-data
       - uses: actions/upload-artifact@v4
         with:
-          name: ex-evidence-merged
-          path: docs/balance/ex-precheck-data/
+          name: integrated-recovered-data
+          path: docs/balance/ex-integrated-data/
       - name: Save evidence to the balance branch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- docs/balance/ex-precheck-data
-          git commit -m 'EX 착수 전 30시드 원자료와 해시 기록'
+          git add -- docs/balance/ex-integrated-data
+          git commit -m '통합 검증 누락 조각 복구와 원자료 기록'
           git fetch origin ccr-balance-port
           git rebase FETCH_HEAD
           git push origin HEAD:refs/heads/ccr-balance-port
