@@ -389,6 +389,15 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 .it .t{overflow:hidden}
 .tag.corner{top:22px!important}
 .caps .tier{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font:600 11px/1 var(--font);background:color-mix(in srgb,var(--m-primary) 16%,transparent);color:var(--m-primary)}
+#appd .fx .ln{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#appd .fx .w{font:500 13.5px/1.5 var(--font);color:var(--m-on-sv)}
+#appd .fx .t{font:700 16px/1.45 var(--font);color:var(--m-on-surface)}
+#appd .fx .n{font:400 12.5px/1.5 var(--font);color:var(--m-on-sv)}
+.fit1{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+/* Korean wraps only between words, and paragraphs balance their lines */
+#sheet,#shade,#cf,#appd,.toast{word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
+.foot{display:flex;flex-direction:column;align-items:center;gap:2px;margin:12px 0 4px;font:400 12px/1.5 var(--font);color:var(--m-on-sv)}.foot span{display:block;max-width:100%}
+.day .caps{justify-content:flex-start}.day .fit1{display:block;max-width:100%}
 </style>
 </head>
 <body>
@@ -1709,7 +1718,6 @@ function renderSheet() {
     b.innerHTML = `<div class="seg">${[0, ...tiers].map(t => `<button class="${t === shopTier ? 'on' : ''}" data-tier="${t}">${t ? t + '티어' : '전체'}</button>`).join('')}</div>`
       + list.map(a => {
         const lock = !a.owned && !a.open;
-        const fx = (TEXTS[a.id] || [])[0] || '';
         const btn = a.owned ? `<span class="btn own">${ic('check')}보유</span>` : lock ? `<button class="btn skin off" disabled>${ic('lock')}잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${(a.canBuy != null ? a.canBuy : geq(st.wallet, a.price)) ? '' : 'disabled'}>${P$(a.price, a.priceShort)}</button>`;
         const caps = `<span class="cap">${a.region}</span><span class="cap">${a.cat}</span>${lock ? `<span class="cap lockc">${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel}`}</span>` : ''}`;
         return `<div class="it ${lock ? 'lock' : ''}"><button class="appi" data-info="${a.id}" aria-label="${a.name} 정보">${ico(a.id)}</button><div class="t"><b>${a.name}</b><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><div class="caps">${caps}</div></div>${btn}</div>`;
@@ -1751,7 +1759,7 @@ function renderSheet() {
     $('sheet-t').textContent = sheetKind === 'reset' ? '초기화 · 동기화' : '백업 상점';
     const files = st.backupFilesNow;
     b.innerHTML = (sheetKind === 'reset' ? `<div class="hero">받을 백업파일<b>+${shortOf(files)}</b><span class="note">${P.canReset ? (files ? '지난 최고 기록을 넘긴 만큼만 받아요' : '이번 판이 지난 최고를 넘어야 받아요') : `Lv ${st.resetLevel}부터 초기화할 수 있어요 (지금 Lv ${st.level})`}</span></div>
-      <div class="cols"><div><h4>초기화되는 것</h4>P · 레벨 · 앱 · 강화 · 덱</div><div><h4>남는 것</h4>백업파일 · 백업 상점 · 데이터 · 칭호</div></div>
+      <div class="cols"><div><h4>초기화되는 것</h4><div class="caps"><span class="cap">P</span><span class="cap">레벨</span><span class="cap">앱</span><span class="cap">강화</span><span class="cap">덱</span></div></div><div><h4>남는 것</h4><div class="caps"><span class="cap">백업파일</span><span class="cap">백업 상점</span><span class="cap">데이터</span><span class="cap">칭호</span></div></div></div>
       <button class="btn big skin claim" data-act="reset" ${P.canReset && files > 0 ? '' : 'disabled'}>${armReset ? '정말 초기화할까요? 한 번 더 누르기' : '공장 초기화'}</button>` : '')
       + (sheetKind === 'reset' ? `<div class="h3">클라우드 동기화 · 두 번째 환생</div>
       <div class="hero">받을 GB<b>+${shortOf(P.gbNow)}</b><span class="note">${P.canSync ? '백업파일·백업 상점까지 비우고 GB로 바꿔요. GB와 클라우드 상점은 영원히 남아요' : `Lv ${P.syncLevel}부터 동기화할 수 있어요 (지금 Lv ${st.level})`}</span></div>
@@ -1772,7 +1780,12 @@ function renderSheet() {
   else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
   b.querySelectorAll('[data-info]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); appDetail(x.dataset.info); }));
-  stagger(b);
+  stagger(b); requestAnimationFrame(() => fitLines(b));
+}
+// one sentence, one line: shrink (never wrap) any .fit1 line that would overflow its box
+const foot = ls => `<div class="foot">${ls.map(l => `<span class="fit1">${l}</span>`).join('')}</div>`;
+function fitLines(root) {
+  root.querySelectorAll('.fit1').forEach(e => { e.style.fontSize = ''; let f = parseFloat(getComputedStyle(e).fontSize); while (e.scrollWidth > e.clientWidth + 1 && f > 10) { f -= .5; e.style.fontSize = f + 'px'; } });
 }
 // app detail: a glass card over the sheet with everything the row leaves out
 function appDetail(id) {
@@ -1786,7 +1799,7 @@ function appDetail(id) {
     rows.push(['다음 강화', P$(a.price1, a.price1Short)]);
     if (a.synRegion || a.synCat) rows.push(['시너지', `${a.region} +${a.synRegion || 0}% · ${a.cat} +${a.synCat || 0}%`]);
   } else {
-    rows.push(['가격', P$(a.price, a.priceShort)]);
+    rows.push(['가격', a.price != null ? P$(a.price, a.priceShort) : '<span class="sub">해금 후 공개</span>']);
     rows.push(['해금', a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel}${st.level >= a.unlockLevel ? ' <span class="sub">(달성)</span>' : ''}`]);
   }
   rows.push(['프리미엄', stars ? `<span class="t-gold">${'★'.repeat(stars)}</span>` : '<span class="sub">없음</span>']);
@@ -1796,11 +1809,11 @@ function appDetail(id) {
   const el = $('appd');
   el.innerHTML = `<div class="card" role="dialog" aria-label="${a.name}"><button class="x" id="appd-x" aria-label="닫기">${svg('M6 6l12 12M18 6 6 18')}</button>
     <div class="hd"><div class="big">${ico(a.id)}</div><div><b>${a.name}</b><div class="caps"><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><span class="cap">${a.region}</span><span class="cap">${a.cat}</span><span class="cap ${stat[1]}">${stat[0]}</span></div></div></div>
-    ${fx ? `<div class="fx"><span class="l">고유 효과</span>${fx}</div>` : ''}
+    ${fx ? `<div class="fx"><span class="l">고유 효과</span><span class="ln w fit1">${fx[0]}</span><span class="ln t fit1">${fx[1]}</span>${fx[2] ? `<span class="ln n fit1">${fx[2]}</span>` : ''}</div>` : ''}
     <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
     ${msgs.length ? `<div class="l">이 앱이 보내는 알림</div>${msgs.map(m => `<div class="msg">${ico(a.id, 0)}<span><b>${a.name}</b>${m}</span></div>`).join('')}` : ''}
     ${act ? `<div class="act">${act}</div>` : ''}</div>`;
-  el.classList.add('on'); sfx.snap();
+  el.classList.add('on'); sfx.snap(); fitLines(el);
   const close = () => el.classList.remove('on');
   el.onclick = e => { if (e.target === el) close(); };
   $('appd-x').onclick = close;
@@ -1824,7 +1837,7 @@ async function renderSettings(b) {
     <a class="it" href="${SITE}privacy/" style="text-decoration:none;color:inherit"><div class="t"><b>개인정보처리방침</b><div class="m">수집 항목과 삭제 방법</div></div><span class="note">›</span></a>
     <a class="it" href="${SITE}terms/" style="text-decoration:none;color:inherit"><div class="t"><b>이용약관</b><div class="m">결제·환불 안내 포함</div></div><span class="note">›</span></a>
     <div class="h3" style="color:var(--m-error)">데이터</div>
-    <div class="it"><div class="t"><b>게임 데이터 초기화</b><div class="m" style="white-space:normal">이 기기의 진행·재화·출석·설정을 모두 지우고 처음부터 시작해요. 되돌릴 수 없어요.</div></div></div>
+    <div class="it"><div class="t"><b>게임 데이터 초기화</b><div class="m fit1">진행·재화·출석·설정을 모두 지워요</div><div class="m fit1" style="color:var(--m-error)">[!] 되돌릴 수 없어요</div></div></div>
     <button class="btn big" id="wipe" style="background:var(--m-error);color:var(--m-on-error)">${wipeArm ? '정말 지울까요? 한 번 더 누르기' : '게임 데이터 초기화'}</button>`;
   b.querySelectorAll('[data-sw]').forEach(x => x.addEventListener('click', () => {
     const k = x.dataset.sw;
@@ -1937,11 +1950,11 @@ function renderData(b) {
         <span class="basep">${bonus ? `${p.data.toLocaleString()} + ${bonus.toLocaleString()}` : '\u00a0'}</span>
         <span class="won skin gold">${won(p.won)}</span></button>`;
     }).join('')}</div>`;
-  h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m">${ic('clock')}오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
+  h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b class="fit1" style="display:block">${it.label.split(' (')[0]}</b>${it.label.includes(' (') ? `<div class="m fit1">(${it.label.split(' (')[1]}</div>` : ''}<div class="m">${ic('clock')}오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
       <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
       <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '<img src="img/ui/ad.webp">광고'}</button></div>`).join('')
-    + `<div class="note" style="text-align:center;margin-top:10px">N배 이득 = 데이터 100 (₩2,200) 기준 · ★ 선택권·부스트는 데이터 가격으로 환산 · 확률형 상품 없음 · 결제는 테스트용 가짜</div>`;
+    + foot(['N배 이득은 데이터 100 (₩2,200) 기준', '★ 선택권·부스트는 데이터 가격으로 환산', '확률형 상품 없음', '[!] 지금 결제는 테스트용 가짜']);
   b.innerHTML = h;
 }
 function renderPass(b) {
@@ -1950,7 +1963,7 @@ function renderPass(b) {
   b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', ['광고 없이 광고 보상 즉시', '매일 데이터 60 + 즉시 300', '매일 오버클럭 3시간'], '₩5,500 / 30일', m.passActive && !m.speedPass)
     + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×3.5', '백업파일·GB ×1.75'], '₩33,000 / 30일', m.speedPass === 'Turbo')
     + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', ['월간 패스 전부 포함', '하루 종일 게임 속도 ×8', '백업파일·GB ×4', '매일 데이터 +200'], '₩99,000 / 30일', m.speedPass === 'Ultra')
-    + `<div class="note" style="text-align:center">자동 갱신 · 언제든 해지 · 남은 기간은 그대로 · 상위 패스로 바꾸면 차액만 · 결제는 테스트용 가짜</div>`;
+    + foot(['30일 자동 갱신 · 언제든 해지', '해지해도 남은 기간은 그대로', '상위 패스로 바꾸면 차액만 결제', '[!] 지금 결제는 테스트용 가짜']);
 }
 function renderPremium(b) {
   const m = P.bm; $('sheet-t').textContent = '프리미엄 버전'; $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
@@ -1958,7 +1971,7 @@ function renderPremium(b) {
   b.innerHTML = (m.vouchers ? `<div class="it" style="border-color:var(--gold)"><img src="img/bm/badge-star-on.webp"><div class="t"><b>★ 선택권 ${m.vouchers}장</b><div class="m">아무 앱 ★2까지 무료로 · 아래에서 "선택권" 누르기</div></div></div>` : '')
     + m.premium.map(a => `<div class="it ${a.open ? '' : 'lock'}">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">${a.tier}티어 · 가치 ×${(a.permille / 1000).toFixed(a.permille % 1000 ? 1 : 0)}</span><div>${stars(a.stars)}</div></div>
       ${a.stars >= a.max ? '<b style="color:var(--gold)">' + ic('crown', 'width:20px;height:20px') + 'MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn skin gold" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn skin green" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
-    + `<div class="note" style="text-align:center;margin-top:8px">★마다 그 앱 가치 ×2 · 초기화·동기화해도 남아요 · 높은 티어일수록 효율이 좋아요</div>`;
+    + foot(['★ 하나마다 그 앱 가치 ×2', '초기화·동기화해도 남아요', '(높은 티어 앱일수록 효율이 좋아요)']);
 }
 function renderAttend(b) {
   const m = P.bm; $('sheet-t').textContent = '매일 들르기'; $('sheet-w').innerHTML = '';
@@ -1967,8 +1980,8 @@ function renderAttend(b) {
   const cell = (d, i) => {
     const n = i + 1, big = n % 10 === 0, cls = `day ${big ? 'big' : ''} ${n <= got ? 'got' : ''} ${n === (m.claimedToday ? m.streak : m.today) ? 'now' : ''}`;
     const what = d.tickets.length ? `${d.tickets[0].label.split(' ')[0]} ×${d.tickets[0].n}` : '';
-    if (big) return `<div class="${cls}"><i>${n}</i><img src="img/ui/gift.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
-    return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b>${n <= got ? sticker('stamp', '출석', 38, 'right:-6px;bottom:-6px;transform:rotate(-12deg)') : ''}</div>`;
+    if (big) return `<div class="${cls}"><i>${n}</i><img src="img/ui/gift.webp"><b>${d.data}</b><span class="caps">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 「${d.title}」` : ''].filter(Boolean).map(x => `<span class="cap">${x}</span>`).join('')}</span></div>`;
+    return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b class="fit1">${d.data || what}</b>${n <= got ? sticker('stamp', '출석', 38, 'right:-6px;bottom:-6px;transform:rotate(-12deg)') : ''}</div>`;
   };
   b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:800 22px Pretendard;color:var(--gold)">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
     <div class="board">${m.board.map(cell).join('')}</div>

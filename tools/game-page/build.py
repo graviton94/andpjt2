@@ -11,7 +11,11 @@ FX = ROOT / "docs/design/fx-demo"
 colors = {m[0]: "#" + m[1][2:] for m in re.findall(r'"([a-z0-9]+)" to AppStyle\("[^"]*", Color\(0xFF([0-9A-Fa-f]{6})\)\)', (ROOT / "app/src/main/java/com/graviton94/notificationcleaner/ui/AppStyle.kt").read_text())}
 colors = {k: "#" + v for k, v in re.findall(r'"([a-z0-9]+)" to AppStyle\("[^"]*", Color\(0xFF([0-9A-Fa-f]{6})\)\)', (ROOT / "app/src/main/java/com/graviton94/notificationcleaner/ui/AppStyle.kt").read_text())}
 page = (ROOT / "tools/game-page/game.tpl.html").read_text()
-texts = {k: [v[3], v[4]] for k, v in json.loads((ROOT / "docs/content/app-texts.json").read_text()).items()}
+effects = {k: v for k, v in json.loads((ROOT / "docs/content/app-effects.ko.json").read_text()).items() if not k.startswith("_")}
+for k, v in effects.items():  # 3-line grammar: when / then / note, each one line of at most 20 characters
+    assert v.get("when") and v.get("then") and set(v) <= {"when", "then", "note"}, k
+    assert all(len(x) <= 20 and "\n" not in x for x in v.values()), f"effect line too long: {k}"
+texts = {k: [[effects[k]["when"], effects[k]["then"], effects[k].get("note", "")], v[4]] for k, v in json.loads((ROOT / "docs/content/app-texts.json").read_text()).items()}
 page = page.replace("__COLORS__", json.dumps(colors)).replace("__TEXTS__", json.dumps(texts, ensure_ascii=False)).replace("__HANDSET__", repr((FX / "handset.b64").read_text().strip())).replace("__PHONE__", (FX / "phone-sfx.json").read_text())
 assert "__" not in re.sub(r"__(proto|dirname)__", "", page.split("<script>")[1])[:0] + "", "placeholder left"
 if OUT.exists(): shutil.rmtree(OUT)
