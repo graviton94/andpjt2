@@ -1,0 +1,82 @@
+diff --git a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CommerceTest.kt b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CommerceTest.kt
+index a704c77..68141c8 100644
+--- a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CommerceTest.kt
++++ b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CommerceTest.kt
+@@ -52 +52 @@ class CommerceTest {
+-        assertTrue(restored.state.backup.files > 0)
++        assertTrue(restored.state.backup.files.signum() > 0)
+diff --git a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CoreRulesTest.kt b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CoreRulesTest.kt
+index 7453f5d..e8f17dd 100644
+--- a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CoreRulesTest.kt
++++ b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/CoreRulesTest.kt
+@@ -240 +240 @@ class CoreRulesTest {
+-        assertEquals(10, e.backupFilesNow(run))
++        assertEquals(valueOf(10), e.backupFilesNow(run))
+@@ -244,2 +244,2 @@ class CoreRulesTest {
+-        assertEquals(4, next.backup.files)
+-        assertEquals(10, next.backup.lifetime)
++        assertEquals(valueOf(4), next.backup.files)
++        assertEquals(valueOf(10), next.backup.lifetime)
+@@ -251,4 +251,4 @@ class CoreRulesTest {
+-        assertEquals(10L, e.rules.backupTotal(anchor))
+-        assertEquals(158L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
+-        assertEquals(100_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
+-        assertEquals(Math.floor(10 * Math.pow(10.0, 6.4)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
++        assertEquals(valueOf(10), e.rules.backupTotal(anchor))
++        assertEquals(valueOf(158), e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
++        assertEquals(valueOf(100_000), e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
++        assertEquals(valueOf(Math.floor(10 * Math.pow(10.0, 6.4)).toLong()), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
+@@ -267 +267 @@ class CoreRulesTest {
+-        assertEquals(158L - 10L, e.backupFilesNow(strong))
++        assertEquals(valueOf(148), e.backupFilesNow(strong))
+@@ -402 +402 @@ class CoreRulesTest {
+-        val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
++        val backup = Backup(files = valueOf(500), lifetime = r.backupTotal(r.levelP(r.syncLevel)) * valueOf(4), resets = 30, bestLevel = 75,
+@@ -406 +406 @@ class CoreRulesTest {
+-        assertEquals(20L, e.cloudGbNow(run))
++        assertEquals(valueOf(20), e.cloudGbNow(run))
+@@ -408 +408 @@ class CoreRulesTest {
+-        assertEquals(0L, after.backup.files)
++        assertEquals(BigInteger.ZERO, after.backup.files)
+@@ -413 +413 @@ class CoreRulesTest {
+-        assertEquals(20L, after.backup.cloud.gb)
++        assertEquals(valueOf(20), after.backup.cloud.gb)
+@@ -419 +419 @@ class CoreRulesTest {
+-        assertEquals(Math.floor(10 * 1.5 * Math.sqrt(3.0)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 20 GB)
++        assertEquals(valueOf(Math.floor(10 * 1.5 * Math.sqrt(3.0)).toLong()), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 20 GB)
+@@ -524 +524 @@ class CoreRulesTest {
+-        val rich = e.newGame(now, 1, Backup(cloud = Cloud(gb = 1_000_000, syncs = 20)))
++        val rich = e.newGame(now, 1, Backup(cloud = Cloud(gb = valueOf(1_000_000), syncs = 20)))
+@@ -694 +694 @@ class CoreRulesTest {
+-        assertTrue(plain > 10_000_000_000_000_000L, "late game pays $plain files")
++        assertTrue(plain > valueOf(10_000_000_000_000_000L), "late game pays $plain files")
+@@ -696 +696,28 @@ class CoreRulesTest {
+-        assertEquals(plain / 1_000 * 4_000 + plain % 1_000 * 4, after.backup.files)
++        assertEquals(plain * valueOf(4), after.backup.files)
++    }
++
++    @Test
++    fun capacityPurchasesContinuePastBothPreviousLimits() {
++        val game = e.newGame(now, 17, Backup(files = valueOf(1_000_000), resets = 1,
++            items = mapOf(BackupItem.Offline to 10),
++            cloud = Cloud(gb = valueOf(1_000_000), syncs = 4, items = mapOf(CloudItem.CloudOffline to 4))))
++        val first = e.buyBackup(game, BackupItem.Offline)
++        val second = e.buyCloud(first, CloudItem.CloudOffline)
++        assertEquals(11, first.backup.lv(BackupItem.Offline))
++        assertEquals(5, second.backup.cloud.lv(CloudItem.CloudOffline))
++        assertEquals(3_600_000L, e.offlineCapMs(first) - e.offlineCapMs(game))
++        assertEquals(3_600_000L, e.offlineCapMs(second) - e.offlineCapMs(first))
++        assertEquals(e.offlinePercent(game), e.offlinePercent(second))
++    }
++
++    @Test
++    fun lowTierAppStillGetsAPaidMilestoneAfterLevel500() {
++        val app = Catalog.app("memo")
++        val startLevel = 599
++        val game = e.newGame(now, 17).copy(appLevels = Catalog.starter.associateWith { if (it == app.id) startLevel else 1 },
++            wallet = e.rules.upgradePrice(app, startLevel))
++        val after = e.upgrade(game, app.id)
++        assertEquals(600, after.appLevels.getValue(app.id))
++        assertEquals(BigInteger.ZERO, after.wallet)
++        assertTrue(e.rules.upgradePrice(app, 600) > e.rules.upgradePrice(app, 599))
++        assertTrue(e.earn(after, app.id, valueOf(1_000), 0) >= e.earn(game, app.id, valueOf(1_000), 0) * valueOf(2))
