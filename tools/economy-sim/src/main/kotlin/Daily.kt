@@ -5,6 +5,7 @@ import com.graviton94.notificationcleaner.core.Catalog
 import com.graviton94.notificationcleaner.core.Engine
 import com.graviton94.notificationcleaner.core.EventCard
 import com.graviton94.notificationcleaner.core.GameState
+import com.graviton94.notificationcleaner.core.SwipeOutcome
 import com.graviton94.notificationcleaner.core.AdSlot
 import com.graviton94.notificationcleaner.core.CreditItem
 import com.graviton94.notificationcleaner.core.SpeedPass
@@ -62,6 +63,13 @@ private const val DAY = 86_400_000L
 
 data class DayPlan(val sessions: Int = 4, val sessionMin: Int = 15)
 
+interface DailyAudit {
+    val throughDay: Int
+    fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long)
+    fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int)
+    fun endDay(day: Int, state: GameState)
+}
+
 class Timeline {
     /** (active minutes, day, label) of every first-time unlock. */
     val unlocks = mutableListOf<Triple<Double, Double, String>>()
@@ -118,7 +126,7 @@ fun unlockLevels(): Map<Int, List<String>> {
 }
 
 /** [update]: on this day (0-based) the pack is switched on, as a content update reaching a veteran save. */
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet(), stopAtLv124: Boolean = false): Timeline {
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet(), stopAtLv124: Boolean = false, audit: DailyAudit? = null): Timeline {
     if (Catalog.packs.isNotEmpty()) Catalog.packs = emptySet()  // shared global: only touch it when needed (parallel runs)
     val tl = Timeline()
     var levels = unlockLevels()
@@ -137,6 +145,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     var highestLevel = 0
     var weekRunPeak = 1
     val milestonesToRecord = listOf(1, 3, 5, 8, 12)
+    fun reachedTarget(day: Int) = stopAtLv124 && day >= (audit?.throughDay ?: 0) && tl.level124Day != null
     fun observe() {
         weekRunPeak = maxOf(weekRunPeak, s.level)
         while (highestLevel < s.level) tl.levelDays[++highestLevel] = dayOf(t)
@@ -165,12 +174,12 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 tl.offlineP += got
                 t = begin
                 observe()
-                if (stopAtLv124 && tl.level124Day != null) break@play
+                if (reachedTarget(day)) break@play
                 if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ } ?: ads.refund()
             }
             s = economy(s, t, session, payer, tl, slots, ads)
             observe()
-            if (stopAtLv124 && tl.level124Day != null) break@play
+            if (reachedTarget(day)) break@play
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             val levelAtStart = s.level
@@ -186,10 +195,11 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 if (o0 == null && System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
                 val o = o0 ?: continue
+                audit?.swipe(engine, s, o, t)
                 s = o.state
                 if (stopAtLv124) tl.bestSwipeP = tl.bestSwipeP.max(o.earned)
                 observe()
-                if (stopAtLv124 && tl.level124Day != null) break@play
+                if (reachedTarget(day)) break@play
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
                 if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
                 if (s.energy == 0) shop.useTicket(s, CreditItem.Battery, t)?.let { s = it }
@@ -205,7 +215,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                     levels[everLevel]?.forEach { note(it) }
                 }
                 observe()
-                if (stopAtLv124 && tl.level124Day != null) break@play
+                if (reachedTarget(day)) break@play
                 val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
                 tl.tierDay.putIfAbsent(tier, dayOf(t))
                 if (tl.lastAppDay == null && LAST_APP in s.appLevels) tl.lastAppDay = dayOf(t)
@@ -227,7 +237,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             if (resets && gb > 0 && sinceReset >= 4 && stallSessions >= 2) {
                 if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
                 tl.lastSyncLevel = s.level
-                s = engine.sync(s, t)!!
+                val synced = engine.sync(s, t)!!
+                audit?.prestige("sync", s, synced, t, gain, stallSessions, sinceReset)
+                s = synced
                 tl.syncDays += dayOf(t)
                 everSyncs++
                 com.graviton94.notificationcleaner.core.CloudItem.entries.filter { it.minSyncs == everSyncs }.forEach { note("클라우드 ${it.label}") }
@@ -240,7 +252,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
                 tl.lastResetLevel = s.level
                 s = shop.useTicket(s, CreditItem.BackupBoost, t) ?: if (payer.monthlyData > 0) shop.buyItem(s, CreditItem.BackupBoost, t) ?: s else s
-                s = engine.factoryReset(s, t)!!
+                val reset = engine.factoryReset(s, t)!!
+                audit?.prestige("reset", s, reset, t, gain, stallSessions, sinceReset)
+                s = reset
                 tl.resetDays += dayOf(t)
                 everResets++
                 if (s.backup.cloud.syncs == 0) BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
@@ -256,6 +270,8 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
         if (day % 7 == 6) weekRunPeak = 1
         tl.digitsByWeek[week] = s.bestSwipe.toString().length
         tl.lifetimeByWeek[week] = s.backup.lifetime
+        audit?.endDay(day + 1, s)
+        if (audit != null && reachedTarget(day + 1)) break
     }
     tl.finalLevel = s.level
     tl.credits = s.account.creditsFree
