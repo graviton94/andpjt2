@@ -1,0 +1,29 @@
+{
+  "kind": "analytic design emulator",
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "days": 168,
+  "price_policy": "indexed",
+  "advance_permille": 150,
+  "source_sha256": "a191aa390e942d4f7a2c54955fb044b2349229d925759f504426164e1dd159e7",
+  "csv_sha256": {
+    "acceleration.csv": "e7566043f468b7bd5d51577782ffee99bb91a39425fb7944e325f7cb447df308",
+    "daily-growth.csv": "9345ea2d0f402484ed3acf7b3a396bb87778b1e4fb39d56365443634b261f84b",
+    "daily-seeds.csv": "28d7e6422e10207cc73a54a478c41b5e84390dbc8f436b6a2f46996ffc23f271",
+    "paired-summary.csv": "e73cab4ff18d7afd023689ba6a66ff881555ba9c15bb5ecccd68a19bcf996731",
+    "paired.csv": "7f99e03e3d03651e2c03cef83ebb4c58ee11073ac57d5de01a3c3e26c287e5d1",
+    "skipped-prestige.csv": "9e2f12bf54ee4e805433681664b465e5edb01842c49d0ea068d609cbaa300030",
+    "stall-locations.csv": "3121deecb4c8107d8b1725e4b682850a948511e4a8e4717e5a196ac5e0e9e4fe",
+    "waiting.csv": "a1eb3e6971f616d9057b5afd0857da58a42a75977a7a0e0edd085f815e55f1aa"
+  }
+}

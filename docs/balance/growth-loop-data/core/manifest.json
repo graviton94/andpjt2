@@ -1,0 +1,62 @@
+{
+  "45sec_checkpoint_row_matches": 12960,
+  "baseline": "bdc8175d2f13aed412cf0201ad72a2a496a23373",
+  "files": {
+    "core-15min-indexed.csv": {
+      "active_seconds_per_login": 900,
+      "days": 56,
+      "price_index": true,
+      "rows": 1080,
+      "seed_count": 5,
+      "seed_start": 1,
+      "sha256": "3ff70365aaf4d9ef20ff984d7b8ffd02b242a41378b918b9b5fdf271e6b17803"
+    },
+    "core-15min.csv": {
+      "active_seconds_per_login": 900,
+      "days": 56,
+      "price_index": false,
+      "rows": 6480,
+      "seed_count": 30,
+      "seed_start": 1,
+      "sha256": "037a66545afd2f962d347ff5a33908469cdfb1b353d4660176509810d24646fb"
+    },
+    "core-45sec-daily.csv": {
+      "active_seconds_per_login": 45,
+      "days": 168,
+      "price_index": false,
+      "rows": 272160,
+      "seed_count": 30,
+      "seed_start": 1,
+      "sha256": "d82c6f050c65340210c093e52ce253c9f933048d941e9126ea0693c0d9b91cff"
+    },
+    "core-45sec.csv": {
+      "active_seconds_per_login": 45,
+      "days": 168,
+      "price_index": false,
+      "rows": 12960,
+      "seed_count": 30,
+      "seed_start": 1,
+      "sha256": "52d838047761685b2adbd8a9ce74cced581a908e4ad284afe5dfe9f3056b1327"
+    },
+    "core-return.csv": {
+      "active_seconds_per_login": 0,
+      "days": 168,
+      "price_index": false,
+      "rows": 12960,
+      "seed_count": 30,
+      "seed_start": 1,
+      "sha256": "6ca883b6ca451187e67b3b392b414c965cbd33aa4451233cbedee0b978dccba7",
+      "swipes_per_login": 3
+    }
+  },
+  "patch_sha256": "c73961e498cfe9a06eb4de241605a516ff191f2fe3ec42a0235f2c5f3d8477ea",
+  "probe_sha256": "42fe3b75036119810321c52e2f278ea195ebba4d79950f339f9fd51eb0b54b0f",
+  "profiles": [
+    "Free",
+    "Ads",
+    "Pass",
+    "PassVisible",
+    "Spend30",
+    "Spend100"
+  ]
+}

@@ -104,11 +104,23 @@ def purchases(offer, sku, sets):
     )
 
 
-def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"):
+def file_entitlement(run_p):
+    if run_p < 3:
+        return ZERO
+    return .38 * (run_p - 3) if run_p < 11 else 3.04 + .30 * (run_p - 11)
+
+
+def gb_entitlement(layer_files):
+    return .48 * (layer_files - 2) if layer_files >= 2 else ZERO
+
+
+def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed", advance_permille=0):
     active, speed_prestige, offline, returns = PROFILE[profile]
     rng = random.Random(seed)
     pos, p_total, run_p, file_wallet, gb_wallet, files, gb = (ZERO,) * 7
     best_file_record = best_gb_record = layer_files = ZERO
+    advanced_file = advanced_gb = ZERO
+    advance_fraction = math.log10(advance_permille / 1000) if advance_permille else ZERO
     rank = file_rank = gb_rank = peak = 0
     resets = syncs = run_minutes = 0
     run_id = 1
@@ -120,6 +132,7 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
     rows, buys, events, reaches = [], [], [], []
     hit = {}
     previous_p = previous_wallet = 0.0
+    indexed_quote = 0.0
     effect = purchases(OFFERS.get(model, Offer()), *STAGES[stage if stage != "staged" else "none"])
 
     def add_p(amount):
@@ -127,6 +140,31 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
         pos = logadd(pos, amount)
         p_total = logadd(p_total, amount)
         run_p = logadd(run_p, amount)
+
+    def grant_file(raw, now):
+        nonlocal file_wallet, files, layer_files, last_file_min, file_rank
+        paid = raw + math.log10(speed_prestige) + reward_up
+        file_wallet, files = logadd(file_wallet, paid), logadd(files, paid)
+        layer_files = logadd(layer_files, paid)
+        rate = paid - math.log10(now - last_file_min)
+        last_file_min = now
+        count, debit = geometric_batch(file_wallet, .15 + file_rank * FILE_PRICE + cost_down, FILE_PRICE, 20)
+        file_wallet, file_rank = logsub(file_wallet, debit), file_rank + count
+        wait = 10 ** min(10, .15 + file_rank * FILE_PRICE + cost_down - rate)
+        buys.append((day, run_id, "files", "prestige", 1, int(1 <= wait <= 10), int(wait > 10), wait, wait))
+        return paid
+
+    def grant_gb(raw, now):
+        nonlocal gb_wallet, gb, last_gb_min, gb_rank
+        paid = raw + math.log10(speed_prestige) + reward_up
+        gb_wallet, gb = logadd(gb_wallet, paid), logadd(gb, paid)
+        rate = paid - math.log10(now - last_gb_min)
+        last_gb_min = now
+        count, debit = geometric_batch(gb_wallet, .15 + gb_rank * GB_PRICE + cost_down, GB_PRICE, 20)
+        gb_wallet, gb_rank = logsub(gb_wallet, debit), gb_rank + count
+        wait = 10 ** min(10, .15 + gb_rank * GB_PRICE + cost_down - rate)
+        buys.append((day, run_id, "gb", "prestige", 1, int(1 <= wait <= 10), int(wait > 10), wait, wait))
+        return paid
 
     for day in range(1, days + 1):
         if stage == "staged" and day in (3, 14):
@@ -140,6 +178,8 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
             record_acceleration = .045 * resets + .11 * syncs
             permanent = (0.20 * report_log(files) + 0.24 * report_log(gb)
                          + .06 * file_rank + .07 * gb_rank + record_acceleration)
+            if run_minutes == 0:
+                indexed_quote = max(0.0, permanent - .48)
             base = math.log10(active) + permanent + income_up + noise
             away = 705 if segment == 0 else 225
             if t:
@@ -152,7 +192,7 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
                 rate = base + rank * APP_VALUE
                 if price_policy == "indexed":
                     # The saved run's neutral production funds the new band. The EX factor is separate.
-                    frontier_repricing = max(0.0, permanent - .48)
+                    frontier_repricing = indexed_quote
                     quote_step, batch = APP_PRICE, 20
                 else:
                     frontier_repricing = .80 * record_acceleration * min(1.0, rank / 25)
@@ -172,15 +212,28 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
                 for marker in (12, 25, 60, 124, 250, 500, 1000):
                     if current >= marker and marker not in hit:
                         hit[marker] = run_minutes
+                if advance_permille and minute in (5, 10):
+                    active_minute = t * 15 + minute
+                    raw_offer = logsub(file_entitlement(run_p), best_file_record)
+                    tranche = logsub(raw_offer + advance_fraction, advanced_file)
+                    if tranche >= 0:
+                        grant_file(tranche, active_minute)
+                        advanced_file = logadd(advanced_file, tranche)
+                    if layer_resets >= 4:
+                        raw_gb = logsub(gb_entitlement(layer_files), best_gb_record)
+                        tranche = logsub(raw_gb + advance_fraction, advanced_gb)
+                        if tranche >= 0:
+                            grant_gb(tranche, active_minute)
+                            advanced_gb = logadd(advanced_gb, tranche)
             for phase in ("opening", "late"):
                 observations = [wait for group, wait in sample if group == phase]
                 if observations:
                     buys.append((day, run_id, "P", phase, len(observations), sum(3/60 <= v <= 1 if phase == "opening" else 1 <= v <= 10 for v in observations),
                                  sum(v > 10 for v in observations), median(observations), max(observations)))
-            file_record = (.38 * (run_p - 3) if run_p < 11 else 3.04 + .30 * (run_p - 11)) if run_p >= 3 else ZERO
-            file_offer = logsub(file_record, best_file_record) if file_record != ZERO else ZERO
-            gb_record = (.48 * (layer_files - 2) if layer_files >= 2 else ZERO)
-            gb_offer = logsub(gb_record, best_gb_record) if gb_record != ZERO else ZERO
+            file_record = file_entitlement(run_p)
+            file_offer = logsub(logsub(file_record, best_file_record), advanced_file)
+            gb_record = gb_entitlement(layer_files)
+            gb_offer = logsub(logsub(gb_record, best_gb_record), advanced_gb)
             wait = sample[-1][1]
             if schedule is None:
                 move = ("sync" if gb_offer != ZERO and layer_resets >= 4 and t - last_sync_session >= 10 and t - last_prestige_session >= 2
@@ -199,29 +252,16 @@ def run(profile, seed, model, stage, days, schedule=None, price_policy="indexed"
             active_minute = (t + 1) * 15
             gross_file = gross_gb = ZERO
             if move == "reset":
-                gross_file = file_offer + math.log10(speed_prestige) + reward_up
-                file_wallet, files = logadd(file_wallet, gross_file), logadd(files, gross_file)
-                layer_files = logadd(layer_files, gross_file)
-                previous_file_rate = gross_file - math.log10(active_minute - last_file_min)
-                last_file_min = active_minute
+                gross_file = grant_file(file_offer, active_minute)
                 best_file_record = file_record
-                count, debit = geometric_batch(file_wallet, .15 + file_rank * FILE_PRICE + cost_down, FILE_PRICE, 20)
-                file_wallet, file_rank = logsub(file_wallet, debit), file_rank + count
-                file_time = 10 ** min(10, .15 + file_rank * FILE_PRICE + cost_down - previous_file_rate)
-                buys.append((day, run_id, "files", "prestige", 1, int(1 <= file_time <= 10), int(file_time > 10), file_time, file_time))
+                advanced_file = ZERO
                 layer_resets += 1
                 resets += 1
             else:
-                gross_gb = gb_offer + math.log10(speed_prestige) + reward_up
-                gb_wallet, gb = logadd(gb_wallet, gross_gb), logadd(gb, gross_gb)
-                previous_gb_rate = gross_gb - math.log10(active_minute - last_gb_min)
-                last_gb_min = active_minute
+                gross_gb = grant_gb(gb_offer, active_minute)
                 best_gb_record = gb_record
-                count, debit = geometric_batch(gb_wallet, .15 + gb_rank * GB_PRICE + cost_down, GB_PRICE, 20)
-                gb_wallet, gb_rank = logsub(gb_wallet, debit), gb_rank + count
-                gb_time = 10 ** min(10, .15 + gb_rank * GB_PRICE + cost_down - previous_gb_rate)
-                buys.append((day, run_id, "gb", "prestige", 1, int(1 <= gb_time <= 10), int(gb_time > 10), gb_time, gb_time))
                 file_wallet = layer_files = best_file_record = ZERO
+                advanced_file = advanced_gb = ZERO
                 layer_resets = file_rank = 0
                 last_sync_session = t
                 syncs += 1
@@ -256,6 +296,7 @@ def main():
     parser.add_argument("--seeds", type=int, default=30)
     parser.add_argument("--days", type=int, default=DAY_COUNT)
     parser.add_argument("--price-policy", choices=("indexed", "record"), default="indexed")
+    parser.add_argument("--advance-permille", type=int, choices=range(0, 151), default=0, metavar="0..150")
     args = parser.parse_args()
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -266,10 +307,11 @@ def main():
     stages = tuple(k for k in STAGES if k != "none") + ("staged",)
     for profile in PROFILE:
         for seed in range(1, args.seeds + 1):
-            before, waiting, restarts, reached, schedule = run(profile, seed, "none", "none", args.days, price_policy=args.price_policy)
+            before, waiting, restarts, reached, schedule = run(profile, seed, "none", "none", args.days,
+                                                                  price_policy=args.price_policy, advance_permille=args.advance_permille)
             for policy, model, stage, results in [("natural", "none", "none", (before, waiting, restarts, reached, schedule))] + [
                 (policy, model, stage, run(profile, seed, model, stage, args.days,
-                                           schedule if policy == "fixed" else None, args.price_policy))
+                                           schedule if policy == "fixed" else None, args.price_policy, args.advance_permille))
                 for policy in ("natural", "fixed") for model in OFFERS
                 for stage in (stages if policy == "natural" else ("one_set", "full"))
             ]:
@@ -329,6 +371,7 @@ def main():
     (out/"manifest.json").write_text(json.dumps(
         {"kind":"analytic design emulator", "seeds":list(range(1,args.seeds+1)), "days":args.days,
          "price_policy":args.price_policy,
+         "advance_permille":args.advance_permille,
          "source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
          "csv_sha256":{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in files}}, indent=2)+"\n")
 

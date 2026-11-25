@@ -167,7 +167,11 @@ object CoreReturnProbe {
         val telemetry = args.getOrNull(6)?.toBooleanStrict() ?: false
         val indexPrices = args.getOrNull(7)?.toBooleanStrict() ?: false
         require(seeds > 0 && days > 0 && activeMs >= 0 && firstSeed > 0)
-        val paths = users.flatMap { user -> (firstSeed until firstSeed + seeds).map { seed -> user to seed } }
+        val selected = args.getOrNull(8)?.split(',') ?: users.map { it.name }
+        require(selected.isNotEmpty() && selected.all { profile -> users.any { it.name == profile } })
+        val paths = users.filter { it.name in selected }.flatMap { user ->
+            (firstSeed until firstSeed + seeds).map { seed -> user to seed }
+        }
         try {
             val futures = paths.map { (user, seed) ->
                 pool.submit<List<String>> {
