@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>알림 청소부</title>
 <link rel="stylesheet" href="fonts/black-han-sans/index.css">
+<link rel="stylesheet" href="fonts/pretendard/index.css">
 <style>
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
@@ -21,16 +22,16 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
  --sheet:#F4F6FB;--shade:linear-gradient(180deg,#FFFFFFf4,#EEF1F7f8);--acc:#3867F0;--on-acc:#FFFFFF;--acc2:#B25F00;--gold:#C07A00;--hot:#C05A00;
  --dis:#1E2A5014;--dis-ink:#8A90A0;--pack:linear-gradient(180deg,#FFFFFF,#EEF2FA);--hero:radial-gradient(circle at 50% 0,#3867F022,#FFFFFF);
  --bigday:linear-gradient(90deg,#FFF1CF,#FFE3A6);--ok:#0E7A3E;--ok-bg:#18A95724;--bad:#D81E2A;--grab:#16181D55}}
-.ov{position:fixed;inset:0;color:var(--ink);font:14px/1.4 "Noto Sans KR",system-ui,sans-serif;pointer-events:none}
+.ov{position:fixed;inset:0;color:var(--ink);font:14px/1.4 "Pretendard","Noto Sans KR",system-ui,sans-serif;pointer-events:none}
 .ov.open{pointer-events:auto}
 #scrim{position:fixed;inset:0;background:#000a;opacity:0;transition:opacity .22s;pointer-events:none}
 #scrim.open{opacity:1;pointer-events:auto}
-#shade{position:fixed;left:0;right:0;top:0;max-height:92vh;color:var(--ink);font:14px/1.4 "Noto Sans KR",system-ui,sans-serif;overflow:auto;padding:18px 16px 14px;border-radius:0 0 28px 28px;
+#shade{position:fixed;left:0;right:0;top:0;max-height:92vh;color:var(--ink);font:14px/1.4 "Pretendard","Noto Sans KR",system-ui,sans-serif;overflow:auto;padding:18px 16px 14px;border-radius:0 0 28px 28px;
  background:var(--shade);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 50px #000c;
  transform:translateY(-104%);transition:transform .32s cubic-bezier(.2,1,.3,1)}
 #shade.open{transform:none}
 .sh-top{display:flex;align-items:baseline;justify-content:space-between}
-.sh-wallet{font:30px "Black Han Sans",sans-serif;letter-spacing:-.01em}
+.sh-wallet{font:800 30px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;letter-spacing:-.01em}
 .sh-wallet small{font-size:18px;color:var(--acc2)}
 .lv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:12px;color:var(--sub)}
 .lv b{background:var(--acc);color:var(--on-acc);border-radius:999px;padding:1px 8px;font-size:12px}
@@ -45,11 +46,11 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .row2 input{flex:1;accent-color:var(--acc)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{background:var(--soft);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
 .grab{width:44px;height:5px;border-radius:9px;background:var(--grab);margin:12px auto 0}
-#sheet{position:fixed;left:0;right:0;bottom:0;height:88vh;display:flex;flex-direction:column;background:var(--sheet);color:var(--ink);font:14px/1.4 "Noto Sans KR",system-ui,sans-serif;border-radius:26px 26px 0 0;
+#sheet{position:fixed;left:0;right:0;bottom:0;height:88vh;display:flex;flex-direction:column;background:var(--sheet);color:var(--ink);font:14px/1.4 "Pretendard","Noto Sans KR",system-ui,sans-serif;border-radius:26px 26px 0 0;
  box-shadow:0 -14px 40px #000c;transform:translateY(104%);transition:transform .3s cubic-bezier(.2,1,.3,1)}
 #sheet.open{transform:none}
 .sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 8px}
-.sheet-h h2{flex:1;margin:0;font:22px "Black Han Sans",sans-serif}
+.sheet-h h2{flex:1;margin:0;font:800 22px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 .sheet-h .w{font-weight:800;color:var(--acc2)}
 .x{background:var(--soft2);border:0;color:var(--ink);width:36px;height:36px;border-radius:999px;font-size:18px}
 .sheet-b{flex:1;overflow:auto;padding:4px 14px 30px}
@@ -74,7 +75,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .slot img{width:36px;height:36px;border-radius:10px}.slot.empty{background:transparent;border:1.5px dashed var(--dash);color:var(--sub)}
 .syn{display:grid;grid-template-columns:96px 1fr 58px;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}.syn .v{text-align:right;font-weight:800;color:var(--acc2)}
 .hero{text-align:center;padding:14px;border-radius:22px;background:var(--hero);margin-bottom:12px}
-.hero b{display:block;font:44px "Black Han Sans",sans-serif;color:var(--gold)}
+.hero b{display:block;font:800 44px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;color:var(--gold)}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.cols div{background:var(--card);border-radius:16px;padding:10px 12px;font-size:12.5px}
 .cols h4{margin:0 0 4px;font-size:12px;color:var(--sub)}
 .h3{font-size:12.5px;color:var(--sub);margin:14px 2px 8px;font-weight:700}
@@ -86,11 +87,11 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .gain{display:inline-block;font-size:12px;font-weight:900;color:#fff;background:linear-gradient(180deg,#FF5A4E,#E0261C);border-radius:999px;padding:2px 9px;margin-bottom:6px;box-shadow:0 2px 0 #8A1010}
 .gain.base0{background:var(--soft);color:var(--sub);box-shadow:none}
 .rookie{position:relative;border-radius:20px;padding:14px 14px 12px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,#0E7A5A,#0B4A64);border:2px solid #5BD6A8;overflow:hidden}
-.rookie h3{margin:0;font:22px "Black Han Sans",sans-serif}
+.rookie h3{margin:0;font:800 22px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 .rookie ul{margin:6px 0 10px;padding-left:16px;font-size:12.5px}
 .rookie .d{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;background:#00000033;border-radius:999px;padding:2px 9px}
 .rookie .d img{width:16px;height:16px}
-.bst{position:absolute;right:8px;top:8px;width:84px;height:84px;background:url(img/ui/burst.webp) center/contain no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#B31A00;font:900 18px/1 "Noto Sans KR",sans-serif;transform:rotate(10deg);letter-spacing:-.5px}
+.bst{position:absolute;right:8px;top:8px;width:84px;height:84px;background:url(img/ui/burst.webp) center/contain no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#B31A00;font:900 18px/1 "Pretendard","Noto Sans KR",system-ui,sans-serif;transform:rotate(10deg);letter-spacing:-.5px}
 .bst small{font-size:11px;line-height:1.1}
 .rookie .btn,.starter .btn{min-width:130px}
 .pack{position:relative;border-radius:18px;padding:22px 6px 8px;text-align:center;background:var(--pack);border:1px solid var(--line);color:inherit;font:inherit}
@@ -99,14 +100,14 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .pack .basep{display:block;height:18px;font-size:11px;color:var(--sub);margin:-2px 0 4px;white-space:nowrap}
 .rib{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#FF3B30;color:#fff;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:0 0 9px 9px;white-space:nowrap}
 .starter{display:flex;gap:10px;align-items:center;border-radius:18px;padding:12px;background:linear-gradient(90deg,#5A1E2E,#3A1A12);border:1px solid #FF8A6B55;margin-bottom:6px;color:#FFF4EC;font:inherit;text-align:left;width:100%}
-.starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:20px "Black Han Sans",sans-serif}
+.starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:800 20px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 .dbtn{flex:none;min-width:70px;height:38px;border-radius:12px;border:0;font:inherit;font-weight:900;background:linear-gradient(180deg,#9BE37A,#4FB43A);color:#123006;display:flex;align-items:center;justify-content:center;gap:4px}
 .dbtn img{width:18px;height:18px}
 .adbtn{background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff}
 .passc{border-radius:20px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;border:1px solid #FFFFFF22;color:#F6F1EA}
 .passc .btn{background:#FFD66B;color:#1E1408}
-.passc .big{font:34px "Black Han Sans",sans-serif;color:#fff;width:74px;text-align:center}.passc img{width:74px}
-.passc ul{margin:6px 0 8px;padding-left:16px;font-size:12px;color:#E9E3DC}.passc h3{margin:0;font:18px "Black Han Sans",sans-serif}
+.passc .big{font:800 34px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;color:#fff;width:74px;text-align:center}.passc img{width:74px}
+.passc ul{margin:6px 0 8px;padding-left:16px;font-size:12px;color:#E9E3DC}.passc h3{margin:0;font:800 18px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 .on-tag{background:#5BD68A;color:#0E3B1F;border-radius:999px;font-size:11px;font-weight:900;padding:2px 8px;margin-left:6px}
 .stars img{width:16px;height:16px}
 .board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
@@ -116,7 +117,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .day.got{opacity:.55}
 .day.now{border:2px solid var(--gold);box-shadow:0 0 14px #FFC23D66;opacity:1}
 .day.big{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;background:var(--bigday);border-color:#FFC23D66;min-height:54px}
-.day.big img{margin:0;width:36px;height:36px}.day.big b{font:20px "Black Han Sans",sans-serif;color:var(--gold)}
+.day.big img{margin:0;width:36px;height:36px}.day.big b{font:800 20px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;color:var(--gold)}
 .mis{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}.mis .bar{height:6px}
 .ic,.it img.ic,.skin img.ic{width:16px;height:16px;border-radius:0;vertical-align:-3px;margin-right:3px;flex:none}
 .it .btn.own{display:inline-flex;align-items:center;justify-content:center}
@@ -133,18 +134,18 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .stk .lbl small{font-size:.62em;margin-top:.08em}
 .stk-ribbon{--sc:#7A0A0A;color:#fff}.stk-rosette{--sc:#FFF3C0;--sw:2px;color:#8A3A00}.stk-burst{--sc:#fff;color:#D0140A}
 .stk-bolt{--sc:#4A1E9A;color:#fff}.stk-bubble{--sc:#0E6A2E;color:#fff}.stk-stamp{--sc:#8A0A0A;color:#fff}
-#cf{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;font:15px/1.45 "Noto Sans KR",sans-serif;color:var(--ink)}
+#cf{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;font:15px/1.45 "Pretendard","Noto Sans KR",system-ui,sans-serif;color:var(--ink)}
 #cf.on{display:grid}
 #cf .box{width:min(320px,86vw);background:var(--sheet);border:1px solid var(--line);border-radius:24px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px #000a}
-#cf h3{margin:0 0 6px;font:22px "Black Han Sans",sans-serif}
+#cf h3{margin:0 0 6px;font:800 22px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 #cf .what{color:var(--sub);font-size:13px;margin-bottom:6px}
-#cf .price{font:26px "Black Han Sans",sans-serif;margin:6px 0 14px}
+#cf .price{font:800 26px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;margin:6px 0 14px}
 #cf .row{display:flex;gap:8px}#cf .row button{flex:1;height:50px;font:inherit;font-weight:900;font-size:15px}
 #cf .no{border:0;border-radius:999px;background:var(--soft2);color:var(--ink)}
 .cd{font-variant-numeric:tabular-nums}
-#adov{position:fixed;inset:0;background:#000;color:#fff;display:none;place-items:center;text-align:center;font:16px "Noto Sans KR",sans-serif;z-index:50}
-#adov.on{display:grid}#adov b{display:block;font:28px "Black Han Sans",sans-serif;margin-bottom:8px}
-#offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;height:52px;padding:0 24px 4px;white-space:nowrap;font:800 15px "Noto Sans KR",sans-serif;
+#adov{position:fixed;inset:0;background:#000;color:#fff;display:none;place-items:center;text-align:center;font:16px "Pretendard","Noto Sans KR",system-ui,sans-serif;z-index:50}
+#adov.on{display:grid}#adov b{display:block;font:800 28px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;margin-bottom:8px}
+#offer{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) scale(.8);opacity:0;pointer-events:none;transition:.25s;height:52px;padding:0 24px 4px;white-space:nowrap;font:800 15px "Pretendard","Noto Sans KR",system-ui,sans-serif;
  background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff;box-shadow:0 8px 24px #2F7BF566;z-index:20}
 #offer.on{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
 
@@ -157,7 +158,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
  --m-info:#A8C8FF;--m-on-info:#002F65;
  --m-surface:#19120C;--m-s-low:#221A13;--m-s:#261E17;--m-s-high:#31281F;--m-s-highest:#3C3229;
  --m-on-surface:#EEE0D6;--m-on-sv:#D6C3B4;--m-outline:#9F8D80;--m-outline-v:#51443A;--m-error:#FFB4AB;--m-on-error:#690005;--m-badge:#F2B8B5;--m-on-badge:#601410;
- --font:"Noto Sans KR",Roboto,system-ui,sans-serif}
+ --font:"Pretendard",Roboto,"Noto Sans KR",system-ui,sans-serif}
 @media (prefers-color-scheme: light){:root{--m-primary:#2F5BD3;--m-on-primary:#FFFFFF;--m-primary-c:#DCE1FF;--m-on-primary-c:#00174B;
  --m-sec-c:#DDE1F9;--m-on-sec-c:#161B2C;--m-ter:#1E7A34;--m-on-ter:#FFFFFF;--m-ter-c:#A6F5AE;--m-on-ter-c:#00210A;
  --m-info:#0B61A4;--m-on-info:#FFFFFF;
@@ -360,11 +361,39 @@ input[type=range]{accent-color:var(--m-primary)}
 .rec-board .new{position:absolute;right:8px;top:8px;height:18px;padding:0 6px;border-radius:9px;font:800 10px/18px var(--font);color:#fff;background:linear-gradient(135deg,#FF5F6D,#E0261C)}
 @media (prefers-reduced-motion: reduce){.fx-shine::before,.fx-ring::after,.t-holo{animation:none}}
 svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
+/* capsules + app detail popup */
+.caps{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.cap{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font:500 11px/1 var(--font);color:var(--m-on-sv);background:color-mix(in srgb,var(--m-on-surface) 7%,transparent)}
+.cap.on{background:var(--m-primary-c);color:var(--m-on-primary-c)}.cap.buy{background:color-mix(in srgb,#34C759 22%,transparent);color:#1E9E46}.cap.lockc{background:color-mix(in srgb,var(--m-error) 14%,transparent);color:var(--m-error)}
+.caps .tier{margin:0}
+.appi{background:none;border:0;padding:0;margin:0;cursor:pointer;display:contents}
+#appd{position:fixed;inset:0;z-index:65;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
+#appd.on{opacity:1;pointer-events:auto;transition:opacity .25s var(--ease-std)}
+#appd .card{position:relative;width:100%;max-width:360px;max-height:86vh;overflow:auto;border-radius:28px;padding:20px;font-family:var(--font);color:var(--m-on-surface);
+ background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);
+ transform:scale(.92) translateY(8px);transition:transform .15s var(--ease-in)}
+#appd.on .card{transform:none;transition:transform .4s var(--ease-out)}
+#appd .x{position:absolute;right:10px;top:10px}
+#appd .hd{display:flex;gap:14px;align-items:center;padding-right:36px}
+#appd .big{width:64px;height:64px;flex:none;position:relative}#appd .big>img,#appd .big .fr{width:64px;height:64px;border-radius:16px}
+#appd .hd b{font:700 20px/1.2 var(--font)}
+#appd .fx{margin:16px 0 4px;padding:12px 14px;border-radius:16px;font:500 14px/1.45 var(--font);background:linear-gradient(135deg,color-mix(in srgb,var(--m-primary) 18%,transparent),color-mix(in srgb,var(--m-primary) 5%,transparent))}
+#appd .l{display:block;font:600 11.5px/1 var(--font);color:var(--m-on-sv);margin:12px 0 6px}#appd .fx .l{margin:0 0 6px}
+#appd dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:12px 0 0;font:14px/1.35 var(--font)}
+#appd dt{color:var(--m-on-sv)}#appd dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}#appd .sub{color:var(--m-on-sv);font-weight:400;font-size:12px}
+#appd .msg{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:16px;margin-top:6px;background:color-mix(in srgb,var(--m-on-surface) 5%,transparent);font:13px/1.35 var(--font)}
+#appd .msg img{width:28px;height:28px;border-radius:8px;flex:none}#appd .msg b{display:block;font-size:12px;color:var(--m-on-sv);font-weight:600}
+#appd .act{margin-top:16px;display:flex}#appd .act .btn{flex:1;height:48px}
+/* one-line notes in rows */
+.it .t div.note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .t{overflow:hidden}
+.tag.corner{top:22px!important}
+.caps .tier{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font:600 11px/1 var(--font);background:color-mix(in srgb,var(--m-primary) 16%,transparent);color:var(--m-primary)}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="toasts"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
@@ -376,7 +405,7 @@ const LADDER = [
   { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
 ];
 const W = 390, H = Math.max(740, Math.round(390 * (innerHeight || 740) / (innerWidth || 390))), EX = H - 740, SIM = 1 / 120, POOL = 600;
-const FD = '"Black Han Sans","Noto Sans KR",sans-serif', FB = '"Noto Sans KR",sans-serif';
+const FD = '"Black Han Sans","Pretendard","Noto Sans KR",system-ui,sans-serif', FB = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
 const cv = document.getElementById('stage');
 const gl = cv.getContext('webgl', { premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
 const out2d = gl ? null : cv.getContext('2d');
@@ -394,7 +423,7 @@ const colOf = d => d.kind === 'Spam' || d.kind === 'Call' ? '#FF3B30' : d.kind =
 let dpr = 1;
 const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = scene.width = ui.width = W * dpr; cv.height = scene.height = ui.height = H * dpr; if (gl) gl.viewport(0, 0, cv.width, cv.height); };
 fit(); window.addEventListener('resize', fit);
-if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Noto Sans KR"'); }
+if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Pretendard"'); }
 
 const lightQ = matchMedia('(prefers-color-scheme: light)');
 const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
@@ -1682,8 +1711,8 @@ function renderSheet() {
         const lock = !a.owned && !a.open;
         const fx = (TEXTS[a.id] || [])[0] || '';
         const btn = a.owned ? `<span class="btn own">${ic('check')}보유</span>` : lock ? `<button class="btn skin off" disabled>${ic('lock')}잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${(a.canBuy != null ? a.canBuy : geq(st.wallet, a.price)) ? '' : 'disabled'}>${P$(a.price, a.priceShort)}</button>`;
-        const meta = lock ? `${a.region} · ${a.cat} · ${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel} 해금`}` : `${a.region} · ${a.cat} · ${fx}`;
-        return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
+        const caps = `<span class="cap">${a.region}</span><span class="cap">${a.cat}</span>${lock ? `<span class="cap lockc">${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel}`}</span>` : ''}`;
+        return `<div class="it ${lock ? 'lock' : ''}"><button class="appi" data-info="${a.id}" aria-label="${a.name} 정보">${ico(a.id)}</button><div class="t"><b>${a.name}</b><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><div class="caps">${caps}</div></div>${btn}</div>`;
       }).join('');
     b.querySelectorAll('[data-tier]').forEach(x => x.addEventListener('click', () => { shopTier = +x.dataset.tier; renderSheet(); }));
   } else if (sheetKind === 'up') {
@@ -1697,7 +1726,7 @@ function renderSheet() {
         const n = upMode === 'max' ? a.maxN : +upMode, price = upMode === '10' ? a.price10 : a.price1, can = upMode === 'max' ? a.maxN > 0 : upMode === '10' ? (a.canUpgrade10 != null ? a.canUpgrade10 : geq(st.wallet, price)) : (a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, price));
         const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price, upMode === '10' ? a.price10Short : a.price1Short);
         const tv = a.level >= 500 ? 4 : a.level >= 300 ? 3 : a.level >= 100 ? 2 : 1, tc = tv > 1 ? 'lv' + tv : '';
-        return `<div class="it ${tc} ${tv === 4 ? 'fx-ring' : ''}">${ico(a.id)}<div class="t"><b class="${tv === 4 ? 't-holo' : tv === 3 ? 't-gold' : ''}">${a.name}</b><span class="lvb ${tc}">Lv ${a.level}</span> <span class="note">→ ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
+        return `<div class="it ${tc} ${tv === 4 ? 'fx-ring' : ''}"><button class="appi" data-info="${a.id}" aria-label="${a.name} 정보">${ico(a.id)}</button><div class="t"><b class="${tv === 4 ? 't-holo' : tv === 3 ? 't-gold' : ''}">${a.name}</b><span class="lvb ${tc}">Lv ${a.level}</span> <span class="note">→ ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
           <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
           <button class="btn skin gold ${can && hot ? 'fx-shine' : ''}" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
       }).join('');
@@ -1742,7 +1771,40 @@ function renderSheet() {
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
+  b.querySelectorAll('[data-info]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); appDetail(x.dataset.info); }));
   stagger(b);
+}
+// app detail: a glass card over the sheet with everything the row leaves out
+function appDetail(id) {
+  const a = P.apps.find(x => x.id === id); if (!a) return;
+  const T = TEXTS[id] || [], fx = T[0] || '', msgs = (T[1] || []).slice(0, 2), st = P.state, stars = starsOf(id), lock = !a.owned && !a.open;
+  const stat = a.owned ? (a.active ? ['덱 안', 'on'] : ['덱 밖', '']) : lock ? ['잠김', 'lockc'] : ['구매 가능', 'buy'];
+  const rows = [];
+  if (a.owned) {
+    const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
+    rows.push(['강화 단계', `Lv ${a.level}`], ['다음 마일스톤', `Lv ${next} · 가치 ×2 <span class="sub">(${next - a.level}단계 남음)</span>`]);
+    rows.push(['다음 강화', P$(a.price1, a.price1Short)]);
+    if (a.synRegion || a.synCat) rows.push(['시너지', `${a.region} +${a.synRegion || 0}% · ${a.cat} +${a.synCat || 0}%`]);
+  } else {
+    rows.push(['가격', P$(a.price, a.priceShort)]);
+    rows.push(['해금', a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel}${st.level >= a.unlockLevel ? ' <span class="sub">(달성)</span>' : ''}`]);
+  }
+  rows.push(['프리미엄', stars ? `<span class="t-gold">${'★'.repeat(stars)}</span>` : '<span class="sub">없음</span>']);
+  const can = a.owned ? (a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, a.price1)) : (a.canBuy != null ? a.canBuy : geq(st.wallet, a.price));
+  const act = a.owned ? `<button class="btn skin gold" data-act="upgradeN" data-id="${a.id}" data-n="1" ${can ? '' : 'disabled'}>강화 ${P$(a.price1, a.price1Short)}</button>`
+    : lock ? '' : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${can ? '' : 'disabled'}>구매 ${P$(a.price, a.priceShort)}</button>`;
+  const el = $('appd');
+  el.innerHTML = `<div class="card" role="dialog" aria-label="${a.name}"><button class="x" id="appd-x" aria-label="닫기">${svg('M6 6l12 12M18 6 6 18')}</button>
+    <div class="hd"><div class="big">${ico(a.id)}</div><div><b>${a.name}</b><div class="caps"><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><span class="cap">${a.region}</span><span class="cap">${a.cat}</span><span class="cap ${stat[1]}">${stat[0]}</span></div></div></div>
+    ${fx ? `<div class="fx"><span class="l">고유 효과</span>${fx}</div>` : ''}
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    ${msgs.length ? `<div class="l">이 앱이 보내는 알림</div>${msgs.map(m => `<div class="msg">${ico(a.id, 0)}<span><b>${a.name}</b>${m}</span></div>`).join('')}` : ''}
+    ${act ? `<div class="act">${act}</div>` : ''}</div>`;
+  el.classList.add('on'); sfx.snap();
+  const close = () => el.classList.remove('on');
+  el.onclick = e => { if (e.target === el) close(); };
+  $('appd-x').onclick = close;
+  el.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', async () => { await sheetAct(x); close(); }));
 }
 let wipeArm = 0, appInfo = null;
 const SITE = 'https://graviton94.github.io/notificationcleaner/';
@@ -1908,7 +1970,7 @@ function renderAttend(b) {
     if (big) return `<div class="${cls}"><i>${n}</i><img src="img/ui/gift.webp"><b>${d.data}</b><span class="note">${[d.vouchers ? `★ 선택권 ${d.vouchers}` : '', ...d.tickets.map(t => `${t.label.split(' (')[0]} ${t.n}`), d.title ? `칭호 "${d.title}"` : ''].filter(Boolean).join(' + ')}</span></div>`;
     return `<div class="${cls}"><i>${n}</i><img src="img/bm/${d.data ? 'currency-data' : ticketImg(d.tickets)}.webp"><b>${d.data || what}</b>${n <= got ? sticker('stamp', '출석', 38, 'right:-6px;bottom:-6px;transform:rotate(-12deg)') : ''}</div>`;
   };
-  b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:22px 'Black Han Sans';color:var(--gold)">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
+  b.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px"><span>연속 출석 <b style="font:800 22px Pretendard;color:var(--gold)">${m.streak}일</b></span><span class="note">하루라도 빠지면 1일차부터</span></div>
     <div class="board">${m.board.map(cell).join('')}</div>
     ${m.claimedToday ? '' : `<button class="btn big skin claim" data-act="attend">${m.today}일차 출석하기</button>`}
     <div class="h3">오늘의 미션 · 모두 하면 데이터 ${m.missionReward}</div>
