@@ -228,11 +228,143 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .sw.on::after{left:22px;top:2px;width:24px;height:24px;background:var(--m-on-primary)}
 input[type=range]{accent-color:var(--m-primary)}
 .row2{min-height:48px}.row2 label{font:400 14px var(--font);color:var(--m-on-surface);flex:1;width:auto}
+
+/* ==== Design system v2 — high-end Android glass. Item art and the ad mark are the only images; every surface,
+   badge and promo tag below is drawn here so it follows the system theme and scales to any phone. ==== */
+:root{--g-bg:color-mix(in srgb,var(--m-s-low) 72%,transparent);--g-card:color-mix(in srgb,var(--m-s-high) 55%,transparent);
+ --g-line:color-mix(in srgb,var(--m-on-surface) 12%,transparent);--g-hi:color-mix(in srgb,#fff 10%,transparent);
+ --ease-in:cubic-bezier(.3,0,.8,.15);--ease-out:cubic-bezier(.05,.7,.1,1);--ease-std:cubic-bezier(.2,0,0,1);
+ --shadow:0 1px 2px rgba(0,0,0,.18),0 12px 40px rgba(0,0,0,.28)}
+@media (prefers-color-scheme: light){:root{--g-bg:color-mix(in srgb,#fff 70%,transparent);--g-card:color-mix(in srgb,#fff 62%,transparent);
+ --g-line:color-mix(in srgb,#1A1B21 9%,transparent);--g-hi:rgba(255,255,255,.7);--shadow:0 1px 2px rgba(20,30,60,.08),0 12px 40px rgba(20,30,60,.16)}}
+/* glass surfaces */
+#sheet,#shade,#cf .box,.toast{background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
+ border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi)}
+#sheet{border-bottom:0;transition:transform .2s var(--ease-in)}
+#sheet.open{transition:transform .45s var(--ease-out)}
+#shade{border-top:0;border-radius:0 0 32px 32px;transition:transform .2s var(--ease-in)}
+#shade.open{transition:transform .45s var(--ease-out)}
+#scrim{background:rgba(0,0,0,.28);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);transition:opacity .3s var(--ease-std)}
+.it,.pack,.slot,.cols>div,.day,.hero{background:var(--g-card)!important;border:1px solid var(--g-line)!important;box-shadow:inset 0 1px 0 var(--g-hi)}
+.it{border-radius:20px}
+/* content enters in a short stagger (Android 'fade through') */
+.sheet-b>*,#shade .grid>*{animation:rise .38s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* dialog: scale + fade in, quick fade out */
+#cf{display:grid!important;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
+#cf.on{opacity:1;pointer-events:auto;transition:opacity .2s var(--ease-std)}
+#cf .box{transform:scale(.92);transition:transform .15s var(--ease-in)}
+#cf.on .box{transform:none;transition:transform .35s var(--ease-out)}
+#cf .ico{width:24px;height:24px;color:var(--m-primary);margin:0 auto 16px;display:block}
+#cf h3{text-align:center}
+/* toasts (snackbars) */
+#toasts{position:fixed;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:70}
+.toast{display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);min-height:48px;padding:12px 18px;border-radius:24px;color:var(--m-on-surface);
+ font:500 14px/20px var(--font);opacity:0;transform:translateY(16px) scale(.96);transition:opacity .2s var(--ease-in),transform .2s var(--ease-in)}
+.toast.in{opacity:1;transform:none;transition:opacity .3s var(--ease-out),transform .45s var(--ease-out)}
+.toast svg,.toast img{width:20px;height:20px;flex:none}
+.toast.ok svg{color:var(--m-ter)}.toast.err svg{color:var(--m-error)}
+/* Android 14 quick-settings tiles */
+#shade .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0 12px}
+#shade .tile{flex-direction:row;justify-content:flex-start;gap:12px;height:64px;padding:0 14px;border-radius:22px;text-align:left;
+ background:var(--g-card);border:1px solid var(--g-line);color:var(--m-on-surface);box-shadow:inset 0 1px 0 var(--g-hi);transition:background .2s var(--ease-std)}
+#shade .tile span.c{width:auto;height:auto;background:none!important;box-shadow:none!important;color:inherit}
+#shade .tile .tx{display:flex;flex-direction:column;min-width:0}
+#shade .tile b{font:500 14px/20px var(--font)}#shade .tile em{font:400 12px/16px var(--font);color:var(--m-on-sv);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shade .tile.hot{background:var(--m-primary-c);color:var(--m-on-primary-c);border-color:transparent}
+#shade .tile.hot em{color:inherit;opacity:.8}
+#shade .tile .m3b{position:static;margin-left:auto}
+/* promo tags, all drawn here */
+.pb{position:absolute;z-index:3;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;font:700 12px/1 var(--font);letter-spacing:-.2px;pointer-events:none}
+.pb-first{left:50%;top:-11px;transform:translateX(-50%);height:22px;padding:0 10px;border-radius:11px;color:#fff;
+ background:linear-gradient(135deg,#FF5F6D,#E0261C);box-shadow:0 4px 12px rgba(224,38,28,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.pb-gain{display:inline-flex;flex-direction:column;gap:1px;padding:6px 10px;border-radius:14px;color:#fff;font-size:15px;line-height:1;
+ background:linear-gradient(140deg,#FFB547,#FF5A1F 60%,#E0261C);box-shadow:0 6px 18px rgba(255,90,31,.4),inset 0 1px 0 rgba(255,255,255,.45)}
+.pb-gain small{font:600 10px/1 var(--font);opacity:.9}
+.pb-gain::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);background-size:250% 100%;animation:sheen 2.6s ease-in-out infinite}
+@keyframes sheen{0%,55%{background-position:120% 0}100%{background-position:-120% 0}}
+.pb-rec{height:22px;padding:0 9px 0 7px;border-radius:11px;color:#3A2400;background:linear-gradient(135deg,#FFE27A,#FFB300);box-shadow:0 4px 12px rgba(255,179,0,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+.pb-timer{position:static;height:28px;padding:0 12px 0 8px;border-radius:14px;color:#fff;font-variant-numeric:tabular-nums;font-size:13px;
+ background:linear-gradient(135deg,#8B5CF6,#5B21B6);box-shadow:0 4px 12px rgba(91,33,182,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+.pb-timer svg{width:16px;height:16px}
+.pb-stamp{right:5px;top:5px;width:20px;height:20px;border-radius:50%;color:#fff;font-size:9px;background:linear-gradient(135deg,#34C759,#1E8E3E);
+ box-shadow:0 3px 8px rgba(30,142,62,.4);transform:rotate(-10deg)}
+.pb-stamp svg{width:12px;height:12px}
+.pack .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;min-height:22px;margin:2px 0 4px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;font:700 11.5px/1 var(--font);white-space:nowrap}
+.tag.gain{color:#fff;background:linear-gradient(140deg,#FFB547,#FF5A1F 60%,#E0261C);box-shadow:0 3px 10px rgba(255,90,31,.35),inset 0 1px 0 rgba(255,255,255,.4);position:relative;overflow:hidden}
+.tag.gain::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);background-size:250% 100%;animation:sheen 2.6s ease-in-out infinite}
+.tag.rec{color:#3A2400;background:linear-gradient(135deg,#FFE27A,#FFB300)}
+.tag.base{color:var(--m-on-sv);background:var(--m-s-highest)}
+.pack .basep{font-size:10.5px;height:16px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pack{padding-top:34px!important;min-width:0}.pack img{width:56px;height:56px}
+.tag.corner{position:absolute;right:6px;top:8px;height:20px;padding:0 6px;font-size:10.5px}
+.packs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.day.got{opacity:.72}
+/* pack cards and promo cards */
+.packs{gap:22px 10px}
+.pack{border-radius:22px!important;padding:24px 8px 10px!important;overflow:visible}
+.pack.rec{border:1.5px solid #FFC23D!important;box-shadow:0 0 0 4px color-mix(in srgb,#FFC23D 18%,transparent),inset 0 1px 0 var(--g-hi)!important}
+.pack .n{font:700 16px/1.2 var(--font)}
+.starter,.rookie{border-radius:24px!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 12px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.25)!important;color:#fff!important;overflow:hidden;position:relative}
+.starter{background:linear-gradient(135deg,#7A1F3D,#3B0F2A 60%,#1E0B1F)!important;padding:16px!important}
+.rookie{background:linear-gradient(135deg,#0E7A5A,#0B4A64 60%,#0A2B44)!important}
+.starter .note,.rookie .note{color:rgba(255,255,255,.78)!important}
+.starter::after,.rookie::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.14) 50%,transparent 60%);background-size:250% 100%;animation:sheen 4s ease-in-out infinite;pointer-events:none}
+.starter b,.rookie h3{font:700 20px/1.2 var(--font)!important}
+.passc{border-radius:24px;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 12px 32px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.2)}
+.passc h3{font:700 18px/1.3 var(--font)!important}.passc .big{font:800 34px/1 var(--font)!important}
+.hero b{font:800 40px/1.1 var(--font)!important;color:var(--m-primary)!important}
+.on-tag{background:var(--m-ter);color:var(--m-on-ter);font:600 11px/1 var(--font);padding:4px 8px;border-radius:8px}
+@media (prefers-reduced-motion: reduce){.sheet-b>*,#shade .grid>*{animation:none}.pb-gain::after,.starter::after,.rookie::after{animation:none}}
+/* ==== Accent layer: same M3 components, emphasis only through fill, outline, sheen and text colour ==== */
+.fx-shine{position:relative;overflow:hidden;isolation:isolate}
+.fx-shine::before{content:"";position:absolute;inset:0;z-index:-0;pointer-events:none;border-radius:inherit;
+ background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.5) 50%,transparent 62%);background-size:260% 100%;animation:sheen 2.8s ease-in-out infinite;mix-blend-mode:soft-light}
+.fx-glow{box-shadow:0 0 0 1px color-mix(in srgb,var(--m-primary) 60%,transparent),0 6px 22px color-mix(in srgb,var(--m-primary) 38%,transparent)!important}
+.fx-ring{position:relative}
+.fx-ring::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;
+ background:conic-gradient(from var(--ra,0deg),#FFD86B,#FF8A3D,#FF4F8B,#8B6BFF,#4FC3FF,#5BE39A,#FFD86B);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ra 4s linear infinite}
+@property --ra{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes ra{to{--ra:360deg}}
+.t-gold{background:linear-gradient(180deg,#FFE9A3,#FFB300 55%,#E07B00);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.t-holo{background:linear-gradient(90deg,#FF7AB6,#FFC857,#5BE39A,#4FC3FF,#A77BFF,#FF7AB6);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:holo 3s linear infinite}
+@keyframes holo{to{background-position:200% 0}}
+@media (prefers-color-scheme: light){.t-gold{background:linear-gradient(180deg,#E8A100,#B96A00);-webkit-background-clip:text;background-clip:text}}
+/* upgrade tiers by app level: Lv100 amber, Lv300 gold, Lv500 holo */
+.it.lv2{background:linear-gradient(135deg,color-mix(in srgb,#FFB300 14%,transparent),var(--g-card) 60%)!important;border-color:color-mix(in srgb,#FFB300 45%,transparent)!important}
+.it.lv3{background:linear-gradient(135deg,color-mix(in srgb,#FFB300 24%,transparent),var(--g-card) 70%)!important;border-color:#FFC23D!important;box-shadow:0 0 0 3px color-mix(in srgb,#FFC23D 16%,transparent),inset 0 1px 0 var(--g-hi)!important}
+.it.lv4{background:linear-gradient(135deg,color-mix(in srgb,#A77BFF 20%,transparent),color-mix(in srgb,#4FC3FF 10%,transparent) 50%,var(--g-card))!important;border-color:transparent!important}
+.lvb{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:10px;font:700 11px/1 var(--font);margin-left:4px;vertical-align:1px;background:var(--m-s-highest);color:var(--m-on-sv)}
+.lvb.lv2{background:color-mix(in srgb,#FFB300 22%,transparent);color:#E08A00}
+.lvb.lv3{background:linear-gradient(135deg,#FFE27A,#FFB300);color:#3A2400}
+.lvb.lv4{background:linear-gradient(90deg,#FF7AB6,#FFC857,#5BE39A,#4FC3FF,#A77BFF);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.prog i.hot{background:linear-gradient(90deg,#FFB300,#FF5A1F)!important;box-shadow:0 0 10px color-mix(in srgb,#FF8A1F 60%,transparent)}
+.tier.t4{background:linear-gradient(135deg,#FFE27A,#FFB300)!important;color:#3A2400!important}
+.tier.t6{background:linear-gradient(90deg,#FF7AB6,#A77BFF,#4FC3FF)!important;color:#fff!important}
+/* record board */
+.rec-board{margin-top:14px;border-radius:24px;padding:14px 14px 12px;background:var(--g-card);border:1px solid var(--g-line);box-shadow:inset 0 1px 0 var(--g-hi)}
+.rec-board .hd{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--font);color:var(--m-on-sv);margin-bottom:10px}
+.rec-board .hd svg{width:18px;height:18px;color:var(--m-primary)}
+.rec-board .hd .sp{margin-left:auto;font-weight:400;font-size:12px}
+.rec-board .g{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}
+.rec-board .c{position:relative;border-radius:16px;padding:10px 12px;background:color-mix(in srgb,var(--m-on-surface) 5%,transparent);min-width:0}
+.rec-board .c.main{grid-row:span 2;display:flex;flex-direction:column;justify-content:center;
+ background:linear-gradient(150deg,color-mix(in srgb,var(--m-primary) 26%,transparent),color-mix(in srgb,var(--m-primary) 6%,transparent))}
+.rec-board .l{display:flex;align-items:center;gap:5px;font:500 11.5px/1 var(--font);color:var(--m-on-sv)}
+.rec-board .l img,.rec-board .l svg{width:14px;height:14px}
+.rec-board .v{font:700 18px/1.15 var(--font);font-variant-numeric:tabular-nums;color:var(--m-on-surface);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-board .main .v{font:800 28px/1.05 var(--font);margin-top:8px}
+.rec-board .main .v small{font-size:15px;margin-left:2px}
+.rec-board .new{position:absolute;right:8px;top:8px;height:18px;padding:0 6px;border-radius:9px;font:800 10px/18px var(--font);color:#fff;background:linear-gradient(135deg,#FF5F6D,#E0261C)}
+@media (prefers-reduced-motion: reduce){.fx-shine::before,.fx-ring::after,.t-holo{animation:none}}
+svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="cf"><div class="box"><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="toasts"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -1366,8 +1498,8 @@ requestAnimationFrame(frame);
 const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0 };
 function tapTile(k) {
   sfx.snap(); buzz(8);
-  if (k === 'auto') { autoOn = !autoOn; say2(autoOn ? '자동 정리 켬' : '자동 정리 끔', 160, 20); }
-  else if (k === 'dnd') { sound = !sound; if (sound) ac(); say2(sound ? '소리 켬' : '방해 금지 · 소리 끔', 160, 20); }
+  if (k === 'auto') { autoOn = !autoOn; toast(autoOn ? '자동 정리를 켰어요' : '자동 정리를 껐어요'); }
+  else if (k === 'dnd') { sound = !sound; if (sound) ac(); toast(sound ? '소리를 켰어요' : '방해 금지 · 소리를 껐어요'); }
   else if (k === 'deck') openSheet('deck');
   else openSheet('pass');
 }
@@ -1399,7 +1531,7 @@ const release = async e => {
   if (Math.abs(dx) > 70 || (Math.abs(dx) > 24 && Math.abs(v) > .5)) {
     r.fly = dx < 0 ? -1 : 1; r.dx = dx;
     const o = await api('swipe', { id: r.id });
-    if (!o.ok) { r.fly = 0; applyState(o.state); say2(o.reason === 'battery' ? '배터리 부족! 잠시 충전 중…' : '이미 사라진 알림', 150, 22); sfx.snap(); return; }
+    if (!o.ok) { r.fly = 0; applyState(o.state); toast(o.reason === 'battery' ? '배터리가 부족해요 · 잠시 충전 중' : '이미 사라진 알림이에요', 'err'); sfx.snap(); return; }
     swipes++; play(o);
   } else if (!drag.moved) { kick(r.sc, -4); r.wob = 1; say2('옆으로 밀어서 치워요', r.y.x - 6, 18); }
 };
@@ -1491,6 +1623,14 @@ async function openShade() {
   shadeEl.classList.add('open'); scrimEl.classList.add('open'); phone('phone.wake', .25);
 }
 const openShop = openShade;  // the board's footer and pull-down both open the shade
+function recBoard(st) {
+  const best = shortOf(st.bestSwipe, st.bestSwipeShort), nb = !!(plate && plate.newBest);
+  return `<div class="rec-board"><div class="hd">${svg('M7 4h10v3a5 5 0 0 1-10 0V4zM5 5H3v1a4 4 0 0 0 4 4M19 5h2v1a4 4 0 0 1-4 4M12 12v4M8 20h8M9 16h6v4H9z')}내 기록<span class="sp">초기화해도 남아요</span></div>
+    <div class="g"><div class="c main">${nb ? '<i class="new">NEW</i>' : ''}<span class="l">최고 한 방</span><span class="v ${P.resets >= 10 ? 't-holo' : 't-gold'}">${best.replace(/([A-Za-z]+)$/, '<small>$1</small>')}<small>P</small></span></div>
+    <div class="c"><span class="l">최고 연쇄</span><span class="v">${P.bestChain}<small style="font-size:12px;font-weight:500"> 줄</small></span></div>
+    <div class="c"><span class="l">초기화</span><span class="v">${P.resets}<small style="font-size:12px;font-weight:500"> 회</small></span></div></div>
+    <div class="g" style="grid-template-columns:1fr;margin-top:8px"><div class="c" style="display:flex;align-items:center;justify-content:space-between"><span class="l"><img src="img/bm/currency-backup.webp">모은 백업파일</span><span class="v" style="margin:0">${shortOf(P.files)}</span></div></div></div>`;
+}
 function renderShade() {
   const st = P.state, w = L(st.wallet), apps = P.apps;
   const canBuy = a => a.canBuy != null ? a.canBuy : geq(st.wallet, a.price), canUp = a => a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, a.price1);
@@ -1508,12 +1648,12 @@ function renderShade() {
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${shortOf(P.files)}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div style="display:flex;align-items:center;gap:4px"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="설정">${svg('M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4z')}</button></div></div>
     <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
-    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}<b>${l}</b><em>${sub}</em></button>`).join('')}</div>
+    <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot fx-shine' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><span class="tx"><b>${l}</b><em>${sub}</em></span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}</button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><button class="sw ${vibOn ? 'on' : ''}" id="vib" role="switch" aria-checked="${vibOn}" aria-label="진동"></button></div>
-    <div class="chips"><span class="chip">백업파일 ${shortOf(P.files)}</span><span class="chip">초기화 ${P.resets}회</span><span class="chip">최고 한 방 ${P$(st.bestSwipe)}</span><span class="chip">최고 연쇄 ${P.bestChain}</span></div>
+    ${recBoard(st)}
     <div class="grab"></div>`;
-  requestAnimationFrame(() => fitStickers(shadeEl));
+  stagger(shadeEl.querySelector('.grid'));
   shadeEl.querySelectorAll('.tile').forEach(b => b.addEventListener('click', () => { if (!b.classList.contains('lock')) openSheet(b.dataset.k); else { sfx.snap(); } }));
   $('gear').addEventListener('click', () => openSheet('settings'));
   $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; savePrefs(); });
@@ -1541,24 +1681,25 @@ function renderSheet() {
       + list.map(a => {
         const lock = !a.owned && !a.open;
         const fx = (TEXTS[a.id] || [])[0] || '';
-        const btn = a.owned ? `<span class="btn own"><img class="ic" src="img/ui/check.webp">보유</span>` : lock ? `<button class="btn skin off" disabled><img class="ic" src="img/ui/lock.webp">잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${(a.canBuy != null ? a.canBuy : geq(st.wallet, a.price)) ? '' : 'disabled'}>${P$(a.price, a.priceShort)}</button>`;
+        const btn = a.owned ? `<span class="btn own">${ic('check')}보유</span>` : lock ? `<button class="btn skin off" disabled>${ic('lock')}잠김</button>` : `<button class="btn skin gold" data-act="buy" data-id="${a.id}" ${(a.canBuy != null ? a.canBuy : geq(st.wallet, a.price)) ? '' : 'disabled'}>${P$(a.price, a.priceShort)}</button>`;
         const meta = lock ? `${a.region} · ${a.cat} · ${a.minResets > P.resets ? `초기화 ${a.minResets}회 후` : `Lv ${a.unlockLevel} 해금`}` : `${a.region} · ${a.cat} · ${fx}`;
-        return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
+        return `<div class="it ${lock ? 'lock' : ''}">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier ${a.tier >= 6 ? 't6' : a.tier >= 4 ? 't4' : ''}">${a.tier}티어</span><div class="m">${meta}</div></div>${btn}</div>`;
       }).join('');
     b.querySelectorAll('[data-tier]').forEach(x => x.addEventListener('click', () => { shopTier = +x.dataset.tier; renderSheet(); }));
   } else if (sheetKind === 'up') {
     $('sheet-t').textContent = '강화';
     const mine = apps.filter(a => a.owned).sort((x, y) => (y.active - x.active) || (L(x.price1) - L(y.price1)));
     b.innerHTML = `<div class="seg segm">${[['1', '×1'], ['10', '×10'], ['max', 'Max']].map(([k, l]) => `<button class="${upMode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div>
-      <button class="btn big skin claim" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
+      <button class="btn big skin claim ${mine.some(a => a.active && (a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, a.price1))) ? 'fx-shine fx-glow' : ''}" data-act="upgradeN" data-id="" data-n="all">모두 강화 (싼 것부터)</button>`
       + mine.map(a => {
         const prev = [0, 10, 25, 50, 100, 200, 300, 400, 500].filter(m => m <= a.level).pop() || 0, next = a.nextMilestone || a.level + 1;
         const pct = Math.round((a.level - prev) / Math.max(1, next - prev) * 100), left = next - a.level, hot = left <= 5;
         const n = upMode === 'max' ? a.maxN : +upMode, price = upMode === '10' ? a.price10 : a.price1, can = upMode === 'max' ? a.maxN > 0 : upMode === '10' ? (a.canUpgrade10 != null ? a.canUpgrade10 : geq(st.wallet, price)) : (a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, price));
         const label = upMode === 'max' ? (a.maxN ? `+${a.maxN}단계` : '부족') : P$(price, upMode === '10' ? a.price10Short : a.price1Short);
-        return `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">Lv ${a.level} → ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
-          <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `마일스톤 Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
-          <button class="btn skin gold" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
+        const tv = a.level >= 500 ? 4 : a.level >= 300 ? 3 : a.level >= 100 ? 2 : 1, tc = tv > 1 ? 'lv' + tv : '';
+        return `<div class="it ${tc} ${tv === 4 ? 'fx-ring' : ''}">${ico(a.id)}<div class="t"><b class="${tv === 4 ? 't-holo' : tv === 3 ? 't-gold' : ''}">${a.name}</b><span class="lvb ${tc}">Lv ${a.level}</span> <span class="note">→ ${a.level + Math.max(1, n)}${a.active ? '' : ' · 덱 밖'}</span>
+          <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? `Lv ${next}까지 ${left}단계 · 가치 ×2` : `다음 마일스톤 Lv ${next}`}</div></div>
+          <button class="btn skin gold ${can && hot ? 'fx-shine' : ''}" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
       }).join('');
     b.querySelectorAll('[data-mode]').forEach(x => x.addEventListener('click', () => { upMode = x.dataset.mode; renderSheet(); }));
   } else if (sheetKind === 'deck') {
@@ -1574,7 +1715,7 @@ function renderSheet() {
       <div class="syn"><span>세트 ${P.sets}개</span><span class="bar"><i style="width:${Math.min(100, P.sets * 14)}%;background:#FF8A1F"></i></span><span class="v">×${P.sets > 1 ? '1.22^' + (P.sets - 1) : '1'}</span></div>
       <div class="h3">보유한 앱</div>
       ${rest.length ? rest.map(a => `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${a.tier}티어</span><div class="m">${a.region} · ${a.cat} · Lv ${a.level}</div></div><button class="btn skin gold" data-in="${a.id}" ${act.length < P.maxSlots ? '' : 'disabled'}>넣기</button></div>`).join('') : '<div class="note">상점에서 앱을 사면 여기에 나와요</div>'}`;
-    const setDeck = async ids => { const o = await api('setDeck', { apps: ids.join(',') }); afterAct(o, '덱 슬롯은 최소 ' + Math.max(2, P.minSlots) + '칸이에요'); };
+    const setDeck = async ids => { const o = await api('setDeck', { apps: ids.join(',') }); afterAct(o, '덱 슬롯은 최소 ' + Math.max(2, P.minSlots) + '칸이에요', 'setDeck'); };
     b.querySelectorAll('[data-out]').forEach(x => x.addEventListener('click', () => setDeck(act.map(a => a.id).filter(id => id !== x.dataset.out))));
     b.querySelectorAll('[data-in]').forEach(x => x.addEventListener('click', () => setDeck([...act.map(a => a.id), x.dataset.in])));
   } else if (sheetKind === 'reset' || sheetKind === 'backup') {
@@ -1601,7 +1742,7 @@ function renderSheet() {
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
-  requestAnimationFrame(() => fitStickers(b));
+  stagger(b);
 }
 let wipeArm = 0, appInfo = null;
 const SITE = 'https://graviton94.github.io/notificationcleaner/';
@@ -1639,17 +1780,44 @@ async function renderSettings(b) {
     try { localStorage.removeItem('prefs'); } catch (e) {}
     const st = await api('wipe'); closeAll(); P = null;
     applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = L(st.wallet); wallet.unit = splitL(wallet.v).unit;
-    board.length = 0; reconcile(st); swipes = 0; say2('처음부터 다시 시작해요', 300, 24);
+    board.length = 0; reconcile(st); swipes = 0; toast('게임 데이터를 지웠어요 · 처음부터 시작해요', 'ok');
   });
 }
 const DIMG = '<img src="img/bm/currency-data.webp">';
 // promo stickers: the text sits in each asset's measured blank area (tools/game-page/ui-boxes.json) and is shrunk to fit
 const UIBOX = {"ribbon": {"x": 0.198, "y": 0.16, "w": 0.594, "h": 0.489, "ar": 2.043}, "rosette": {"x": 0.233, "y": 0.224, "w": 0.534, "h": 0.417, "ar": 0.849}, "burst": {"x": 0.219, "y": 0.258, "w": 0.542, "h": 0.484, "ar": 1.011}, "bolt": {"x": 0.328, "y": 0.302, "w": 0.589, "h": 0.547, "ar": 1.811}, "stamp": {"x": 0.156, "y": 0.268, "w": 0.688, "h": 0.461, "ar": 1.011}, "bubble": {"x": 0.156, "y": 0.186, "w": 0.682, "h": 0.605, "ar": 1.085}, "flame": {"x": 0.177, "y": 0.511, "w": 0.641, "h": 0.319, "ar": 1.021}};
+const IC = {
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>',
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m7.5 12 3 3 6-6"/></svg>',
+  err: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16.5v.5"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  cart: '<path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/>',
+  warn: '<path d="M12 3 2 20h20zM12 10v4M12 17v.5"/>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  crown: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z"/></svg>',
+};
+const ic = (k, st = '') => IC[k].replace('<svg ', `<svg class="ic" style="${st}" `);
+// promo tags (were image stickers): same signature, drawn in CSS so they follow the theme and never misalign
 function sticker(kind, lines, w, style = '') {
-  const b = UIBOX[kind], h = Math.round(w / b.ar), pc = v => (v * 100).toFixed(1) + '%';
-  const t = Array.isArray(lines) ? lines[0] + (lines[1] ? `<small>${lines[1]}</small>` : '') : lines;
-  return `<span class="stk stk-${kind}" style="width:${w}px;height:${h}px;background-image:url(img/ui/${kind}.webp);${style}"><span class="lbl" style="left:${pc(b.x)};top:${pc(b.y)};width:${pc(b.w)};height:${pc(b.h)}">${t}</span></span>`;
+  const t = Array.isArray(lines) ? lines : [lines];
+  if (kind === 'ribbon') return `<span class="pb pb-first">${t[0]}</span>`;
+  if (kind === 'rosette') return `<span class="pb pb-rec" style="right:8px;top:8px">★ ${t[0]}</span>`;
+  if (kind === 'burst') return `<span class="pb pb-gain" style="${w >= 80 ? 'right:14px;top:14px' : 'left:6px;top:10px'}">${t[0]}${t[1] ? `<small>${t[1]}</small>` : ''}</span>`;
+  if (kind === 'bolt') return `<span class="pb pb-timer">${IC.clock}${t[0]}</span>`;
+  if (kind === 'stamp') return `<span class="pb pb-stamp" aria-label="${t[0]}">${IC.check}</span>`;
+  return `<span class="pb pb-first">${t[0]}</span>`;
 }
+// toasts: system messages slide up from the bottom, stack up to three, leave on their own
+function toast(text, kind = 'info') {
+  const host = document.getElementById('toasts'); if (!host) return;
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.setAttribute('role', 'status');
+  el.innerHTML = (IC[kind] || IC.info) + `<span>${text}</span>`;
+  host.appendChild(el); while (host.children.length > 3) host.firstChild.remove();
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 260); }, 2600);
+}
+const stagger = root => { if (!root) return; [...root.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 14))); };
 function fitStickers(root = document) {
   root.querySelectorAll('.stk .lbl').forEach(l => {
     const lines = l.querySelector('small') ? 1.55 : 1;
@@ -1682,13 +1850,13 @@ function renderData(b) {
     const x = gainX(m.starterValue, m.starterWon);
     h += `<button class="starter" data-act="buyStarter" style="position:relative;padding-right:96px">${sticker('burst', [xStr(x) + '배', '이득'], 84, 'right:4px;top:50%;transform:translateY(-50%) rotate(8deg)')}
       <img src="img/bm/shop-starter.webp"><div style="flex:1"><b>스타터 팩 ${won(m.starterWon)}</b>
-      <div style="position:relative;height:46px;margin:0 0 2px">${sticker('bolt', '<span class="cd">' + hms(m.starterLeftMs) + '</span>', 84, 'left:0;top:0')}</div>
+      <div style="margin:6px 0 6px">${sticker('bolt', '<span class="cd">' + hms(m.starterLeftMs) + '</span>', 84, 'left:0;top:0')}</div>
       <div class="note">데이터 ${m.starterData} · ★ 선택권 1장 (데이터 ${m.voucherData} 가치)<br>수입 부스트 3회 · 오버클럭 3회</div></div></button>`;
   }
   if (m.rookieOpen || (m.rookieBought && m.rookieDay <= 7)) {
     const x = gainX(m.rookieValue, m.rookieWon);
     h += `<div class="rookie">${m.rookieBought ? '' : sticker('burst', [xStr(x) + '배', '이득'], 84, 'right:6px;top:6px;transform:rotate(10deg)')}
-      <h3>초심자 패스</h3><span class="d"><img src="img/ui/clock.webp">${m.rookieBought ? `${m.rookieDay}/7일째` : `설치 후 7일만 · ${m.rookieDaysLeft}일 남음`}</span>
+      <h3>초심자 패스</h3><span class="d">${ic('clock')}${m.rookieBought ? `${m.rookieDay}/7일째` : `설치 후 7일만 · ${m.rookieDaysLeft}일 남음`}</span>
       <ul><li>지금 바로 데이터 300</li><li>7일 동안 매일 데이터 50 (총 650)</li><li>프리미엄 ★ 선택권 1장 (데이터 ${m.voucherData} 가치)</li></ul>
       ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? '오늘 50 받기' : '오늘 받음 · 내일 또'}</button>`
         : `<button class="btn skin gold" data-act="buyRookie">${won(m.rookieWon)}</button>`}</div>`;
@@ -1699,12 +1867,15 @@ function renderData(b) {
       const rib = m.firstData ? sticker('ribbon', bonus >= p.data ? '첫 구매 2배' : `첫 구매 +${bonus.toLocaleString()}`, 112, 'left:50%;top:-24px;transform:translateX(-50%)') : '';
       const ros = p.id === 'data_1200' ? sticker('rosette', '추천', 44, 'right:-8px;top:14px;transform:rotate(12deg)') : '';
       const bst = x >= 1.05 ? sticker('burst', [xStr(x) + '배', '이득'], 58, 'left:-8px;top:14px;transform:rotate(-10deg)') : '';
-      return `<button class="pack ${p.id === 'data_1200' ? 'rec' : ''}" data-act="buyData" data-pack="${p.id}">${rib}${ros}${bst}
+      // tags live in the card's flow (one row under the amount) so they never cover the art
+      const tags = (x >= 1.05 ? `<span class="tag gain">${xStr(x)}배 이득</span>` : '<span class="tag base">기본가</span>') ; const rc = p.id === 'data_1200' ? '<span class="tag rec corner">★ 추천</span>' : '';
+      return `<button class="pack ${p.id === 'data_1200' ? 'rec' : ''}" data-act="buyData" data-pack="${p.id}">${rib}${rc}
         <img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${di} ${p.gets.toLocaleString()}</div>
-        <span class="basep">${bonus ? `${p.data.toLocaleString()} + ${bonus.toLocaleString()}` : x < 1.05 ? '기본가' : `기본가보다 ${xStr(x)}배`}</span>
+        <span class="tags">${tags}</span>
+        <span class="basep">${bonus ? `${p.data.toLocaleString()} + ${bonus.toLocaleString()}` : '\u00a0'}</span>
         <span class="won skin gold">${won(p.won)}</span></button>`;
     }).join('')}</div>`;
-  h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m"><img class="ic" src="img/ui/clock.webp">오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
+  h += `<div class="h3">데이터 상점</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b>${it.label}</b><div class="m">${ic('clock')}오늘 ${it.left}번 남음${it.tickets ? ` · 무료권 ${it.tickets}` : ''}</div></div>
       <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? '무료' : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? '패스 혜택 · 광고 없이 받기' : '광고 보고 받기'}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">오늘 ${a.left}/${a.daily}</div></div>
       <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? '받기' : '<img src="img/ui/ad.webp">광고'}</button></div>`).join('')
@@ -1724,7 +1895,7 @@ function renderPremium(b) {
   const stars = n => `<span class="stars">${Array.from({ length: 5 }, (_, i) => `<img src="img/bm/badge-star-${i < n ? 'on' : 'off'}.webp">`).join('')}</span>`;
   b.innerHTML = (m.vouchers ? `<div class="it" style="border-color:var(--gold)"><img src="img/bm/badge-star-on.webp"><div class="t"><b>★ 선택권 ${m.vouchers}장</b><div class="m">아무 앱 ★2까지 무료로 · 아래에서 "선택권" 누르기</div></div></div>` : '')
     + m.premium.map(a => `<div class="it ${a.open ? '' : 'lock'}">${ico(a.id)}<div class="t"><b>${a.name}</b> <span class="note">${a.tier}티어 · 가치 ×${(a.permille / 1000).toFixed(a.permille % 1000 ? 1 : 0)}</span><div>${stars(a.stars)}</div></div>
-      ${a.stars >= a.max ? '<b style="color:var(--gold)"><img class="ic" src="img/ui/crown.webp" style="width:22px;height:22px">MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn skin gold" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn skin green" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
+      ${a.stars >= a.max ? '<b style="color:var(--gold)">' + ic('crown', 'width:20px;height:20px') + 'MAX</b>' : m.vouchers && a.voucherOk ? `<button class="btn skin gold" data-act="premium" data-id="${a.id}" data-voucher="1">선택권</button>` : `<button class="dbtn skin green" data-act="premium" data-id="${a.id}" ${a.open && m.data >= a.price ? '' : 'disabled'}>${DIMG}${fmt(a.price)}</button>`}</div>`).join('')
     + `<div class="note" style="text-align:center;margin-top:8px">★마다 그 앱 가치 ×2 · 초기화·동기화해도 남아요 · 높은 티어일수록 효율이 좋아요</div>`;
 }
 function renderAttend(b) {
@@ -1746,7 +1917,7 @@ function renderAttend(b) {
 }
 function confirmPay(title, what, price) {
   return new Promise(res => {
-    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = price; $('cf-ok').textContent = /지우기/.test(price) ? '지우기' : /사용/.test(price) ? '사용' : '결제'; $('cf').classList.add('on'); sfx.snap();
+    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = price; $('cf-ok').textContent = /지우기/.test(price) ? '지우기' : /사용/.test(price) ? '사용' : '결제'; $('cf-ico').innerHTML = /지우기/.test(price) ? IC.warn : IC.cart; $('cf').classList.add('on'); sfx.snap();
     const done = v => { $('cf').classList.remove('on'); $('cf-ok').onclick = $('cf-no').onclick = null; res(v); };
     $('cf-ok').onclick = () => done(true); $('cf-no').onclick = () => done(false);
   });
@@ -1771,7 +1942,7 @@ async function sheetAct(x) {
   const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
   if ((act === 'reset' || act === 'sync') && o.ok) { const got = act === 'reset' ? P.state.backupFilesNow : P.gbNow; closeAll(); armSync = false; prestigeShow(act, got, o.state); }
-  afterAct(o);
+  afterAct(o, null, act);
 }
 const offerEl = $('offer');
 let offerT = null;
@@ -1786,8 +1957,11 @@ function fakeAd() {
   return new Promise(res => { const ov = $('adov'); let n = 3; $('adt').textContent = n; ov.classList.add('on');
     const iv = setInterval(() => { n--; $('adt').textContent = n; if (n <= 0) { clearInterval(iv); ov.classList.remove('on'); res(true); } }, 1000); });
 }
-async function afterAct(o, failMsg) {
-  if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); } else { sfx.snap(); if (failMsg) say2(failMsg, 300, 18); }
+const DONE = { buy: '새 앱을 샀어요 · 덱에 넣으면 판에 와요', upgradeN: '강화했어요', buyData: '데이터를 충전했어요', buyStarter: '스타터 팩을 받았어요', buyRookie: '초심자 패스가 시작됐어요',
+  claimRookie: '오늘의 데이터 50을 받았어요', buyItem: '사용했어요', watchAd: '보상을 받았어요', buyPass: '패스가 시작됐어요', premium: '프리미엄 ★을 올렸어요',
+  buyBackup: '백업 상점 강화 완료', buyCloud: '클라우드 상점 강화 완료', attend: '출석했어요', claimMissions: '미션 보상을 받았어요', setDeck: '덱을 바꿨어요' };
+async function afterAct(o, failMsg, act) {
+  if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); if (act && DONE[act]) toast(DONE[act], 'ok'); } else { sfx.snap(); toast(failMsg || '지금은 할 수 없어요', 'err'); }
   applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);
   armReset = false; await loadPanel(); if (sheetKind) renderSheet();
 }
@@ -1813,7 +1987,7 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
 })();
 // back from away: the app paid the time away (AwayClock) and hands the result here
 window.onOffline = o => {
-  if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); say2('자리 비운 동안 정리했어요', 300, 22); phone('ui.bonus', .4); }
+  if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); toast(`자리 비운 동안 +${shortOf(o.paid, o.paidShort)} P 정리했어요`, 'ok'); phone('ui.bonus', .4); }
   applyState(o.state); reconcile(o.state);
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) api('snapshot').then(st => { applyState(st); reconcile(st); }); });

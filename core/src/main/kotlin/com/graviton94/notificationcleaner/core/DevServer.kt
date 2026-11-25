@@ -55,7 +55,7 @@ fun serve(port: Int, root: File) {
                 session = WebSession(state = session.state.copy(wallet = java.math.BigInteger.TEN.pow(d) + java.math.BigInteger.valueOf(123_456_789)), now = now); session.snapshot(now) }
             // dev only: jump to a level with its run P (and wallet), to try the late panels
             "cheat" -> { val lv = q["level"]?.toInt() ?: 30; val r = session.engine.rules; val p = r.levelCeil(lv, 0)
-                session = WebSession(state = session.state.copy(level = lv, runEarned = p, wallet = p * java.math.BigInteger.valueOf((q["wallet"] ?: "3").toLong())), now = now); session.snapshot(now) }
+                session = WebSession(state = session.state.copy(level = lv, runEarned = p, wallet = p * java.math.BigInteger.valueOf((q["wallet"] ?: "3").toLong()), appLevels = q["apps"]?.split(",")?.mapIndexed { i, v -> session.state.appLevels.keys.elementAtOrNull(i) to v.toInt() }?.filter { it.first != null }?.associate { it.first!! to it.second }?.let { session.state.appLevels + it } ?: session.state.appLevels), now = now); session.snapshot(now) }
             "buy" -> session.buy(q.getValue("app"), now)
             "upgrade" -> session.upgrade(q.getValue("app"), now)
             "reset" -> session.reset(now)
