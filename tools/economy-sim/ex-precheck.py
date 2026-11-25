@@ -170,6 +170,8 @@ def main():
     parser.add_argument("--integrated", action="store_true", help="Apply the reviewed candidate to the isolated engine copy")
     parser.add_argument("--expansion-after-124", action="store_true",
                         help="Diagnostic: preserve opening shop and file caps until first Lv124")
+    parser.add_argument("--offline-transfer", action="store_true",
+                        help="For the lower-P offline_cap case, earn up to 84 extra minutes twice as fast")
     parser.add_argument("--audit-only", action="store_true", help="Run the integrated lifecycle fixture instead of the matrix")
     args = parser.parse_args()
     sim = Path(__file__).resolve().parent
@@ -203,12 +205,16 @@ def main():
         parser.error("--audit-only requires the integrated candidate")
     if args.expansion_after_124 and not args.integrated:
         parser.error("--expansion-after-124 requires the integrated candidate")
+    if args.offline_transfer and (not args.integrated or args.cases != "offline_cap"):
+        parser.error("--offline-transfer requires --integrated --cases offline_cap")
     if args.audit_only:
         manifest["audit_only"] = True
     if args.days != 84:
         manifest["days"] = args.days
     if args.expansion_after_124:
         manifest["expansion_after_124"] = True
+    if args.offline_transfer:
+        manifest["offline_transfer"] = True
     manifest_path = out / "manifest.json"
     if manifest_path.exists() and json.loads(manifest_path.read_text()) != manifest:
         parser.error("The output directory contains checkpoints made with a different run configuration")
@@ -236,6 +242,9 @@ def main():
                 text = text.replace(f"BigInteger.valueOf({field})", field).replace(f"{field} > 0", f"{field}.signum() > 0")
             cli.write_text(text)
         instrument(core, args.integrated)
+        if args.offline_transfer:
+            offers = core / "ExOffers.kt"
+            offers.write_text(replace(offers.read_text(), "2L * completed * ranks", "4L * completed * ranks"))
         if args.expansion_after_124:
             delay_growth_expansion(core)
         if args.protect_level is not None:
