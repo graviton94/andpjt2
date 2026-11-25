@@ -15,7 +15,7 @@ object ExExperiment {
     val current = ThreadLocal<Run>()
 
     data class Scenario(val name: String, val owned: Int, val staged: Boolean = false, val alternative: Boolean = false,
-        val revised: Boolean = false)
+        val revised: Boolean = false, val activeRecovery: Boolean = false)
     val scenarios = listOf(
         Scenario("none", 0),
         Scenario("full", FULL),
@@ -26,6 +26,7 @@ object ExExperiment {
         Scenario("staged", 0, staged = true),
         Scenario("offline_cap", FULL, alternative = true),
         Scenario("revised", FULL, revised = true),
+        Scenario("revised_active", FULL, revised = true, activeRecovery = true),
     )
 
     class Sample {
@@ -46,6 +47,8 @@ object ExExperiment {
         var shadowAttempted = 0L
         var validPrestige = false
         var lastValidSyncAt: Long? = null
+        var recoverySwipes = 0
+        var syncPlayMs = 0L
 
         fun record(actor: Actor, now: Long, conditionMask: Int, bp: Int, base: BigInteger, added: BigInteger,
             marginal: BigInteger, capBlocked: Boolean) {
@@ -121,8 +124,9 @@ object ExExperiment {
             val firstCategory = burstApps.firstOrNull()?.let { Catalog.app(it).category }
             listOf(
                 run.validPrestige,
-                s.level in resetLevel until resetLevel + 10,
-                run.lastValidSyncAt?.let { now - it in 0 until 30 * 60_000L } ?: false,
+                if (run.scenario.activeRecovery) run.recoverySwipes > 0 else s.level in resetLevel until resetLevel + 10,
+                if (run.scenario.activeRecovery) run.syncPlayMs > 0
+                else run.lastValidSyncAt?.let { now - it in 0 until 30 * 60_000L } ?: false,
                 firstCategory != null && burstApps.any { Catalog.app(it).category != firstCategory },
                 directApp?.let { s.account.stars(it) > 0 } ?: false,
                 burstApps.any { it in s.pro },

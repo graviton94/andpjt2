@@ -20,12 +20,18 @@ private class Trace(private val run: ExExperiment.Run, private val through: Int)
     val checkpoints = mutableListOf<List<Any>>()
     val events = mutableListOf<List<Any>>()
 
+    override fun activeTime(elapsedMs: Long) {
+        if (run.syncPlayMs > 0) run.syncPlayMs = (run.syncPlayMs - elapsedMs).coerceAtLeast(0)
+    }
+
     override fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long) {
-        if (!run.collects || --run.shadowCountdown != 0) return
-        run.shadowCountdown = 64
-        run.shadowAttempted++
-        // Same state and timestamp, separate Auto target and payout. Discard the side branch.
-        engine.autoTarget(before, now)?.let { engine.swipe(before, it, now, Actor.Auto) }
+        if (run.collects && --run.shadowCountdown == 0) {
+            run.shadowCountdown = 64
+            run.shadowAttempted++
+            // Same state and timestamp, separate Auto target and payout. Discard the side branch.
+            engine.autoTarget(before, now)?.let { engine.swipe(before, it, now, Actor.Auto) }
+        }
+        if (run.recoverySwipes > 0) run.recoverySwipes--
     }
 
     override fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int) {
@@ -33,6 +39,11 @@ private class Trace(private val run: ExExperiment.Run, private val through: Int)
         val paidGb = if (kind == "sync") after.backup.cloud.gb - before.backup.cloud.gb else 0L
         if (paidFiles > 0 || paidGb > 0) run.validPrestige = true
         if (paidGb > 0) run.lastValidSyncAt = now
+        if (run.scenario.activeRecovery) {
+            if (paidFiles > 0) run.recoverySwipes = 200
+            if (kind == "sync") run.recoverySwipes = 0
+            if (paidGb > 0) run.syncPlayMs = 30 * 60_000L
+        }
         files += BigInteger.valueOf(paidFiles)
         gb += BigInteger.valueOf(paidGb)
         events += listOf(kind, (now - ExExperiment.START) / ExExperiment.DAY.toDouble(), before.level,

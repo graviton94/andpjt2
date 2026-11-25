@@ -65,6 +65,7 @@ data class DayPlan(val sessions: Int = 4, val sessionMin: Int = 15)
 
 interface DailyAudit {
     val throughDay: Int
+    fun activeTime(elapsedMs: Long) = Unit
     fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long)
     fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int)
     fun endDay(day: Int, state: GameState)
@@ -186,6 +187,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
                 val step = engine.chargeMs(s, t)
+                audit?.activeTime(minOf(step, end - t))
                 t += step
                 tl.activeMin += step / 60_000.0
                 s = engine.tick(s, t)
