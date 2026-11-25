@@ -1,6 +1,5 @@
 import com.graviton94.notificationcleaner.core.Catalog
 import com.graviton94.notificationcleaner.core.CreditItem
-import com.graviton94.notificationcleaner.core.RuleSet
 import com.graviton94.notificationcleaner.core.SpeedPass
 import com.graviton94.notificationcleaner.core.premiumCost
 import java.io.File
@@ -28,7 +27,7 @@ internal fun csv(file: File, fields: List<String>, rows: Sequence<List<Any?>>) {
     }
 }
 
-fun balanceReport(out: File) {
+fun balanceDetail(out: File) {
     out.mkdirs()
     val rules = simRules()
     val profiles = scenarios.flatMap { scenario -> (1L..2L).map { scenario to it } }
@@ -88,23 +87,18 @@ fun balanceReport(out: File) {
     csv(File(out, "sku-values.csv"), listOf("sku", "won", "data_equivalent", "first_data_equivalent", "normal_x", "first_x"),
         skuValues.asSequence())
 
-    val report = StringBuilder("# 본선 밸런스 판정\n\n")
+    val report = StringBuilder("# 2시드 상세 리포트\n\n")
     fun line(s: String = "") { report.appendLine(s) }
     line("엔진 RuleSet ${rules.version}, 레벨 비율 ${rules.levelRatioPermille}‰. 84일·시드 1/2·하루 4회 × 15분.")
-    line("Lv124 최초 도달과 마지막 앱 구매를 분리했다. 시드 중 하나라도 관측 기간 내 미도달이면 목표 미달로 판정한다.")
+    line("Lv124 최초 도달과 마지막 앱 구매를 분리했다. 최종 진행 판정은 balance-report의 10시드 결과를 사용한다.")
     line()
-    line("| 프로필 | 시드 1 / 2 Lv124 | 평균 | 목표 | 판정 | 첫 초기화 평균 | 마지막 앱 구매 평균 |")
-    line("|---|---:|---:|---:|---|---:|---:|")
+    line("| 프로필 | 시드 1 / 2 Lv124 | 평균 | 첫 초기화 평균 | 마지막 앱 구매 평균 |")
+    line("|---|---:|---:|---:|---:|")
     for (scenario in scenarios) {
         val series = rows(scenario).map { it.trace }
         val avg = levels(scenario)
-        val status = when {
-            avg == null || avg > scenario.high -> "미달"
-            avg < scenario.low -> "과속"
-            else -> "통과"
-        }
         line("| ${scenario.payer.label} | ${series.joinToString(" / ") { fmt(it.level124Day).ifEmpty { "미도달" } }} | " +
-            "${fmt(avg).ifEmpty { "미도달" }} | ${scenario.low.toInt()}~${scenario.high.toInt()} | $status | " +
+            "${fmt(avg).ifEmpty { "미도달" }} | " +
             "${fmt(completeMean(series.map { it.resetDays.firstOrNull() }))} | ${fmt(completeMean(series.map { it.lastAppDay }))} |")
     }
     line()
@@ -123,17 +117,11 @@ fun balanceReport(out: File) {
             val fast = y.trace.level124Day
             slow != null && fast != null && slow <= fast
         }.map { it.first.seed }
-        line("- ${slower.payer.name} → ${faster.payer.name} 평균 격차 ${fmt(gap).ifEmpty { "판정 불가" }}일 · " +
-            "${if (gap != null && gap >= 5.0 && reversed.isEmpty()) "통과" else "미달"}" +
+        line("- ${slower.payer.name} → ${faster.payer.name} 평균 격차 ${fmt(gap).ifEmpty { "미관측" }}일" +
             if (reversed.isEmpty()) "" else " · 순서 역전 시드 $reversed")
     }
     val reset = completeMean(rows(scenarios.first()).map { it.trace.resetDays.firstOrNull() })
-    val resetResult = when {
-        reset == null || reset > 3.0 -> "미달"
-        reset < 2.0 -> "과속"
-        else -> "통과"
-    }
-    line("- 무과금 첫 초기화 2~3일 · ${fmt(reset).ifEmpty { "미도달" }}일 · $resetResult")
+    line("- 무과금 첫 초기화 평균 ${fmt(reset).ifEmpty { "미도달" }}일")
     line()
     line("## 무과금 ★5 장바구니")
     line()
@@ -166,5 +154,5 @@ fun balanceReport(out: File) {
     line("속도 구독의 데이터 환산은 확정 지급분과 오버클럭만 계산한다. 속도·초기화·동기화 배율은 프로필 표에서 판정한다.")
     line()
     line("출석 가치는 [검산식](standards.md)과 [출석 CSV](attendance-values.csv)를 참고한다. [상품·출석 40개 케이스](commerce-scenarios.csv)는 84일 성장 프로필과 별도다.")
-    File(out, "REPORT.md").writeText(report.toString())
+    File(out, "DETAIL.md").writeText(report.toString())
 }

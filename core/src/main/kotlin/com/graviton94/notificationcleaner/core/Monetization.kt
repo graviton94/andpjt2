@@ -105,6 +105,7 @@ data class Account(
     val processedAdClaims: Map<Long, List<String>> = emptyMap(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
+    val lastAdWatchDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
     val shopDay: Long = -1,
     val shopUses: Map<CreditItem, Int> = emptyMap(),
@@ -315,7 +316,9 @@ class Shop(private val engine: Engine) {
         if (adsLeft(s, slot, now) <= 0) return null
         val counted = s.withAccount { a ->
             val uses = if (a.adDay < dayOf(now)) emptyMap() else a.adUses
-            a.copy(adDay = dayOf(now), adUses = uses + (slot to (uses[slot] ?: 0) + 1))
+            val today = dayOf(now)
+            val watched = if (passActive(s, now)) a.lastAdWatchDay else maxOf(a.lastAdWatchDay, today)
+            a.copy(adDay = today, lastAdWatchDay = watched, adUses = uses + (slot to (uses[slot] ?: 0) + 1))
         }
         return when (slot) {
             AdSlot.BestDouble -> grantP(counted, offerP, rules.adLevelCap)

@@ -872,9 +872,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
         val income = s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong())
-        val gross = if (acc.speedPass == SpeedPass.Ultra && acc.speedPassUntil >= now && rules.ultraOfflinePermille != 1_000)
-            income * BigInteger.valueOf(rules.ultraOfflinePermille.toLong()) / BigInteger.valueOf(100_000_000)
-        else income / BigInteger.valueOf(100_000)
+        val today = dayOf(now)
+        val multiplier = when {
+            acc.speedPass == SpeedPass.Ultra && acc.speedPassUntil >= now -> rules.ultraOfflinePermille
+            acc.passUntil <= now && acc.lastAdWatchDay >= 0 && acc.lastAdWatchDay in (today - 1)..today -> rules.adWatchOfflinePermille
+            else -> 1_000
+        }
+        val gross = if (multiplier == 1_000) income / BigInteger.valueOf(100_000)
+            else income * BigInteger.valueOf(multiplier.toLong()) / BigInteger.valueOf(100_000_000)
         val p = gross
             .min(jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt()))  // paid speed isn't thrown away by 과열 보호
         val runEarned = s.runEarned + p

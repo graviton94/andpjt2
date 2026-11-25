@@ -30,6 +30,7 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "boostPermille" -> r.copy(boostPermille = v.toInt())
             "warpMinutes" -> r.copy(warpMinutes = v.toInt())
             "levelRatioPermille" -> r.copy(levelRatioPermille = v.toInt())
+            "adWatchOfflinePermille" -> r.copy(adWatchOfflinePermille = v.toInt())
             "ultraOfflinePermille" -> r.copy(ultraOfflinePermille = v.toInt())
             "offlineEfficiencyPercent" -> r.copy(offlineEfficiencyPercent = v.toInt())
             "boostMinutes" -> r.copy(boostMinutes = v.toInt())

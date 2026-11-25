@@ -1,3 +1,4 @@
+import com.graviton94.notificationcleaner.core.AdSlot
 import java.io.File
 import java.math.BigInteger
 
@@ -18,12 +19,13 @@ private fun median(days: List<Double?>): Double? {
     return (lower + upper) / 2.0
 }
 
-fun balanceAudit(output: File, profiles: String?) {
+fun balanceAudit(output: File, profiles: String?, availableRewardsOnly: Boolean) {
     output.mkdirs()
     val payers = profiles?.split(",")?.map(Payer::valueOf) ?: Payer.entries
+    val slots = if (availableRewardsOnly) AdSlot.entries.toSet() - AdSlot.OfflineDouble else AdSlot.entries.toSet()
     val jobs = payers.flatMap { payer -> (1L..AUDIT_SEEDS.toLong()).map { seed -> payer to seed } }
     val rows = jobs.parallelStream().map { (payer, seed) ->
-        val result = playDays(seed, AUDIT_DAYS, DayPlan(), true, payer = payer, stopAtLv124 = true)
+        val result = playDays(seed, AUDIT_DAYS, DayPlan(), true, payer = payer, slots = slots, stopAtLv124 = true)
         println("${payer.name},$seed,${result.level124Day ?: "미도달"}")
         Triple(payer, seed, result)
     }.toList()

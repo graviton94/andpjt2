@@ -149,6 +149,41 @@ class CommerceTest {
         assertEquals(1, shop.claimAttendance(state, now + 31 * day).account.streak)
     }
 
+    @Test fun watchedAdsCanIncreaseOfflinePThroughTheFollowingUtcDay() {
+        val tuned = engine
+        val reference = Engine(engine.rules.copy(adWatchOfflinePermille = 1_000))
+        val shop = Shop(tuned)
+        val away = 60_000L
+        val s = tuned.newGame(now, 11).copy(earnRate = java.math.BigInteger.valueOf(10_000))
+        val watched = assertNotNull(shop.watchAd(s, AdSlot.CreditBox, now))
+        val claimedWithPass = assertNotNull(shop.watchAd(shop.buyPass(s, now), AdSlot.CreditBox, now))
+        val base = reference.settleOffline(watched, away, now + day).second
+        assertEquals(base * java.math.BigInteger.valueOf(17) / java.math.BigInteger.TEN,
+            tuned.settleOffline(watched, away, now + day).second)
+        for (state in listOf(s, claimedWithPass)) {
+            assertEquals(reference.settleOffline(state, away, now + day), tuned.settleOffline(state, away, now + day))
+        }
+        assertEquals(reference.settleOffline(watched, away, now + 2 * day),
+            tuned.settleOffline(watched, away, now + 2 * day))
+    }
+
+    @Test fun ultraOfflineCalibrationLeavesOtherEntitlementsAlone() {
+        val reference = Engine(engine.rules.copy(ultraOfflinePermille = 1_000))
+        val away = 60_000L
+        val s = engine.newGame(now, 11).copy(earnRate = java.math.BigInteger.valueOf(10_000))
+        val active = s.withAccount { it.copy(speedPass = SpeedPass.Ultra, speedPassUntil = now + day) }
+        val before = reference.settleOffline(active, away, now).second
+        assertEquals(before * java.math.BigInteger.valueOf(3) / java.math.BigInteger.TWO,
+            engine.settleOffline(active, away, now).second)
+        val turbo = active.withAccount { it.copy(speedPass = SpeedPass.Turbo) }
+        val expired = active.withAccount { it.copy(speedPassUntil = now - 1) }
+        for (state in listOf(s, turbo, expired)) {
+            assertEquals(reference.settleOffline(state, away, now), engine.settleOffline(state, away, now))
+        }
+        assertEquals(reference.chargeMs(active, now), engine.chargeMs(active, now))
+        assertEquals(reference.prestigePermille(active, now), engine.prestigePermille(active, now))
+    }
+
     @Test fun subscriptionsDeliverDailyEntitlementsInTheAppSession() {
         for ((kind, extra) in listOf("month" to 0L, "Turbo" to 0L, "Ultra" to 200L)) {
             val w = session()

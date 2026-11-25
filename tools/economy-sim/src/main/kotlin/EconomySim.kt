@@ -184,8 +184,10 @@ fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 6
 
 fun main(args: Array<String>) {
     if (args.firstOrNull() == "balance-commerce") return balanceCommerce(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
-    if (args.firstOrNull() == "balance-audit") return balanceAudit(java.io.File(args[1]), args.getOrNull(2))
-    if (args.firstOrNull() == "balance-report") return balanceReport(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
+    if (args.firstOrNull() in setOf("balance-report", "balance-audit")) return balanceAudit(
+        java.io.File(args.getOrNull(1) ?: error("Choose an output directory")),
+        args.getOrNull(2), args.getOrNull(3) == "available-rewards")
+    if (args.firstOrNull() == "balance-detail") return balanceDetail(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() == "debug") return debugRun()
     if (args.firstOrNull() == "money") return monetization(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toLong() ?: 4L, profilesFor(args.getOrNull(3)))
     if (args.firstOrNull() == "daily") return daily(args.getOrNull(1)?.toInt() ?: 56, args.getOrNull(2)?.toLong() ?: 4L)
