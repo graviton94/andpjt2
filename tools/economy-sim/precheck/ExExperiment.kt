@@ -14,7 +14,8 @@ object ExExperiment {
     private val basis = BigInteger.valueOf(10_000)
     val current = ThreadLocal<Run>()
 
-    data class Scenario(val name: String, val owned: Int, val staged: Boolean = false, val alternative: Boolean = false)
+    data class Scenario(val name: String, val owned: Int, val staged: Boolean = false, val alternative: Boolean = false,
+        val revised: Boolean = false)
     val scenarios = listOf(
         Scenario("none", 0),
         Scenario("full", FULL),
@@ -24,6 +25,7 @@ object ExExperiment {
         Scenario("two_sets", prism or reboot),
         Scenario("staged", 0, staged = true),
         Scenario("offline_cap", FULL, alternative = true),
+        Scenario("revised", FULL, revised = true),
     )
 
     class Sample {
@@ -39,9 +41,11 @@ object ExExperiment {
 
     class Run(val scenario: Scenario) {
         val samples = Array(2) { Array(days.size) { Sample() } }
-        val collects = scenario.name == "full"
+        val collects = scenario.name == "full" || scenario.revised
         var shadowCountdown = 1
         var shadowAttempted = 0L
+        var validPrestige = false
+        var lastValidSyncAt: Long? = null
 
         fun record(actor: Actor, now: Long, conditionMask: Int, bp: Int, base: BigInteger, added: BigInteger,
             marginal: BigInteger, capBlocked: Boolean) {
@@ -109,8 +113,33 @@ object ExExperiment {
         return if (scenario.alternative) base + base * 60 / 10_000 else base
     }
 
+    fun revisedConditions() = current.get()?.scenario?.revised == true
+
+    private fun lateConditions(run: Run, s: GameState, now: Long, resetLevel: Int,
+        directApp: String?, burstApps: List<String>): Int {
+        val active = if (run.scenario.revised) {
+            val firstCategory = burstApps.firstOrNull()?.let { Catalog.app(it).category }
+            listOf(
+                run.validPrestige,
+                s.level in resetLevel until resetLevel + 10,
+                run.lastValidSyncAt?.let { now - it in 0 until 30 * 60_000L } ?: false,
+                firstCategory != null && burstApps.any { Catalog.app(it).category != firstCategory },
+                directApp?.let { s.account.stars(it) > 0 } ?: false,
+                burstApps.any { it in s.pro },
+            )
+        } else {
+            val syncs = s.backup.cloud.syncs
+            listOf(
+                s.backup.resets > 0 || syncs > 0, s.level >= resetLevel, syncs > 0, s.active.size >= 4,
+                s.active.any { s.account.stars(it) > 0 }, s.active.any { it in s.pro },
+            )
+        }
+        return active.foldIndexed(0) { index, mask, met -> if (met) mask or (8 shl index) else mask }
+    }
+
     fun adjust(earned: BigInteger, room: BigInteger, s: GameState, now: Long, actor: Actor,
-        chain: Int, overload: Boolean, beats: List<Beat>, resetLevel: Int): BigInteger {
+        chain: Int, overload: Boolean, beats: List<Beat>, resetLevel: Int,
+        directApp: String?, burstApps: List<String>): BigInteger {
         val run = current.get() ?: return earned
         val owned = owned(run.scenario, now)
         if (owned == 0) return earned
@@ -118,13 +147,9 @@ object ExExperiment {
         if (owned and 1 != 0 && chain >= 2) conditions = conditions or 1
         if (owned and 2 != 0 && overload) conditions = conditions or 2
         if (owned and 4 != 0 && beats.any { it is Beat.Merged }) conditions = conditions or 4
-        val syncs = s.backup.cloud.syncs
-        if (owned and 8 != 0 && (s.backup.resets > 0 || syncs > 0)) conditions = conditions or 8
-        if (owned and 16 != 0 && s.level >= resetLevel) conditions = conditions or 16
-        if (owned and 32 != 0 && syncs > 0) conditions = conditions or 32
-        if (owned and 64 != 0 && s.active.size >= 4) conditions = conditions or 64
-        if (owned and 128 != 0 && s.active.any { s.account.stars(it) > 0 }) conditions = conditions or 128
-        if (owned and 256 != 0 && s.active.any { it in s.pro }) conditions = conditions or 256
+        if (owned and 0b111111000 != 0) {
+            conditions = conditions or (lateConditions(run, s, now, resetLevel, directApp, burstApps) and owned)
+        }
         val sets = (if (owned and prism == prism) 1 else 0) + (if (owned and reboot == reboot) 1 else 0) +
             (if (owned and studio == studio) 1 else 0)
         val bp = 50 * Integer.bitCount(owned) + 25 * Integer.bitCount(conditions) +

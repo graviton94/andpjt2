@@ -31,6 +31,8 @@ private class Trace(private val run: ExExperiment.Run, private val through: Int)
     override fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int) {
         val paidFiles = if (kind == "reset") after.backup.files - before.backup.files else 0L
         val paidGb = if (kind == "sync") after.backup.cloud.gb - before.backup.cloud.gb else 0L
+        if (paidFiles > 0 || paidGb > 0) run.validPrestige = true
+        if (paidGb > 0) run.lastValidSyncAt = now
         files += BigInteger.valueOf(paidFiles)
         gb += BigInteger.valueOf(paidGb)
         events += listOf(kind, (now - ExExperiment.START) / ExExperiment.DAY.toDouble(), before.level,

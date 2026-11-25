@@ -20,7 +20,9 @@ def instrument(core):
     source = engine.read_text()
     anchor = "        val room = jackpotRoom(s, rules.swipeLevelCap)\n"
     source = replace(source, anchor, anchor + (
-        "        earned = ExExperiment.adjust(earned, room, s, now, actor, chain, overload, beats, rules.resetLevel)\n"
+        "        val exBurstApps = if (ExExperiment.revisedConditions()) bursts.map { valueApp(s, it) } else emptyList()\n"
+        "        earned = ExExperiment.adjust(earned, room, s, now, actor, chain, overload, beats, rules.resetLevel,\n"
+        "            removed.app.takeIf { removed.kind == RowKind.App }, exBurstApps)\n"
     ))
     cap = "(rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L"
     engine.write_text(replace(source, cap, f"ExExperiment.offlineCap({cap})"))
