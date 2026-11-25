@@ -30,6 +30,7 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "boostPermille" -> r.copy(boostPermille = v.toInt())
             "warpMinutes" -> r.copy(warpMinutes = v.toInt())
             "levelRatioPermille" -> r.copy(levelRatioPermille = v.toInt())
+            "ultraOfflinePermille" -> r.copy(ultraOfflinePermille = v.toInt())
             "offlineEfficiencyPercent" -> r.copy(offlineEfficiencyPercent = v.toInt())
             "boostMinutes" -> r.copy(boostMinutes = v.toInt())
             "upgradeGrowthPerTierPermille" -> r.copy(upgradeGrowthPerTierPermille = v.toInt())
@@ -67,6 +68,7 @@ class Timeline {
     var lastAppDay: Double? = null
     val levelDays = sortedMapOf<Int, Double>()
     val level124Day get() = levelDays[124]
+    var bestSwipeP = java.math.BigInteger.ZERO
     val appBuys = sortedMapOf<String, Double>()
     val appLevels = sortedMapOf<String, MutableMap<Int, Double>>()
     val premiumByApp = sortedMapOf<String, Int>()
@@ -111,7 +113,7 @@ fun unlockLevels(): Map<Int, List<String>> {
 }
 
 /** [update]: on this day (0-based) the pack is switched on, as a content update reaching a veteran save. */
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet()): Timeline {
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet(), stopAtLv124: Boolean = false): Timeline {
     if (Catalog.packs.isNotEmpty()) Catalog.packs = emptySet()  // shared global: only touch it when needed (parallel runs)
     val tl = Timeline()
     var levels = unlockLevels()
@@ -141,7 +143,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     }
     observe()
 
-    for (day in 0 until days) {
+    play@ for (day in 0 until days) {
         if (update != null && day == update.first) {
             Catalog.packs = setOf(update.second)
             levels = unlockLevels()
@@ -156,10 +158,12 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 tl.offlineP += got
                 t = begin
                 observe()
+                if (stopAtLv124 && tl.level124Day != null) break@play
                 if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ } ?: ads.refund()
             }
             s = economy(s, t, session, payer, tl, slots, ads)
             observe()
+            if (stopAtLv124 && tl.level124Day != null) break@play
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             val levelAtStart = s.level
@@ -176,7 +180,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 val best = s.bestSwipe
                 val o = o0 ?: continue
                 s = o.state
+                if (stopAtLv124) tl.bestSwipeP = tl.bestSwipeP.max(o.earned)
                 observe()
+                if (stopAtLv124 && tl.level124Day != null) break@play
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
                 if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
                 if (s.energy == 0) shop.useTicket(s, CreditItem.Battery, t)?.let { s = it }
@@ -192,6 +198,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                     levels[everLevel]?.forEach { note(it) }
                 }
                 observe()
+                if (stopAtLv124 && tl.level124Day != null) break@play
                 val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
                 tl.tierDay.putIfAbsent(tier, dayOf(t))
                 if (tl.lastAppDay == null && LAST_APP in s.appLevels) tl.lastAppDay = dayOf(t)

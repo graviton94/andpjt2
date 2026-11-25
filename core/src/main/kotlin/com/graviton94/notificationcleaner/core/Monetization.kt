@@ -3,6 +3,8 @@ package com.graviton94.notificationcleaner.core
 import kotlinx.serialization.Serializable
 
 import java.math.BigInteger
+import java.security.MessageDigest
+import java.util.Base64
 
 /**
  * Monetization layer (docs/bible/17-monetization.md). Four currencies:
@@ -97,8 +99,10 @@ data class Account(
     val challengeDay: Long = -1,
     val challengeKeys: Int = 0,
     val challengeBest: String = "0",
-    /** Granted purchase and ad ids, retained across saves and resets. */
+    /** Granted purchase ids. Older saves also stored debug ad ids here. */
     val processedClaims: List<String> = emptyList(),
+    /** UTC claim day → compact rewarded ad ids, kept for seven calendar days. */
+    val processedAdClaims: Map<Long, List<String>> = emptyMap(),
     val missionDay: Long = -1,
     val adDay: Long = -1,
     val adUses: Map<AdSlot, Int> = emptyMap(),
@@ -136,6 +140,42 @@ val GameState.account: Account get() = backup.cloud.account
 fun GameState.withAccount(f: (Account) -> Account): GameState = copy(backup = backup.copy(cloud = backup.cloud.copy(account = f(backup.cloud.account))))
 
 private const val DAY_MS = 86_400_000L
+private const val AD_CLAIM_DAYS = 7
+private val AD_CLAIM_LIMIT = AD_CLAIM_DAYS * AdSlot.entries.sumOf { it.daily }
+private val rewardIdEncoding = Base64.getUrlEncoder().withoutPadding()
+
+private fun rewardKey(id: String): String = rewardIdEncoding.encodeToString(
+    MessageDigest.getInstance("SHA-256").digest(id.toByteArray(Charsets.UTF_8)).copyOf(16)
+)
+
+private fun Map<Long, List<String>>.retainRecentAds(today: Long): Map<Long, List<String>> {
+    var remaining = AD_CLAIM_LIMIT
+    return entries.sortedByDescending { it.key }.filter { it.key > today - AD_CLAIM_DAYS }.mapNotNull { (day, ids) ->
+        if (remaining == 0) return@mapNotNull null
+        val recent = ids.takeLast(remaining)
+        remaining -= recent.size
+        day to recent
+    }.toMap()
+}
+
+/** Migrate timestamp-less debug ad ids once. Preserve all ambiguous ids as purchase receipts. */
+internal fun GameState.migrateRewardClaims(now: Long): GameState {
+    val (legacyAds, purchases) = account.processedClaims.partition { it.startsWith("fakead-") }
+    if (legacyAds.isEmpty()) return this
+    val day = dayOf(now)
+    val carried = legacyAds.takeLast(AD_CLAIM_LIMIT).map(::rewardKey)
+    return withAccount { a ->
+        val ads = a.processedAdClaims + (day to (carried + a.processedAdClaims[day].orEmpty()).distinct())
+        a.copy(processedClaims = purchases, processedAdClaims = ads.retainRecentAds(day))
+    }
+}
+
+internal fun GameState.expireRewardClaims(now: Long): GameState {
+    val day = dayOf(now)
+    val claims = account.processedAdClaims
+    if (claims.keys.none { it <= day - AD_CLAIM_DAYS }) return this
+    return withAccount { it.copy(processedAdClaims = claims.retainRecentAds(day)) }
+}
 fun dayOf(now: Long) = Math.floorDiv(now, DAY_MS)
 
 /** Premium star value multiplier in ‰. */
@@ -160,13 +200,27 @@ class Shop(private val engine: Engine) {
     }
 
     /**
-     * Pays a store or ad reward at most once: [grant] runs only for an unseen [claimId], and the id is stored with the
+     * Pays a store purchase at most once: [grant] runs only for an unseen [claimId], and the id is stored with the
      * result so the caller saves both in one transaction before confirming to the SDK. Retains previously granted ids across saves.
      */
     fun claimOnce(s: GameState, claimId: String, grant: (GameState) -> GameState?): GameState? {
         if (claimId.isBlank() || claimId in s.account.processedClaims) return null
         val paid = grant(s) ?: return null
         return paid.withAccount { it.copy(processedClaims = it.processedClaims + claimId) }
+    }
+
+    /** Deduplicate ad callbacks for seven UTC dates and keep the ad ledger bounded. */
+    fun claimAdOnce(s: GameState, claimId: String, now: Long, grant: (GameState) -> GameState?): GameState? {
+        if (claimId.isBlank() || claimId in s.account.processedClaims) return null
+        val current = s.expireRewardClaims(now)
+        val key = rewardKey(claimId)
+        if (current.account.processedAdClaims.values.any { key in it }) return null
+        val paid = grant(current) ?: return null
+        return paid.withAccount { a ->
+            val day = dayOf(now)
+            val ads = a.processedAdClaims + (day to (a.processedAdClaims[day].orEmpty() + key))
+            a.copy(processedAdClaims = ads.retainRecentAds(day))
+        }
     }
 
     private fun spend(s: GameState, n: Long): GameState? =

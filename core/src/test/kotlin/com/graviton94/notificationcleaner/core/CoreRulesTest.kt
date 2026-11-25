@@ -28,6 +28,49 @@ class CoreRulesTest {
     }
 
     @Test
+    fun sharedDeckValuationMatchesIndividualRoundedPayouts() {
+        val apps = listOf("alarm", "calc", "duo", "contacts", "photo", "career", "portal", "jobs", "papago", "why")
+        val base = e.newGame(now, 11L).copy(
+            appLevels = apps.withIndex().associate { (index, app) -> app to index * 11 + 1 },
+            whyStacks = 3, trend = Category.Social, pro = setOf("photo"),
+        ).withAccount { it.copy(premium = mapOf("duo" to 2), streak = 10) }
+        val count = valueOf(1_000)
+        val rates = e.deckValuation(base, count)
+        val random = kotlin.random.Random(42)
+        repeat(100) {
+            val deck = apps.shuffled(random).take(2 + it % 8)
+            val state = base.copy(active = deck)
+            val expected = deck.fold(ZERO) { sum, id -> sum + e.earn(state, id, count, 0) }
+            assertEquals(expected, rates(deck))
+        }
+    }
+
+    @Test
+    fun targetPreviewMatchesFullSwipes() {
+        val apps = listOf("alarm", "memo", "weather", "ctaxi", "maps", "chat", "reddit", "match", "music")
+        val events = listOf(EventCard.GroupText, EventCard.Update, EventCard.Firmware)
+        val random = kotlin.random.Random(124)
+        repeat(400) { sample ->
+            val rows = (1L..11).map { id ->
+                when (random.nextInt(8)) {
+                    0 -> Row(id, RowKind.Event, event = events.random(random))
+                    1 -> Row(id, RowKind.Wild, count = 2, threshold = 4)
+                    2 -> Row(id, RowKind.Spam)
+                    else -> Row(id, RowKind.App, app = apps.random(random), count = random.nextInt(1, 6), threshold = 4)
+                }
+            }
+            val state = e.newGame(now, sample.toLong() + 1).copy(rows = rows, active = apps,
+                appLevels = apps.associateWith { random.nextInt(1, 10) }, gauge = random.nextInt(101), nextId = 12)
+            val reference = rows.withIndex().mapNotNull { (index, row) ->
+                e.swipe(state, row.id, now)?.let { Triple(index, row, it) }
+            }.maxWithOrNull(compareBy({ it.third.chain }, { it.third.overload },
+                { it.third.beats.count { beat -> beat is Beat.Merged } }, { it.second.kind == RowKind.Event },
+                { it.second.kind == RowKind.Spam }, { it.first }))?.second?.id
+            assertEquals(reference, e.bestTarget(state, now), "board $sample")
+        }
+    }
+
+    @Test
     fun firstSwipeIsOneSmallBurst() {
         val (_, o) = firstSwipe()
         assertEquals(1, o.chain)

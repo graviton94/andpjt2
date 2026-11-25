@@ -54,6 +54,66 @@ class CommerceTest {
         assertEquals(account.credits, restored.state.account.credits)
     }
 
+    @Test fun aYearOfDailyAdsAndMonthlyPurchasesFitsTheSaveBudget() {
+        val rules = engine.rules
+        val mature = engine.newGame(now, 11).copy(level = 124, runEarned = rules.levelP(124),
+            appLevels = Catalog.apps.associate { it.id to 50 })
+        val w = WebSession(engine, mature, now)
+        val purchases = (0..360 step 30).associateWith { day ->
+            "GPA.$day-" + "store-purchase-token".repeat(6)
+        }
+        var views = 0
+        for (d in 0..364) {
+            val at = now + d * day
+            purchases[d]?.let { w.buyData("data_100", it, at) }
+            for (slot in AdSlot.entries) repeat(slot.daily) { sequence ->
+                val id = "network-ad-$d-${slot.name}-$sequence-" + "ad-token".repeat(9)
+                val before = w.state.account.processedAdClaims.values.flatten()
+                w.watchAd(slot.name, id, at)
+                val after = w.state.account.processedAdClaims.values.flatten()
+                assertTrue(after.any { it !in before })
+                val settled = w.state.account
+                w.watchAd(slot.name, id, at)
+                assertEquals(settled, w.state.account)
+                views++
+            }
+        }
+        assertEquals(4_380, views)
+        assertEquals(84, w.state.account.processedAdClaims.values.sumOf { it.size })
+        assertEquals(purchases.values.toList(), w.state.account.processedClaims)
+
+        val at = now + 364 * day
+        val bytes = w.save().toByteArray(Charsets.UTF_8).size
+        assertTrue(bytes <= 20_000, "save was $bytes bytes after $views ads")
+        println("365-day commerce fixture: $bytes bytes · $views ads · ${purchases.size} purchase receipts")
+        val restored = WebSession(engine, SaveCodec.decode(w.save()), at + day)
+        val bought = restored.state.account.creditsBought
+        restored.buyData("data_100", purchases.getValue(0), at + day)
+        assertEquals(bought, restored.state.account.creditsBought)
+        val lastAd = "network-ad-364-CreditBox-0-" + "ad-token".repeat(9)
+        val credits = restored.state.account.credits
+        restored.watchAd("CreditBox", lastAd, at + day)
+        assertEquals(credits, restored.state.account.credits)
+        restored.snapshot(at + 7 * day)
+        assertTrue(restored.state.account.processedAdClaims.isEmpty())
+        restored.watchAd("CreditBox", lastAd, at + 7 * day)
+        assertEquals(credits + rules.adCredits, restored.state.account.credits)
+    }
+
+    @Test fun migratesOnlyKnownLegacyAdIdsAndKeepsPurchaseReplayProtection() {
+        val legacy = engine.newGame(now, 11).withAccount {
+            it.copy(processedClaims = listOf("fakead-1", "GPA.keep", "untyped-keep"))
+        }
+        val w = WebSession(engine, SaveCodec.decode(SaveCodec.encode(legacy)), now)
+        assertEquals(listOf("GPA.keep", "untyped-keep"), w.state.account.processedClaims)
+        assertEquals(1, w.state.account.processedAdClaims.values.sumOf { it.size })
+        w.watchAd("CreditBox", "fakead-1", now)
+        w.watchAd("CreditBox", " ", now)
+        w.buyData("data_100", "GPA.keep", now + 7 * day)
+        assertEquals(0L, w.state.account.credits)
+        assertTrue(w.state.account.processedAdClaims.isEmpty())
+    }
+
     @Test fun starterUsesOriginalInstallTimeAndGrantsThePublishedContentsOnce() {
         val fresh = session()
         val inside = WebSession(engine, SaveCodec.decode(fresh.save()), now + 2 * day - 1)

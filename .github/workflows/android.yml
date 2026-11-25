@@ -22,8 +22,6 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: true
       - name: Core rules tests
         run: |
           if ./gradlew -p core test --no-daemon > "$RUNNER_TEMP/core-test.log" 2>&1; then

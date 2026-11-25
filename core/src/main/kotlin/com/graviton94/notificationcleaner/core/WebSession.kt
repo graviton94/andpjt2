@@ -17,11 +17,11 @@ import java.math.BigInteger
 class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: Long = System.currentTimeMillis()) {
     private val meta = Meta(engine)
     val shop = Shop(engine)
-    var state: GameState = installed(state ?: engine.newGame(now, now), now)
+    var state: GameState = installed((state ?: engine.newGame(now, now)).migrateRewardClaims(now).expireRewardClaims(now), now)
         private set
 
     private fun tick(now: Long): GameState {
-        state = shop.claimPassDaily(engine.tick(state, now), now)
+        state = shop.claimPassDaily(engine.tick(state, now).expireRewardClaims(now), now)
         return state
     }
 
@@ -81,7 +81,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     }
 
     // ---- M4 monetization (bible 17, bm-screens). Billing and ads are faked until M6: every grant still goes through
-    // Shop.claimOnce so the real SDK callbacks can drop in with their order / ad ids.
+    // permanent purchase or bounded ad ledgers so M6 callbacks can supply their own ids.
 
     private val offers get() = engine.rules.commerce
 
@@ -137,7 +137,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun watchAd(slot: String, adId: String, now: Long): String = act(now) { s ->
         val a = AdSlot.entries.firstOrNull { it.name == slot } ?: return@act s
         val offer = if (a == AdSlot.BestDouble) s.lastEarned else BigInteger.ZERO
-        shop.claimOnce(s, adId) { shop.watchAd(it, a, now, offer) } ?: s
+        shop.claimAdOnce(s, adId, now) { shop.watchAd(it, a, now, offer) } ?: s
     }
 
     fun buyPass(kind: String, orderId: String, now: Long): String = act(now) { s ->

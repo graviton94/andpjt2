@@ -32,7 +32,7 @@ class GameBridge(private val context: Context) {
 
     private fun now() = System.currentTimeMillis()
 
-    // An empty receipt is rejected by Shop.claimOnce. Billing/AdMob will supply real receipts in M6.
+    // An empty receipt is rejected by the reward ledgers. Billing/AdMob will supply real receipts in M6.
     private fun debugReceipt(kind: String): String = if (debugTransactions) "$kind-${System.nanoTime()}" else ""
 
     @JavascriptInterface
