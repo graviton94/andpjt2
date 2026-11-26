@@ -19,6 +19,14 @@ private fun ratio(n: Long, d: Long): Double = if (d == 0L) 0.0 else n.toDouble()
 private fun fixed(n: Double): String = String.format(Locale.ROOT, "%.7f", n)
 private fun num(n: Double?): String = n?.let(::fixed) ?: ""
 
+private data class ChainPath(
+    val period: String,
+    val physicalBursts: Int,
+    val matchBonus: Int,
+    val waves: Int,
+    val scoringChain: Int,
+)
+
 /** Collects actual committed swipes. A wave can raise the scoring chain but is not an additional direct explosion. */
 private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     var sessions = 0L
@@ -43,6 +51,7 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     var openingFirstUnitMs = 0L
     var laterUnitSession = 0L
     var laterUnitSessions = 0L
+    val chainPaths = mutableMapOf<ChainPath, Long>()
     val adCounts = mutableMapOf<AdSlot, Long>()
     val adP = mutableMapOf<AdSlot, BigInteger>()
     private var previousEvent: String? = null
@@ -73,9 +82,15 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     }
 
     override fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long) {
-        var burst = false
+        var physicalBursts = 0
+        var preWaveChain = 0
+        var waveCount = 0
         for (beat in outcome.beats) when (beat) {
-            is Beat.Burst -> burst = true
+            is Beat.Burst -> {
+                physicalBursts++
+                preWaveChain = beat.chain
+            }
+            is Beat.Wave -> waveCount++
             is Beat.Spawned -> {
                 val row = beat.row
                 val event = when (row.kind) {
@@ -92,6 +107,10 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
             }
             else -> Unit
         }
+        val burst = physicalBursts > 0
+        val path = ChainPath(if (day <= 14) "days1_14" else "day15_on", physicalBursts, preWaveChain - physicalBursts,
+            waveCount, outcome.chain)
+        chainPaths.merge(path, 1, Long::plus)
         if (before.level <= 10) { opening++; if (burst) earlyBlast++ }
         else { late++; if (burst) lateBlast++ }
         if (outcome.chain >= 2) chains2++
@@ -127,14 +146,17 @@ private fun storeCompletedCase(file: File, line: String) {
     }
 }
 
-private data class LaunchCase(val payer: Payer, val seed: Int, val input: InputPolicy, val resets: Boolean) {
+private data class LaunchCase(val profile: Profile, val seed: Int, val input: InputPolicy, val resets: Boolean) {
+    val payer get() = profile.payer
     val label = if (resets) input.name else "NoReset"
     val key = "${payer.name},$seed,$label"
 }
 
 fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: Set<String>) {
     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
-    val signature = "launch-v1;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()}"
+    require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
+    val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
+    val signature = "launch-v1;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots"
     out.mkdirs()
     val manifest = File(out, "parameters.txt")
     if (manifest.isFile) require(manifest.readText().trim() == signature) { "Results directory already has different parameters" }
@@ -143,7 +165,7 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
     val cases = profiles.flatMap { profile -> (1..seeds).flatMap { seed ->
         modes.mapNotNull { name ->
             if (name != "Best" && profile.payer != Payer.Free) return@mapNotNull null
-            LaunchCase(profile.payer, seed, if (name == "NoReset") InputPolicy.Best else InputPolicy.valueOf(name), name != "NoReset")
+            LaunchCase(profile, seed, if (name == "NoReset") InputPolicy.Best else InputPolicy.valueOf(name), name != "NoReset")
         }
     } }
     val metrics = "profile,seed,input,days,reset_day,tier5_day,tier6_day,sync_day,lv124_day,last_app_day,peak," +
@@ -155,14 +177,17 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
         val filename = case.key.replace(',', '-')
         val main = File(path, "$filename.metrics")
         val ad = File(path, "$filename.ads")
-        if (main.isFile && ad.isFile) return@forEach
+        val chain = File(path, "$filename.chains")
+        val span = File(path, "$filename.unlocks")
+        if (main.isFile && ad.isFile && chain.isFile && span.isFile) return@forEach
         val horizon = if (case.resets) days else minOf(30, days)
         val feel = LaunchFeel(horizon)
         val tl = playDays(case.seed.toLong(), horizon, DayPlan(), case.resets, payer = case.payer,
-            audit = feel, input = case.input)
-        val daysUntilLastUnlock = tl.unlocks.map { it.second }.filter { it <= (tl.lastAppDay ?: horizon.toDouble()) }
+            slots = case.profile.slots, audit = feel, input = case.input)
         val end = tl.lastAppDay ?: horizon.toDouble()
-        val gap = (listOf(0.0) + daysUntilLastUnlock + end).zipWithNext { a,b -> b - a }.maxOrNull() ?: 0.0
+        val unlocks = listOf(0.0 to "start") + tl.unlocks.filter { it.second <= end }.map { it.second to it.third } + (end to "end")
+        val (gapFrom, gapTo) = unlocks.zipWithNext().maxBy { (from, to) -> to.first - from.first }
+        val gap = gapTo.first - gapFrom.first
         val weeks = tl.bestLevelByWeek.values.toList()
         val swipes = feel.opening + feel.late
         fun pct(a: BigInteger, b: BigInteger): String = if (b.signum() <= 0) "0" else a.toBigDecimal().divide(b.toBigDecimal(), MathContext.DECIMAL64).toPlainString()
@@ -177,10 +202,21 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
             fixed(ratio(feel.cappedSwipes, swipes)), pct(feel.clipped, feel.earned + feel.clipped), feel.spamMax,
             fixed(tl.ads.toDouble() / horizon), weeks.joinToString("|")).joinToString(",")
         ad.writeText(AdSlot.entries.joinToString("\n", postfix = "\n") { "${case.key},${it.name},${feel.adCounts[it] ?: 0},${feel.adP[it] ?: zero}" })
+        storeCompletedCase(chain, feel.chainPaths.entries
+            .sortedWith(compareBy({ it.key.period }, { it.key.scoringChain }, { it.key.physicalBursts }, { it.key.matchBonus }, { it.key.waves }))
+            .joinToString("\n", postfix = "\n") { (path, count) ->
+                "${case.key},${path.period},${path.physicalBursts},${path.matchBonus},${path.waves},${path.scoringChain},$count"
+            })
+        fun quote(label: String) = "\"" + label.replace("\"", "\"\"") + "\""
+        storeCompletedCase(span, "${case.key},${fixed(gapFrom.first)},${quote(gapFrom.second)},${fixed(gapTo.first)},${quote(gapTo.second)},${fixed(gap)}\n")
         storeCompletedCase(main, record + "\n")
         println(record)
     }
-    for ((file, header, extension) in listOf(Triple("seeds.csv",metrics,"metrics"), Triple("ad-slots.csv",ads,"ads"))) {
+    val chains = "profile,seed,input,period,physical_bursts,match_bonus,waves,scoring_chain,swipes"
+    val gaps = "profile,seed,input,from_day,from_unlock,to_day,to_unlock,gap_days"
+    val outputs = listOf(Triple("seeds.csv", metrics, "metrics"), Triple("ad-slots.csv", ads, "ads"),
+        Triple("chain-paths.csv", chains, "chains"), Triple("unlock-gaps.csv", gaps, "unlocks"))
+    for ((file, header, extension) in outputs) {
         File(out,file).bufferedWriter().use { writer ->
             writer.appendLine(header)
             for (case in cases) writer.write(File(path,"${case.key.replace(',', '-')}.$extension").readText())

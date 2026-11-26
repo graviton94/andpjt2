@@ -153,6 +153,7 @@ fun unlockLevels(): Map<Int, List<String>> {
     r.minSlotSteps.drop(1).forEach { add(it.first, "덱 최소 ${it.second}") }
     r.eventSlotSteps.forEach { add(it.first, "이벤트 슬롯 ${it.second}") }
     add(r.resetLevel, "공장 초기화")
+    add(r.syncLevel, "클라우드 동기화")
     add(r.callUnlockLevel, "스팸 전화")
     return m
 }
@@ -431,6 +432,7 @@ fun monetization(days: Int, seeds: Long, profiles: List<Profile>) {
 /** Standard profiles, or "ablate": no ads, each ad placement alone, all ads. */
 fun profilesFor(arg: String?): List<Profile> = when (arg) {
     null, "all" -> Payer.entries.map { Profile(it.label, it) }
+    "screen" -> Payer.entries.map { Profile(it.label, it, AdSlot.entries.toSet() - AdSlot.OfflineDouble) }
     "ablate" -> listOf(Profile("광고 없음", Payer.Pass, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Pass, setOf(it)) } + Profile("광고 전부", Payer.Pass)
     else -> if (arg.startsWith("slot:")) listOf(Profile(arg, Payer.Pass, setOf(AdSlot.valueOf(arg.removePrefix("slot:"))))) else arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
 }
