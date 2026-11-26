@@ -52,6 +52,6 @@
 
 | 키 | 지문 확인 | 쓰임 |
 |---|---|---|
-| sideload (`SIDELOAD_PASSPHRASE`) | 워크플로 실행 요약 | CI 테스트 APK → Firebase에 등록 |
-| upload (`ANDROID_UPLOAD_PASSPHRASE`) | 워크플로 실행 요약 | Play 업로드용 AAB |
+| sideload (`SIDELOAD_PASSPHRASE`) | SHA-1 `5B:F3:6C:0C:80:FF:C2:D2:B8:B2:43:FF:9B:8B:4C:C5:45:7A:DD:17`<br>SHA-256 `48:B5:FD:1B:6C:E7:67:FA:BC:94:37:54:36:00:7F:F5:A8:E1:73:92:63:72:7B:1D:91:83:C9:B2:30:73:BE:62` | CI 테스트 APK → Firebase에 등록 |
+| upload (`ANDROID_UPLOAD_PASSPHRASE`) | SHA-1 `5B:D1:34:79:5B:E8:3B:5D:FF:7D:FE:6D:01:3F:C7:BB:46:E1:1E:94`<br>SHA-256 `18:12:3F:78:E8:1A:31:95:2C:F1:BC:E1:8A:F7:67:56:C9:AF:D2:F3:CF:D0:72:19:E0:72:09:D1:63:71:49:9A` | Play 업로드용 AAB |
 | Play 앱 서명 키 | Play Console → 앱 무결성 → 앱 서명 | 스토어 설치본 → Firebase에 등록 |
