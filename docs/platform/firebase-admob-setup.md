@@ -4,16 +4,13 @@
 
 ## 패키지 이름
 
-| 빌드 | 패키지 |
-|---|---|
-| 출시(release) | `com.graviton94.notificationcleaner` |
-| 테스트(debug, CI APK) | `com.graviton94.notificationcleaner.playtest` |
+`io.github.graviton94.notificationcleaner` — 다른 앱(`io.github.graviton94.todayletters`, `io.github.graviton94.todaybible`)과 같은 규칙. 테스트(debug)와 출시 빌드가 같은 패키지라 Firebase에는 **앱 1개만** 등록하면 된다.
 
 ## 1. Firebase 프로젝트
 
 1. Firebase 콘솔 → 프로젝트 추가 → 이름 예: `notification-cleaner` → Google 애널리틱스 **사용**
-2. Android 앱 추가 2번(위 표의 패키지 둘 다). 앱 닉네임은 자유, SHA-1은 지금 비워도 됨(카카오·구글 로그인 붙일 때 추가)
-3. `google-services.json` 다운로드 — 두 앱을 다 추가한 뒤 받으면 한 파일에 둘 다 들어 있음
+2. Android 앱 추가: 패키지 `io.github.graviton94.notificationcleaner`. 앱 닉네임은 자유, SHA-1은 지금 비워도 됨(카카오·구글 로그인 붙일 때 추가)
+3. `google-services.json` 다운로드
 4. 넣는 방법 중 하나
    - GitHub 저장소 → Settings → Secrets and variables → Actions → **New repository secret**, 이름 `GOOGLE_SERVICES_JSON`, 값 = 파일 내용 전체 (권장: CI APK에 자동 반영)
    - 또는 `app/google-services.json`으로 커밋 (비공개 저장소일 때만)

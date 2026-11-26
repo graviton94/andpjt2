@@ -70,3 +70,4 @@
 | 11-26 | **일일 도전 = 60초 타임어택**. 향후 전 세계 일일 랭킹보드와 티어별 보상(Firebase). 상세 설계는 보완 예정 | 사용자 |
 | 11-26 | 판 위 처리량·배수 상자를 시스템 UI형 알약(톤 채움·헤어라인·Pretendard 숫자)으로 교체. 꾸미기 조각·열쇠는 픽토그램 | 사용자 |
 | 11-26 | 앱 고유 효과 문구는 3줄 문법(조건 / 결과 / (부가)), 줄당 20자, 줄바꿈 금지 — `docs/content/app-effects.ko.json`, 빌드가 검사 | 사용자 |
+| 11-26 | 패키지(applicationId)를 다른 앱 규칙에 맞춰 **`io.github.graviton94.notificationcleaner`**로 변경, 디버그 접미사(.playtest) 제거. Kotlin 네임스페이스는 그대로 | 사용자 (todayletters·todaybible과 통일) |

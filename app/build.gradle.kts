@@ -21,7 +21,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.graviton94.notificationcleaner"
+        // store id follows the other apps (io.github.graviton94.<app>); namespace stays the Kotlin package
+        applicationId = "io.github.graviton94.notificationcleaner"
         minSdk = 26
         targetSdk = 36
         versionCode = 4
@@ -31,7 +32,6 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".playtest"
             // debug builds never show live ads
             manifestPlaceholders["admobAppId"] = admobTestApp
             buildConfigField("String", "ADMOB_REWARDED", "\"$admobTestRewarded\"")
