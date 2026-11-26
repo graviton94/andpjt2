@@ -1,5 +1,6 @@
 import com.graviton94.notificationcleaner.core.AdSlot
 import com.graviton94.notificationcleaner.core.Catalog
+import com.graviton94.notificationcleaner.core.Shop
 import com.graviton94.notificationcleaner.core.Engine
 import com.graviton94.notificationcleaner.core.WebSession
 import com.graviton94.notificationcleaner.core.account
@@ -121,4 +122,31 @@ fun balanceCommerce(output: File) {
                 listOf(apps.first().tier, star, rules.premiumCost(apps.first(), star), rules.premiumPermille(star))
             }
         })
+    val shop = Shop(engine)
+    val baseP = rules.levelP(25)
+    val board = engine.newGame(START_MS, 11).copy(level = 25, runEarned = baseP,
+        earnRate = baseP / 120.toBigInteger(), lastEarned = baseP / 4.toBigInteger(), energy = 2)
+    val away = engine.settleOfflineWithBonus(board, 6 * 3_600_000L, START_MS)
+    csv(File(output, "ad-slot-quotes.csv"),
+        listOf("slot", "daily", "quote_p", "credited_p", "data_added", "energy_added", "ranks_added",
+            "boost_minutes", "overclock_minutes", "remaining", "day_after_watch_bonus_permille"),
+        AdSlot.entries.asSequence().map { slot ->
+            val (before, quote) = when (slot) {
+                AdSlot.OfflineDouble -> away.state to away.paid
+                AdSlot.BestDouble -> board to board.lastEarned
+                else -> board to java.math.BigInteger.ZERO
+            }
+            val after = checkNotNull(shop.watchAd(before, slot, START_MS, quote))
+            var consumed = after
+            repeat(slot.daily - 1) { consumed = checkNotNull(shop.watchAd(consumed, slot, START_MS, quote)) }
+            check(shop.watchAd(consumed, slot, START_MS, quote) == null)
+            check(shop.adsLeft(consumed, slot, START_MS + DAY_MS) == slot.daily)
+            listOf(slot.name, slot.daily, quote, after.runEarned - before.runEarned,
+                after.account.credits - before.account.credits, after.energy - before.energy,
+                after.appLevels.values.sum() - before.appLevels.values.sum(),
+                (after.account.boostUntil - START_MS).coerceAtLeast(0) / 60_000,
+                (after.account.overclockUntil - START_MS).coerceAtLeast(0) / 60_000,
+                shop.adsLeft(after, slot, START_MS), engine.offlineBonus(after, START_MS + DAY_MS).multiplierPermille)
+        })
+
 }
