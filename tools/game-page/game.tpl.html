@@ -2314,6 +2314,41 @@ function appDetail(id) {
 }
 let wipeArm = 0, appInfo = null;
 const SITE = 'https://graviton94.github.io/donotdisturb/';
+let delArm = false;
+const acctInfo = () => { try { return window.Game && window.Game.account ? JSON.parse(window.Game.account()) : { enabled: false }; } catch (e) { return { enabled: false }; } };
+const GLOGO = '<svg class="ic" viewBox="0 0 48 48" style="width:20px;height:20px;vertical-align:-4px;margin-right:8px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+const KLOGO = '<svg class="ic" viewBox="0 0 24 24" style="width:20px;height:20px;vertical-align:-4px;margin-right:8px"><path fill="#191919" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>';
+function accountHTML() {
+  const a = acctInfo(); if (!a.enabled) return '';
+  const prov = a.provider === 'kakao' ? $t('provider_kakao') : $t('provider_google');
+  return `<div class="h3">${$t('account')}</div>` + (a.signedIn
+    ? `<div class="it"><div class="t"><b>${a.name ? $t('signed_in_as', a.name) : $t('signed_in')}</b><div class="m">${$t('cloud_save_on', prov)}</div></div></div>
+      <button class="btn big" id="signout" style="background:var(--m-s);color:var(--ink)">${$t('sign_out')}</button>
+      <div class="it" style="margin-top:8px"><div class="t"><b>${$t('delete_account')}</b><div class="m fit1">${$t('delete_account_sub')}</div></div></div>
+      <button class="btn big" id="delacct" style="background:var(--m-error);color:var(--m-on-error)">${delArm ? $t('delete_account_confirm') : $t('delete_account')}</button>`
+    : `<div class="it"><div class="t"><b>${$t('guest')}</b><div class="m">${$t('sign_in_to_back_up')}</div></div></div>
+      ${a.google ? `<button class="btn big" data-signin="google" style="background:#fff;color:#1F1F1F;border:1px solid #747775">${GLOGO}${$t('sign_in_google')}</button>` : ''}
+      ${a.kakao ? `<button class="btn big" data-signin="kakao" style="background:#FEE500;color:rgba(0,0,0,.85);margin-top:8px">${KLOGO}${$t('sign_in_kakao')}</button>` : ''}`);
+}
+async function signIn(provider, b) {
+  const r = await ask('signIn', provider);
+  if (!r.ok) { if (r.reason !== 'cancel') toast($t('sign_in_failed'), 'err'); return; }
+  track('login', { method: provider });
+  if (r.reason === 'conflict') {
+    const i = r.info, when = i.cloud.savedAt ? new Date(i.cloud.savedAt).toLocaleString(I18N.lang) : '-';
+    const cloud = await choose($t('save_conflict_title'), $t('save_conflict_body', i.local.level, i.cloud.level, when), $t('use_cloud_save'), $t('keep_this_phone'));
+    window.Game.resolveSave(cloud ? 'cloud' : 'local');
+    toast(cloud ? $t('cloud_restored') : $t('signed_in'), 'ok');
+  } else toast(r.reason === 'restored' ? $t('cloud_restored') : $t('signed_in'), 'ok');
+  if (b) renderSettings(b);
+}
+function choose(title, what, okText, noText) {
+  return new Promise(res => {
+    $('cf-t').textContent = title; $('cf-w').innerHTML = what; $('cf-p').innerHTML = ''; $('cf-ok').textContent = okText; $('cf-no').textContent = noText; $('cf-ico').innerHTML = IC.cart; $('cf').classList.add('on'); sfx.snap();
+    const done = v => { $('cf').classList.remove('on'); $('cf-ok').onclick = $('cf-no').onclick = null; $('cf-no').textContent = $t('cancel'); res(v); };
+    $('cf-ok').onclick = () => done(true); $('cf-no').onclick = () => done(false);
+  });
+}
 async function renderSettings(b) {
   $('sheet-t').textContent = $t('settings'); $('sheet-w').textContent = '';
   if (!appInfo) appInfo = await api('info').catch(() => ({}));
@@ -2325,6 +2360,7 @@ async function renderSettings(b) {
     <div class="h3">${$t('display')}</div>
     ${row('reduce', $t('reduce_motion'), $t('less_shake_flashes_and_debris'), reduce)}
     <div class="it"><div class="t"><b>${$t('theme')}</b><div class="m">${$t('follows_your_phone_light_dark', day ? $t('theme_light') : $t('theme_dark'))}</div></div></div>
+    ${accountHTML()}
     <div class="h3">${$t('language')}</div>
     <div class="it" style="min-height:64px"><div class="t"><b>${$t('language')}</b><div class="m">${$t('language_sub')}</div>
       <div class="seg" style="margin-top:8px;padding-bottom:0">${[['', $t('language_system')], ...I18N.langs.map(l => [l, I18N.name(l)])].map(([l, n]) => `<button data-lang="${l}" class="${(PREF.lang || '') === l ? 'on' : ''}">${n}</button>`).join('')}</div></div></div>
@@ -2336,6 +2372,13 @@ async function renderSettings(b) {
     <div class="h3" style="color:var(--m-error)">${$t('data')}</div>
     <div class="it"><div class="t"><b>${$t('erase_game_data')}</b><div class="m fit1">${$t('erases_progress_currency_attendance_and')}</div><div class="m fit1" style="color:var(--m-error)">${$t('this_can_t_be_undone')}</div></div></div>
     <button class="btn big" id="wipe" style="background:var(--m-error);color:var(--m-on-error)">${wipeArm ? $t('erase_confirm') : $t('erase_game_data')}</button>`;
+  b.querySelectorAll('[data-signin]').forEach(x => x.addEventListener('click', () => signIn(x.dataset.signin, b)));
+  const so = $('signout'); if (so) so.onclick = () => { window.Game.signOut(); toast($t('signed_out'), 'info'); renderSettings(b); };
+  const da = $('delacct'); if (da) da.onclick = async () => {
+    if (!delArm) { delArm = true; renderSettings(b); sfx.snap(); return; }
+    delArm = false; const r = await ask('deleteAccount');
+    toast(r.ok ? $t('account_deleted') : $t('not_right_now'), r.ok ? 'ok' : 'err'); renderSettings(b);
+  };
   b.querySelectorAll('[data-lang]').forEach(x => x.addEventListener('click', () => { PREF.lang = x.dataset.lang || null; savePrefs(); sfx.snap(); location.reload(); }));
   const ap = $('adpriv'); if (ap) ap.onclick = () => { if (window.Game && window.Game.adPrivacy) window.Game.adPrivacy(); };
   b.querySelectorAll('[data-sw]').forEach(x => x.addEventListener('click', () => {
@@ -2404,6 +2447,18 @@ function fitStickers(root = document) {
 const ITEM_IMG = { Boost: 'boost-income-boost', Warp: 'boost-time-warp', Battery: 'boost-power-bank', BackupBoost: 'boost-backup-boost', Overclock: 'boost-best-double' };
 const AD_IMG = { BestDouble: 'boost-best-double', OfflineDouble: 'boost-offline-double', Boost: 'boost-income-boost', Warp: 'boost-time-warp', Overclock: 'boost-best-double', Battery: 'boost-power-bank', CreditBox: 'boost-data-box', FreeUpgrade: 'boost-free-upgrade' };
 const won = n => '₩' + n.toLocaleString('ko-KR');
+// Google Play Billing (Android): store prices in the player's currency; without it (browser, dev) purchases are test grants
+const STORE = { ready: false, prices: {} };
+const loadStore = () => { try { if (window.Game && window.Game.store) Object.assign(STORE, JSON.parse(window.Game.store())); } catch (e) {} };
+loadStore();
+window.onStore = () => { loadStore(); if (sheetKind) renderSheet(); };
+const priceOf = (playId, wonN) => STORE.prices[playId] || won(wonN);
+const PASS_ID = { month: 'pass_month', Turbo: 'pass_turbo', Ultra: 'pass_ultra' };
+const playIdOf = x => { const a = x.dataset.act; return a === 'buyData' ? x.dataset.pack : a === 'buyStarter' ? 'starter_pack' : a === 'buyRookie' ? 'beginner_pass' : a === 'buyPass' ? PASS_ID[x.dataset.kind] : null; };
+const waits = {}; let waitN = 0;
+const ask = (fn, ...args) => new Promise(res => { const id = 'r' + (++waitN); waits[id] = res; window.Game[fn](id, ...args); });
+window.onPurchase = (id, ok, reason) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason }); else if (id === 'late' && ok) { toast($t('purchase_restored'), 'ok'); api('snapshot').then(st => afterAct({ ok: true, state: st }, null, null)); } };
+window.onAccount = (id, ok, reason, info) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason, info }); };
 // value against the smallest pack (₩22 per data, priced to be skipped): what every "N배 이득" means
 const gainX = (data, wonAmt) => data * P.bm.baseWon / wonAmt;
 const xStr = v => (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
@@ -2423,7 +2478,7 @@ function renderData(b) {
   if (m.starterLeftMs > 0) {
     const x = gainX(m.starterValue, m.starterWon);
     h += `<button class="starter" data-act="buyStarter" style="position:relative;padding-right:96px">${sticker('burst', [xStr(x) + $t('times_suffix'), $t('value')], 84, 'right:4px;top:50%;transform:translateY(-50%) rotate(8deg)')}
-      <img src="img/bm/shop-starter.webp"><div style="flex:1"><b>${$t('starter_pack_2', won(m.starterWon))}</b>
+      <img src="img/bm/shop-starter.webp"><div style="flex:1"><b>${$t('starter_pack_2', priceOf('starter_pack', m.starterWon))}</b>
       <div style="margin:6px 0 6px">${sticker('bolt', '<span class="cd">' + hms(m.starterLeftMs) + '</span>', 84, 'left:0;top:0')}</div>
       <div class="note">${$t('data_voucher_1_worth_data', m.starterData, m.voucherData)}<br>${$t('income_boost_3_overclock_3')}</div></div></button>`;
   }
@@ -2433,7 +2488,7 @@ function renderData(b) {
       <h3>${$t('beginner_pass')}</h3><span class="d">${ic('clock')}${m.rookieBought ? $t('day_7', m.rookieDay) : $t('first_7_days_only_days', m.rookieDaysLeft)}</span>
       <ul><li>${$t('data_300_right_now')}</li><li>${$t('data_7_daily_for_50')}</li><li>${$t('premium_voucher_1_worth_data', m.voucherData)}</li></ul>
       ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? $t('claim_today_s_50') : $t('claimed_today_back_tomorrow')}</button>`
-        : `<button class="btn skin gold" data-act="buyRookie">${won(m.rookieWon)}</button>`}</div>`;
+        : `<button class="btn skin gold" data-act="buyRookie">${priceOf('beginner_pass', m.rookieWon)}</button>`}</div>`;
   }
   if (m.firstData) h += `<div class="note" style="text-align:center;margin:4px 0 0;font-weight:800;color:var(--hot)">${$t('first_data_purchase_1_time', m.firstBonusCap.toLocaleString())}</div>`;
   h += `<div class="packs" style="padding-top:22px">${m.packs.map((p, i) => {
@@ -2447,22 +2502,22 @@ function renderData(b) {
         <img src="img/bm/shop-data-${i + 1}.webp"><div class="n">${di} ${p.gets.toLocaleString()}</div>
         <span class="tags">${tags}</span>
         <span class="basep">${bonus ? `${p.data.toLocaleString()} + ${bonus.toLocaleString()}` : '\u00a0'}</span>
-        <span class="won skin gold">${won(p.won)}</span></button>`;
+        <span class="won skin gold">${priceOf(p.id, p.won)}</span></button>`;
     }).join('')}</div>`;
   h += `<div class="h3">${$t('data_shop')}</div>` + m.items.map(it => `<div class="it"><img src="img/bm/${ITEM_IMG[it.id]}.webp"><div class="t"><b class="fit1" style="display:block">${it.label.split(' (')[0]}</b>${it.label.includes(' (') ? `<div class="m fit1">(${it.label.split(' (')[1]}</div>` : ''}<div class="m">${$t('left_today_icon', ic('clock'), it.left, it.tickets ? $t('free_tickets', it.tickets) : '')}</div></div>
       <button class="dbtn skin green" data-act="buyItem" data-item="${it.id}" ${it.left > 0 && (it.tickets || m.data >= it.price) ? '' : 'disabled'}>${it.tickets ? $t('free') : DIMG + it.price}</button></div>`).join('')
     + `<div class="h3">${m.passActive ? $t('pass_claim_no_ad') : $t('watch_ad_to_claim')}</div>` + m.ads.filter(a => a.id !== 'BestDouble' && a.id !== 'OfflineDouble').map(a => `<div class="it"><img src="img/bm/${AD_IMG[a.id]}.webp"><div class="t"><b>${a.label}</b><div class="m">${$t('today', a.left, a.daily)}</div></div>
       <button class="dbtn skin blue" data-act="watchAd" data-slot="${a.id}" ${a.left > 0 ? '' : 'disabled'}>${m.passActive ? $t('accept') : `<img src="img/ui/ad.webp">${$t('ad')}`}</button></div>`).join('')
-    + foot([$t('n_value_is_based_on'), $t('vouchers_and_boosts_valued_at'), $t('no_random_chance_items'), $t('purchases_are_test_only_for')]);
+    + foot([$t('n_value_is_based_on'), $t('vouchers_and_boosts_valued_at'), $t('no_random_chance_items'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
   b.innerHTML = h;
 }
 function renderPass(b) {
   const m = P.bm; $('sheet-t').textContent = $t('go_faster'); $('sheet-w').innerHTML = '';
   const card = (kind, bg, head, lines, price, active) => `<div class="passc" style="background:${bg}">${head}<div style="flex:1"><h3>${kind === 'month' ? $t('monthly_pass') : kind === 'Turbo' ? $t('turbo_pass') : $t('ultra_pass')}${active ? `<span class="on-tag">${$t('active')}</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul><button class="btn skin gold" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>`;
-  b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', [$t('ad_rewards_instantly_no_ads'), $t('data_60_daily_300_now'), $t('overclock_3h_daily')], $t('5_500_30_days'), m.passActive && !m.speedPass)
-    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_3_5_all'), $t('backup_files_gb_1_75')], $t('33_000_30_days'), m.speedPass === 'Turbo')
-    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_8_all_day'), $t('backup_files_gb_4'), $t('data_200_daily')], $t('99_000_30_days'), m.speedPass === 'Ultra')
-    + foot([$t('30_days_auto_renews_cancel'), $t('cancel_anytime_remaining_days_stay'), $t('upgrade_your_pass_and_pay'), $t('purchases_are_test_only_for')]);
+  b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', [$t('ad_rewards_instantly_no_ads'), $t('data_60_daily_300_now'), $t('overclock_3h_daily')], priceOf('pass_month', 5500) + $t('per_30_days'), m.passActive && !m.speedPass)
+    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_3_5_all'), $t('backup_files_gb_1_75')], priceOf('pass_turbo', 33000) + $t('per_30_days'), m.speedPass === 'Turbo')
+    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_8_all_day'), $t('backup_files_gb_4'), $t('data_200_daily')], priceOf('pass_ultra', 99000) + $t('per_30_days'), m.speedPass === 'Ultra')
+    + foot([$t('30_days_auto_renews_cancel'), $t('cancel_anytime_remaining_days_stay'), $t('upgrade_your_pass_and_pay'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
 }
 function renderPremium(b) {
   const m = P.bm; $('sheet-t').textContent = $t('premium_version'); $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
@@ -2498,10 +2553,10 @@ function confirmPay(title, what, price) {
 }
 function payPrompt(x) {
   const m = P.bm, act = x.dataset.act, D = n => `${DIMG.replace('<img', '<img style="width:22px;vertical-align:-4px"')} ${Number(n).toLocaleString()}`;
-  if (act === 'buyData') { const p = m.packs.find(q => q.id === x.dataset.pack); return [$t('top_up_data'), $t('data_amount', p.gets.toLocaleString(), p.gets > p.data ? $t('incl_first_bonus', (p.gets - p.data).toLocaleString()) : ''), won(p.won) + $t('pay_2')]; }
-  if (act === 'buyStarter') return [$t('starter_pack'), $t('data_voucher_1_boost_overclock', m.starterData), won(m.starterWon) + $t('pay_2')];
-  if (act === 'buyRookie') return [$t('beginner_pass'), $t('300_now_7_daily_for'), won(m.rookieWon) + $t('pay_2')];
-  if (act === 'buyPass') return [{ month: $t('monthly_pass'), Turbo: $t('turbo_pass'), Ultra: $t('ultra_pass') }[x.dataset.kind], $t('30_days_auto_renews_cancel_2'), won({ month: 5500, Turbo: 33000, Ultra: 99000 }[x.dataset.kind]) + $t('30_days')];
+  if (act === 'buyData') { const p = m.packs.find(q => q.id === x.dataset.pack); return [$t('top_up_data'), $t('data_amount', p.gets.toLocaleString(), p.gets > p.data ? $t('incl_first_bonus', (p.gets - p.data).toLocaleString()) : ''), priceOf(p.id, p.won) + $t('pay_2')]; }
+  if (act === 'buyStarter') return [$t('starter_pack'), $t('data_voucher_1_boost_overclock', m.starterData), priceOf('starter_pack', m.starterWon) + $t('pay_2')];
+  if (act === 'buyRookie') return [$t('beginner_pass'), $t('300_now_7_daily_for'), priceOf('beginner_pass', m.rookieWon) + $t('pay_2')];
+  if (act === 'buyPass') return [{ month: $t('monthly_pass'), Turbo: $t('turbo_pass'), Ultra: $t('ultra_pass') }[x.dataset.kind], $t('30_days_auto_renews_cancel_2'), priceOf(PASS_ID[x.dataset.kind], { month: 5500, Turbo: 33000, Ultra: 99000 }[x.dataset.kind]) + $t('30_days')];
   if (act === 'buyItem') { const it = m.items.find(q => q.id === x.dataset.item); return it.tickets ? null : [it.label, $t('left_today', it.left), D(it.price) + $t('use_2')]; }
   if (act === 'premium' && x.dataset.voucher !== '1') { const a = m.premium.find(q => q.id === x.dataset.id); return [$t('premium_2', a.name, a.stars + 1), $t('value_to', a.permille * 2 / 1000), D(a.price) + $t('use_2')]; }
   return null;
@@ -2521,8 +2576,16 @@ function backupShopHTML(full) {
 }
 async function sheetAct(x) {
   const act = x.dataset.act;
-  const ask = payPrompt(x);
-  if (ask && !(await confirmPay(...ask))) return;
+  const playId = STORE.ready ? playIdOf(x) : null;
+  if (playId) {  // Play shows its own purchase sheet; the core grants inside the app (GameBridge.grant)
+    const r = await ask('purchase', playId);
+    if (r.ok) { afterAct({ ok: true, state: await api('snapshot') }, null, act); track('purchase', { product: playId }); }
+    else if (r.reason === 'pending') toast($t('purchase_pending'), 'info');
+    else if (r.reason !== 'cancel') toast($t('purchase_failed'), 'err');
+    return;
+  }
+  const askPay = payPrompt(x);
+  if (askPay && !(await confirmPay(...askPay))) return;
   if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
   if (act === 'sync' && !armSync) { armSync = true; renderSheet(); sfx.snap(); return; }
   if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd(x.dataset.slot))) return; }

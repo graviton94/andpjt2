@@ -39,6 +39,7 @@ jobs:
       - name: Test and assemble
         env:
           DND_SIDELOAD_PASSWORD: ${{ secrets.SIDELOAD_PASSPHRASE }}
+          KAKAO_NATIVE_APP_KEY: ${{ secrets.KAKAO_NATIVE_APP_KEY }}
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug
       - name: Forget the unlocked key
         if: always()

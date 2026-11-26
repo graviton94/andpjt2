@@ -18,7 +18,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewFeature
+import com.graviton94.notificationcleaner.platform.Account
 import com.graviton94.notificationcleaner.platform.Ads
+import com.graviton94.notificationcleaner.platform.Billing
 import com.graviton94.notificationcleaner.platform.Telemetry
 
 /**
@@ -37,6 +39,12 @@ class MainActivity : ComponentActivity() {
         bridge = GameBridge(applicationContext)
         val ads = Ads(this)
         bridge.ads = ads
+        bridge.activity = this
+        bridge.account = Account(applicationContext)
+        val billing = Billing(applicationContext) { p, claim -> bridge.grant(p, claim) }
+        bridge.billing = billing
+        billing.onReady = { web.post { web.evaluateJavascript("window.onStore && window.onStore()", null) } }
+        billing.onLateGrant = { web.post { web.evaluateJavascript("window.onPurchase && window.onPurchase('late', true, 'restored')", null) } }
         val assets = WebViewAssetLoader.Builder().addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this)).build()
         web = WebView(this).apply {
             val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -69,7 +77,9 @@ class MainActivity : ComponentActivity() {
         }
         setContentView(web)
         bridge.js = { script -> web.post { web.evaluateJavascript(script, null) } }
+        bridge.reload = { web.post { web.reload() } }
         ads.start()
+        billing.start()
         // The board draws its own phone chrome (clock, battery = game battery), so the real bars stay out of the way.
         WindowCompat.getInsetsController(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.systemBars())
@@ -80,11 +90,20 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         web.onResume()
+        bridge.billing?.restore()  // payments that finished while we were away (pending methods, other device)
         bridge.resume()?.let { json -> web.evaluateJavascript("window.onOffline && window.onOffline($json)", null) }
     }
 
+    private val backupTick = object : Runnable {
+        override fun run() { bridge.backup(); web.postDelayed(this, 3 * 60_000L) }
+    }
+
+    override fun onStart() { super.onStart(); web.postDelayed(backupTick, 3 * 60_000L) }
+    override fun onStop() { web.removeCallbacks(backupTick); super.onStop() }
+
     override fun onPause() {
         bridge.save()
+        bridge.backup()
         web.onPause()
         super.onPause()
     }
