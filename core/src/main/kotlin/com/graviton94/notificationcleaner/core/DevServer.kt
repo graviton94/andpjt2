@@ -21,6 +21,9 @@ fun serve(port: Int, root: File) {
             "new" -> { val seed = q["seed"]?.toLongOrNull() ?: now; session = WebSession(state = Engine().newGame(now, seed), now = now); session.snapshot(now) }
             "snapshot" -> session.snapshot(now)
             "sync" -> session.sync(now)
+            "meta" -> session.meta(now)
+            "challengeStart" -> session.challengeStart(now)
+            "challengeEnd" -> session.challengeEnd(now)
             "buyCloud" -> session.buyCloud(q.getValue("item"), now)
             "info" -> """{"version":"dev","package":"devserver"}"""
             "wipe" -> { session = WebSession(now = now); session.snapshot(now) }

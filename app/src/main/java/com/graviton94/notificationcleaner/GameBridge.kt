@@ -37,6 +37,9 @@ class GameBridge(private val context: Context) {
         val out = when (method) {
             "snapshot" -> session.snapshot(t)
             "sync" -> session.sync(t)
+            "meta" -> session.meta(t)
+            "challengeStart" -> session.challengeStart(t)
+            "challengeEnd" -> session.challengeEnd(t)
             "buyCloud" -> session.buyCloud(a.optString("item"), t)
             "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).toString()
             "wipe" -> { saveFile.delete(); File(saveFile.path + ".tmp").delete(); prefs.edit().clear().apply(); session = WebSession(now = t); session.snapshot(t) }

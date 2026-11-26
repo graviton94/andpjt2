@@ -482,11 +482,46 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #coach .ft{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 #coach .st{font:700 12px/1 var(--font);color:var(--m-primary);letter-spacing:.04em}
 #coach button{background:none;border:0;font:600 13px var(--font);color:var(--m-on-sv);padding:8px 4px}
+/* 업적 · 칭호 */
+.ttl{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font:700 11.5px/1 var(--font);color:#3A2400;background:linear-gradient(135deg,#FFE27A,#FFB300);white-space:nowrap}
+.ttl.big{height:32px;padding:0 14px;border-radius:16px;font-size:15px}
+.achsum{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-bottom:4px}
+.achsum>div{border-radius:20px;padding:12px 14px;background:var(--g-card);border:1px solid var(--g-line)}
+.achsum .l{display:block;font:500 12px/1 var(--font);color:var(--m-on-sv)}.achsum b{display:block;font:800 26px/1.2 var(--font);margin-top:6px}.achsum small{font-size:14px;color:var(--m-on-sv);font-weight:500}
+.achsum .bar{display:block;height:6px;border-radius:3px;margin-top:6px;background:color-mix(in srgb,var(--m-on-surface) 10%,transparent);overflow:hidden}.achsum .bar i{display:block;height:100%;background:linear-gradient(90deg,#FFB300,#FF7A1F)}
+.ttlnow{display:flex;align-items:center;gap:10px;min-height:40px}
+.it.ach .medal{width:44px;height:44px;flex:none;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--m-on-surface) 8%,transparent);color:var(--m-on-sv)}
+.it.ach.got .medal{background:linear-gradient(135deg,#FFE27A,#FFB300);color:#3A2400;box-shadow:0 4px 14px rgba(255,179,0,.35)}
+.it.ach:not(.got){opacity:.92}.it.ach:not(.got) b{color:var(--m-on-sv)}
+.btn.sm{height:36px;padding:0 14px;font-size:13px}
+/* 일일 도전 */
+.chero{border-radius:24px;padding:14px;margin-bottom:10px;background:linear-gradient(150deg,color-mix(in srgb,#8B5CF6 26%,transparent),color-mix(in srgb,#4FC3FF 10%,transparent));border:1px solid var(--g-line)}
+.chero .l{font:600 12px/1 var(--font);color:var(--m-on-sv)}
+.cdeck{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0 12px}.cdk{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}.cdk img{width:40px;height:40px;border-radius:11px}.cdk em{font:500 10.5px/1 var(--font);font-style:normal;max-width:100%;color:var(--m-on-sv)}
+.rule{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}.rule span{font:500 13px/1.4 var(--font);color:var(--m-on-sv)}.rule b{font:800 18px/1.35 var(--font)}.rule .n{font-size:12px}
+.rule>*{display:block;max-width:100%}
+.cbest{font:800 24px/1.2 var(--font)!important;display:block;margin-top:4px}
+.keys{display:flex;gap:6px;margin:6px 0 4px}.key{width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--m-on-surface) 10%,transparent);position:relative}
+.key.on{background:linear-gradient(135deg,#FFE27A,#FFB300);box-shadow:0 3px 10px rgba(255,179,0,.4)}.key.on::after{content:"";position:absolute;inset:8px;border-radius:50%;background:#3A2400;opacity:.5}
+#chud{position:fixed;left:50%;bottom:calc(34px + env(safe-area-inset-bottom));white-space:nowrap;z-index:40;display:flex;align-items:center;gap:10px;height:44px;padding:0 6px 0 16px;border-radius:22px;font-family:var(--font);color:#fff;
+ background:linear-gradient(135deg,rgba(139,92,246,.92),rgba(59,130,246,.9));box-shadow:0 8px 24px rgba(60,40,160,.45),inset 0 1px 0 rgba(255,255,255,.3);transform:translate(-50%,140px);transition:transform .4s var(--ease-out)}
+#chud.on{transform:translate(-50%,0)}#chud .lb{font:600 12px/1 var(--font);opacity:.85}#chud b{font:800 20px/1 var(--font);font-variant-numeric:tabular-nums}
+#chud #chud-s{font:700 14px/1 var(--font);font-variant-numeric:tabular-nums;min-width:64px}
+#chud button{height:32px;padding:0 12px;border-radius:16px;border:0;background:rgba(255,255,255,.2);color:#fff;font:600 12px var(--font)}
+#chud.hurry b{color:#FFD166;animation:holeP 1s infinite}
+#chres{position:fixed;inset:0;z-index:66;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s var(--ease-std)}
+#chres.on{opacity:1;pointer-events:auto}
+#chres .card{width:100%;max-width:340px;border-radius:28px;padding:22px 20px 18px;text-align:center;font-family:var(--font);color:var(--m-on-surface);
+ background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9);transition:transform .5s var(--ease-out)}
+#chres.on .card{transform:none}#chres .l{font:600 13px/1 var(--font);color:var(--m-on-sv)}
+#chres .amt{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:14px 0 10px}#chres .v{font:800 46px/1 var(--font);font-variant-numeric:tabular-nums}#chres .u{font:800 22px var(--font);color:var(--m-primary)}
+#chres .nb{display:inline-flex;height:30px;align-items:center;padding:0 14px;border-radius:15px;font:800 14px var(--font);color:#fff;background:linear-gradient(135deg,#FF5F6D,#E0261C)}
+#chres .got{display:flex;justify-content:center;gap:6px;margin:14px 0 16px}#chres .btn{width:100%;height:52px}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb">일일 도전</span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" aria-label="그만하기">그만</button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
@@ -1722,7 +1757,7 @@ function drawHint(t) {
 const $ = id => document.getElementById(id);
 const shadeEl = $('shade'), sheetEl = $('sheet'), scrimEl = $('scrim');
 let P = null, sheetKind = null, upMode = '1', shopTier = 0, armReset = false, armSync = false;
-const ICONP = { data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
+const ICONP = { chal: 'M13 2 4 14h7l-1 8 9-12h-7z', ach: 'M7 4h10v3a5 5 0 0 1-10 0V4zM5 5H3v1a4 4 0 0 0 4 4M19 5h2v1a4 4 0 0 1-4 4M12 12v4M8 20h8M9 16h6v4H9z', data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
   reset: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4', backup: 'M6 4h9l3 3v13H6zM9 4v5h6V4', cloud: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z', rec: 'M5 19V9M12 19V5M19 19v-7' };
 const svg = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
 // premium ★n wraps the icon in frame n: the icon is scaled to the frame's measured hole (centre, size, corner) so the
@@ -1736,11 +1771,12 @@ const ico = (id, stars = starsOf(id)) => {
   return `<span class="fr">${img} style="left:${pct(f.cx - f.s / 2)};top:${pct(f.cy - f.s / 2)};width:${pct(f.s)};height:${pct(f.s)};border-radius:${(f.r / f.s * 100).toFixed(1)}%"><img class="ring" src="img/bm/badge-frame-${Math.min(5, stars)}.webp" alt=""></span>`;
 };
 const P$ = (n, short) => shortOf(n, short) + ' P';
-async function loadPanel() { const np = await api('panel'); np.bm = await api('bm'); P = np; applyState(P.state); return P; }  // swap in whole: a sheet may render meanwhile
+async function loadPanel() { const np = await api('panel'); np.bm = await api('bm'); np.meta = await api('meta'); P = np; applyState(P.state); return P; }  // swap in whole: a sheet may render meanwhile
 function closeAll() {
   armSync = false; ftue('closed'); shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
+  if (chal) { toast('도전 중에는 패널을 열 수 없어요'); return; }
   await loadPanel(); renderShade();
   shadeEl.classList.add('open'); scrimEl.classList.add('open'); phone('phone.wake', .25); setTimeout(() => ftue('shade'), 500);
 }
@@ -1766,10 +1802,12 @@ function renderShade() {
     ['reset', '초기화', P.canReset ? `+${shortOf(st.backupFilesNow)} 파일` : `Lv ${st.resetLevel}부터`, P.canReset && st.backupFilesNow > 0],
     ['pass', '더 빠르게', P.bm && P.bm.passActive ? `패스 ${P.bm.passDaysLeft}일` : '패스', false],
     ['premium', '프리미엄', P.bm && P.bm.vouchers ? `선택권 ${P.bm.vouchers}` : '★ 강화', P.bm && P.bm.vouchers > 0],
+    ['chal', '일일 도전', P.meta ? (P.meta.keys ? `열쇠 ${P.meta.keys}/${P.meta.keyCap}` : '내일 다시') : '도전', P.meta && P.meta.keys > 0],
+    ['ach', '업적 · 칭호', P.meta ? `칭호 ${P.meta.titles.length}/${P.meta.achievements.length}` : '업적', false],
     ['attend', '매일 들르기', P.bm ? (P.bm.claimedToday ? `${P.bm.streak}일째` : '출석하기') : '출석', P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${shortOf(P.files)}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div style="display:flex;align-items:center;gap:4px"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="설정">${svg('M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4z')}</button></div></div>
-    <div class="lv"><b>Lv ${st.level}</b><span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
+    <div class="lv"><b>Lv ${st.level}</b>${TITLE() ? `<span class="ttl">「${TITLE()}」</span>` : ''}<span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>다음 ${shortOf(P.nextLevelP, P.nextLevelPShort)}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot fx-shine' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><span class="tx"><b>${l}</b><em>${sub}</em></span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}</button>`).join('')}</div>
     <div class="row2"><label>효과음</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>진동</label><button class="sw ${vibOn ? 'on' : ''}" id="vib" role="switch" aria-checked="${vibOn}" aria-label="진동"></button></div>
@@ -1862,6 +1900,8 @@ function renderSheet() {
   else if (sheetKind === 'pass') renderPass(b);
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
+  else if (sheetKind === 'ach') renderAch(b);
+  else if (sheetKind === 'chal') renderChal(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
   b.querySelectorAll('[data-info]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); appDetail(x.dataset.info); }));
   stagger(b); requestAnimationFrame(() => fitLines(b));
@@ -2134,6 +2174,7 @@ document.addEventListener('pointerdown', e => {
   el.appendChild(c); setTimeout(() => c.remove(), 500);
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
+document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
 if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
@@ -2205,6 +2246,65 @@ function coach({ rect, text, sub = '', finger = 'tap', step = '', place = 'below
   $('coach-skip').onclick = () => { el.classList.remove('on'); if (FT.step < 9) ftEnd(); };
 }
 
+
+
+// ---------- 업적 · 칭호 ----------
+const TITLE = () => localStorage.getItem('titleOn') || '';
+const ACH_DESC = { FirstReset: '공장 초기화 처음 하기', FirstSync: '클라우드 동기화 처음 하기', LastApp: '마지막 앱까지 손에 넣기', Chain10: '한 번에 10연쇄 터뜨리기',
+  Wave9: '과부하 파동 9단까지', Spam1000: '스팸 1,000개 치우기', Crash100: '먹통 재부팅 100번', Pro10: '프로 버전 앱 10개 모으기', Streak30: '30일 연속 출석' };
+function renderAch(b) {
+  $('sheet-t').textContent = '업적 · 칭호'; $('sheet-w').textContent = '';
+  const m = P.meta, on = TITLE(), got = m.achievements.filter(a => a.got).length;
+  b.innerHTML = `<div class="achsum"><div><span class="l">모은 칭호</span><b>${got}<small> / ${m.achievements.length}</small></b></div>
+      <div><span class="l">꾸미기 조각</span><b>${m.pieces}<small> / 10</small></b><span class="bar"><i style="width:${Math.min(100, m.pieces * 10)}%"></i></span></div></div>
+    <div class="h3">장착한 칭호</div>
+    <div class="ttlnow">${on ? `<span class="ttl big">「${on}」</span><button class="btn tonal sm" data-unequip>해제</button>` : '<span class="note">업적을 달성하면 칭호를 달 수 있어요</span>'}</div>
+    <div class="h3">업적</div>
+    ${m.achievements.map(a => `<div class="it ach ${a.got ? 'got' : ''}"><span class="medal">${svg(ICONP.ach)}</span>
+      <div class="t"><b class="fit1" style="display:block">「${a.title}」</b><div class="m fit1">${ACH_DESC[a.id] || ''}</div>
+      ${a.got ? '' : `<div class="prog"><i style="width:${Math.min(100, a.now / a.goal * 100)}%"></i></div><div class="note fit1">${a.now.toLocaleString()} / ${a.goal.toLocaleString()} · 조각 +${a.pieces}</div>`}</div>
+      ${a.got ? (on === a.title ? '<span class="cap on">장착 중</span>' : `<button class="btn skin gold sm" data-equip="${a.title}">장착</button>`) : `<span class="cap">조각 +${a.pieces}</span>`}</div>`).join('')}
+    ${foot(['칭호는 보여 주기용이에요', '꾸미기 조각 10개 = 꾸미기 1개 (준비 중)'])}`;
+  b.querySelectorAll('[data-equip]').forEach(x => x.onclick = () => { localStorage.setItem('titleOn', x.dataset.equip); toast(`「${x.dataset.equip}」 칭호를 달았어요`, 'ok'); sfx.badge(); renderSheet(); });
+  const u = b.querySelector('[data-unequip]'); if (u) u.onclick = () => { localStorage.removeItem('titleOn'); renderSheet(); };
+}
+
+// ---------- 일일 도전: today's shared board, 60 seconds, best score ----------
+let chal = null;  // { ends, timer }
+function renderChal(b) {
+  $('sheet-t').textContent = '일일 도전'; $('sheet-w').textContent = '';
+  const m = P.meta, keys = Array.from({ length: m.keyCap }, (_, i) => `<i class="key ${i < m.keys ? 'on' : ''}"></i>`).join('');
+  b.innerHTML = `<div class="chero"><span class="l">오늘의 판</span>
+      <div class="cdeck">${m.deck.map(a => `<span class="cdk">${ico(a.id, 0)}<em class="fit1">${a.name}</em></span>`).join('')}</div>
+      <div class="rule"><span class="fit1">60초 동안 오늘의 판에서</span><b class="fit1">P를 가장 많이 벌어요</b><span class="fit1 n">(모두 같은 조건 · 내 강화·보너스 없음)</span></div></div>
+    <div class="cols"><div><h4>내 최고 기록</h4><b class="cbest t-gold">${m.bestShort} P</b></div><div><h4>오늘 남은 열쇠</h4><div class="keys">${keys}</div><span class="note fit1">${m.keyCap === 3 ? '최고 Lv52 달성 · 하루 3개' : 'Lv52부터 하루 3개'}</span></div></div>
+    <button class="btn big skin gold ${m.keys ? 'fx-shine' : ''}" id="chal-go" ${m.keys ? '' : 'disabled'}>${m.keys ? '도전 시작 · 열쇠 1개' : '내일 열쇠가 다시 생겨요'}</button>
+    ${foot(['완주하면 꾸미기 조각 +1', '최고 기록을 넘기면 조각 +2', '열쇠는 팔지 않아요'])}`;
+  const go = $('chal-go'); if (go) go.onclick = startChallenge;
+}
+async function startChallenge() {
+  const o = await api('challengeStart');
+  if (!o.ok) { toast(o.reason === 'keys' ? '오늘 열쇠를 다 썼어요' : '이미 도전 중이에요', 'err'); return; }
+  closeAll(); chal = { ends: Date.now() + 60000, auto: autoOn }; autoOn = false;
+  applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);
+  $('chud').classList.add('on'); phone('ui.levelup', .4);
+  chal.timer = setInterval(() => { const left = Math.max(0, chal.ends - Date.now()); $('chud-t').textContent = `0:${String(Math.ceil(left / 1000)).padStart(2, '0')}`; $('chud').classList.toggle('hurry', left < 10000);
+    $('chud-s').textContent = '+' + fmtL(wallet.v) + ' P'; if (!left) endChallenge(); }, 200);
+}
+async function endChallenge() {
+  if (!chal) return; clearInterval(chal.timer); autoOn = chal.auto; chal = null; $('chud').classList.remove('on');
+  const o = await api('challengeEnd'); if (!o.ok) return;
+  applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);
+  const el = $('chres');
+  el.innerHTML = `<div class="card"><span class="l">일일 도전 끝!</span><div class="amt"><span class="v t-gold" id="chres-v">0</span><span class="u">P</span></div>
+    ${o.newBest ? '<div class="nb fx-shine">최고 기록 경신!</div>' : `<div class="note fit1">내 최고 ${o.bestShort} P</div>`}
+    <div class="got"><span class="cap on">꾸미기 조각 +${o.piecesGot}</span><span class="cap">모은 조각 ${o.pieces} / 10</span></div>
+    <button class="btn big skin gold" id="chres-ok">확인</button></div>`;
+  el.classList.add('on'); fitLines(el); sfx.badge(); phone('ui.bonus', .5);
+  const to = L(o.score), t0 = performance.now(), v = $('chres-v');
+  (function tick() { const k = Math.min(1, (performance.now() - t0) / 1200), e = 1 - Math.pow(1 - k, 3); v.textContent = k < 1 ? fmtL(lerpL(-1, to, e)) : o.scoreShort; if (k < 1) requestAnimationFrame(tick); })();
+  $('chres-ok').onclick = () => el.classList.remove('on');
+}
 
 // ---------- first-run flow: swipe → burst → pull the shade → app shop → first buy (bible 16 #1, #2, #7) ----------
 const FT = { step: +(localStorage.getItem('ftue') || 0) };  // 0 = not started, 9 = done
