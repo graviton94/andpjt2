@@ -1,0 +1,19 @@
+{
+ "_note": "Play Console products for Do Not Disturb!. ids must match app/.../platform/Billing.kt PRODUCTS; prices in KRW, other countries converted by Play. Run .github/workflows/play-products.yml after the first AAB is on a track.",
+ "package": "io.github.graviton94.donotdisturb",
+ "inapp": [
+  {"id": "data_100", "krw": 2200, "en": ["100 Data", "100 Data for upgrades, boosts and premium stars"], "ko": ["데이터 100", "강화·부스트·프리미엄 ★에 쓰는 데이터 100"]},
+  {"id": "data_540", "krw": 5900, "en": ["540 Data", "540 Data for upgrades, boosts and premium stars"], "ko": ["데이터 540", "강화·부스트·프리미엄 ★에 쓰는 데이터 540"]},
+  {"id": "data_1200", "krw": 12000, "en": ["1,200 Data", "1,200 Data for upgrades, boosts and premium stars"], "ko": ["데이터 1,200", "강화·부스트·프리미엄 ★에 쓰는 데이터 1,200"]},
+  {"id": "data_3700", "krw": 33000, "en": ["3,700 Data", "3,700 Data for upgrades, boosts and premium stars"], "ko": ["데이터 3,700", "강화·부스트·프리미엄 ★에 쓰는 데이터 3,700"]},
+  {"id": "data_8600", "krw": 69000, "en": ["8,600 Data", "8,600 Data for upgrades, boosts and premium stars"], "ko": ["데이터 8,600", "강화·부스트·프리미엄 ★에 쓰는 데이터 8,600"]},
+  {"id": "data_16800", "krw": 119000, "en": ["16,800 Data", "16,800 Data for upgrades, boosts and premium stars"], "ko": ["데이터 16,800", "강화·부스트·프리미엄 ★에 쓰는 데이터 16,800"]},
+  {"id": "starter_pack", "krw": 2500, "en": ["Starter Pack", "Data, a premium star voucher, income boosts and overclocks"], "ko": ["스타터 팩", "데이터 · 프리미엄 ★ 선택권 · 수입 부스트 · 오버클럭"]},
+  {"id": "rookie_pass", "krw": 3300, "en": ["Beginner Pass", "Data now and daily for 7 days, plus a premium star voucher"], "ko": ["초심자 패스", "지금 데이터 + 7일 동안 매일 데이터, 프리미엄 ★ 선택권"]}
+ ],
+ "subs": [
+  {"id": "pass_monthly", "krw": 5500, "en": ["Monthly Pass", "Ad rewards without ads, daily Data and overclock"], "ko": ["월간 패스", "광고 없이 광고 보상, 매일 데이터와 오버클럭"]},
+  {"id": "pass_turbo", "krw": 33000, "en": ["Turbo Pass", "Monthly Pass plus game speed x3.5 all day"], "ko": ["터보 패스", "월간 패스 + 하루 종일 게임 속도 ×3.5"]},
+  {"id": "pass_ultra", "krw": 99000, "en": ["Ultra Pass", "Monthly Pass plus game speed x8 and daily Data"], "ko": ["울트라 패스", "월간 패스 + 하루 종일 게임 속도 ×8, 매일 데이터"]}
+ ]
+}

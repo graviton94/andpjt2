@@ -19,8 +19,26 @@ texts = {k: [[effects[k]["when"], effects[k]["then"], effects[k].get("note", "")
 en = json.loads((ROOT / "docs/content/l10n/en.json").read_text())
 eff_en = {k: v for k, v in json.loads((ROOT / "docs/content/app-effects.en.json").read_text()).items() if not k.startswith("_")}
 texts_en = {k: [[eff_en[k]["when"], eff_en[k]["then"], eff_en[k].get("note", "")], en["lines"][k]] for k in texts}
-i18n_en = json.loads((ROOT / "tools/game-page/i18n/en.json").read_text())
-page = page.replace("__I18N_EN__", json.dumps(i18n_en, ensure_ascii=False)).replace("__APPS_EN__", json.dumps(en["apps"], ensure_ascii=False)).replace("__TEXTS_EN__", json.dumps(texts_en, ensure_ascii=False))
+
+# ---- i18n: every on-screen string is a key; each language is one file. The build refuses to ship a hole.
+I18N_DIR = ROOT / "tools/game-page/i18n"
+locs = {f.stem: json.loads(f.read_text()) for f in sorted(I18N_DIR.glob("*.json")) if re.fullmatch(r"[a-z]{2}(-[A-Za-z]{2,4})?", f.stem)}
+core = {f.stem[5:]: json.loads(f.read_text()) for f in sorted(I18N_DIR.glob("core-*.json"))}
+HAN = re.compile(r"[\uAC00-\uD7A3\u3131-\u318E]")
+problems = []
+base = locs["ko"]
+for lang, tbl in locs.items():
+    for k in base.keys() - tbl.keys(): problems.append(f"{lang}: missing key {k!r} (ko: {base[k]!r})")
+    for k in tbl.keys() - base.keys(): problems.append(f"{lang}: extra key {k!r}")
+    for k in base.keys() & tbl.keys():
+        if set(re.findall(r"\{\d\}", base[k])) != set(re.findall(r"\{\d\}", tbl[k])): problems.append(f"{lang}: placeholders differ in {k!r}")
+for k in set(re.findall(r"\$t\('([^']+)'", page)) - base.keys(): problems.append(f"code uses unknown key {k!r}")
+for k in set(re.findall(r'data-i18n(?:-aria)?="([^"]+)"', page)) - base.keys(): problems.append(f"html uses unknown key {k!r}")
+for n, line in enumerate(page.splitlines(), 1):  # display text must come from the language files, not the code (comments are fine)
+    code_part = re.split(r"(?<![:'\"])//\s|/\*", line)[0] if "<script" not in line else line
+    if HAN.search(code_part) and not re.match(r"\s*(\*|<!--)", line): problems.append(f"game.tpl.html:{n}: Korean text in code — move it to i18n/ko.json")
+if problems: raise SystemExit("i18n check failed:\n  " + "\n  ".join(problems[:60]) + (f"\n  … {len(problems) - 60} more" if len(problems) > 60 else ""))
+page = page.replace("__I18N__", json.dumps(locs, ensure_ascii=False)).replace("__I18N_CORE__", json.dumps(core, ensure_ascii=False)).replace("__TEXTS_EN__", json.dumps(texts_en, ensure_ascii=False))
 page = page.replace("__COLORS__", json.dumps(colors)).replace("__TEXTS__", json.dumps(texts, ensure_ascii=False)).replace("__HANDSET__", repr((FX / "handset.b64").read_text().strip())).replace("__PHONE__", (FX / "phone-sfx.json").read_text())
 assert "__" not in re.sub(r"__(proto|dirname)__", "", page.split("<script>")[1])[:0] + "", "placeholder left"
 if OUT.exists(): shutil.rmtree(OUT)

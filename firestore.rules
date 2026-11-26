@@ -1,0 +1,18 @@
+rules_version = '2';
+// Do Not Disturb! — cloud save only. users/{uid}: the signed-in player's own save, nobody else's.
+// Fields: save (string, the core SaveCodec JSON), level (int), savedAt (server time), app (version name).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['save', 'level', 'savedAt', 'app'])
+        && request.resource.data.save is string && request.resource.data.save.size() < 900000
+        && request.resource.data.level is int
+        && request.resource.data.savedAt == request.time;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

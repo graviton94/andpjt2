@@ -135,13 +135,15 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
   - Firebase(꺼짐/켜짐 자동), AdMob 보상형 + UMP, 분석 이벤트(ad_*, ftue_step)
   - 서명 키, AAB 워크플로
 - 웹사이트 이름 · 주소 변경, 스토어 그래픽 이미지(새 제목)
+- VFX 3차(빛 계열 통일) — 점검 릴 승인(11-26)
+- **언어(키 기반)**: 화면 문구는 `$t('key')`, 언어 파일 `tools/game-page/i18n/ko.json`(원본)·`en.json`, 코어 라벨 `core-en.json`(id 기준). 규칙·언어 추가 방법 `tools/game-page/i18n/README.md`. 빌드가 한글 하드코딩·빠진 키를 거부. 설정 > 언어. 영·한 화면 전체 크롤 누락 0. 테스트는 `&lang=ko`
 
 ### 진행 중 · 다음 (화면 세션)
 1. 첫 AAB(0.1.0, 가짜 결제) → 사용자가 내부 테스트에 직접 업로드 (API 열기용)
-2. **실제 로그인**
+2. **실제 로그인** — 코드 완료(11-26, `docs/platform/login-billing.md`). 남은 것: 서비스 계정 키를 앱 프로젝트(donotdisturb-e66ea)로 교체 → Functions 배포
    - Google + 카카오 → Firebase Auth. 카카오는 Cloud Functions가 커스텀 토큰 발급
    - 게스트 유지, Firestore `users/{uid}`에 세이브 동기화
-3. **실제 결제**
+3. **실제 결제** — 코드 완료(Billing 8, `tools/play/products.json`). 첫 AAB 업로드 뒤 `Play products` 워크플로로 상품 등록
    - Play Billing: 데이터 6종 · 스타터 · 초심자 · 패스 3종
    - 지급은 코어(claim id = 구매 토큰, 멱등)
 4. 스토어 자료
@@ -149,13 +151,16 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
    - API 업로드 워크플로(`play-listing`)
 5. 앱 콘텐츠 · 데이터 보안 답안을 실제 로그인 · 결제 기준으로 갱신 → 사용자 입력
 6. 인앱 상품 API 등록 → 비공개 테스트 트랙 출시
-7. 한국어 문구 통합 정리(사용자 검수) → 영어 기본 전환 → 기타 언어
+7. 앱 색·티어·권역·콤보 단계별 VFX(밸런스 세션 burst 필드 추가 후 완성) → 스토어 스크린샷(영·한, 라이트·다크 번갈아)
+8. 기타 언어(ja · zh-TW · es)
 
 ### 밸런스 세션 · 규칙 B 이식 및 출시 검증
 
 - 화면 세션 변경을 `ccr-balance-port`에 병합 후 작업했다. 기준 지시서는 [balance-session-v1.0.md](prompts/balance-session-v1.0.md), 결과와 출시에 남은 조건은 [LAUNCH-V1-REPORT.md](balance/LAUNCH-V1-REPORT.md)에 있다. 84일 시드 8에서 무과금 마지막 앱 중앙 62.50일, 첫 동기화 15.84일로 출시 구간은 미충족이다.
 - 코어에서 같은 앱의 두 줄이 닿으면 즉시 폭발한다. 저장 JSON 외피는 버전 1이고, 규칙 버전 4에서 열린 이전 보드의 폭발 기준을 2로 이관한다.
 - VFX 계약은 [api-changes.md](balance/api-changes.md), 결제 등록 ID와 보상은 [17-monetization.md](bible/17-monetization.md)를 따른다.
+
+v1.1 작업 지시서는 [balance-session-v1.1.md](prompts/balance-session-v1.1.md)다.
 
 ### 별도 트랙 · 무한 강화와 EX 사전 이식 기준
 1. GB 동기화 직후 가속 복구: Lv60 재도달 비율 ≤0.80이 인접 회차 쌍의 70% 이상

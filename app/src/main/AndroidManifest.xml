@@ -2,6 +2,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- KakaoTalk login: see whether the talk app is installed -->
+    <queries><package android:name="com.kakao.talk" /></queries>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,6 +12,17 @@
         android:theme="@style/Theme.NotificationCleaner">
         <!-- AdMob app id from build.gradle.kts (Google's test id in debug) -->
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}" />
+        <!-- Kakao login comes back through kakao<native app key>://oauth (build.gradle.kts kakaoScheme) -->
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="oauth" android:scheme="${kakaoScheme}" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true">

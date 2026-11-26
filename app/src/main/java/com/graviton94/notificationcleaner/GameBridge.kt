@@ -11,7 +11,13 @@ import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.WebSession
 import com.graviton94.notificationcleaner.core.account
+import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import com.graviton94.notificationcleaner.platform.Account
 import com.graviton94.notificationcleaner.platform.Ads
+import com.graviton94.notificationcleaner.platform.Billing
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import com.graviton94.notificationcleaner.platform.Telemetry
 import org.json.JSONObject
 import java.io.File
@@ -35,7 +41,7 @@ class GameBridge(private val context: Context) {
 
     private fun now() = System.currentTimeMillis()
 
-    // An empty receipt is rejected by the reward ledgers. Billing/AdMob will supply real receipts in M6.
+    // An empty receipt is rejected by the reward ledgers.
     private fun debugReceipt(kind: String): String = if (debugTransactions) "$kind-${System.nanoTime()}" else ""
 
     @JavascriptInterface
@@ -50,7 +56,7 @@ class GameBridge(private val context: Context) {
             "challengeStart" -> session.challengeStart(t)
             "challengeEnd" -> session.challengeEnd(t)
             "buyCloud" -> session.buyCloud(a.optString("item"), t)
-            "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).put("adPrivacy", ads?.privacyRequired == true).toString()
+            "info" -> JSONObject().put("billing", billing?.ready == true).put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).put("adPrivacy", ads?.privacyRequired == true).toString()
             "wipe" -> { saveFile.delete(); File(saveFile.path + ".tmp").delete(); prefs.edit().clear().apply(); session = WebSession(now = t); session.snapshot(t) }
             "swipe" -> session.swipe(a.optString("id").toLong(), t)
             "auto" -> session.auto(t)
@@ -60,14 +66,18 @@ class GameBridge(private val context: Context) {
             "reset" -> session.reset(t)
             "panel" -> session.panel(t)
             "bm" -> session.bm(t)
-            // M4: billing and ads are faked until the SDKs land (M6); ids keep every grant claim-once.
-            "buyData" -> session.buyData(a.optString("pack"), debugReceipt("fake"), t)
-            "buyStarter" -> session.buyStarter(debugReceipt("fake"), t)
-            "buyRookie" -> session.buyRookie(debugReceipt("fake"), t)
+            // Play purchases go through Game.purchase. The fallback is restricted to debug builds.
+            "buyData" -> if (billing?.ready == true) session.snapshot(t) else session.buyData(a.optString("pack"), debugReceipt("fake"), t)
+            "buyStarter" -> if (billing?.ready == true) session.snapshot(t) else session.buyStarter(debugReceipt("fake"), t)
+            "buyRookie" -> if (billing?.ready == true) session.snapshot(t) else session.buyRookie(debugReceipt("fake"), t)
             "claimRookie" -> session.claimRookie(t)
             "buyItem" -> session.buyItem(a.optString("item"), t)
-            "watchAd" -> session.watchAd(a.optString("slot"), debugReceipt("fakead"), t)
-            "buyPass" -> session.buyPass(a.optString("kind"), debugReceipt("fake"), t)
+            "watchAd" -> {
+                val receipt = if (session.shop.passActive(session.state, t)) "pass-" + java.util.UUID.randomUUID()
+                    else adRewards.removeFirstOrNull() ?: debugReceipt("fakead")
+                session.watchAd(a.optString("slot"), receipt, t)
+            }
+            "buyPass" -> if (billing?.ready == true) session.snapshot(t) else session.buyPass(a.optString("kind"), debugReceipt("fake"), t)
             "premium" -> session.premium(a.optString("app"), a.optString("voucher") == "1", t)
             "claimMissions" -> session.claimMissions(t)
             "attend" -> session.attend(t)
@@ -85,16 +95,133 @@ class GameBridge(private val context: Context) {
         out
     }
 
-    /** Set by MainActivity: the rewarded-ad host and a way to call back into the page. */
+    /** Set by MainActivity: the rewarded-ad host, billing, sign-in and a way to call back into the page. */
     var ads: Ads? = null
     var js: ((String) -> Unit)? = null
+    var activity: ComponentActivity? = null
+    var billing: Billing? = null
+    var account: Account? = null
+    /** Reload the page after the save was replaced by the cloud copy. */
+    var reload: (() -> Unit)? = null
+    private var cloudPending: Account.Cloud? = null
+    /** Rewards AdMob confirmed and the page has not cashed in yet (one watchAd each). */
+    private val adRewards = ArrayDeque<String>()
+
+    private fun cb(fn: String, vararg args: Any?) {
+        val a = args.joinToString(",") { v -> when (v) { null -> "null"; is String -> JSONObject.quote(v); is Boolean, is Number -> v.toString(); is JSONObject -> v.toString(); else -> JSONObject.quote(v.toString()) } }
+        js?.invoke("window.$fn && window.$fn($a)")
+    }
+
+    // ---- Play Billing: the page asks, Play charges, the core grants once per claim id
+    /** Called by [Billing] for every paid purchase; true when the core granted it now. */
+    fun grant(p: Billing.Product, claim: String): Boolean = synchronized(lock) {
+        val t = now()
+        val out = when (p.kind) {
+            "data" -> session.buyData(p.coreId, claim, t)
+            "starter" -> session.buyStarter(claim, t)
+            "rookie" -> session.buyRookie(claim, t)
+            "pass" -> session.buyPass(p.coreId, claim, t)
+            else -> return false
+        }
+        save()
+        runCatching { JSONObject(out).optBoolean("ok", false) }.getOrDefault(false)
+    }
+
+    /** {ready, prices: {playId: "₩5,500"}} — the page shows store prices when billing is up. */
+    @JavascriptInterface
+    fun store(): String = JSONObject().put("ready", billing?.ready == true).put("prices", billing?.prices() ?: JSONObject()).toString()
+
+    /** Buy a Play product; answer: window.onPurchase(id, ok, reason). */
+    @JavascriptInterface
+    fun purchase(id: String, playId: String) {
+        val act = activity; val b = billing
+        if (act == null || b == null) return cb("onPurchase", id, false, "unavailable")
+        act.runOnUiThread { b.buy(act, playId) { ok, reason -> cb("onPurchase", id, ok, reason) } }
+    }
+
+    // ---- account: Google / Kakao sign-in, cloud save, deletion
+    @JavascriptInterface
+    fun account(): String = (account?.status() ?: JSONObject().put("enabled", false)).toString()
+
+    /** provider google|kakao; answer: window.onAccount(id, ok, reason, info). reason "conflict" carries both saves. */
+    @JavascriptInterface
+    fun signIn(id: String, provider: String) {
+        val act = activity ?: return cb("onAccount", id, false, "unavailable", null)
+        val acc = account?.takeIf { it.enabled } ?: return cb("onAccount", id, false, "unavailable", null)
+        act.lifecycleScope.launch {
+            try {
+                if (provider == "kakao") acc.signInKakao(act) else acc.signInGoogle(act)
+                afterSignIn(id, acc)
+            } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                val cancel = e.javaClass.simpleName.contains("Cancel") || (e.message ?: "").contains("cancel", true)
+                cb("onAccount", id, false, if (cancel) "cancel" else "error", JSONObject().put("type", e.javaClass.simpleName))
+            }
+        }
+    }
+
+    private suspend fun afterSignIn(id: String, acc: Account) {
+        val cloud = runCatching { acc.download() }.getOrNull()
+        val (local, level, fresh) = synchronized(lock) { Triple(session.save(), session.state.level, session.state.level <= 2 && session.state.swipes < 30) }
+        when {
+            cloud == null -> { acc.upload(local, level); cb("onAccount", id, true, "uploaded", JSONObject(acc.status().toString())) }
+            fresh -> { useCloud(cloud); cb("onAccount", id, true, "restored", JSONObject(acc.status().toString())) }
+            else -> {
+                cloudPending = cloud
+                val info = JSONObject(acc.status().toString()).put("local", JSONObject().put("level", level)).put("cloud", JSONObject().put("level", cloud.level).put("savedAt", cloud.savedAt))
+                cb("onAccount", id, true, "conflict", info)
+            }
+        }
+    }
+
+    /** After a "conflict": keep this phone's game (upload it) or take the cloud one (replace and reload). */
+    @JavascriptInterface
+    fun resolveSave(choice: String) {
+        val acc = account ?: return
+        val act = activity ?: return
+        val cloud = cloudPending; cloudPending = null
+        act.lifecycleScope.launch {
+            if (choice == "cloud" && cloud != null) useCloud(cloud)
+            else { val (save, lv) = synchronized(lock) { session.save() to session.state.level }; acc.upload(save, lv) }
+        }
+    }
+
+    private fun useCloud(cloud: Account.Cloud) {
+        val st = runCatching { SaveCodec.decode(cloud.save) }.getOrNull() ?: return
+        synchronized(lock) { session = WebSession(state = st, now = now()); save() }
+        reload?.invoke()
+    }
+
+    @JavascriptInterface
+    fun signOut(): String { account?.signOut(); return account() }
+
+    /** Two taps in the page, then here: server data and the Firebase user go; this phone keeps playing as a guest. */
+    @JavascriptInterface
+    fun deleteAccount(id: String) {
+        val act = activity ?: return
+        val acc = account ?: return cb("onAccount", id, false, "unavailable", null)
+        act.lifecycleScope.launch {
+            try { acc.deleteAccount(); cb("onAccount", id, true, "deleted", JSONObject(acc.status().toString())) }
+            catch (e: CancellationException) { throw e } catch (e: Exception) { cb("onAccount", id, false, "error", JSONObject().put("type", e.javaClass.simpleName)) }
+        }
+    }
+
+    /** Cloud backup of the save while signed in (MainActivity: on pause and every few minutes). */
+    fun backup() {
+        val acc = account ?: return
+        if (acc.uid == null) return
+        val (save, lv) = synchronized(lock) { session.save() to session.state.level }
+        activity?.lifecycleScope?.launch { acc.upload(save, lv) }
+    }
 
     /** Page asks for a rewarded ad; the answer comes back as window.onAdResult(id, earned, reason). */
     @JavascriptInterface
     fun showAd(id: String) {
         val q = JSONObject.quote(id)
         val a = ads ?: return run { js?.invoke("window.onAdResult && window.onAdResult($q, false, 'none')") }
-        a.show { earned, reason -> js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})") }
+        a.show { earned, reason ->
+            if (earned) synchronized(lock) { adRewards.add("ad-" + java.util.UUID.randomUUID()) }
+            js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})")
+        }
     }
 
     /** Settings › 광고 개인정보 설정: the UMP privacy options form. */

@@ -29,6 +29,10 @@ android {
         versionCode = System.getenv("DND_VERSION_CODE")?.toIntOrNull()?.let { 1000 + it } ?: 4
         versionName = System.getenv("DND_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "0.4.0-web"
         buildConfigField("boolean", "FIREBASE", hasFirebase.toString())
+        // Kakao native app key (public, ships in the APK; secret KAKAO_NATIVE_APP_KEY in CI). Empty = Kakao sign-in hidden.
+        val kakaoKey = prop("KAKAO_NATIVE_APP_KEY", "")
+        buildConfigField("String", "KAKAO_KEY", "\"$kakaoKey\"")
+        manifestPlaceholders["kakaoScheme"] = if (kakaoKey.isNotBlank()) "kakao$kakaoKey" else "kakao-disabled"
     }
 
     // Signing keys like the other apps (keystore/README.md): CI unlocks keystore/*.jks.gpg into a temp file and passes
@@ -99,5 +103,13 @@ dependencies {
     implementation("com.google.firebase:firebase-config")
     implementation("com.google.android.gms:play-services-ads:24.4.0")
     implementation("com.google.android.ump:user-messaging-platform:3.2.0")
+    // sign-in (Google via Credential Manager, Kakao SDK → Cloud Function custom token) and Play Billing
+    implementation("com.google.firebase:firebase-functions")
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("com.kakao.sdk:v2-user:2.21.4")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     testImplementation("junit:junit:4.13.2")
 }
