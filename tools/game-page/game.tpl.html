@@ -108,6 +108,52 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .passc .btn{background:#FFD66B;color:#1E1408}
 .passc .big{font:800 34px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;color:#fff;width:74px;text-align:center}.passc img{width:74px}
 .passc{position:relative;flex-direction:column;align-items:stretch}.passc .pc-top{display:flex;gap:12px;align-items:center}
+/* pass cards by tier: Monthly warm gold · Turbo electric blue with racing stripes · Ultra obsidian with a holo gold rim */
+.pz{position:relative;isolation:isolate;border-radius:24px;padding:18px 16px 14px;margin:18px 0 14px;color:#F6F1EA;overflow:visible}
+.pz::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1}
+.pz-band{position:absolute;left:16px;top:-12px;display:inline-flex;align-items:center;gap:5px;font:900 12px/1 "Pretendard";padding:6px 12px;border-radius:99px;box-shadow:0 3px 0 rgba(0,0,0,.28);z-index:2}
+.pz-band img{width:16px;height:16px}
+.pz-on{position:absolute;right:14px;top:-10px;font:800 11px/1 "Pretendard";padding:5px 9px;border-radius:99px;background:#34C759;color:#fff;z-index:2}
+.pz-head{display:flex;gap:10px;align-items:center}.pz-txt{flex:1;min-width:0}
+.pz-name{font:900 24px/1.1 "Pretendard";letter-spacing:-.03em}
+.pz-hook{margin-top:4px;font:700 13.5px/1.35 "Pretendard";opacity:.92}
+.pz-x{display:inline-flex;align-items:baseline;gap:6px;margin-top:10px;padding:6px 12px 7px;border-radius:12px;transform:rotate(-2deg)}
+.pz-x b{font:900 22px/1 "Pretendard";letter-spacing:-.02em}.pz-x span{font:800 12px/1 "Pretendard"}
+.pz-art{position:relative;width:108px;height:108px;flex:none;display:grid;place-items:center}
+.pz-art img{width:108px;height:108px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45));position:relative}
+.pz-big{position:absolute;font:900 40px/1 "Pretendard";letter-spacing:-.04em}
+.pz-perks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.pz-perks div{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.08);font:700 12px/1.25 "Pretendard"}
+.pz-perks img{width:24px;height:24px;flex:none;object-fit:contain}
+.pz-buy{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:58px;margin-top:12px;border:0;border-radius:16px;cursor:pointer;font-family:"Pretendard";box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.pz-buy b{font:900 20px/1.1 "Pretendard";letter-spacing:-.02em}.pz-buy small{font:700 12px/1.3 "Pretendard";opacity:.8}
+.pz-buy:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.pz .pv{margin-top:12px}
+/* Monthly: warm gold, a soft sheen sweeping across */
+.pz-month::before{background:linear-gradient(150deg,#6A4512,#2E1C08 70%);border:2px solid #FFD23F;box-shadow:0 0 0 4px rgba(255,210,63,.16),0 16px 36px rgba(255,170,40,.25)}
+.pz-month::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,240,190,.18) 50%,transparent 65%);background-size:250% 100%;animation:sheen 3.6s ease-in-out infinite;pointer-events:none}
+.pz-month .pz-band{background:#FFD23F;color:#2A1800}.pz-month .pz-x{background:#FFD23F;color:#2A1800}
+.pz-month .pz-buy{background:linear-gradient(#FFE27A,#F0A000);color:#2A1800}
+/* Turbo: electric blue, racing stripes moving, cyan glow */
+.pz-Turbo::before{background:repeating-linear-gradient(115deg,rgba(92,225,230,.07) 0 14px,transparent 14px 34px),linear-gradient(150deg,#14306E,#060D24 75%);background-size:200% 100%,100% 100%;border:2px solid #5CE1E6;box-shadow:0 0 0 4px rgba(92,225,230,.15),0 0 26px rgba(56,103,240,.45),0 16px 36px rgba(0,0,0,.4);animation:pzstripe 1.4s linear infinite}
+.pz-Turbo .pz-band{background:linear-gradient(90deg,#3867F0,#5CE1E6);color:#fff}.pz-Turbo .pz-x{background:#5CE1E6;color:#05122E}
+.pz-Turbo .pz-name{background:linear-gradient(90deg,#FFFFFF,#9FEFFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pz-Turbo .pz-big{color:#5CE1E6;text-shadow:0 0 18px rgba(92,225,230,.8)}
+.pz-Turbo .pz-buy{background:linear-gradient(#7FEBFF,#3867F0);color:#fff;box-shadow:0 5px 0 #1B3A99,0 0 18px rgba(92,225,230,.5)}
+.pz-Turbo .pz-perks div{background:rgba(92,225,230,.12)}
+@keyframes pzstripe{to{background-position:-68px 0,0 0}}
+/* Ultra: obsidian, rotating holo-gold rim, twinkling sparkles, gold everything */
+.pz-Ultra::before{inset:3px;background:radial-gradient(circle at 20% 15%,rgba(255,210,63,.16),transparent 40%),radial-gradient(circle at 85% 80%,rgba(186,104,255,.18),transparent 45%),linear-gradient(160deg,#1E1626,#07050A 75%)}
+.pz-Ultra::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-2;padding:3px;background:conic-gradient(from var(--ra,0deg),#FFD23F,#FFF3B0,#B8860B,#BA68FF,#5CE1E6,#FFD23F);animation:ra 4s linear infinite;box-shadow:0 0 30px rgba(255,210,63,.35),0 18px 40px rgba(0,0,0,.5)}
+.pz-Ultra .pz-band{background:linear-gradient(90deg,#1A1208,#3A2A10);color:#FFD23F;border:1.5px solid #FFD23F}
+.pz-Ultra .pz-name{background:linear-gradient(90deg,#FFF3B0,#FFD23F 40%,#B8860B);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:26px}
+.pz-Ultra .pz-x{background:linear-gradient(90deg,#FFD23F,#FFF3B0);color:#1A1208}
+.pz-Ultra .pz-big{background:linear-gradient(#FFF3B0,#FFD23F,#B8860B);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,210,63,.6));font-size:46px}
+.pz-Ultra .pz-buy{background:linear-gradient(#FFF3B0,#FFD23F 45%,#B8860B);color:#1A1208;box-shadow:0 5px 0 #6B4A00,0 0 22px rgba(255,210,63,.55)}
+.pz-Ultra .pz-perks div{background:rgba(255,210,63,.1);border:1px solid rgba(255,210,63,.18)}
+.pz-Ultra .pz-head::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background-image:radial-gradient(2px 2px at 12% 22%,#fff,transparent),radial-gradient(1.5px 1.5px at 78% 12%,#FFF3B0,transparent),radial-gradient(2px 2px at 64% 58%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 70%,#FFD23F,transparent);animation:pztw 2.2s ease-in-out infinite alternate}
+@keyframes pztw{from{opacity:.25}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.pz::before,.pz::after,.pz-head::after{animation:none!important}}
 .passc.hot .pc-top{padding-right:74px}.passc.hot{border:2px solid #FFD23F!important;box-shadow:0 0 0 4px rgba(255,210,63,.18),0 14px 34px rgba(255,170,40,.28)!important}
 .pv-best{position:absolute;left:14px;top:-11px;background:#FFD23F;color:#2A1800;font:900 11.5px/1 "Pretendard";padding:5px 10px;border-radius:99px;box-shadow:0 3px 0 rgba(0,0,0,.25);z-index:2}
 .pv-x{position:absolute;right:12px;top:12px;font:800 11.5px/1 "Pretendard";padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.14);color:#FFE9A8}
@@ -2541,18 +2587,31 @@ function passTable(k) {
   return `<div class="pv"><div class="pv-h">${$t('pv_title')}</div>${rows.map(([a, b]) => `<div class="pv-r"><span>${a}</span><b>${b}</b></div>`).join('')}
     <div class="pv-t"><span>${$t('pv_total', n(v.dataTotal))}</span><b>${$t('pv_worth', won(Math.round(v.dataTotal * P.bm.baseWon)))}</b></div></div>`;
 }
+// pass cards, one design per tier: the dearer the pass, the richer the card (gold → electric → obsidian holo)
+const PERK_FALLBACK = { 'ad-free': 'img/ui/ad.webp', 'daily-data': 'img/bm/currency-data.webp', 'instant-data': 'img/bm/currency-data.webp', overclock: 'img/bm/boost-income-boost.webp', speed: 'img/bm/boost-time-warp.webp', prestige: 'img/bm/currency-backup.webp', crown: 'img/bm/badge-star-on.webp' };
+const perkImg = id => `<img src="img/bm/perk-${id}.webp" onerror="this.onerror=null;this.src='${PERK_FALLBACK[id]}'" alt="">`;
 function renderPass(b) {
   const m = P.bm; $('sheet-t').textContent = $t('go_faster'); $('sheet-w').innerHTML = '';
-  const card = (kind, bg, head, lines, price, active) => {
-    const v = passValue(kind), hot = kind === 'month';
-    return `<div class="passc ${hot ? 'hot' : ''}" style="background:${bg}">
-      ${hot ? sticker('burst', [$t('pv_up_to', xStr(v.valueX)), $t('value')], 92, 'right:-4px;top:-10px;transform:rotate(9deg)') + `<div class="pv-best">${$t('best_value_monthly')}</div>` : `<div class="pv-x">${$t('pv_up_to', xStr(v.valueX))} ${$t('value')}</div>`}
-      <div class="pc-top">${head}<div style="flex:1"><h3>${kind === 'month' ? $t('monthly_pass') : kind === 'Turbo' ? $t('turbo_pass') : $t('ultra_pass')}${active ? `<span class="on-tag">${$t('active')}</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul>
-      <button class="btn skin gold" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>${passTable(kind)}</div>`;
+  const T = {
+    month: { name: $t('monthly_pass'), tag: $t('best_value_monthly'), hook: $t('pz_hook_month'), art: 'monthly', fb: 'img/bm/shop-month-pass.webp', won: 5500, active: m.passActive && !m.speedPass,
+      perks: [['ad-free', $t('ad_rewards_instantly_no_ads')], ['instant-data', $t('pz_perk_now')], ['daily-data', $t('pz_perk_daily')], ['overclock', $t('overclock_3h_daily')]] },
+    Turbo: { name: $t('turbo_pass'), tag: $t('pz_tag_turbo'), hook: $t('pz_hook_turbo'), art: 'turbo', big: '×3.5', won: 33000, active: m.speedPass === 'Turbo',
+      perks: [['speed', $t('game_speed_3_5_all')], ['prestige', $t('backup_files_gb_1_75')], ['ad-free', $t('everything_in_the_monthly_pass')]] },
+    Ultra: { name: $t('ultra_pass'), tag: $t('pz_tag_ultra'), hook: $t('pz_hook_ultra'), art: 'ultra', big: '×8', won: 99000, active: m.speedPass === 'Ultra',
+      perks: [['speed', $t('game_speed_8_all_day')], ['prestige', $t('backup_files_gb_4')], ['daily-data', $t('data_200_daily')], ['ad-free', $t('everything_in_the_monthly_pass')]] },
   };
-  b.innerHTML = card('month', 'linear-gradient(135deg,#5A3A12,#2A1808)', '<img src="img/bm/shop-month-pass.webp">', [$t('ad_rewards_instantly_no_ads'), $t('data_60_daily_300_now'), $t('overclock_3h_daily')], priceOf(passId('month'), 5500) + $t('per_30_days'), m.passActive && !m.speedPass)
-    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_3_5_all'), $t('backup_files_gb_1_75')], priceOf(passId('Turbo'), 33000) + $t('per_30_days'), m.speedPass === 'Turbo')
-    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_8_all_day'), $t('backup_files_gb_4'), $t('data_200_daily')], priceOf(passId('Ultra'), 99000) + $t('per_30_days'), m.speedPass === 'Ultra')
+  const card = kind => {
+    const c = T[kind], v = passValue(kind), id = passId(kind), price = priceOf(id, c.won), krw = !STORE.prices[id] || /₩/.test(STORE.prices[id]);
+    const art = `<div class="pz-art">${c.big ? `<b class="pz-big">${c.big}</b>` : ''}<img src="img/bm/pass-${c.art}.webp" onerror="this.onerror=null;${c.fb ? `this.src='${c.fb}'` : `this.remove()`}" alt=""></div>`;
+    return `<div class="pz pz-${kind}">
+      <div class="pz-band">${kind === 'Ultra' ? perkImg('crown') : ''}${c.tag}</div>${c.active ? `<span class="pz-on">${$t('active')}</span>` : ''}
+      <div class="pz-head"><div class="pz-txt"><div class="pz-name">${c.name}</div><div class="pz-hook">${c.hook}</div>
+        ${kind === 'month' ? `<div class="pz-x"><b>${$t('pv_up_to', xStr(v.valueX))}</b><span>${$t('value')}</span></div>` : ''}</div>${art}</div>
+      <div class="pz-perks">${c.perks.map(([i, t]) => `<div>${perkImg(i)}<span>${t}</span></div>`).join('')}</div>
+      <button class="pz-buy" data-act="buyPass" data-kind="${kind}"><b>${price}</b><small>${$t('per_30_days')}${krw ? ' · ' + $t('pz_per_day', won(Math.round(c.won / 30))) : ''}</small></button>
+      ${passTable(kind)}</div>`;
+  };
+  b.innerHTML = card('month') + card('Turbo') + card('Ultra')
     + foot([$t('30_days_auto_renews_cancel'), $t('cancel_anytime_remaining_days_stay'), $t('upgrade_your_pass_and_pay'), $t('pv_note'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
 }
 function renderPremium(b) {
