@@ -2,7 +2,9 @@ package com.graviton94.notificationcleaner.core
 
 import kotlinx.serialization.Serializable
 
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.security.MessageDigest
 import java.util.Base64
 
@@ -44,6 +46,20 @@ data class AttendReward(val data: Long, val tickets: Map<CreditItem, Int> = empt
 
 data class DataPack(val id: String, val data: Long, val won: Int)
 
+const val PASS_DAYS = 30
+
+data class PassValue(
+    val wonPrice: Int,
+    val dataNow: Long,
+    val dataDaily: Long,
+    val overclockMinutesDaily: Int,
+    val speedPermille: Int,
+    val prestigePermille: Int,
+) {
+    val dataTotal get() = dataNow + dataDaily * PASS_DAYS
+    val dataEquivalent get() = dataTotal + (overclockMinutesDaily.toLong() * PASS_DAYS * CreditItem.Overclock.price / 60)
+}
+
 data class CommerceOffers(
     val packs: List<DataPack> = listOf(
         DataPack("data_100", 100, 2_200), DataPack("data_540", 540, 5_900), DataPack("data_1200", 1_200, 12_000),
@@ -64,6 +80,23 @@ data class CommerceOffers(
     val monthlyProductId: String = "pass_monthly",
 ) {
     val baseWonPerData: Double get() = packs.first().won.toDouble() / packs.first().data
+
+    /** One decimal on the same list-price basis used for first-purchase offers. */
+    fun valueX(dataEquivalent: Long, won: Int): Double {
+        val reference = packs.first()
+        return BigDecimal.valueOf(dataEquivalent).multiply(BigDecimal.valueOf(reference.won.toLong()))
+            .divide(BigDecimal.valueOf(won.toLong()).multiply(BigDecimal.valueOf(reference.data)), 1, RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    fun passValue(rules: RuleSet, speed: SpeedPass? = null) = PassValue(
+        wonPrice = speed?.won ?: passWon,
+        dataNow = rules.passInstantCredits,
+        dataDaily = rules.passDailyCredits + (speed?.dailyData ?: 0),
+        overclockMinutesDaily = rules.passOverclockMinutes,
+        speedPermille = speed?.speedPermille ?: 0,
+        prestigePermille = speed?.prestigePermille ?: 0,
+    )
 
     fun dataReceived(pack: DataPack, first: Boolean): Long =
         pack.data + if (first) minOf(pack.data, firstBonusCap) else 0
@@ -275,11 +308,11 @@ class Shop(private val engine: Engine) {
 
     /** Purchase: 30 days of ad-free rewards and daily credits, plus credits now. Stacks. */
     fun buyPass(s: GameState, now: Long): GameState =
-        credit(s, rules.passInstantCredits, bought = true).withAccount { it.copy(passUntil = maxOf(now, it.passUntil) + 30 * DAY_MS) }
+        credit(s, rules.passInstantCredits, bought = true).withAccount { it.copy(passUntil = maxOf(now, it.passUntil) + PASS_DAYS * DAY_MS) }
 
     /** 터보·울트라: 30 days of permanent speed, the month pass included. */
     fun buySpeedPass(s: GameState, now: Long, pass: SpeedPass): GameState =
-        buyPass(s, now).withAccount { it.copy(speedPass = pass, speedPassUntil = maxOf(now, it.speedPassUntil) + 30 * 86_400_000L) }
+        buyPass(s, now).withAccount { it.copy(speedPass = pass, speedPassUntil = maxOf(now, it.speedPassUntil) + PASS_DAYS * DAY_MS) }
 
     fun claimPassDaily(s: GameState, now: Long): GameState {
         if (!passActive(s, now) || s.account.passDay >= dayOf(now)) return s

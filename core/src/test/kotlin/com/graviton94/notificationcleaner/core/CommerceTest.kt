@@ -45,6 +45,29 @@ class CommerceTest {
             bm.getValue("passProductIds").jsonObject.mapValues { it.value.jsonPrimitive.content })
     }
 
+    @Test fun passValueShowsCashAndTimeSeparatelyAtTheRegisteredPrices() {
+        val bm = Json.parseToJsonElement(session().bm(now)).jsonObject
+        val passes = bm.getValue("passValues").jsonObject
+        assertEquals(setOf("month", "Turbo", "Ultra"), passes.keys)
+        val expected = mapOf(
+            "month" to listOf("5500", "60", "2100", "5700", "22.8", "8.4"),
+            "Turbo" to listOf("33000", "60", "2100", "5700", "3.8", "1.4"),
+            "Ultra" to listOf("99000", "260", "8100", "11700", "2.6", "1.8"),
+        )
+        for ((id, quote) in expected) {
+            val value = passes.getValue(id).jsonObject
+            val reported = listOf("wonPrice", "dataDaily", "dataTotal", "dataEquivalent", "valueX", "valueXDataOnly")
+                .map { value.getValue(it).jsonPrimitive.content }
+            assertEquals(quote, reported, id)
+            assertEquals("300", value.getValue("dataNow").jsonPrimitive.content)
+            assertEquals("30", value.getValue("days").jsonPrimitive.content)
+            assertEquals("3.0", value.getValue("overclockHoursDaily").jsonPrimitive.content)
+            assertTrue(value.getValue("adFree").jsonPrimitive.boolean)
+        }
+        assertEquals("10.2", bm.getValue("starterValueX").jsonPrimitive.content)
+        assertEquals("7.1", bm.getValue("rookieValueX").jsonPrimitive.content)
+    }
+
     @Test fun anOldReceiptRemainsSettledAcrossSaveAndReset() {
         val rules = engine.rules
         val w = session()

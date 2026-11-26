@@ -195,6 +195,21 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     fun claimMissions(now: Long): String = act(now) { meta.claimMissions(shop, it, now) ?: it }
 
+    private fun passValueJson(value: PassValue): JsonObject = buildJsonObject {
+        put("wonPrice", value.wonPrice)
+        put("dataNow", value.dataNow)
+        put("dataDaily", value.dataDaily)
+        put("days", PASS_DAYS)
+        put("overclockHoursDaily", value.overclockMinutesDaily / 60.0)
+        put("adFree", true)
+        put("speedPermille", value.speedPermille)
+        put("prestigePermille", value.prestigePermille)
+        put("dataTotal", value.dataTotal)
+        put("dataEquivalent", value.dataEquivalent)
+        put("valueX", offers.valueX(value.dataEquivalent, value.wonPrice))
+        put("valueXDataOnly", offers.valueX(value.dataTotal, value.wonPrice))
+    }
+
     fun bm(now: Long): String {
         val s = tick(now)
         val a = s.account
@@ -212,9 +227,14 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
                 put("month", offers.monthlyProductId)
                 SpeedPass.entries.forEach { put(it.name, it.productId) }
             }
+            putJsonObject("passValues") {
+                put("month", passValueJson(offers.passValue(r)))
+                SpeedPass.entries.forEach { put(it.name, passValueJson(offers.passValue(r, it))) }
+            }
             put("starterLeftMs", starterLeftMs(s, now)); put("starterWon", offers.starterWon); put("starterData", offers.starterData)
             put("voucherData", offers.voucherValue(r))
             put("starterValue", offers.starterValue(r))
+            put("starterValueX", offers.valueX(offers.starterValue(r), offers.starterWon))
             putJsonArray("starterTickets") { offers.starterTickets.forEach { (k, v) -> add(buildJsonObject { put("label", k.label); put("n", v) }) } }
             put("rookieOpen", rookieOpen(s, now))
             put("rookieDaysLeft", (offers.rookieDays - (dayOf(now) - a.installDay)).toInt().coerceAtLeast(0))
@@ -222,6 +242,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
             put("rookieDay", if (a.rookieDay >= 0) rookieDayNo(s, now) + 1 else 0)
             put("rookieCanClaim", a.rookieDay >= 0 && rookieDayNo(s, now) in 0 until offers.rookieDays && a.rookieClaimDay != dayOf(now))
             put("rookieWon", offers.rookieWon); put("rookieValue", offers.rookieValue(r))
+            put("rookieValueX", offers.valueX(offers.rookieValue(r), offers.rookieWon))
             putJsonArray("items") {
                 CreditItem.entries.forEach { c -> add(buildJsonObject {
                     put("id", c.name); put("label", c.label); put("price", c.price); put("left", shop.shopLeft(s, c, now)); put("tickets", a.tickets[c] ?: 0)

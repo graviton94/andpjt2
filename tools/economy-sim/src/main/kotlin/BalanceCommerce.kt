@@ -100,19 +100,18 @@ fun balanceCommerce(output: File) {
             listOf(i + 1, reward.data, reward.tickets.entries.sumOf { (item, n) -> item.price * n }, reward.starVouchers) + balances[i + 1]
         })
 
-    val totalDays = 30
-    val dailyClockEquivalent = rules.passOverclockMinutes.toLong() * totalDays * com.graviton94.notificationcleaner.core.CreditItem.Overclock.price / 60
-    val basePassData = rules.passInstantCredits + totalDays * rules.passDailyCredits
+    fun subscription(id: String, value: com.graviton94.notificationcleaner.core.PassValue) =
+        listOf(id, "subscription", value.wonPrice, value.dataTotal, value.dataTotal, value.dataEquivalent, value.dataEquivalent)
+
     val products = offers.packs.map { pack ->
         listOf(pack.id, "consumable", pack.won, pack.data, offers.dataReceived(pack, true), pack.data, offers.dataReceived(pack, true))
     } + listOf(
         listOf(offers.starterProductId, "one_time", offers.starterWon, offers.starterData, offers.starterData, offers.starterValue(rules), offers.starterValue(rules)),
         listOf(offers.rookieProductId, "one_time", offers.rookieWon, offers.rookieNow + offers.rookieDaily * offers.rookieDays,
             offers.rookieNow + offers.rookieDaily * offers.rookieDays, offers.rookieValue(rules), offers.rookieValue(rules)),
-        listOf(offers.monthlyProductId, "subscription", offers.passWon, basePassData, basePassData, basePassData + dailyClockEquivalent, basePassData + dailyClockEquivalent),
+        subscription(offers.monthlyProductId, offers.passValue(rules)),
     ) + com.graviton94.notificationcleaner.core.SpeedPass.entries.map { pass ->
-        val data = basePassData + pass.dailyData * totalDays
-        listOf(pass.productId, "subscription", pass.won, data, data, data + dailyClockEquivalent, data + dailyClockEquivalent)
+        subscription(pass.productId, offers.passValue(rules, pass))
     }
     csv(File(output, "commerce-skus.csv"), listOf("id", "type", "won", "data", "first_data", "data_equivalent", "first_data_equivalent"), products.asSequence())
 
