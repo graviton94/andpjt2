@@ -705,12 +705,13 @@ if (gl) {
 varying vec2 vq;
 uniform sampler2D T,UI;
 uniform float glitch,crt,sat,bright,alarm;uniform vec4 tint;
-uniform float A,t,seed,heat,chroma,amt,band,bandAmp;
+uniform float A,t,seed,heat,chroma,amt,band,bandAmp;uniform float pix,noi,psy;
 uniform vec4 rip[8];
 uniform vec4 crk;
 vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return fract(sin(p)*43758.5453);}
 void main(){
   vec2 v=vq;float on=1.;
+  if(pix>0.){float b=floor(mix(2.,11.,pix));vec2 st=vec2(b/390.,b*A/390.);v=(floor(v/st)+.5)*st;}
   if(crt>0.){float sy=max(1.-crt*1.12,.004);v.y=.5+(v.y-.5)/sy;float sx=crt>.86?max(1.-(crt-.86)/.14,.004):1.;v.x=.5+(v.x-.5)/sx;on=step(abs(v.y-.5),.5)*step(abs(v.x-.5),.5);}
   vec2 off=vec2(0.);float lit=0.,ca=chroma,dark=0.;
   if(glitch>0.){
@@ -753,6 +754,10 @@ void main(){
   vec2 u=v+off,cd=v-.5;
   vec3 col=vec3(texture2D(T,u+cd*ca).r,texture2D(T,u).g,texture2D(T,u-cd*ca).b);
   col=col*(1.-dark*.6)+vec3(1.,.96,.88)*lit*.32;
+  if(psy>0.){vec2 q=(v-.5)*vec2(A,1.)*3.2;float a2=t*.55;for(int i=0;i<4;i++){q+=vec2(sin(q.y*1.6+a2+float(i)),cos(q.x*1.35-a2*1.2))*.62;}
+    float hh=fract(length(q)*.16+t*.04);vec3 sw=.5+.5*cos(6.2831*(hh+vec3(0.,.33,.67)));sw=floor(sw*5.)/5.;
+    float l0=dot(col,vec3(.299,.587,.114));col=mix(col,col*.45+sw*.85,psy*(1.-smoothstep(.25,.85,l0))*.7);}
+  {float n=fract(sin(dot(floor(v*vec2(390.,390./A)*.5)+floor(t*24.),vec2(12.9898,78.233)))*43758.5453);col+=(n-.5)*noi*.22;col*=1.-noi*.12*step(.5,fract(v.y*211.));}
   float lu=dot(col,vec3(.299,.587,.114));col=mix(vec3(lu),col,sat)*bright;col=mix(col,tint.rgb,tint.a);
   col+=vec3(1.,.12,.06)*alarm*smoothstep(.28,.78,length((v-.5)*vec2(1.25,1.)));
   vec4 s=texture2D(UI,v);col=mix(col,s.rgb,s.a);
@@ -768,7 +773,7 @@ void main(){
     [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
   });
-  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
   gl.uniform1i(U.T, 0); gl.uniform1i(U.UI, 1); gl.uniform1f(U.A, W / H);
 }
 const ripArr = new Float32Array(32);
@@ -780,7 +785,7 @@ function present(t) {
   gl.uniform4fv(U.rip, ripArr);
   gl.uniform4f(U.crk, crack ? crack.x : 0, crack ? crack.y : 0, crack ? crack.age : 0, crack ? crack.amp : 0);
   gl.uniform1f(U.seed, crack ? crack.seed : 0); gl.uniform1f(U.heat, heat); gl.uniform1f(U.chroma, chroma);
-  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000);
+  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000); gl.uniform1f(U.pix, reduce ? 0 : pixT); gl.uniform1f(U.noi, reduce ? .02 : .05 + noiT * .8); gl.uniform1f(U.psy, reduce ? 0 : psyT);
   gl.uniform1f(U.glitch, reduce ? 0 : fx.glitch); gl.uniform1f(U.crt, fx.crt); gl.uniform1f(U.sat, fx.sat); gl.uniform1f(U.bright, fx.bright); gl.uniform1f(U.alarm, reduce ? fx.alarm * .4 : fx.alarm); gl.uniform4f(U.tint, ...fx.tint);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
@@ -846,9 +851,50 @@ function slamMerge(from, into, k, onHit) {  // anticipation: a contracting ring 
     const cy = into.y.x + 2;
     spawn('CORE', 195, cy, 0, 0, .09, [255, 240, 210], 150);
     for (let j = 0; j < (reduce ? 4 : 14); j++) { const side = j % 2 ? 1 : -1; spawn('DUST', 195 + side * (40 + rnd() * 140), cy, side * (260 + rnd() * 420), (rnd() - .5) * 80, .35 + rnd() * .2, [255, 244, 225], 6 + rnd() * 6); }
-    stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35);
+    stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35); pixT = Math.max(pixT, .22); noiT = Math.max(noiT, .35);
     sfx.thud(1); buzz(18); onHit && onHit();
   } };
+}
+
+// ---------- pixel VFX (Balatro-style): everything is snapped square pixels, dithered, in a loud palette ----------
+const BAL = [[254, 95, 85], [0, 157, 255], [253, 162, 0], [75, 194, 146], [138, 113, 225], [255, 255, 255]];
+const balc = i => BAL[((i % BAL.length) + BAL.length) % BAL.length];
+let pixT = 0, psyT = 0, noiT = 0, frameNo = 0;
+function px(x, y, s, col, a) { if (a <= .01) return; ctx.fillStyle = rgb(col, Math.min(1, a)); ctx.fillRect(Math.round(x / 4) * 4 - s / 2, Math.round(y / 4) * 4 - s / 2, s, s); }
+function pblob(x, y, r, col, a, dither) {  // a cloud of square pixels with a checker-dithered edge (never a circle outline)
+  if (a <= .01 || r < 2) return; const g = r > 18 ? 8 : r > 9 ? 6 : 4, n = Math.ceil(r / g);
+  const gx = Math.round(x / g), gy = Math.round(y / g);
+  for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+    const d = Math.hypot(i, j) * g / r; if (d > 1) continue;
+    if (dither && d > .62 && ((i + j + frameNo) & 1)) continue;
+    ctx.fillStyle = rgb(col, a * (d > .62 ? .55 : 1)); ctx.fillRect((gx + i) * g, (gy + j) * g, g, g);
+  }
+}
+function pstar(x, y, r, col, a) {  // flash: a pixel cross + diagonal sparkle, white core
+  const g = 4, n = Math.max(2, Math.round(r / g / 2));
+  for (let i = -n; i <= n; i++) { const w = 1 - Math.abs(i) / (n + 1); px(x + i * g, y, g + 4 * w, i ? col : [255, 255, 255], a * w); px(x, y + i * g, g + 4 * w, i ? col : [255, 255, 255], a * w); }
+  for (let i = -Math.floor(n / 2); i <= Math.floor(n / 2); i++) { px(x + i * g, y + i * g, g, [255, 255, 255], a * .7); px(x + i * g, y - i * g, g, [255, 255, 255], a * .7); }
+}
+function pring(p, f) {  // shockwave as a pixel-art diamond wave (no vector circles): chunky steps, rainbow-cycling, moving dither
+  const e = 1 - f, x = p.k === 'RING' ? 1 - Math.pow(2, -10 * e) : 1 - e * e, r = p.k === 'RING' ? 6 + p.size * x : p.size * (1 - x) + 4;
+  const g = p.k === 'RING' ? (r > 120 ? 8 : 6) : 4, n = Math.max(8, Math.floor(r / g));
+  for (let i = 0; i < n; i++) {
+    const u = i / n, ox = r * u, oy = r * (1 - u) * .7;
+    for (let q = 0; q < 4; q++) {
+      if (p.k === 'RING' && ((i + q + frameNo) % 3) === 0) continue;
+      const sx = q & 1 ? -1 : 1, sy = q & 2 ? -1 : 1, c = p.col[0] === 255 && p.col[1] === 255 ? balc(Math.floor(i / 2) + q + frameNo) : p.col;
+      px(p.x + sx * ox, p.y + sy * oy, g + (p.k === 'RING' ? 4 * f : 0), c, (p.k === 'RING' ? 1 : .8) * f);
+    }
+  }
+}
+function plaser(p, f) {  // a horizontal laser through the popped row: jagged pixel edge, white core, colour halo
+  const th = p.size * (.35 + f * .65), y = p.y; ctx.fillStyle = rgb(p.col, .85 * f);
+  for (let x = 0; x < W; x += 4) { const j = Math.sin(x * .9 + frameNo * 2.3) * th * .22 + (rnd() - .5) * th * .3; ctx.fillRect(x, Math.round((y - th / 2 + j) / 2) * 2, 4, Math.max(2, th + (rnd() - .5) * 4)); }
+  ctx.fillStyle = `rgba(255,255,255,${f})`; ctx.fillRect(0, Math.round(y - th * .14), W, Math.max(2, Math.round(th * .28)));
+}
+function pbeam(p, f) {  // a laser bolt from the pop to the score: stepped pixel line with a hot core
+  const x0 = p.x, y0 = p.y, x1 = p.vx, y1 = p.vy, d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6), w = 4 + p.size * f;
+  for (let i = 0; i <= n; i++) { const u = i / n, jx = (rnd() - .5) * 6 * f, x = x0 + (x1 - x0) * u + jx, y = y0 + (y1 - y0) * u; px(x, y, w, p.col, .9 * f); px(x, y, Math.max(2, w * .4), [255, 255, 255], f); }
 }
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
@@ -1453,8 +1499,12 @@ function burstRow(b, k, quiet) {
   for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
   spawn('CORE', ix, iy, 0, 0, .16, pal[3], 110 + k * 8);
   spawn('RING', ix, iy, 0, 0, .26, [255, 255, 255], 140 + Math.min(k, 10) * 12);
+  spawn('LASER', 195, cy, 0, 0, .2 + Math.min(k, 8) * .015, balc(k), 26 + Math.min(k, 10) * 3);
+  if (k >= 3) for (let j = 0; j < Math.min(k - 2, 5); j++) after(.025 * j, () => spawn('LASER', 195, y + rnd() * CH, 0, 0, .14, balc(k + j + 1), 10 + rnd() * 10));
+  spawn('BEAM', ix, iy, CHIPX, BOXY, .16, balc(k + 2), 10);
+  pixT = Math.max(pixT, .3 + Math.min(k, 10) * .05); psyT = Math.min(1, Math.max(psyT, (k - 1) * .16)); noiT = Math.max(noiT, .5);
   after(.03, () => spawn('RING', ix, iy, 0, 0, .34, pal[3], 190 + Math.min(k, 10) * 16));
-  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 420 + rnd() * 700; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .16 + rnd() * .2, i % 3 ? pal[3] : [255, 255, 255], 2.6); }
+  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 420 + rnd() * 700; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .16 + rnd() * .2, i % 4 ? balc(i + k) : [255, 255, 255], 2.6); }
   for (let i = 0; i < (5 + k) * q; i++) { const a = rnd() * 6.28, sp = 60 + rnd() * 160; spawn('SMOKE', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp - 40, .55 + rnd() * .35, day ? [90, 96, 112] : [40, 30, 26], 14 + rnd() * 12); }
   for (let i = 0; i < (6 + k) * q; i++) { const a = -Math.PI * (.15 + rnd() * .7), sp = 200 + rnd() * 380; spawn('EMBERF', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .6 + rnd() * .5, [255, 170 + rnd() * 60, 80], 2 + rnd() * 2); }
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
@@ -1500,7 +1550,7 @@ function payoff() {
   });
 }
 function slam() { // end of the count-up: the screen glass takes the hit
-  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
+  plate.landed = true; kick(plate.ts, 34); pixT = Math.max(pixT, .65); psyT = 1; noiT = 1; sfx.payoff(plate.k); buzz([30, 40, 70]);
   // the glass takes the hit in proportion: small tallies thump, big chains crack the screen
   if (plate.k >= 3) crackAt(195, REVEAL_Y - 18, Math.min(1, .55 + plate.k * .05)); ripple(195, REVEAL_Y - 18, .02 + Math.min(plate.k, 10) * .0025); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
   for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
@@ -1587,20 +1637,22 @@ function draw(t) {
   for (const p of parts) {
     const f = p.life / p.max;
     if (p.k === 'GLASS') { const g = .35 + .65 * Math.abs(Math.sin(p.rot * 2)); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, f * 2.5); ctx.beginPath(); ctx.moveTo(-p.size, -p.size * .4); ctx.lineTo(p.size * .8, -p.size * .7); ctx.lineTo(p.size * .2, p.size * .8); ctx.closePath(); ctx.fillStyle = rgb(mixc(p.col, [255, 255, 255], g), .35 + .5 * g); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
-    else if (p.k === 'INK') { ctx.fillStyle = rgb(p.col, Math.min(.85, f)); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
-    else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
-    else if (p.k === 'DUST' || p.k === 'SMOKE') { const e = 1 - f, r = p.size * (1 + e * (p.k === 'SMOKE' ? 1.6 : 1.1)); ctx.fillStyle = rgb(p.col, (p.k === 'SMOKE' ? .5 : .42) * f * f); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.28); ctx.fill(); }
+    else if (p.k === 'INK') pblob(p.x, p.y, p.size, p.col, Math.min(.85, f));
+    else if (p.k === 'VAPOUR') pblob(p.x, p.y, p.size * (1.8 - f), p.col, .3 * f, true);
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { const e = 1 - f; pblob(p.x, p.y, p.size * (1 + e * (p.k === 'SMOKE' ? 1.6 : 1.1)), p.col, (p.k === 'SMOKE' ? .62 : .5) * f, true); }
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
-    if (p.k === 'RING' || p.k === 'RINGIN') { const e = 1 - f, x = p.k === 'RING' ? 1 - Math.pow(2, -10 * e) : 1 - e * e, r = p.k === 'RING' ? 6 + p.size * x : p.size * (1 - x) + 4; ctx.strokeStyle = rgb(p.col, (p.k === 'RING' ? .9 : .7) * f); ctx.lineWidth = (p.k === 'RING' ? 3 + 9 * f : 2 + 4 * e); ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .62, 0, 0, 6.28); ctx.stroke(); }
-    else if (p.k === 'STREAK') { ctx.strokeStyle = rgb(p.col, .55 * f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .06, p.y); ctx.stroke(); }
-    else if (p.k === 'EMBERF') { ctx.fillStyle = rgb(p.col, f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (.6 + f * .6), 0, 6.28); ctx.fill(); }
-    else if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
-    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { const r = p.size * (p.k === 'DROP' ? 2.6 : 3), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,230,${f})`); g.addColorStop(.35, rgb(p.col, .8 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
-    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
+    if (p.k === 'RING' || p.k === 'RINGIN') pring(p, f);
+    else if (p.k === 'LASER') plaser(p, f);
+    else if (p.k === 'BEAM') pbeam(p, f);
+    else if (p.k === 'STREAK') { const n = 5; for (let j = 0; j < n; j++) px(p.x - p.vx * .012 * j, p.y, 6, j ? p.col : [255, 255, 255], .7 * f * (1 - j / n)); }
+    else if (p.k === 'EMBERF') px(p.x, p.y, p.size > 2.5 ? 8 : 4, (Math.floor(p.life * 30) % 2) ? p.col : [255, 255, 210], f);
+    else if (p.k === 'SPARK') { const sp = Math.hypot(p.vx, p.vy) || 1, n = Math.min(4, 1 + Math.floor(sp / 260)); for (let j = 0; j < n; j++) px(p.x - p.vx / sp * j * 5, p.y - p.vy / sp * j * 5, j ? 4 : 6, j ? p.col : [255, 255, 255], f * (1 - j * .22)); }
+    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { px(p.x, p.y, p.k === 'DROP' ? 6 : 4, [255, 255, 230], f); pblob(p.x, p.y, p.size * 2.2, p.col, .55 * f, true); }
+    else if (p.k === 'CORE') pstar(p.x, p.y, p.size * (1.15 - f * .5), p.col, f);
   }
   for (const o of tokens) {
     if (o.text || o.big) continue;
@@ -1704,7 +1756,7 @@ function frame(now) {
     const rsd = gdt / Math.max(1, n); if (rsd > 0) board.forEach(r => { stepSpring(r.sc, rsd, 300, 16); stepSpring(r.q, rsd, 900, 11); stepRowY(r, rsd); }); stepSpring(camK, sd, 220, 13);
   }
   board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 11); if (r.fly) { r.dx += r.fly * dt * 3800; if (!r.streaked) { r.streaked = 1; camK.v += r.fly * 260; for (let j = 0; j < (reduce ? 3 : 9); j++) spawn('STREAK', 195 + r.fly * (40 + rnd() * 120), r.y.x + 8 + rnd() * (CH - 16), r.fly * (1400 + rnd() * 900), 0, .18 + rnd() * .1, [255, 255, 255], 1.5 + rnd() * 2); } } else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
-  shake = Math.max(0, shake - dt * 9);
+  shake = Math.max(0, shake - dt * 9); frameNo++; pixT = Math.max(0, pixT - dt * 4.5); psyT = Math.max(0, psyT - dt * (plate.phase === 'idle' ? 1.2 : .35)); noiT = Math.max(0, noiT - dt * 2.5);
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
