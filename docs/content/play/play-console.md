@@ -1,6 +1,6 @@
 # Play Console 등록 답안 · Do Not Disturb! (방해 금지!)
 
-콘솔 화면 순서 그대로. 기준 앱 사실: 네이티브 Kotlin/Compose, **계정·로그인 없음(로컬 저장)**, Firebase Analytics + Remote Config, AdMob **보상형만**(미디에이션), Play Billing(소모품·1회·구독 3종), **사용자 입력 텍스트·채팅 없음**, **확률형 상품 없음**.
+콘솔 화면 순서 그대로. 기준 앱 사실(11-26, 실제 로그인·결제 기준): WebView 게임 + Kotlin 셸, **게스트로 전부 플레이 가능 + 선택 로그인(Google·카카오 → Firebase Auth)**, 로그인 시 Firestore 진행 백업, Firebase Analytics·Crashlytics·Remote Config, AdMob **보상형만**(UMP 동의: 유럽·미국 주), Play Billing(소모품·1회·구독 3종, 구매 토큰 서버 확인), **사용자 입력 텍스트·채팅 없음**, **확률형 상품 없음**. 개인정보처리방침·약관은 이 기준으로 갱신해 공개함(웹 PR #27).
 
 ## 0. 정해 둘 것
 
@@ -21,14 +21,14 @@
 | 화면 | 답 |
 |---|---|
 | 개인정보처리방침 | `https://graviton94.github.io/donotdisturb/privacy/` |
-| 앱 액세스 권한 | 모든 기능 제한 없이 사용 가능 (로그인 없음) |
+| 앱 액세스 권한 | **모든 기능 제한 없이 사용 가능** — 로그인은 선택(진행 백업용)이고 게스트로 모든 기능을 쓸 수 있음. 설명란: "Sign-in is optional (Google or Kakao) and only backs up progress; every feature is available as a guest." |
 | 광고 | 예, 광고 포함 — **보상형 광고만**, 사용자가 버튼을 눌러 직접 시청, 강제 전면·배너 없음 |
 | 콘텐츠 등급 | 2-1 |
 | 타깃층 | **13세 이상** (13~15, 16~17, 18+). 귀여운 아이콘 → "어린이에게 관심을 끌 수 있음" 예, 설명: "폰 알림을 패러디한 정리 퍼즐, 아동 대상 아님, 결제·광고 포함" |
 | 뉴스·정부·금융 기능·건강 | 모두 아니요 (게임 속 '금융' 카테고리는 패러디 앱 분류일 뿐 실제 금융 기능 없음) |
 | 데이터 보안 | 2-2 CSV |
 | 광고 ID | 예 → 광고 또는 마케팅, 애널리틱스 |
-| 계정 삭제 | 계정을 만들지 않음 → 해당 없음. 데이터 삭제는 앱 설정 "게임 데이터 초기화" + 웹 주소 |
+| 계정 삭제 | 앱에서 계정 생성 가능 → **예**. 앱 안: 설정 → 계정 → 계정 삭제. 웹: `https://graviton94.github.io/donotdisturb/privacy/#delete` |
 
 ### 2-1. IARC
 
@@ -43,14 +43,16 @@
 
 ### 2-2. 데이터 보안 — CSV
 
-1. `python3 make_data_safety_csv.py profile_notificationcleaner.json data_safety_import.csv` (이 폴더, 이미 생성됨)
+1. `python3 make_data_safety_csv.py profile_donotdisturb.json data_safety_import.csv` (이 폴더, 이미 생성됨)
 2. 콘솔 → 데이터 보안 → 가져오기·내보내기 → **CSV 가져오기** → 미리보기 → 저장
 
 판단 근거:
-- 계정 생성 방법: **없음** (`PSL_ACM_NONE`). 사용자 ID·이름·이메일 수집 없음.
-- 수집: 대략적 위치(광고 SDK) · 구매 내역(결제 이벤트 분석, 지급 확인) · 진단 · 비정상 종료 로그 · 앱 상호작용 · 기기 ID(광고 ID).
-- 공유 ✔ 는 **AdMob·미디에이션 광고 네트워크로 가는 항목만**: 위치·진단·상호작용·기기 ID. Firebase는 우리 대신 처리하는 서비스 제공업체라 공유가 아님.
-- 모두 필수(분석을 끌 수 없음), 임시 처리 아님, 전송 암호화 예, 삭제 요청 가능 예.
+- 계정 생성 방법: **OAuth** (`PSL_ACM_OAUTH`: Google·카카오). 계정 삭제 URL = 데이터 삭제 URL(`#delete`).
+- CSV 가져오기 뒤 콘솔에서 직접 답할 것: "외부 계정으로 로그인하나요?" → 예(Google·카카오). 독립 보안 검토 → 아니요.
+- 수집(로그인한 경우만, **선택**): 이름(표시 이름) · 이메일 · 사용자 ID · 기타 앱 활동(게임 진행 백업) → 앱 기능 · 계정 관리.
+- 수집(필수): 대략적 위치(광고 SDK) · 구매 내역(지급 확인 · 부정 방지 · 분석) · 진단 · 비정상 종료 로그 · 앱 상호작용 · 기기 ID(광고 ID).
+- 공유 ✔ 는 **AdMob으로 가는 항목만**: 위치 · 진단 · 상호작용 · 기기 ID. Firebase·Google Cloud는 우리 대신 처리하는 서비스 제공업체라 공유가 아님.
+- 임시 처리 아님, 전송 암호화 예, 삭제 요청 가능 예.
 
 ## 3. 스토어 등록정보
 
