@@ -1,0 +1,37 @@
+name: Play products
+
+# Creates or updates the in-app products and subscriptions (tools/play/products.json) through the Play Developer API.
+# Run by hand after the first AAB (with the billing permission) is on a track: Play refuses products before that.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only print what would be created'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Service account
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "::error::FIREBASE_SERVICE_ACCOUNT is not set"; exit 1; fi
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+      - run: pip install -q google-api-python-client google-auth
+      - name: Create / update products
+        run: python3 tools/play/products.py ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Forget the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
