@@ -421,9 +421,12 @@ class CoreRulesTest {
     fun cloudSyncRestartsTheBackupLayerButKeepsUnlocksAndGb() {
         val r = e.rules
         assertNull(e.sync(e.newGame(now, 1).copy(level = r.syncLevel - 1), now))
-        val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
-            bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
-        val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
+        val anchorP = r.levelP(r.cloudAnchorLevel)
+        assertEquals(10L, r.cloudTotal(r.backupTotal(anchorP)))
+        assertEquals(10L, r.copy(syncLevel = 80).cloudTotal(r.backupTotal(anchorP)))
+        val backup = Backup(files = 500, lifetime = r.backupTotal(anchorP) * 4, resets = 30, bestLevel = 75,
+            bestRunP = anchorP, items = mapOf(BackupItem.Value to 10))
+        val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = anchorP)
         // Four times the anchor's files → ⌊10 × 4^0.5⌋ = 20 GB.
         assertEquals(20L, e.cloudGbNow(run))
         val after = e.sync(run, now)!!
@@ -674,7 +677,7 @@ class CoreRulesTest {
         val after = e.factoryReset(s, 1)!!
         assertEquals(1, after.account.stars("memo"))
         assertEquals(s.account.credits, after.account.credits)
-        val synced = e.sync(after.copy(level = 60), 2)!!
+        val synced = e.sync(after.copy(level = e.rules.syncLevel, runEarned = e.rules.levelP(e.rules.syncLevel)), 2)!!
         assertEquals(1, synced.account.stars("memo"))
     }
 

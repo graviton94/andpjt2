@@ -187,8 +187,9 @@ data class RuleSet(
     /** Region × category × diversity synergy together multiply a value by at most this ‰: below one tier step (×[tierBase]). */
     val synergyCapPermille: Int = 4_000,
     // 2nd prestige: 클라우드 동기화
-    val syncLevel: Int = 60,
-    /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
+    val syncLevel: Int = 75,
+    val cloudAnchorLevel: Int = 60,
+    /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[cloudAnchorLevel] run)^exponent⌋, paid as a delta. */
     val cloudBase: Long = 10,
     val cloudExponentPermille: Int = 500,
     /** Every GB ever synced adds this % to backup files paid by factory resets. */
@@ -331,7 +332,7 @@ data class RuleSet(
 
     /** Total GB ever earnable from a cycle that earned [cycleFiles] backup files. */
     fun cloudTotal(cycleFiles: Long): Long {
-        val anchor = backupTotal(levelP(syncLevel))
+        val anchor = backupTotal(levelP(cloudAnchorLevel))
         if (cycleFiles < anchor || anchor <= 0) return 0
         return Math.floor(cloudBase * Math.pow(cycleFiles.toDouble() / anchor, cloudExponentPermille / 1000.0)).toLong()
     }
