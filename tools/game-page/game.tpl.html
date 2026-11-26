@@ -555,6 +555,46 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
 <div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb">일일 도전</span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" aria-label="그만하기">그만</button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<script>
+// ---------- i18n: English by default, Korean on a Korean device (?lang=ko|en overrides) ----------
+// Text is translated where it is drawn (canvas fillText/measureText, DOM text nodes and labels), so every
+// string — page copy and core labels alike — goes through one dictionary. Numbers and Latin words inside a
+// string become '#' in the key ("60연타!" -> "#연타!"), so the balance session can change numbers freely.
+window.I18N = (() => {
+  const q = new URLSearchParams(location.search).get('lang');
+  const dev = (window.Game && window.Game.lang && window.Game.lang()) || navigator.language || 'en';
+  const lang = (q || dev).toLowerCase().startsWith('ko') ? 'ko' : 'en';
+  document.documentElement.lang = lang;
+  const D = lang === 'en' ? __I18N_EN__ : {}, cache = new Map(), miss = new Set();
+  const HAN = /[가-힣ㄱ-ㆎ]/;
+  const TOK = /[+\-−×÷₩$~]?[0-9A-Za-z][0-9A-Za-z.,:%/'’]*(?: [0-9A-Za-z][0-9A-Za-z.,:%/'’]*)*%?/g;
+  function tr(s) {
+    if (lang !== 'en' || typeof s !== 'string' || !HAN.test(s)) return s;
+    let r = cache.get(s); if (r !== undefined) return r;
+    const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim(), args = [];
+    const key = core.replace(TOK, m => { args.push(m); return '#'; });
+    const v = D[key];
+    if (v == null) { miss.add(key); r = s; }
+    else { let i = 0; r = lead + v.replace(/#([1-9])?/g, (m, n) => n ? (args[+n - 1] ?? '') : (args[i++] ?? '')) + trail; }
+    cache.set(s, r); return r;
+  }
+  if (lang === 'en') {
+    const P = CanvasRenderingContext2D.prototype;
+    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P[f]; P[f] = function (t, ...a) { return o.call(this, tr(t), ...a); }; }
+    const ATTR = ['aria-label', 'title', 'placeholder', 'alt'];
+    const fix = n => {
+      if (n.nodeType === 3) { if (HAN.test(n.nodeValue)) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
+      if (n.nodeType !== 1) return;
+      for (const a of ATTR) { const v = n.getAttribute(a); if (v && HAN.test(v)) n.setAttribute(a, tr(v)); }
+      for (const c of n.childNodes) fix(c);
+    };
+    const mo = new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') fix(m.target); else if (m.type === 'attributes') fix(m.target); else m.addedNodes.forEach(fix); } });
+    const go = () => { fix(document.body); mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTR }); document.title = tr(document.title); };
+    document.body ? go() : addEventListener('DOMContentLoaded', go);
+  }
+  return { lang, tr, miss, apps: lang === 'en' ? __APPS_EN__ : null };
+})();
+</script>
 <script src="pfx.bundle.js"></script>
 <script>
 {
@@ -592,7 +632,7 @@ const lightQ = matchMedia('(prefers-color-scheme: light)');
 const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
 let sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
 const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce })); } catch (e) {} };
-const TEXTS = __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json)
+const TEXTS = I18N.lang === 'en' ? __TEXTS_EN__ : __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json, l10n/en.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -1580,10 +1620,14 @@ const EVENTS = {
 // ---------- chain choreography ----------
 // ---------- engine bridge: the Android app (window.Game) or the desktop dev server ----------
 let S = null;  // last engine snapshot
+function enNames(o) {  // core sends Korean app names; English builds swap them by app id
+  if (Array.isArray(o)) { o.forEach(enNames); return o; }
+  if (o && typeof o === 'object') { const id = o.app || o.id; if (typeof o.name === 'string' && id && I18N.apps[id]) o.name = I18N.apps[id]; for (const k in o) if (o[k] && typeof o[k] === 'object') enNames(o[k]); }
+  return o;
+}
 async function api(method, args = {}) {
-  if (window.Game) return JSON.parse(window.Game.call(method, JSON.stringify(args)));
-  const q = new URLSearchParams(args).toString();
-  return (await fetch('/api/' + method + (q ? '?' + q : ''))).json();
+  const o = window.Game ? JSON.parse(window.Game.call(method, JSON.stringify(args))) : await (await fetch('/api/' + method + (new URLSearchParams(args).toString() ? '?' + new URLSearchParams(args).toString() : ''))).json();
+  return I18N.apps ? enNames(o) : o;
 }
 let pendingCall = null, boardBusy = false, idleT = 0, hintId = null, hintT = 0, autoClock = 1.5, swipes = 0;
 const say2 = (text, y, size = 26) => say(text, y, size, '#FFFFFF', '#FFD66B', 1.3);
