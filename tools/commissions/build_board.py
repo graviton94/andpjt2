@@ -41,7 +41,7 @@ done = "".join(f'<li><span>{html.escape(x["date"])}</span>{html.escape(x["title"
 total = sum(1 for g in d["pending"] for it in g["items"] if it)
 page = f'''<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>알림 청소부 에셋 발주 보드</title>
+<title>방해 금지! 에셋 발주 보드</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
 <style>
 :root{{color-scheme:light dark;--bg:light-dark(#EEF1F7,#100D0A);--ink:light-dark(#16181D,#F6F1EA);--sub:light-dark(#4B5160,#B3A89B);--card:light-dark(#FFFFFF,#201B16);--line:light-dark(#DDE2EC,#3A332C);--acc:light-dark(#3867F0,#EFA03F);--onacc:light-dark(#FFFFFF,#1E1408);--code:light-dark(#F3F5FA,#16120E)}}
