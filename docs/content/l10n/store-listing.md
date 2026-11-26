@@ -21,6 +21,8 @@
 > ■ 환생 두 단계 — 공장 초기화로 백업파일을, 클라우드 동기화로 GB를 모아 더 빠르게 다시.
 > ■ 돌발 이벤트 — 스팸 전화, 앱 충돌, 배터리 부족, 재난문자 훈련 연타!
 > ■ 30일 연속 출석 — 10·20·30일 특별 보상과 개근 칭호.
+> ■ 매일 60초 타임어택 — 모두 같은 판에서 최고 기록에 도전하고 꾸미기 조각을 모아요.
+> ■ 어디서든 이어서 — 게스트로 바로 시작, Google·카카오 로그인으로 진행을 백업해 새 폰에서도 그대로.
 >
 > 확률형 상품이 없어요. 사기 전에 무엇을 받는지 정확히 보여 드려요.
 
@@ -43,6 +45,8 @@
 > ■ Two layers of prestige — factory reset for Backup Files, cloud sync for GB, and start again faster.
 > ■ Surprise events — spam calls, app crashes, low battery, emergency-alert drills to tap like crazy!
 > ■ 30-day login streak — big rewards on days 10, 20 and 30, and a title for the truly loyal.
+> ■ 60-second daily time attack — everyone gets the same board; beat your best and collect cosmetic pieces.
+> ■ Pick up anywhere — start as a guest, or sign in with Google or Kakao to back up your progress to a new phone.
 >
 > No loot boxes. You always see exactly what you get before you buy.
 

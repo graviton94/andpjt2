@@ -2212,7 +2212,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
 (async () => {
