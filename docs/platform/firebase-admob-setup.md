@@ -48,10 +48,10 @@
 
 ## 5. 서명 키 지문 (Firebase SHA)
 
-| 키 | SHA-1 | SHA-256 | 쓰임 |
-|---|---|---|---|
-| 디버그 (`app/debug.keystore`, 저장소에 고정) | `16:DD:90:2E:03:2A:B6:41:24:F6:6A:8B:90:ED:05:05:8C:53:8C:4F` | `09:97:EB:33:07:27:5D:45:B4:05:33:81:CA:61:41:1A:F0:BA:CF:36:41:87:D2:CA:0C:4D:F1:C1:A5:C7:88:B3` | CI 테스트 APK, 로컬 디버그 |
-| Play 앱 서명 키 | Play Console → 테스트 및 출시 → 앱 무결성 → 앱 서명에서 확인 | 〃 | 스토어에서 받은 앱 |
-| 업로드 키 | 출시 빌드용 키를 만들 때 기록 | 〃 | CI 출시 빌드 |
+다른 앱(mint-and-friends)과 같은 방식: `keystore/README.md`. 키는 **Android signing key** 워크플로가 만들고 실행 요약에 SHA-1 · SHA-256을 찍는다.
 
-디버그 키는 표준 디버그 비밀번호(android)를 쓰는 테스트 전용 키라 저장소에 둔다. 출시 키는 절대 커밋하지 않는다.
+| 키 | 지문 확인 | 쓰임 |
+|---|---|---|
+| sideload (`SIDELOAD_PASSPHRASE`) | 워크플로 실행 요약 | CI 테스트 APK → Firebase에 등록 |
+| upload (`ANDROID_UPLOAD_PASSPHRASE`) | 워크플로 실행 요약 | Play 업로드용 AAB |
+| Play 앱 서명 키 | Play Console → 앱 무결성 → 앱 서명 | 스토어 설치본 → Firebase에 등록 |

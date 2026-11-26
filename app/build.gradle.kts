@@ -30,25 +30,34 @@ android {
         buildConfigField("boolean", "FIREBASE", hasFirebase.toString())
     }
 
-    // Fixed debug key (app/debug.keystore, standard debug passwords) so every CI test APK has the same
-    // SHA-1 registered in Firebase; release builds are signed with the upload key in CI.
+    // Signing keys like the other apps (keystore/README.md): CI unlocks keystore/*.jks.gpg into a temp file and passes
+    // paths and passwords as env. Test APKs use the sideload key (fixed SHA for Firebase); Play bundles the upload key.
     signingConfigs {
-        getByName("debug") {
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        val sideloadStore = System.getenv("DND_SIDELOAD_STORE")?.takeIf { it.isNotBlank() && file(it).exists() }
+        val sideloadPass = System.getenv("DND_SIDELOAD_PASSWORD").orEmpty()
+        if (sideloadStore != null && sideloadPass.isNotBlank()) {
+            create("sideload") {
+                storeFile = file(sideloadStore); storePassword = sideloadPass; keyAlias = "sideload"; keyPassword = sideloadPass
+            }
+        }
+        val uploadStore = System.getenv("ANDROID_UPLOAD_KEYSTORE")?.takeIf { it.isNotBlank() && file(it).exists() }
+        val uploadVars = listOf("ANDROID_UPLOAD_STORE_PASSWORD", "ANDROID_UPLOAD_KEY_ALIAS", "ANDROID_UPLOAD_KEY_PASSWORD").map { System.getenv(it).orEmpty() }
+        if (uploadStore != null && uploadVars.all { it.isNotBlank() }) {
+            create("upload") {
+                storeFile = file(uploadStore); storePassword = uploadVars[0]; keyAlias = uploadVars[1]; keyPassword = uploadVars[2]
+            }
         }
     }
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("sideload") ?: signingConfigs.getByName("debug")
             // debug builds never show live ads
             manifestPlaceholders["admobAppId"] = admobTestApp
             buildConfigField("String", "ADMOB_REWARDED", "\"$admobTestRewarded\"")
         }
         release {
+            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.findByName("sideload")
             manifestPlaceholders["admobAppId"] = prop("ADMOB_APP_ID", admobTestApp)
             buildConfigField("String", "ADMOB_REWARDED", "\"${prop("ADMOB_REWARDED_ID", admobTestRewarded)}\"")
         }
