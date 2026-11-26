@@ -17,7 +17,7 @@ data class RuleSet(
     val maxRows: Int = 12,
     val threshold: Int = 2,
     val countWeights: List<Int> = listOf(1, 2, 1),
-    val sandwichPercent: Int = 35,
+    val sandwichPercent: Int = 60,
     /** Extra sandwich chance per active app above four: a bigger deck still gets proposals. */
     val sandwichPerExtraApp: Int = 2,
     /** One extra board row per this many active apps above four. */
@@ -90,14 +90,14 @@ data class RuleSet(
     /** AutoClean backup level at which auto starts looking one move ahead. */
     val smartAutoLevel: Int = 5,
     // Overload and igniters
-    val gaugePerMerge: Int = 4,
-    val gaugePerBurst: Int = 12,
+    val gaugePerMerge: Int = 0,
+    val gaugePerBurst: Int = 1,
     /** Extra gauge for a burst per tier it sits below the deck's best app: low tiers ignite. */
     val igniterGaugePerTier: Int = 4,
     val waveFactor: Int = 3,
     val waveIncomePermille: Int = 1_000,
     /** A charged gauge waits at 100 until this much wall-clock time has passed since the last wave. */
-    val overloadMinIntervalMs: Long = 0,
+    val overloadMinIntervalMs: Long = 360_000,
     // Interruptions (base rules, not cards)
     val spamEverySwipes: Int = 11,
     val spamCopyAfterSwipes: Int = 3,
@@ -107,7 +107,7 @@ data class RuleSet(
     val callUnlockLevel: Int = 2,
     val callPauseMs: Long = 5_000,
     /** Shared arrival cooldown for call, low battery, crash, drill, and lotto. 0 preserves legacy cadence. */
-    val majorEventCooldownMs: Long = 0,
+    val majorEventCooldownMs: Long = 450_000,
     val otpLifeSwipes: Int = 3,
     // Interruptions added in rules v3.1 and timed cards
     val lowBatteryLevel: Int = 9,
@@ -136,7 +136,7 @@ data class RuleSet(
      */
     val upgradeGrowthPerTierPermille: Int = 0,
     // Progress
-    val resetLevel: Int = 25,
+    val resetLevel: Int = 19,
     /**
      * Level is the run's cumulative P: reaching level L needs levelPBase × ratio^(L−2), the ratio rising by
      * [levelRatioStepPermille] every level after [levelLateFrom]. Leveling is exponential in P, so backup-file
@@ -145,7 +145,7 @@ data class RuleSet(
     val levelPBase: Long = 30,
     val levelRatioPermille: Int = 2_330,
     val levelLateFrom: Int = 25,
-    val levelRatioStepPermille: Int = 5,
+    val levelRatioStepPermille: Int = 1,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
     /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
@@ -154,8 +154,8 @@ data class RuleSet(
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
     /** Number of swipes over which recent P/minute is smoothed. The baseline weight of a new swipe is 1/window. */
-    val recentIncomeWindow: Int = 10,
-    val offlineEfficiencyPercent: Int = 3,
+    val recentIncomeWindow: Int = 180,
+    val offlineEfficiencyPercent: Int = 9,
     /** Offline multiplier for Ultra alone. Multiplies the payout after the pass reward. */
     val ultraOfflinePermille: Int = 1_500,
     /** Offline multiplier for an active pass or through the UTC day following a watched rewarded ad. */
@@ -171,7 +171,7 @@ data class RuleSet(
      * exponent halves. Paid as the delta over files already earned (research A2). The anchor follows the level
      * curve, so reaching the reset level always pays the first 10 files whatever the value tuning.
      */
-    val backupExponentPermille: Int = 400,
+    val backupExponentPermille: Int = 450,
     val backupSoftcapDigits: Int = 8,
     /** Backup files paid by a run that just reaches the reset level. */
     val backupBase: Long = 10,
@@ -261,9 +261,10 @@ data class RuleSet(
      * Unlocks are permanent (Engine.unlocked), so in a later run the price — not the level — sets the order:
      * high tiers stay out of reach at the start of a run and are bought one after another.
      */
-    fun appPrice(app: AppDef): BigInteger {
+    private val purchasePrices = java.util.concurrent.ConcurrentHashMap<AppDef, BigInteger>()
+    fun appPrice(app: AppDef): BigInteger = purchasePrices.computeIfAbsent(app) {
         val ladder = big(appPriceBase) * big(appPriceTierRatio).pow(app.tier - 1) * big(appPriceOrderPermille[app.order].toLong()) / big(1_000)
-        return ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
+        ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
     }
 
     fun upgradeGrowth(app: AppDef): Int = upgradeGrowthPermille + upgradeGrowthPerTierPermille * (app.tier - 1)
@@ -276,15 +277,18 @@ data class RuleSet(
         if (last != null && last.level == level) return last.price
         val growth = big(upgradeGrowth(app).toLong())
         val thousand = big(1_000)
+        val divisor = growth.gcd(thousand)
+        val numeratorStep = growth / divisor
+        val denominatorStep = thousand / divisor
         val numerator: BigInteger
         val denominator: BigInteger
         if (last != null && level == last.level + 1) {
-            numerator = last.numerator * growth
-            denominator = last.denominator * thousand
+            numerator = last.numerator * numeratorStep
+            denominator = last.denominator * denominatorStep
         } else {
             val base = appPrice(app) * big(upgradeSharePermille.toLong()) / thousand
-            numerator = base * growth.pow(level - 1)
-            denominator = thousand.pow(level - 1)
+            numerator = base * numeratorStep.pow(level - 1)
+            denominator = denominatorStep.pow(level - 1)
         }
         val price = (numerator / denominator).max(ONE)
         quotes[app] = RankQuote(level, numerator, denominator, price)

@@ -56,9 +56,12 @@ fun touchPair(): Pair<GameState, SwipeOutcome> =
 fun doubleChain(): Pair<GameState, SwipeOutcome> =
     with(rows("alarm" to 1, "memo" to 2, "alarm" to 3, "weather" to 1, "alarm" to 1, "memo" to 2, "weather" to 2)).let { it to engine.swipe(it, 103, NOW)!! }
 
-/** 3: the same swipe with gauge 80 and overload depth 3 (two Overload assists). */
-fun overload(): Pair<GameState, SwipeOutcome> =
-    doubleChain().first.copy(gauge = 80, assists = mapOf(Assist.Overload to 2)).let { it to engine.swipe(it, 103, NOW)!! }
+/** 3: the same swipe with just enough charge for overload depth 3 (two Overload assists). */
+fun overload(): Pair<GameState, SwipeOutcome> {
+    val gauge = 100 - 2 * (engine.rules.gaugePerMerge + engine.rules.gaugePerBurst)
+    val s = doubleChain().first.copy(gauge = gauge, assists = mapOf(Assist.Overload to 2))
+    return s to engine.swipe(s, 103, NOW)!!
+}
 
 /** 4: the same swipe after upgrades: 톡탁톡 Lv10 (milestone ×2), 메일소포 Lv4. */
 fun upgraded(): Pair<GameState, SwipeOutcome> =
@@ -66,11 +69,11 @@ fun upgraded(): Pair<GameState, SwipeOutcome> =
 
 /**
  * 5: igniter. Deck 시계(1티어) · 메롱(3티어) · 아고다다(6티어). A 시계 burst under a 6-tier deck adds
- * 12 + 4×5 = 32 gauge and raises the chain number, so the 6-tier burst after it pays ×3.
+ * base burst gauge plus 4×5 and raises the chain number, so the 6-tier burst after it pays ×3.
  */
 fun igniter(): Pair<GameState, SwipeOutcome> = with(
     rows("agoda" to 2, "alarm" to 2, "music" to 1, "alarm" to 2, "agoda" to 2, "music" to 2, "alarm" to 1),
-) { it.copy(appLevels = mapOf("alarm" to 1, "music" to 1, "agoda" to 1), active = listOf("alarm", "music", "agoda"), level = 40, gauge = 60) }
+) { it.copy(appLevels = mapOf("alarm" to 1, "music" to 1, "agoda" to 1), active = listOf("alarm", "music", "agoda"), level = 40, gauge = 100 - 2 * (engine.rules.gaugePerMerge + engine.rules.gaugePerBurst) - 5 * engine.rules.igniterGaugePerTier) }
     .let { it to engine.swipe(it, 102, NOW)!! }
 
 /** 6: the same 4 notifications of 듀오링구 under different decks. Synergy only (서양권 3개 뒤로는 다른 권역 업무 앱). */
@@ -102,9 +105,10 @@ data class DeckRun(val apps: Int, val rows: Int, val swipes: Int, val bursts: In
  * 9: why a bigger deck is harder and what helps. Ten minutes of the reference player, no purchases, all
  * apps tier 1 so only the deck size differs. [assists] adds Sandwich 5 and Wild 5.
  */
-fun deckRun(seed: Long, size: Int, assists: Boolean): DeckRun {
+fun deckRun(seed: Long, size: Int, assists: Boolean, rules: RuleSet = engine.rules): DeckRun {
+    val game = if (rules === engine.rules) engine else Engine(rules)
     val ids = listOf("alarm", "memo", "weather", "flash", "calc", "recorder", "phone", "sms").take(size)
-    var s = engine.newGame(NOW, seed).copy(
+    var s = game.newGame(NOW, seed).copy(
         level = 45, appLevels = ids.associateWith { 1 }, active = ids,
         assists = if (assists) mapOf(Assist.Sandwich to 5, Assist.Wild to 5) else emptyMap(),
     )
@@ -112,20 +116,21 @@ fun deckRun(seed: Long, size: Int, assists: Boolean): DeckRun {
     var bursts = 0
     var overloads = 0
     while (t < NOW + 600_000) {
-        t += engine.rules.chargeMs
-        s = engine.tick(s, t)
-        val target = engine.bestTarget(s, t) ?: continue
-        val o = engine.swipe(s, target, t) ?: continue
+        t += game.rules.chargeMs
+        s = game.tick(s, t)
+        val target = game.bestTarget(s, t) ?: continue
+        val o = game.swipe(s, target, t) ?: continue
         bursts += o.beats.count { it is Beat.Burst }
         if (o.overload) overloads++
         s = o.state.copy(active = ids)
     }
-    return DeckRun(size, engine.rowCount(s), s.swipes, bursts, overloads, s.bestChain)
+    return DeckRun(size, game.rowCount(s), s.swipes, bursts, overloads, s.bestChain)
 }
 
-/** 10: first factory reset: exactly the Lv25 P → 10 backup files. */
+/** 10: first factory reset. The starting gate's P pays exactly 10 backup files. */
 fun firstReset(): Pair<GameState, GameState> {
-    val run = engine.newGame(NOW, 7).copy(level = 25, runEarned = engine.rules.levelP(25))
+    val gate = engine.rules.resetLevel
+    val run = engine.newGame(NOW, 7).copy(level = gate, runEarned = engine.rules.levelP(gate))
     var next = engine.factoryReset(run, NOW)!!
     next = engine.buyBackup(next, BackupItem.Value)
     next = engine.buyBackup(next, BackupItem.FastBoot)
@@ -148,7 +153,7 @@ fun main(args: Array<String> = emptyArray()) {
         return
     }
     if (args.firstOrNull() == "serve") return serve(args.getOrNull(1)?.toInt() ?: 8765, java.io.File(args.getOrNull(2) ?: "../app/src/main/assets/game"), args.getOrNull(3)?.let { java.io.File(it) })
-    for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "규칙 B의 1+1 즉시 폭발" to touchPair(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (게이지 80, 깊이 3)" to overload(),
+    for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "규칙 B의 1+1 즉시 폭발" to touchPair(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (과부하 직전 게이지, 깊이 3)" to overload(),
         "4 강화 후 같은 스와이프" to upgraded(), "5 점화제" to igniter(), "7 와일드" to wildMerge(), "8 @모두 공지" to allHands())) {
         val (s, o) = pair
         println("### 예시 $title")

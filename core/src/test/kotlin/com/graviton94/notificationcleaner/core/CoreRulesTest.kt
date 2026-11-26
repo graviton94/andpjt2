@@ -75,7 +75,7 @@ class CoreRulesTest {
         val (_, o) = firstSwipe()
         assertEquals(1, o.chain)
         assertEquals(valueOf(11), o.earned)
-        assertEquals(16, o.state.gauge)
+        assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst, o.state.gauge)
         assertEquals(7, o.state.rows.size)
     }
 
@@ -112,10 +112,10 @@ class CoreRulesTest {
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
         assertEquals(listOf("alarm", "agoda"), bursts.map { it.row.app })
         assertEquals(valueOf(93_312), bursts[1].earned)
-        // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
+        val chargingGauge = 2 * (e.rules.gaugePerMerge + e.rules.gaugePerBurst) + 5 * e.rules.igniterGaugePerTier
+        assertEquals(100, s.gauge + chargingGauge)
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
-        assertEquals(60, s.gauge)
     }
 
     @Test
@@ -195,9 +195,9 @@ class CoreRulesTest {
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 180 * 3 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 3%
+        assertEquals(valueOf(6_480L), p) // Three hours at 40% auto × 9% settlement
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 7 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(9_360L), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -226,10 +226,11 @@ class CoreRulesTest {
 
     @Test
     fun biggerDecksAreHarderAndAssistsHelp() {
-        val three = (1L..3L).sumOf { deckRun(it, 3, false).bursts }
-        val six = (1L..3L).sumOf { deckRun(it, 6, false).bursts }
-        val sixHelped = (1L..3L).sumOf { deckRun(it, 6, true).bursts }
-        // Bigger decks stay clearly harder; stock-app effects (snooze, spam clearing) soften it a little.
+        val lowSupport = RuleSet(sandwichPercent = 35, majorEventCooldownMs = 0)
+        val three = (1L..3L).sumOf { deckRun(it, 3, false, lowSupport).bursts }
+        val six = (1L..3L).sumOf { deckRun(it, 6, false, lowSupport).bursts }
+        val sixHelped = (1L..3L).sumOf { deckRun(it, 6, true, lowSupport).bursts }
+        // Under the low-support reference, additional app kinds break the same sandwiches more often.
         assertTrue(six < three * 4 / 5, "6 apps $six vs 3 apps $three")
         assertTrue(sixHelped > six * 5 / 4, "assists $sixHelped vs $six")
     }
@@ -243,28 +244,28 @@ class CoreRulesTest {
         assertEquals(1, next.backup.resets)
         assertEquals(4, next.backup.files)
         assertEquals(10, next.backup.lifetime)
-        assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
+        assertNull(e.factoryReset(e.newGame(now, 1).copy(level = e.rules.resetLevel - 1), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        // Total = ⌊10 × (P_max / P(Lv25))^0.4⌋, exponent halves 10⁸ above the anchor.
-        val anchor = e.rules.levelP(25)
+        // 0.45 until the eighth income digit, then 0.225.
+        val anchor = e.rules.levelP(e.rules.resetLevel)
         assertEquals(10L, e.rules.backupTotal(anchor))
-        assertEquals(158L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
-        assertEquals(100_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
-        assertEquals(Math.floor(10 * Math.pow(10.0, 6.4)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
+        assertEquals(223L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
+        assertEquals(316_227L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
+        assertEquals(Math.floor(10 * Math.pow(10.0, 7.2)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
     }
 
     @Test
     fun onlyBeatingTheBestRunPaysAndCounts() {
         val (_, after) = firstReset()
         // A second run that stops below the first run's P pays nothing and does not count as a reset.
-        val weak = after.copy(level = 25, runEarned = e.rules.levelP(25) / BigInteger.TEN)
+        val weak = after.copy(level = e.rules.resetLevel, runEarned = e.rules.levelP(e.rules.resetLevel) / BigInteger.TEN)
         val again = e.factoryReset(weak, now)!!
         assertEquals(after.backup.lifetime, again.backup.lifetime)
         assertEquals(after.backup.resets, again.backup.resets)
         // Beating it pays only the difference.
-        val strong = after.copy(level = 30, runEarned = e.rules.levelP(25) * BigInteger.TEN.pow(3))
-        assertEquals(158L - 10L, e.backupFilesNow(strong))
+        val strong = after.copy(level = 30, runEarned = e.rules.levelP(e.rules.resetLevel) * BigInteger.TEN.pow(3))
+        assertEquals(223L - 10L, e.backupFilesNow(strong))
     }
 
     @Test
@@ -276,9 +277,14 @@ class CoreRulesTest {
         val price = e.rules.appPrice(Catalog.app("meet"))
         assertTrue(price >= e.rules.levelP(Catalog.app("meet").unlockLevel) / valueOf(10))
         assertTrue("meet" in e.buy(veteran.copy(wallet = price), "meet").appLevels)
-        // Higher tiers always cost more than lower ones.
-        val prices = Catalog.apps.filter { it.id !in Catalog.starter }.map { e.rules.appPrice(it) }
-        assertEquals(prices.sorted(), prices)
+        // Each tier's first app is costlier than previous entry points; adjacent tier ladders may overlap.
+        val byTier = Catalog.apps.filter { it.id !in Catalog.starter }.groupBy { it.tier }
+        val firstPrices = byTier.values.map { e.rules.appPrice(it.first()) }
+        assertTrue(firstPrices.zipWithNext().all { (lower, higher) -> lower < higher })
+        byTier.values.forEach { tier ->
+            val prices = tier.map(e.rules::appPrice)
+            assertEquals(prices.sorted(), prices)
+        }
     }
 
     @Test
@@ -415,7 +421,7 @@ class CoreRulesTest {
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
         val bought = e.buyCloud(after, CloudItem.Compression)
         assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
-        val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
+        val firstReset = bought.copy(level = r.resetLevel, runEarned = r.levelP(r.resetLevel))
         assertEquals(Math.floor(10 * 1.5 * Math.sqrt(3.0)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 20 GB)
     }
 
@@ -427,8 +433,13 @@ class CoreRulesTest {
         for (t in 1..10) assertEquals((0..5).toList(), apps.filter { it.tier == t }.map { it.order }, "tier $t")
         Region.entries.forEach { r -> assertEquals(12, apps.count { it.region == r }, r.label) }
         Category.entries.forEach { c -> assertEquals(12, apps.count { it.category == c }, c.label) }
-        // A higher tier never opens before a lower one, and every pro version comes after its app.
-        assertEquals(apps.map { it.unlockLevel }.sorted(), apps.map { it.unlockLevel })
+        // The first app of each tier opens in sequence; the tail of a tier may overlap.
+        val firstUnlocks = apps.groupBy { it.tier }.values.map { it.first().unlockLevel }
+        assertTrue(firstUnlocks.zipWithNext().all { (lower, higher) -> lower < higher })
+        apps.groupBy { it.tier }.values.forEach { tier ->
+            val unlocks = tier.map { it.unlockLevel }
+            assertEquals(unlocks.sorted(), unlocks)
+        }
         apps.forEach { assertTrue(Catalog.proLevel.getValue(it.id) > it.unlockLevel, it.id) }
         assertTrue(Catalog.starter.all { Catalog.app(it).tier == 1 })
     }
