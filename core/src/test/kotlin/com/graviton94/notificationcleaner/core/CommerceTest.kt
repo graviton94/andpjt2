@@ -65,7 +65,7 @@ class CommerceTest {
         val rules = engine.rules
         val mature = engine.newGame(now, 11).copy(level = 124, runEarned = rules.levelP(124),
             earnRate = rules.levelP(124) / 1_000_000L.toBigInteger(),
-            lastEarned = rules.levelP(124) / 1_000L.toBigInteger(), appLevels = Catalog.apps.associate { it.id to 50 })
+            lastEarned = rules.levelP(124) / 1_000L.toBigInteger(), bestSwipe = rules.levelP(124) / 1_000L.toBigInteger(), appLevels = Catalog.apps.associate { it.id to 50 })
         val w = WebSession(engine, mature, now)
         val purchases = (0..360 step 30).associateWith { day ->
             "GPA.$day-" + "store-purchase-token".repeat(6)

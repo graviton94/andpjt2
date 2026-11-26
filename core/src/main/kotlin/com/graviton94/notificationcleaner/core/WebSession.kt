@@ -165,7 +165,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun watchAd(slot: String, adId: String, now: Long): String = act(now) { s ->
         val a = AdSlot.entries.firstOrNull { it.name == slot } ?: return@act s
         val offer = when (a) {
-            AdSlot.BestDouble -> s.lastEarned
+            AdSlot.BestDouble -> if (s.level >= engine.rules.bestDoubleFrom) s.bestSwipe else return@act s
             AdSlot.OfflineDouble -> offlineAdOffer?.takeIf { it.day == dayOf(now) }?.paid ?: return@act s
             else -> BigInteger.ZERO
         }

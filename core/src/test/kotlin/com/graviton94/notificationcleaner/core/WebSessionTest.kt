@@ -58,6 +58,17 @@ class WebSessionTest {
         assertEquals(wave.getValue("index"), wave.getValue("waveIndex"))
     }
 
+    @Test fun delayedBestDoubleCreditsTheRecordInsteadOfTheLastSwipe() {
+        val e = Engine()
+        val level = e.rules.bestDoubleFrom
+        val record = 1_000.toBigInteger()
+        val w = WebSession(e, e.newGame(t0, 4).copy(level = level, runEarned = e.rules.levelP(level),
+            bestSwipe = record, lastEarned = 100.toBigInteger()), t0)
+        assertEquals("true", parse(w.watchAd("BestDouble", "ad-record", t0)).getValue("ok").jsonPrimitive.content)
+        assertEquals(record, w.state.wallet)
+        assertEquals("false", parse(w.watchAd("BestDouble", "ad-record", t0)).getValue("ok").jsonPrimitive.content)
+    }
+
     @Test fun offlineDoubleCreditsOneQuotedSettlementAndNeverConsumesAnEmptyOffer() {
         val e = Engine()
         val w = WebSession(e, e.newGame(t0, 4).copy(earnRate = java.math.BigInteger.valueOf(50_000)), t0)
