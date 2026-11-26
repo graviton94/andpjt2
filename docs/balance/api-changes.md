@@ -126,3 +126,42 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
   "carry": {"ratio": 0.65, "untilLevel": 60, "pPerSec": "1240000", "pPerSecShort": "1.24M"}
 }
 ```
+
+## 규칙 B 출시 브랜치 추가 응답
+
+| 응답 | 추가 키 | 값 |
+|---|---|---|
+| 스와이프 `burst.row` | `region` | `stock`, `asia`, `southeast_asia`, `west`, `global`. 와일드 두 줄은 가치 계산 앱의 권역을 사용 |
+| 스와이프 `burst` | `tierMax` | 이 스와이프 직접 폭발의 최고 티어. 같은 스와이프 안 각 폭발에서 같은 정수 |
+| 스와이프 `burst` | `synergy` | 적용된 권역·카테고리 중 큰 구성 배율 하나. 동률은 권역. `mult: 1.25`는 +25%. 덱 다양성 및 합성 상한은 이 표시 배율과 별도로 계산 |
+| 스와이프 `burst` | `effect` | 발동한 코어 효과 앱 ID. 폭발이 없는 독립 이벤트는 이 목록에 포함하지 않음. 스와이프 전체 배율은 첫 폭발에 표시하고, 파동에 연동된 앱 효과는 관련 폭발에 귀속 |
+| 스와이프 `wave` | `waveIndex` | 1부터 시작하는 파동 번호. 기존 `index`와 같음 |
+| `snapshot` 및 상태가 포함된 응답 | `overloadReadyInMs` | 현재 시간부터 다시 파동이 가능한 시점까지의 밀리초. 0이면 시간 조건 충족 |
+| `snapshot` 및 상태가 포함된 응답 | `autoIncomePermille` | 활성 자동 정리 지급 계수. 600은 60%. 과열 상한 전에 적용하며, 오프라인 효율과는 별개 |
+| `offline()` | `awayMs`, `offlineCapMs`, `baseOfflineCapMs`, `basePaidShort`, `exExtraEligibleMs`, `exExtraPShort` | 실제 부재·정산 시점 상한·기본 상한·기본 지급 표기. 규칙 B 출시판에서는 기본과 실제 상한이 같고 EX 추가는 0 |
+
+```json
+{
+  "beats": [
+    {"t":"burst","row":{"id":1,"app":"green","region":"global"},"chain":1,"earned":"3200","tierMax":10,
+      "synergy":{"kind":"region","key":"global","mult":1.25},"effect":["green"]},
+    {"t":"wave","index":1,"waveIndex":1,"chain":2,"earned":"14400"}
+  ]
+}
+```
+
+`synergy.key`의 카테고리는 기존 `row.cat`의 `Social`·`Work`·`Daily`·`Media`·`Money` 키를 사용한다. `effect`와 `synergy`가 비어 있으면 그 키를 생략한다. 새 비트 타입은 없다.
+
+`watchAd("OfflineDouble", adId, now)`가 당일의 가장 최근 양수 복귀 정산을 한 번 더 지급한다. 실제 추가분은 광고 레벨 상한을 적용한다. 한 세션의 제안은 한 번만 사용하며 공장 초기화·동기화 때 만료된다. 복귀 후 광고를 보는 동작과 당일·다음날 공통 +70%는 별도 효과다. 반환 카드는 현재 호스트에서 SDK 호출 후 표시하는 토스트까지 연결돼 있으므로, 운영 지급은 플랫폼의 확인된 `ad-` 클레임과 함께 연결한다.
+
+`bm()`은 `starterProductId`, `rookieProductId`, `passProductIds`로 Play 상품 ID를 제공한다. `passProductIds`의 키는 기존 청구 요청의 구독 종류다.
+
+~~~json
+{
+  "starterProductId": "starter_pack",
+  "rookieProductId": "rookie_pass",
+  "passProductIds": {"month":"pass_monthly","Turbo":"pass_turbo","Ultra":"pass_ultra"}
+}
+~~~
+
+`BestDouble`은 Lv20 이상에서 회차 최고 기록 P를 읽는다. 광고 확인이 늦어지는 동안 일반 스와이프가 생겨도 최신 스와이프 지급액으로 바뀌지 않는다. 광고 레벨 상한은 동일하다.
