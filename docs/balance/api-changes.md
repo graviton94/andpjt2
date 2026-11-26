@@ -165,3 +165,35 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 ~~~
 
 `BestDouble`은 Lv20 이상에서 회차 최고 기록 P를 읽는다. 광고 확인이 늦어지는 동안 일반 스와이프가 생겨도 최신 스와이프 지급액으로 바뀌지 않는다. 광고 레벨 상한은 동일하다.
+
+## v1.1 패스 가치
+
+`WebSession.bm()`에 `passValues`, `starterValueX`, `rookieValueX`가 추가됐다. `passValues`의 키는 대소문자를 구분하며 `month`, `Turbo`, `Ultra`다. 금액은 원, 시간은 시간 단위, 나머지는 데이터 개수 또는 천분율이다. 월간의 속도·환생 천분율 0은 해당 추가 혜택이 없음을 나타낸다. 화면은 기존과 같이 월간의 추가 배율 행을 숨긴다.
+
+```json
+{
+  "passValues": {
+    "month": {
+      "wonPrice": 5500, "dataNow": 300, "dataDaily": 60, "days": 30,
+      "overclockHoursDaily": 3.0, "adFree": true, "speedPermille": 0, "prestigePermille": 0,
+      "dataTotal": 2100, "dataEquivalent": 5700, "valueX": 22.8, "valueXDataOnly": 8.4
+    },
+    "Turbo": {
+      "wonPrice": 33000, "dataNow": 300, "dataDaily": 60, "days": 30,
+      "overclockHoursDaily": 3.0, "adFree": true, "speedPermille": 3500, "prestigePermille": 1750,
+      "dataTotal": 2100, "dataEquivalent": 5700, "valueX": 3.8, "valueXDataOnly": 1.4
+    },
+    "Ultra": {
+      "wonPrice": 99000, "dataNow": 300, "dataDaily": 260, "days": 30,
+      "overclockHoursDaily": 3.0, "adFree": true, "speedPermille": 8000, "prestigePermille": 4000,
+      "dataTotal": 8100, "dataEquivalent": 11700, "valueX": 2.6, "valueXDataOnly": 1.8
+    }
+  },
+  "starterValueX": 10.2,
+  "rookieValueX": 7.1
+}
+```
+
+`valueXDataOnly`는 30일 모두 청구한 데이터의 기준가 환산이다. 월간 카드의 '최대 ×8.4 가치'는 이 값으로 표시한다. `valueX`는 오버클럭 90시간을 시간당 데이터 40으로 전부 환산한 비교 지표다. 광고 제거와 터보·울트라의 상시 배율은 두 환산에서 제외한다. 스타터와 초심자 패스는 기존의 선택권·소모품 포함 기준을 쓴다.
+
+`packs[].id`, `starterProductId`, `rookieProductId`, `passProductIds`는 그대로 안내한다. 출시 상품 ID와 원화는 [Play 상품 등록 원본](../../tools/play/products.json)에 있다. `panel().syncLevel`의 기존 단위는 레벨이고 기본값은 75다.
