@@ -532,6 +532,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
 <div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb">일일 도전</span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" aria-label="그만하기">그만</button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<script src="pfx.bundle.js"></script>
 <script>
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
@@ -844,12 +845,11 @@ function stepRowY(r, dt) {
 }
 function slamMerge(from, into, k, onHit) {  // anticipation: a contracting ring at the contact line, then the hit
   const y1 = into.y.x - CH * .55;
-  spawn('RINGIN', 195, into.y.x + 4, 0, 0, .1, [255, 236, 190], 150);
   from.slam = { t: 0, dur: .1, y0: from.y.x, y1, hit: () => {
     const i = board.indexOf(from); if (i >= 0) board.splice(i, 1);
     into.q.x = .3 + Math.min(k, 8) * .02; into.q.v = 0; into.charge = 1;
     const cy = into.y.x + 2;
-    spawn('CORE', 195, cy, 0, 0, .09, [255, 240, 210], 150);
+    pfx('bluntHit', 195, cy + 6);
     for (let j = 0; j < (reduce ? 4 : 14); j++) { const side = j % 2 ? 1 : -1; spawn('DUST', 195 + side * (40 + rnd() * 140), cy, side * (260 + rnd() * 420), (rnd() - .5) * 80, .35 + rnd() * .2, [255, 244, 225], 6 + rnd() * 6); }
     stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35); pixT = Math.max(pixT, .22); noiT = Math.max(noiT, .35);
     sfx.thud(1); buzz(18); onHit && onHit();
@@ -895,6 +895,26 @@ function plaser(p, f) {  // a horizontal laser through the popped row: jagged pi
 function pbeam(p, f) {  // a laser bolt from the pop to the score: stepped pixel line with a hot core
   const x0 = p.x, y0 = p.y, x1 = p.vx, y1 = p.vy, d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6), w = 4 + p.size * f;
   for (let i = 0; i <= n; i++) { const u = i / n, jx = (rnd() - .5) * 6 * f, x = x0 + (x1 - x0) * u + jx, y = y0 + (y1 - y0) * u; px(x, y, w, p.col, .9 * f); px(x, y, Math.max(2, w * .4), [255, 255, 255], f); }
+}
+
+// ---------- pixelfx layer (patch-gg/pixelfx, MIT): effects drawn at half resolution into colour + light buffers,
+// stepped at 120 Hz, composited (light added on top) and scaled up as hard pixels ----------
+const PXS = 3, PFW = Math.ceil(W / PXS), PFH = Math.ceil(H / PXS);
+const pfxOn = !!(window.PFX && PFX.createFrame);
+const pfxFrame = pfxOn ? PFX.createFrame(PFW, PFH) : null, pfxImg = pfxOn ? new ImageData(PFW, PFH) : null;
+const pfxCv = document.createElement('canvas'); pfxCv.width = PFW; pfxCv.height = PFH; const pfxCtx = pfxCv.getContext('2d');
+const pfxLive = [];
+function pfx(name, x, y, o = {}) {
+  if (!pfxOn || !PFX.FX[name] || (reduce && o.big)) return;
+  const fx = PFX.createFx(PFX.FX[name], Object.assign({ x: x / PXS, y: y / PXS, seed: (rnd() * 1e6) | 0 }, o));
+  pfxLive.push(fx); if (pfxLive.length > 18) pfxLive.shift();
+}
+function pfxStep(dt) { for (let i = pfxLive.length - 1; i >= 0; i--) { const f = pfxLive[i]; f.update(dt); if (!f.meta.loop && f.t >= (f.meta.duration || 1)) pfxLive.splice(i, 1); } }
+function pfxDraw() {
+  if (!pfxOn || !pfxLive.length) return;
+  PFX.clearFrame(pfxFrame); for (const f of pfxLive) f.draw(pfxFrame);
+  PFX.composite(pfxFrame, pfxImg.data, null); pfxCtx.putImageData(pfxImg, 0, 0);
+  const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false; ctx.drawImage(pfxCv, 0, 0, PFW * PXS, PFH * PXS); ctx.imageSmoothingEnabled = sm;
 }
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
@@ -1222,10 +1242,15 @@ const EVENTS = {
     update(e, dt, t) {
       sstep(e.d.bs, dt, 220, 16); sstep(e.d.ms, dt);
       if (!e.d.done) { fx.alarm = .22 + .2 * Math.sin(t * 9); if (e.t > e.d.dur) this.finish(e); }
-      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 1.7) endEvent(); }
+      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 2.4) endEvent(); }
     },
     world(e) { ctx.fillStyle = 'rgba(8,5,3,.5)'; ctx.fillRect(-20, ROW0 - 8, W + 40, H); },
-    finish(e) { e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; tone('sawtooth', 880, 330, .6, .08, { filt: 1800 }); say(e.d.real ? `훈련 끝 · 30초 동안 수입 ×${e.d.mult.toFixed(2)}` : `훈련 종료 ×${e.d.mult.toFixed(2)} 적용`, 470, 26, '#FFFFFF', '#FFD66B', 1.6); },
+    finish(e) {  // the payout lands like loot: freeze, flash, fireworks, coins, a huge stamped multiplier
+      e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; e.d.win = { t: 0 };
+      stop = Math.max(stop, .09); if (!reduce) { flash = .45; shake = 7; } pixT = Math.max(pixT, .6); psyT = 1; noiT = 1;
+      pfx('fireworkBurst', 195, 560, { big: 1 }); pfx('critHit', 195, 420); pfx('coinCollect', 195, 470); pfx('confetti', 195, 520, { big: 1 });
+      sfx.payoff(9); sfx.jackpot(); buzz([60, 40, 60, 40, 200]); ripple(195, 420, .07); crackAt(195, 430, .9);
+    },
     tap(e, x, y) {
       const d = e.d; if (d.done) return;
       d.taps++; d.mult = Math.min(2, 1 + d.taps * .01); kick(d.ms, 7); if (d.real) api('drill');
@@ -1233,7 +1258,7 @@ const EVENTS = {
       for (let i = 0; i < (reduce ? 2 : 7); i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', x, y, Math.cos(a) * sp, Math.sin(a) * sp, .2, [255, 170, 120], 2); }
       pops.push({ x: x + (rnd() - .5) * 30, y: y - 10, text: '+1%', t: 0, life: .55, rot: (rnd() - .5) * .4, size: 22, red: 1 }); while (pops.length > 10) pops.shift();
       sfx.drill(d.taps); if (d.taps % 3 === 0) phone('phone.typing', .25); buzz(8); if (!reduce) shake = Math.max(shake, 1.6); chroma = Math.max(chroma, .006);
-      if (d.taps % 10 === 0) { d.ms2 = { text: `${d.taps}연타!`, t: 0 }; sfx.badge(); ripple(x, y, .04); }
+      if (d.taps % 10 === 0) { const st = Math.min(4, Math.floor(d.taps / 20)); d.ms2 = { text: `${d.taps}연타!`, t: 0, st }; sfx.badge(); ripple(x, y, .04); pfx(['hitSpark', 'hitSpark', 'critHit', 'zapHit', 'critHit'][st], 195, 250); if (st >= 3) pfx('collectBurst', 195, 250); }
       if (d.mult >= 2 && !d.max) {
         d.max = true; crackAt(x, y, 1); collapse(1.25); sfx.payoff(8); if (!reduce) { flash = .3; shake = 6; }
         d.ms2 = { text: '최대 ×2!', t: 0 }; after(.9, () => this.finish(e));
@@ -1253,7 +1278,18 @@ const EVENTS = {
       gtext('×' + m.toFixed(2), 195, 440, 70, { scale: d.ms.x, top: '#FFFFFF', bot: hotc, wob: 1.4, t });
       ctx.fillStyle = 'rgba(0,0,0,.4)'; rr(70, 462, 250, 10, 5); ctx.fill(); ctx.fillStyle = hotc; rr(70, 462, 250 * (m - 1), 10, 5); ctx.fill();
       gtext(`${d.taps}연타`, 195, 504, 24, { top: '#FFFFFF', bot: '#FFD3CC' });
-      if (d.ms2 && d.ms2.t < 1) { d.ms2.t += 1 / 60; gtext(d.ms2.text, 195, 372, 36, { appear: d.ms2.t * 6, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: -.05, top: '#FFFFFF', bot: '#FFC400', wob: 2, t }); }
+      if (d.win) {  // final: "수입 ×N 획득!" stamped over everything
+        d.win.t += 1 / 60; const k = Math.min(1, d.win.t * 5), sc = k < 1 ? 2.4 - 1.4 * k : 1 + .04 * Math.sin(d.win.t * 30);
+        ctx.fillStyle = `rgba(0,0,0,${Math.min(.55, d.win.t * 2)})`; ctx.fillRect(0, 330, W, 200);
+        gtext('획득!', 195, 372, 30, { appear: d.win.t * 8, top: '#FFFFFF', bot: '#7CE0FF', wob: 2, t });
+        gtext(`수입 ×${m.toFixed(2)}`, 195, 450, 64, { scale: sc, top: '#FFF6C8', bot: '#FFB020', wob: 2.2, t });
+        ctx.fillStyle = '#FFE9B8'; ctx.font = `800 14px ${FB}`; ctx.textAlign = 'center'; ctx.fillText(e.d.real ? '30초 동안 적용' : '지금부터 적용', 195, 492);
+      }
+      if (d.ms2 && d.ms2.t < 1) {  // streak callout: each stage bigger, hotter and higher, slammed in
+        d.ms2.t += 1 / 60; const st = d.ms2.st || 0, STG = [['#FFFFFF', '#FFC400', 34], ['#FFFFFF', '#FF8A1F', 40], ['#FFF3A6', '#FF3B30', 48], ['#E9F6FF', '#4FB8FF', 54], ['#FFFFFF', '#B36BFF', 62]][st];
+        const k = Math.min(1, d.ms2.t * 7), sc = k < 1 ? 1.8 - .8 * k : 1 + .05 * Math.sin(d.ms2.t * 40) * (1 - d.ms2.t);
+        gtext(d.ms2.text, 195, 262 - st * 6, STG[2], { scale: sc, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: (st % 2 ? .06 : -.06), top: STG[0], bot: STG[1], wob: 1 + st, t });
+      }
     },
   },
   // app crash: glitch tears -> "stopped" dialog -> tap -> CRT off/on reboot
@@ -1263,8 +1299,8 @@ const EVENTS = {
       const d = e.d; sstep(d.dlg, dt, 300, 15);
       if (d.phase === 'glitch') { fx.glitch = Math.min(1, e.t / .3); fxT.sat = .45; if (!reduce) shake = 2; if (e.t > .45) { d.phase = 'dialog'; d.dlg.t = 1; sfx.glitch(); } }
       else if (d.phase === 'dialog') { fx.glitch = rnd() < .08 ? .5 : .06; fxT.sat = .3; fxT.bright = .8; if (e.t > 3) this.tap(e); }
-      else if (d.phase === 'off') { d.ct += dt; fx.crt = Math.min(1, d.ct / .28); fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
-      else if (d.phase === 'on') { d.ct += dt; fx.crt = Math.max(0, 1 - d.ct / .32); if (d.ct > .32) { d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp, .3, [140, 220, 255], 2.2); } } }
+      else if (d.phase === 'off') { d.ct += dt; const u = Math.min(1, d.ct / .3); fx.crt = u * u * u * u; if (u > .9 && !d.dot) { d.dot = 1; pfx('zapHit', 195, 420); } fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
+      else if (d.phase === 'on') { d.ct += dt; const u = Math.min(1, d.ct / .42), eb = 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2); fx.crt = Math.max(0, 1 - eb); fx.bright = 1 + .6 * Math.max(0, 1 - u * 2.2); if (d.ct > .42) { pfx('collectBurst', 195, 400); d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp, .3, [140, 220, 255], 2.2); } } }
       else if (d.phase === 'done') { d.ct += dt; if (d.ct > 1.3) endEvent(); }
     },
     tap(e) { if (e.d.phase !== 'dialog') return; e.d.phase = 'off'; e.d.ct = 0; e.d.dlg.t = 0; sfx.powerDown(); phone('phone.lock', .6); buzz(40); },
@@ -1325,24 +1361,44 @@ const EVENTS = {
   },
   // low battery: colour drains, heartbeat; tap -> lightning, colour floods back
   battery: {
-    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, pts: null }); lowBat = true; },
+    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, fill: 0, hold: false, pts: null, bs: spring(0), idle: 0 }); e.d.bs.t = 1; lowBat = true; },
     update(e, dt) {
-      const d = e.d;
-      if (d.phase === 'low') { fxT.sat = .15; fxT.bright = .55; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); if (!reduce) shake = 1.2; } if (e.t > 3.2) this.tap(e); }
-      else { d.bt += dt; if (d.bt < .35) d.pts = bolt(356, 24, 195 + (rnd() - .5) * 40, 420, 10); else d.pts = null; if (d.bt > 1.4) endEvent(); }
+      const d = e.d; sstep(d.bs, dt, 260, 14);
+      if (d.phase === 'low') {
+        fxT.sat = .15 + d.fill * .85; fxT.bright = .55 + d.fill * .45;
+        if (d.hold) { d.fill = Math.min(1, d.fill + dt / 1.5); d.zt = (d.zt || 0) - dt; if (d.zt <= 0) { d.zt = .09; sfx.reel(); buzz(6); if (!reduce) shake = Math.max(shake, .6 + d.fill * 2); } }
+        else { d.fill = Math.max(0, d.fill - dt * .5); d.idle += dt; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); } }
+        if (d.idle > 5 && !d.hold) d.hold = true;  // demo/auto: charges itself if nobody holds
+        if (d.fill >= 1) this.full(e);
+      } else { d.bt += dt; if (d.bt < .35) d.pts = bolt(356, 24, 195 + (rnd() - .5) * 40, 420, 10); else d.pts = null; if (d.bt > 1.5) endEvent(); }
     },
-    tap(e) {
-      const d = e.d; if (d.phase !== 'low') return;
-      d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
-      if (!reduce) flash = .35; ripple(356, 24, .05); ripple(195, 420, .05); chroma = .02; phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]); if (!reduce) shake = 5;
-      for (let i = 0; i < (reduce ? 12 : 50); i++) { const side = Math.floor(rnd() * 4), p = rnd(); const [x, y, vx, vy] = side === 0 ? [p * W, 2, 600, 0] : side === 1 ? [W - 2, p * H, 0, 600] : side === 2 ? [p * W, H - 2, -600, 0] : [2, p * H, 0, -600]; spawn('SPARK', x, y, vx * (rnd() < .5 ? 1 : -1), vy * (rnd() < .5 ? 1 : -1), .35, [150, 200, 255], 2.4); }
-      say('충전 완료! 배터리 +2', 440, 30, '#FFFFFF', '#7CC0FF', 1.3);
+    tap(e) { const d = e.d; if (d.phase !== 'low') return; d.hold = true; d.idle = 0; if (!d.cu) { d.cu = 1; pfx('chargeUp', 195, 430); } },
+    up(e) { e.d.hold = false; },
+    full(e) {
+      const d = e.d; d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
+      if (!reduce) { flash = .35; shake = 6; } stop = Math.max(stop, .07); pixT = Math.max(pixT, .5); ripple(195, 420, .06); chroma = .02;
+      pfx('zapHit', 195, 420); pfx('collectBurst', 195, 410); phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]);
+      say('충전 완료! 배터리 +2', 520, 30, '#FFFFFF', '#7CF0A0', 1.3);
     },
     world(e) { if (e.d.pts) strokeBolt(e.d.pts, 1); },
-    ui(e) {
-      if (e.d.phase !== 'low') return;
-      const a = .6 + .4 * Math.sin(e.t * 7);
-      ctx.fillStyle = `rgba(255,59,48,${a})`; rr(95, 600, 200, 34, 17); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = `700 13px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 탭해서 충전', 195, 622);
+    ui(e, t) {
+      const d = e.d, s = d.bs.x; if (d.phase !== 'low' && d.bt > .5) return;
+      const f = d.phase === 'low' ? d.fill : 1;
+      // translucent green rising from the bottom with a stepped pixel surface
+      const top = H - (H - 60) * f;
+      if (f > 0) { ctx.fillStyle = 'rgba(60,230,120,.22)'; ctx.fillRect(0, top, W, H - top); ctx.fillStyle = 'rgba(150,255,190,.55)'; for (let x = 0; x < W; x += 8) { const w = Math.round(Math.sin(x * .07 + t * 9) * 3 + Math.sin(x * .19 - t * 6) * 2); ctx.fillRect(x, Math.round((top + w) / 4) * 4 - 4, 8, 4); } }
+      // the battery icon, centre screen: pixel frame, nub, cells
+      ctx.save(); ctx.translate(195, 420); ctx.scale(s, s);
+      const bw = 120, bh = 64, low = f < .2, blink = low && Math.sin(t * 10) > 0;
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(-bw / 2 - 10, -bh / 2 - 10, bw + 32, bh + 20);
+      ctx.fillStyle = '#F4F1EA'; ctx.fillRect(-bw / 2, -bh / 2, bw, 6); ctx.fillRect(-bw / 2, bh / 2 - 6, bw, 6); ctx.fillRect(-bw / 2, -bh / 2, 6, bh); ctx.fillRect(bw / 2 - 6, -bh / 2, 6, bh); ctx.fillRect(bw / 2, -12, 10, 24);
+      const cells = 5, lit = Math.ceil(f * cells), cw = (bw - 24) / cells;
+      for (let i = 0; i < cells; i++) { const on = i < Math.max(1, lit); ctx.fillStyle = !on ? 'rgba(255,255,255,.08)' : low ? (blink ? '#FF3B30' : '#8A1A14') : i < lit - 1 ? '#3CE67A' : '#9BFFC0'; ctx.fillRect(-bw / 2 + 12 + i * cw + 2, -bh / 2 + 12, cw - 4, bh - 24); }
+      ctx.restore();
+      if (d.phase === 'low') {
+        gtext(d.hold ? `충전 중 ${Math.round(f * 100)}%` : '꾹 눌러서 충전', 195, 500, 26, { top: '#FFFFFF', bot: d.hold ? '#7CF0A0' : '#FF8A80', wob: d.hold ? 1.5 : 0, t });
+        ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 손을 떼면 다시 줄어요', 195, 526);
+      }
     },
   },
   // lotto: slot reel; jackpot = gold shower + glass break, miss = deflate + sad trombone
@@ -1356,8 +1412,8 @@ const EVENTS = {
           d.phase = 'res'; d.endT = e.t; d.val = d.res;
           if (d.res > 0) {
             crackAt(195, 400, 1); collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
-            for (let i = 0; i < (reduce ? 30 : 110); i++) spawn('GLASS', rnd() * W, -20 - rnd() * 200, (rnd() - .5) * 80, 200 + rnd() * 300, 2, [255, 214, 90], 3 + rnd() * 5);
-            say(`잭팟 ×${d.res}!`, 500, 42, '#FFFFFF', '#FFC23D', 1.6);
+            pfx('critHit', 195, 400); pfx('coinCollect', 195, 440); pfx('fireworkBurst', 195, 600, { big: 1 }); pfx('confetti', 195, 520, { big: 1 }); stop = Math.max(stop, .08); pixT = Math.max(pixT, .55); psyT = 1;
+            say(`잭팟 ×${d.res}!`, 490, 46, '#FFFFFF', '#FFC23D', 1.8);
           } else {
             sfx.fail(); d.bs.t = .72; fx.sat = .25;
             for (let i = 0; i < 12; i++) spawn('VAPOUR', 195 + (rnd() - .5) * 120, 400, (rnd() - .5) * 120, -40 - rnd() * 80, 1.2, [150, 150, 150], 12 + rnd() * 10);
@@ -1473,7 +1529,7 @@ function play(o, quiet = false) {
       t += .17;
     } else if (b.t === 'burst') {
       k++; const kk = k, tt = t;
-      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('RINGIN', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 120 + kk * 6); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 60); } });
+      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 50); } });
       after(tt + .06, () => burstRow(b, kk, quiet));
       t += Math.max(.1, .19 - (kk - 1) * .011);
     } else if (b.t === 'wave') {
@@ -1491,22 +1547,16 @@ function burstRow(b, k, quiet) {
   const r = byId(b.row.id); if (!r) return;
   const d = r.d, pal = ramp(colOf(d)), T = tier(k), y = r.y.x, cy = y + CH / 2, q = reduce ? .3 : 1;
   const ix = 110 + rnd() * 170, iy = y + 18 + rnd() * 24;
-  shatter(r, y, ix, iy, 1 + Math.min(k, 12) * .06);
+  pfx(k >= 4 ? 'critHit' : 'hitSpark', ix, iy, { angle: (rnd() - .5) * .6 });
+  if (k >= 6) pfx('smallExplosion', ix, y + CH, { size: .55, big: 1 });
+  if (k >= 9) pfx('impactFrame', 195, iy);
   ripple(ix, iy, .014 + Math.min(k, 12) * .0022);
   if (k >= 9 && (!crack || crack.age > .5)) crackAt(ix, iy, .85);
   chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
-  for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
-  for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
-  spawn('CORE', ix, iy, 0, 0, .16, pal[3], 110 + k * 8);
-  spawn('RING', ix, iy, 0, 0, .26, [255, 255, 255], 140 + Math.min(k, 10) * 12);
   spawn('LASER', 195, cy, 0, 0, .2 + Math.min(k, 8) * .015, balc(k), 26 + Math.min(k, 10) * 3);
   if (k >= 3) for (let j = 0; j < Math.min(k - 2, 5); j++) after(.025 * j, () => spawn('LASER', 195, y + rnd() * CH, 0, 0, .14, balc(k + j + 1), 10 + rnd() * 10));
   spawn('BEAM', ix, iy, CHIPX, BOXY, .16, balc(k + 2), 10);
   pixT = Math.max(pixT, .3 + Math.min(k, 10) * .05); psyT = Math.min(1, Math.max(psyT, (k - 1) * .16)); noiT = Math.max(noiT, .5);
-  after(.03, () => spawn('RING', ix, iy, 0, 0, .34, pal[3], 190 + Math.min(k, 10) * 16));
-  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 420 + rnd() * 700; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .16 + rnd() * .2, i % 4 ? balc(i + k) : [255, 255, 255], 2.6); }
-  for (let i = 0; i < (5 + k) * q; i++) { const a = rnd() * 6.28, sp = 60 + rnd() * 160; spawn('SMOKE', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp - 40, .55 + rnd() * .35, day ? [90, 96, 112] : [40, 30, 26], 14 + rnd() * 12); }
-  for (let i = 0; i < (6 + k) * q; i++) { const a = -Math.PI * (.15 + rnd() * .7), sp = 200 + rnd() * 380; spawn('EMBERF', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .6 + rnd() * .5, [255, 170 + rnd() * 60, 80], 2 + rnd() * 2); }
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
   pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
@@ -1554,8 +1604,7 @@ function slam() { // end of the count-up: the screen glass takes the hit
   // the glass takes the hit in proportion: small tallies thump, big chains crack the screen
   if (plate.k >= 3) crackAt(195, REVEAL_Y - 18, Math.min(1, .55 + plate.k * .05)); ripple(195, REVEAL_Y - 18, .02 + Math.min(plate.k, 10) * .0025); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
   for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
-  for (let i = 0; i < (reduce ? 8 : 26); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('GLASS', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp - 100, .9 + rnd() * .4, [255, 236, 200], 4 + rnd() * 5); }
-  spawn('CORE', 195, REVEAL_Y - 18, 0, 0, .22, [255, 210, 120], 220);
+  pfx('critHit', 195, REVEAL_Y - 18); if (plate.k >= 5) pfx('collectBurst', 195, REVEAL_Y - 30);
   if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
   if (plate.record) after(.08, () => sfx.badge());
   if (plate.record) after(1.2, () => offerDouble(plate.total));
@@ -1607,7 +1656,8 @@ function draw(t) {
   ctx.fillStyle = day ? 'rgba(255,255,255,.25)' : 'rgba(8,5,3,.3)'; ctx.fillRect(0, 0, W, H);
   drawDecor();
   // trauma shake: amplitude ∝ trauma², smooth high-frequency noise plus a little roll; camK = swipe-direction kick
-  const tr = Math.min(1, shake / 7), amp = 30 * tr * tr, sx = amp * (Math.sin(t * 61.3) + Math.sin(t * 97.1 + 1.7)) * .5 + camK.x, sy = amp * (Math.sin(t * 71.9 + .6) + Math.sin(t * 113.3)) * .5, sr = tr * tr * .045 * Math.sin(t * 83.7);
+  // pixel-art shake: a few hard pixel steps, no roll; camK = swipe-direction kick
+  const tr = Math.min(1, shake / 7), amp = 14 * tr * tr, q2 = v => Math.round(v / 2) * 2, ph = Math.floor(t * 40), sx = q2(amp * (((ph * 7) % 5) / 2 - 1) + camK.x), sy = q2(amp * (((ph * 3) % 5) / 2 - 1) * .7), sr = 0;
   const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.rotate(sr); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
   ctx.save(); shaken();
   board.forEach(r => {
@@ -1666,6 +1716,7 @@ function draw(t) {
     ctx.fillStyle = gg; rr(gx, gy, Math.max(8, gw * Math.min(1, S.gauge / 100)), 8, 4); ctx.fill();
     ctx.fillStyle = S.gauge >= 80 ? (day ? '#D81E2A' : '#FF8A80') : (day ? '#5F6674' : '#B3A89B'); ctx.font = `600 12px ${FB}`; ctx.textAlign = 'right'; ctx.fillText(`${S.gauge}%`, 372, gy + 8);
   }
+  pfxDraw();
   if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
   if (plate.phase === 'show') { ctx.fillStyle = `rgba(8,5,3,${.55 * Math.min(1, plate.showT * 6)})`; ctx.fillRect(-20, ROW0 - 8, W + 40, H); drawOverheatWorld(t); }
@@ -1724,11 +1775,11 @@ function draw(t) {
     if (o.text) gtext(o.text, x, y, 17, { top: '#FFFFFF', bot: '#FFD66B', scale: 1 - e * .3 });
     else { gtext(o.big, x, y + 12, 40, { top: '#FFFFFF', bot: '#FFC23D', scale: 1 - e * .55 }); ctx.globalCompositeOperation = 'lighter'; for (let j = 1; j < 6; j++) { const [tx, ty] = tokPos(o, Math.max(0, e - j * .05)); ctx.fillStyle = `rgba(255,190,80,${.35 - j * .06})`; ctx.beginPath(); ctx.arc(tx, ty, 12 - j * 1.5, 0, 6.28); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; }
   }
+  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   for (const p of pops) {
     const f = p.t / p.life;
     if (p.t > 0) gtext(p.text, p.x, p.y - Math.pow(f, .5) * 34, p.size, { appear: p.t * 9, rot: p.rot, alpha: Math.min(1, (1 - f) * 3), top: p.col0 ? p.col0[0] : '#FFFFFF', bot: p.col0 ? p.col0[1] : p.red ? '#FF6B5A' : '#6FB6FF', wob: 1.2, t });
   }
-  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   drawHint(t);
   ctx = sctx;
   present(t);
@@ -1749,14 +1800,14 @@ function frame(now) {
     for (const e of due) timeline.splice(timeline.indexOf(e), 1);
     due.forEach(e => e.fn());
   }
-  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; }
+  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; } pfxStep(gdt);
   const n = Math.ceil(dt / (1 / 240)), sd = dt / Math.max(1, n);
   for (let i = 0; i < n; i++) {
     [plate.cs, plate.ms, plate.xs, plate.ts, wallet.s, wallet.us, zoom].forEach(s => stepSpring(s, sd));
     const rsd = gdt / Math.max(1, n); if (rsd > 0) board.forEach(r => { stepSpring(r.sc, rsd, 300, 16); stepSpring(r.q, rsd, 900, 11); stepRowY(r, rsd); }); stepSpring(camK, sd, 220, 13);
   }
   board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 11); if (r.fly) { r.dx += r.fly * dt * 3800; if (!r.streaked) { r.streaked = 1; camK.v += r.fly * 260; for (let j = 0; j < (reduce ? 3 : 9); j++) spawn('STREAK', 195 + r.fly * (40 + rnd() * 120), r.y.x + 8 + rnd() * (CH - 16), r.fly * (1400 + rnd() * 900), 0, .18 + rnd() * .1, [255, 255, 255], 1.5 + rnd() * 2); } } else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
-  shake = Math.max(0, shake - dt * 9); frameNo++; pixT = Math.max(0, pixT - dt * 4.5); psyT = Math.max(0, psyT - dt * (plate.phase === 'idle' ? 1.2 : .35)); noiT = Math.max(0, noiT - dt * 2.5);
+  shake = Math.max(0, shake - dt * 16); frameNo++; pixT = Math.max(0, pixT - dt * 4.5); psyT = Math.max(0, psyT - dt * (plate.phase === 'idle' ? 1.2 : .35)); noiT = Math.max(0, noiT - dt * 2.5);
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
@@ -1816,6 +1867,7 @@ cv.addEventListener('pointermove', e => {
   drag.r.dx = x - drag.x0; if (Math.abs(drag.r.dx) > 6) drag.moved = true;
 });
 const release = async e => {
+  if (ev && EVENTS[ev.type].up) EVENTS[ev.type].up(ev);
   pull.on = false;
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);

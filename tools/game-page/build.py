@@ -24,6 +24,7 @@ if OUT.exists(): shutil.rmtree(OUT)
 for f in (ROOT / "docs/design/app-icons").glob("*.svg"): shutil.copy(f, OUT / "icons" / f.name)
 shutil.copytree(ROOT / "tools/brand/fonts/black-han-sans", OUT / "fonts/black-han-sans")
 shutil.copytree(ROOT / "tools/brand/fonts/pretendard", OUT / "fonts/pretendard")
+shutil.copy(ROOT / "tools/game-page/pfx.bundle.js", OUT / "pfx.bundle.js")  # pixelfx (MIT) — rebuild with build-pfx.mjs
 (OUT / "img").mkdir()
 shutil.copy(ROOT / "docs/design/ui-assets/tutorial/hand-swipe.png", OUT / "img/hand-swipe.png")
 shutil.copytree(ROOT / "docs/design/bm-screens/img", OUT / "img/bm")
