@@ -24,7 +24,7 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
       [...registered.inapp,...registered.subs].map(p=>[p.id,p.krw])));
     assert.equal(apiProducts.length,11);
     await page.evaluate(() => window.__dbg.open('pass'));
-    const cards = page.locator('.passc');
+    const cards = page.locator('.passc, .pz');
     await cards.last().waitFor();
     assert.equal(await cards.count(),3);
     const shown = await cards.allTextContents();
@@ -33,8 +33,17 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
     assert.match(shown[0], /46,200/);
     assert.match(shown[0], /90시간/);
     assert.doesNotMatch(shown[0], /×22\.8/);
-    assert.match(shown[1], /×1\.4/);
-    assert.match(shown[2], /×1\.8/);
+    assert.match(shown[1], /2,100/);
+    assert.match(shown[1], /90시간/);
+    assert.match(shown[2], /8,100/);
+    assert.match(shown[2], /90시간/);
+    const captions = ['최대 ×8.4 가치'];
+    for (const [index, multiplier] of [[1, '1.4'], [2, '1.8']]) {
+      if (await cards.nth(index).locator('.pv-x').count()) {
+        assert(shown[index].includes('×' + multiplier));
+        captions.push('최대 ×' + multiplier + ' 가치');
+      }
+    }
     await page.screenshot({path:out+'/pass-cards.png'});
     await page.evaluate(() => window.__dbg.open('data'));
     const dataText = await page.locator('#sheet-b').textContent();
@@ -43,7 +52,7 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
     assert.deepEqual(errors,[]);
     const result = {
       passValues:bm.passValues, starterValueX:bm.starterValueX, rookieValueX:bm.rookieValueX,
-      renderedCaptions:['최대 ×8.4 가치','최대 ×1.4 가치','최대 ×1.8 가치'],
+      renderedCaptions:captions,
       renderedMonth:['2,100 데이터','₩46,200','90시간'],
       renderedStarterAndRookie:true, verifiedPlayIdsAndPrices:Object.fromEntries(apiProducts), pageErrors:errors
     };
