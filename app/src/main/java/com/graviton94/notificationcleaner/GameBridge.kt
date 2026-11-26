@@ -43,7 +43,7 @@ class GameBridge(private val context: Context) {
             "challengeStart" -> session.challengeStart(t)
             "challengeEnd" -> session.challengeEnd(t)
             "buyCloud" -> session.buyCloud(a.optString("item"), t)
-            "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).toString()
+            "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).put("adPrivacy", ads?.privacyRequired == true).toString()
             "wipe" -> { saveFile.delete(); File(saveFile.path + ".tmp").delete(); prefs.edit().clear().apply(); session = WebSession(now = t); session.snapshot(t) }
             "swipe" -> session.swipe(a.optString("id").toLong(), t)
             "auto" -> session.auto(t)
@@ -85,6 +85,10 @@ class GameBridge(private val context: Context) {
         val a = ads ?: return run { js?.invoke("window.onAdResult && window.onAdResult($q, false, 'none')") }
         a.show { earned, reason -> js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})") }
     }
+
+    /** Settings › 광고 개인정보 설정: the UMP privacy options form. */
+    @JavascriptInterface
+    fun adPrivacy() { ads?.showPrivacy() }
 
     /** Analytics event from the page (no-op without Firebase). */
     @JavascriptInterface

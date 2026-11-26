@@ -11,6 +11,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 import com.graviton94.notificationcleaner.BuildConfig
@@ -46,6 +47,15 @@ class Ads(private val activity: Activity) {
     }
 
     val ready get() = ad != null
+
+    /** GDPR / US-state messages need a way back to the consent choices: true when this user must be offered one. */
+    val privacyRequired get() = UserMessagingPlatform.getConsentInformation(activity).privacyOptionsRequirementStatus ==
+        ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
+
+    /** Re-opens the consent form (settings › 광고 개인정보 설정). */
+    fun showPrivacy() = main.post {
+        UserMessagingPlatform.showPrivacyOptionsForm(activity) { err -> if (err != null) Log.w(TAG, "privacy form: ${err.message}") }
+    }
 
     private fun load() {
         if (loading || ad != null || !started.get()) return
