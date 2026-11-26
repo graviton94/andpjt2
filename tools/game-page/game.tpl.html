@@ -517,6 +517,16 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #chres .amt{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:14px 0 10px}#chres .v{font:800 46px/1 var(--font);font-variant-numeric:tabular-nums}#chres .u{font:800 22px var(--font);color:var(--m-primary)}
 #chres .nb{display:inline-flex;height:30px;align-items:center;padding:0 14px;border-radius:15px;font:800 14px var(--font);color:#fff;background:linear-gradient(135deg,#FF5F6D,#E0261C)}
 #chres .got{display:flex;justify-content:center;gap:6px;margin:14px 0 16px}#chres .btn{width:100%;height:52px}
+.pc{width:20px;height:20px;vertical-align:-4px;margin-right:2px;flex:none}
+.achsum b .pc{width:22px;height:22px;margin-right:4px}
+.rwd{display:flex;flex-direction:column;align-items:center;gap:6px;margin:14px 0 4px;font:500 13px/1 var(--font);color:var(--m-on-sv)}
+.rwd span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.rwd b{color:var(--m-on-surface);font-weight:800}
+.key{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;position:static!important;color:color-mix(in srgb,var(--m-on-surface) 30%,transparent);background:color-mix(in srgb,var(--m-on-surface) 8%,transparent)!important;box-shadow:none}
+.key svg{width:20px;height:20px;transform:rotate(-35deg)}
+.key.on{color:#5A3A00;background:linear-gradient(135deg,#FFE27A,#FFB300)!important;box-shadow:0 3px 10px rgba(255,179,0,.4)}
+.key.on::after{display:none!important}
+.cols .keys{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+.rule b{font:800 22px/1.3 var(--font)!important}
 </style>
 </head>
 <body>
@@ -833,6 +843,24 @@ function box(cx, cy, w, h, c0, c1, s) {
   ctx.fillStyle = g; rr(-w / 2, -h / 2, w, h, 12); ctx.fill();
   ctx.lineWidth = 3; ctx.strokeStyle = '#1A0E06'; ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.25)'; rr(-w / 2 + 6, -h / 2 + 4, w - 12, 6, 3); ctx.fill();
+  ctx.restore();
+}
+// system-UI score pill: tonal fill, hairline highlight, soft shadow, Pretendard numerals, small caption above
+function scorePill(cx, cy, w, h, c0, c1, s, cap) {
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s);
+  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+  const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2); g.addColorStop(0, c0); g.addColorStop(1, c1);
+  ctx.fillStyle = g; rr(-w / 2, -h / 2, w, h, h / 2); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.stroke();
+  const hl = ctx.createLinearGradient(0, -h / 2, 0, 0); hl.addColorStop(0, 'rgba(255,255,255,.28)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hl; rr(-w / 2 + 1, -h / 2 + 1, w - 2, h / 2, [h / 2, h / 2, 4, 4]); ctx.fill();
+  if (cap) { ctx.font = `600 11px ${FB}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.fillText(cap, 0, -h / 2 - 7); }
+  ctx.restore();
+}
+function stext(str, x, y, size, o = {}) {
+  ctx.save(); ctx.translate(x, y); if (o.scale) ctx.scale(o.scale, o.scale); if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+  ctx.font = `800 ${size}px ${FB}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 1; ctx.fillStyle = o.col || '#FFFFFF'; ctx.fillText(str, 0, 0);
   ctx.restore();
 }
 function flames(cx, cy, w, h, t, amt, hm = 1) {
@@ -1553,11 +1581,10 @@ function draw(t) {
     const m = plate.phase === 'merge' ? plate.merge : 0, e = m * m;
     ctx.globalAlpha = (live ? 1 : .4) * (1 - e * .9);
     const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
-    box(cxp, BOXY, 132, 40, '#5AA2FF', '#1F5FE0', plate.cs.x);
-    box(mxp, BOXY, 132, 40, '#FF6B5A', '#D81E2A', plate.ms.x);
-    gtext(fmtL(plate.chipsShown), cxp, BOXY + 9, 24, { scale: plate.cs.x, top: '#FFFFFF', bot: '#CFE4FF', wob: live ? .8 : 0, t });
-    gtext('×' + fmtMult(plate.multShown), mxp, BOXY + 9, 24, { scale: plate.ms.x, top: '#FFFFFF', bot: '#FFD3CC', wob: live ? .8 : 0, t });
-    gtext('×', 195, BOXY + 8, 22, { top: '#FFFFFF', bot: '#FFD66B', scale: plate.xs.x });
+    scorePill(cxp, BOXY, 124, 40, 'rgba(76,140,255,.95)', 'rgba(36,83,214,.95)', plate.cs.x);
+    scorePill(mxp, BOXY, 124, 40, 'rgba(255,107,90,.95)', 'rgba(217,45,58,.95)', plate.ms.x);
+    stext(fmtL(plate.chipsShown), cxp, BOXY + 1, 22, { scale: plate.cs.x });
+    stext('×' + fmtMult(plate.multShown), mxp, BOXY + 1, 22, { scale: plate.ms.x });
     ctx.globalAlpha = 1;
     if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
@@ -2256,30 +2283,34 @@ function renderAch(b) {
   $('sheet-t').textContent = '업적 · 칭호'; $('sheet-w').textContent = '';
   const m = P.meta, on = TITLE(), got = m.achievements.filter(a => a.got).length;
   b.innerHTML = `<div class="achsum"><div><span class="l">모은 칭호</span><b>${got}<small> / ${m.achievements.length}</small></b></div>
-      <div><span class="l">꾸미기 조각</span><b>${m.pieces}<small> / 10</small></b><span class="bar"><i style="width:${Math.min(100, m.pieces * 10)}%"></i></span></div></div>
+      <div><span class="l">꾸미기 조각</span><b>${PIECE}${m.pieces}<small> / 10</small></b><span class="bar"><i style="width:${Math.min(100, m.pieces * 10)}%"></i></span></div></div>
     <div class="h3">장착한 칭호</div>
     <div class="ttlnow">${on ? `<span class="ttl big">「${on}」</span><button class="btn tonal sm" data-unequip>해제</button>` : '<span class="note">업적을 달성하면 칭호를 달 수 있어요</span>'}</div>
     <div class="h3">업적</div>
     ${m.achievements.map(a => `<div class="it ach ${a.got ? 'got' : ''}"><span class="medal">${svg(ICONP.ach)}</span>
       <div class="t"><b class="fit1" style="display:block">「${a.title}」</b><div class="m fit1">${ACH_DESC[a.id] || ''}</div>
-      ${a.got ? '' : `<div class="prog"><i style="width:${Math.min(100, a.now / a.goal * 100)}%"></i></div><div class="note fit1">${a.now.toLocaleString()} / ${a.goal.toLocaleString()} · 조각 +${a.pieces}</div>`}</div>
-      ${a.got ? (on === a.title ? '<span class="cap on">장착 중</span>' : `<button class="btn skin gold sm" data-equip="${a.title}">장착</button>`) : `<span class="cap">조각 +${a.pieces}</span>`}</div>`).join('')}
+      ${a.got ? '' : `<div class="prog"><i style="width:${Math.min(100, a.now / a.goal * 100)}%"></i></div><div class="note fit1">${a.now.toLocaleString()} / ${a.goal.toLocaleString()}</div>`}</div>
+      ${a.got ? (on === a.title ? '<span class="cap on">장착 중</span>' : `<button class="btn skin gold sm" data-equip="${a.title}">장착</button>`) : `<span class="cap">${PIECE}×${a.pieces}</span>`}</div>`).join('')}
     ${foot(['칭호는 보여 주기용이에요', '꾸미기 조각 10개 = 꾸미기 1개 (준비 중)'])}`;
   b.querySelectorAll('[data-equip]').forEach(x => x.onclick = () => { localStorage.setItem('titleOn', x.dataset.equip); toast(`「${x.dataset.equip}」 칭호를 달았어요`, 'ok'); sfx.badge(); renderSheet(); });
   const u = b.querySelector('[data-unequip]'); if (u) u.onclick = () => { localStorage.removeItem('titleOn'); renderSheet(); };
 }
 
 // ---------- 일일 도전: today's shared board, 60 seconds, best score ----------
+// pictograms: 꾸미기 조각 (puzzle piece) and the challenge key
+const PIECE = '<svg class="pc" viewBox="0 0 24 24"><defs><linearGradient id="pcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9A2FF"/><stop offset="1" stop-color="#7B4DFF"/></linearGradient></defs><path d="M4 8h3.2a2.3 2.3 0 1 1 4.6 0H15v3.2a2.3 2.3 0 1 1 0 4.6V19H4v-3.4a2.3 2.3 0 1 0 0-4.4z" fill="url(#pcg)" stroke="rgba(0,0,0,.18)" stroke-width=".8"/><path d="M5.2 9.2h2.4" stroke="rgba(255,255,255,.6)" stroke-width="1.2" stroke-linecap="round"/></svg>';
+const KEY = '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M12.4 12H21M18 12v3.4M15.4 12v2.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
 let chal = null;  // { ends, timer }
 function renderChal(b) {
   $('sheet-t').textContent = '일일 도전'; $('sheet-w').textContent = '';
-  const m = P.meta, keys = Array.from({ length: m.keyCap }, (_, i) => `<i class="key ${i < m.keys ? 'on' : ''}"></i>`).join('');
-  b.innerHTML = `<div class="chero"><span class="l">오늘의 판</span>
+  const m = P.meta;
+  const keys = Array.from({ length: m.keyCap }, (_, i) => `<span class="key ${i < m.keys ? 'on' : ''}">${KEY}</span>`).join('');
+  b.innerHTML = `<div class="chero"><span class="l">일일 도전</span>
       <div class="cdeck">${m.deck.map(a => `<span class="cdk">${ico(a.id, 0)}<em class="fit1">${a.name}</em></span>`).join('')}</div>
-      <div class="rule"><span class="fit1">60초 동안 오늘의 판에서</span><b class="fit1">P를 가장 많이 벌어요</b><span class="fit1 n">(모두 같은 조건 · 내 강화·보너스 없음)</span></div></div>
+      <div class="rule"><b class="fit1">60초 타임어택!</b></div></div>
     <div class="cols"><div><h4>내 최고 기록</h4><b class="cbest t-gold">${m.bestShort} P</b></div><div><h4>오늘 남은 열쇠</h4><div class="keys">${keys}</div><span class="note fit1">${m.keyCap === 3 ? '최고 Lv52 달성 · 하루 3개' : 'Lv52부터 하루 3개'}</span></div></div>
     <button class="btn big skin gold ${m.keys ? 'fx-shine' : ''}" id="chal-go" ${m.keys ? '' : 'disabled'}>${m.keys ? '도전 시작 · 열쇠 1개' : '내일 열쇠가 다시 생겨요'}</button>
-    ${foot(['완주하면 꾸미기 조각 +1', '최고 기록을 넘기면 조각 +2', '열쇠는 팔지 않아요'])}`;
+    <div class="rwd"><span>완료 시 ${PIECE}<b>×1</b></span><span>최고 기록 갱신 시 ${PIECE}<b>×2</b></span></div>`;
   const go = $('chal-go'); if (go) go.onclick = startChallenge;
 }
 async function startChallenge() {
@@ -2298,7 +2329,7 @@ async function endChallenge() {
   const el = $('chres');
   el.innerHTML = `<div class="card"><span class="l">일일 도전 끝!</span><div class="amt"><span class="v t-gold" id="chres-v">0</span><span class="u">P</span></div>
     ${o.newBest ? '<div class="nb fx-shine">최고 기록 경신!</div>' : `<div class="note fit1">내 최고 ${o.bestShort} P</div>`}
-    <div class="got"><span class="cap on">꾸미기 조각 +${o.piecesGot}</span><span class="cap">모은 조각 ${o.pieces} / 10</span></div>
+    <div class="got"><span class="cap on">${PIECE} ×${o.piecesGot}</span><span class="cap">모은 조각 ${o.pieces} / 10</span></div>
     <button class="btn big skin gold" id="chres-ok">확인</button></div>`;
   el.classList.add('on'); fitLines(el); sfx.badge(); phone('ui.bonus', .5);
   const to = L(o.score), t0 = performance.now(), v = $('chres-v');
