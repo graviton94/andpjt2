@@ -1231,7 +1231,7 @@ function drawLights() {
     const f = l.t / l.life;
     if (l.kind === 'flare') { const e = 1 - Math.pow(1 - Math.min(1, f * 4), 3), a = f < .15 ? 1 : Math.pow(1 - (f - .15) / .85, 1.6); flareAt(l.x, l.y, (90 + 260 * e) * l.size, (10 + 16 * (1 - f)) * l.size, a, l.col); }
     else if (l.kind === 'rays') { const a = Math.min(1, f * 6) * Math.pow(1 - f, 1.2); rays(l.x, l.y, 260 * l.size * (.7 + .3 * Math.min(1, f * 3)), l.t * .6, a, l.col); rays(l.x, l.y, 190 * l.size, -l.t * .9 + .2, a * .6, [255, 255, 255], 10); }
-    else if (l.kind === 'sweep') { const yy = l.y - f * l.dist, a = Math.sin(Math.PI * Math.min(1, f)) * .9, g = ctx.createLinearGradient(0, yy - 140, 0, yy + 30); g.addColorStop(0, rgb(l.col, 0)); g.addColorStop(.8, rgb(l.col, .45 * a)); g.addColorStop(.92, `rgba(255,255,255,${.7 * a})`); g.addColorStop(1, rgb(l.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, yy - 140, W, 170); }
+    else if (l.kind === 'sweep') { const yy = l.y - f * l.dist + (l.down ? 140 : 0), a = Math.sin(Math.PI * Math.min(1, f)) * .9, g = ctx.createLinearGradient(0, yy - 140, 0, yy + 30); g.addColorStop(0, rgb(l.col, 0)); g.addColorStop(.8, rgb(l.col, .45 * a)); g.addColorStop(.92, `rgba(255,255,255,${.7 * a})`); g.addColorStop(1, rgb(l.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, yy - 140, W, 170); }
   }
   ctx.restore();
 }
@@ -1700,10 +1700,12 @@ function finishPlate() {
   wallet.to = wallet.v; wallet.t = Math.min(wallet.t, .999);
 }
 function waveHit(w) {
-  for (let i = 0; i < (reduce ? 20 : 70); i++) spawn('GLASS', rnd() * W, 150 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 380, 1.2, [255, 220, 170], 3 + rnd() * 5);
-  bandT = 0; plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
+  // the wave: a hot light sheet sweeps down the board, the multiplier pill flares
+  light('sweep', 0, 120, { col: [255, 150, 60], dist: -(H + 160), life: .6, down: 1 }); light('flare', MULTX, BOXY, { col: [255, 110, 70], size: .9 + w * .15, life: .5 });
+  for (let i = 0; i < (reduce ? 6 : 22); i++) spawn('STREAK', rnd() * W, 140 + rnd() * 30, (rnd() - .5) * 60, 1400 + rnd() * 900, .22, [255, 200, 140], 1.4 + rnd() * 1.4);
+  plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
   plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
-  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1; chroma = Math.max(chroma, .012);
+  stop = Math.max(stop, .04); if (!reduce) shake = 4; chroma = Math.max(chroma, .008);
   sfx.wave(w); buzz([20, 30, 40]);
 }
 function payoff() {
@@ -1721,11 +1723,11 @@ function payoff() {
   });
 }
 function slam() { // end of the count-up: the screen glass takes the hit
-  plate.landed = true; if (plate.total >= 7) light('flare', 195, REVEAL_Y - 24, { col: [255, 170, 70], size: .8 + clamp((plate.total - 7) / 3, 0, 1) * .5 }); kick(plate.ts, 34); pixT = Math.max(pixT, .65); psyT = 1; noiT = 1; sfx.payoff(plate.k); buzz([30, 40, 70]);
+  plate.landed = true; light('flare', 195, REVEAL_Y - 24, { col: [255, 170, 70], size: .7 + Math.min(plate.k, 12) * .05 }); kick(plate.ts, 34); noiT = Math.max(noiT, .3); sfx.payoff(plate.k); buzz([30, 40, 70]);
   // the glass takes the hit in proportion: small tallies thump, big chains crack the screen
-  if (plate.k >= 3) crackAt(195, REVEAL_Y - 18, Math.min(1, .55 + plate.k * .05)); ripple(195, REVEAL_Y - 18, .02 + Math.min(plate.k, 10) * .0025); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
+  ripple(195, REVEAL_Y - 18, .012 + Math.min(plate.k, 10) * .001); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
   for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
-  pfx('critHit', 195, REVEAL_Y - 18); if (plate.k >= 5) pfx('collectBurst', 195, REVEAL_Y - 30);
+  if (plate.k >= 5 || plate.wmul > 1) light('rays', 195, REVEAL_Y - 24, { col: [255, 170, 60], size: .8 + Math.min(plate.k, 12) * .03, life: 1.4 });
   if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
   if (plate.record) after(.08, () => sfx.badge());
   if (plate.record) after(1.2, () => offerDouble(plate.total));
