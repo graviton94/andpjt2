@@ -22,6 +22,18 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Firebase config (only when the repository secret is set)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; echo "Firebase on"; else echo "Firebase off (no secret)"; fi
+      - name: Sideload signing key
+        env:
+          P: ${{ secrets.SIDELOAD_PASSPHRASE }}
+        run: |
+          if [ -z "$P" ] || [ ! -f keystore/sideload.jks.gpg ]; then echo "::warning::시험 키가 없어 임시 디버그 키로 서명합니다 (SIDELOAD_PASSPHRASE + android-signing-key.yml)"; exit 0; fi
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 -d -o "$RUNNER_TEMP/sideload.jks" keystore/sideload.jks.gpg 3<<<"$P"
+          echo "DND_SIDELOAD_STORE=$RUNNER_TEMP/sideload.jks" >> "$GITHUB_ENV"
       - name: Core rules tests
         run: |
           if ./gradlew -p core test --no-daemon > "$RUNNER_TEMP/core-test.log" 2>&1; then
@@ -33,7 +45,12 @@ jobs:
             exit 1
           fi
       - name: Test and assemble
+        env:
+          DND_SIDELOAD_PASSWORD: ${{ secrets.SIDELOAD_PASSPHRASE }}
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug
+      - name: Forget the unlocked key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sideload.jks"
       - uses: actions/upload-artifact@v4
         with:
           name: notification-cleaner-debug

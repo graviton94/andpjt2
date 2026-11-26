@@ -11,6 +11,8 @@ import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.WebSession
 import com.graviton94.notificationcleaner.core.account
+import com.graviton94.notificationcleaner.platform.Ads
+import com.graviton94.notificationcleaner.platform.Telemetry
 import org.json.JSONObject
 import java.io.File
 
@@ -23,7 +25,8 @@ class GameBridge(private val context: Context) {
     private val saveFile = File(context.filesDir, "save.json")
     private val prefs = context.getSharedPreferences("clock", 0)
     private val lock = Any()
-    private val session: WebSession = synchronized(lock) {
+    // var: 설정의 "게임 데이터 초기화" replaces the whole session (privacy policy §데이터 삭제)
+    private var session: WebSession = synchronized(lock) {
         val saved = runCatching { SaveCodec.decode(saveFile.readText()) }.getOrNull()
         WebSession(state = saved, now = now())
     }
@@ -42,6 +45,13 @@ class GameBridge(private val context: Context) {
         val previousPassDay = session.state.account.passDay
         val out = when (method) {
             "snapshot" -> session.snapshot(t)
+            "sync" -> session.sync(t)
+            "meta" -> session.meta(t)
+            "challengeStart" -> session.challengeStart(t)
+            "challengeEnd" -> session.challengeEnd(t)
+            "buyCloud" -> session.buyCloud(a.optString("item"), t)
+            "info" -> JSONObject().put("version", runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "").put("package", context.packageName).put("adPrivacy", ads?.privacyRequired == true).toString()
+            "wipe" -> { saveFile.delete(); File(saveFile.path + ".tmp").delete(); prefs.edit().clear().apply(); session = WebSession(now = t); session.snapshot(t) }
             "swipe" -> session.swipe(a.optString("id").toLong(), t)
             "auto" -> session.auto(t)
             "hint" -> session.hint(t)
@@ -74,6 +84,26 @@ class GameBridge(private val context: Context) {
         if (changesState || previousPassDay != session.state.account.passDay) save()
         out
     }
+
+    /** Set by MainActivity: the rewarded-ad host and a way to call back into the page. */
+    var ads: Ads? = null
+    var js: ((String) -> Unit)? = null
+
+    /** Page asks for a rewarded ad; the answer comes back as window.onAdResult(id, earned, reason). */
+    @JavascriptInterface
+    fun showAd(id: String) {
+        val q = JSONObject.quote(id)
+        val a = ads ?: return run { js?.invoke("window.onAdResult && window.onAdResult($q, false, 'none')") }
+        a.show { earned, reason -> js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})") }
+    }
+
+    /** Settings › 광고 개인정보 설정: the UMP privacy options form. */
+    @JavascriptInterface
+    fun adPrivacy() { ads?.showPrivacy() }
+
+    /** Analytics event from the page (no-op without Firebase). */
+    @JavascriptInterface
+    fun log(name: String, paramsJson: String) = Telemetry.event(name, paramsJson)
 
     @JavascriptInterface
     fun buzz(ms: Int) {

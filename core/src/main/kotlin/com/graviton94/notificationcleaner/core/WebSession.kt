@@ -83,6 +83,13 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     /** 알림 훈련: one tap while the drill runs (+1% income each, up to +100%). */
     fun tapDrill(now: Long): String { state = engine.tapDrill(tick(now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
 
+    /** 클라우드 동기화 (2nd prestige) and its shop: GB survives everything. */
+    fun sync(now: Long): String = act(now) { meta.sync(it, now) ?: it }
+
+    fun buyCloud(item: String, now: Long): String = act(now) { s ->
+        CloudItem.entries.firstOrNull { it.name == item }?.let { engine.buyCloud(s, it) } ?: s
+    }
+
     fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
 
     fun buyBackup(item: String, now: Long): String = act(now) { s ->
@@ -273,6 +280,19 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
                 }
             }
             put("canReset", s.level >= r.resetLevel)
+            put("syncLevel", r.syncLevel)
+            put("canSync", s.level >= r.syncLevel)
+            put("gbNow", engine.cloudGbNow(s))
+            put("gb", s.backup.cloud.gb)
+            put("syncs", s.backup.cloud.syncs)
+            putJsonArray("cloudShop") {
+                CloudItem.entries.filter { it.pack == null || it.pack in Catalog.packs }.forEach { c ->
+                    add(buildJsonObject {
+                        put("id", c.name); put("label", c.label); put("lv", s.backup.cloud.lv(c)); put("max", c.max)
+                        put("price", r.cloudPrice(c, s.backup.cloud.lv(c))); put("open", engine.cloudOpen(s, c)); put("minSyncs", c.minSyncs)
+                    })
+                }
+            }
             put("files", s.backup.files)
             put("resets", s.backup.resets)
             putJsonArray("backupShop") {
@@ -286,7 +306,66 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         }.toString()
     }
 
-    fun save(): String = SaveCodec.encode(state)
+    fun save(): String = SaveCodec.encode(home ?: state)
+
+    // ---- 업적 · 칭호 · 일일 도전 (18 meta-and-ops) -------------------------------------------------------------
+
+    /** Main game parked while a 60-second challenge board is played; saves always write the main game. */
+    private var home: GameState? = null
+    private var challengeEnds = 0L
+
+    private fun achGoal(s: GameState, a: Achievement): Pair<Long, Long> {
+        fun st(k: Stat) = s.account.stats[k.name] ?: 0L
+        return when (a) {
+            Achievement.FirstReset -> st(Stat.Resets) to 1L
+            Achievement.FirstSync -> st(Stat.Syncs) to 1L
+            Achievement.LastApp -> (if (Catalog.apps.maxBy { it.unlockLevel }.id in s.appLevels) 1L else 0L) to 1L
+            Achievement.Chain10 -> st(Stat.BestChain) to 10L
+            Achievement.Wave9 -> st(Stat.BestWave) to 9L
+            Achievement.Spam1000 -> st(Stat.SpamCleared) to 1_000L
+            Achievement.Crash100 -> st(Stat.CrashRestarts) to 100L
+            Achievement.Pro10 -> s.pro.size.toLong() to 10L
+            Achievement.Streak30 -> s.account.streak.toLong() to 30L
+        }
+    }
+
+    /** Achievements with progress, held titles, 꾸미기 조각 and today's challenge keys. */
+    fun meta(now: Long): String {
+        val s = home ?: engine.tick(state, now).also { state = it }
+        return buildJsonObject {
+            putJsonArray("achievements") {
+                Achievement.entries.forEach { a -> val (v, g) = achGoal(s, a)
+                    add(buildJsonObject { put("id", a.name); put("title", a.title); put("pieces", a.pieces); put("got", a.title in s.account.titles); put("now", minOf(v, g)); put("goal", g) }) }
+            }
+            put("titles", JsonArray(s.account.titles.map { JsonPrimitive(it) }))
+            put("pieces", s.account.pieces)
+            put("keys", meta.challengeKeys(s, now)); put("keyCap", if (maxOf(s.backup.bestLevel, s.level) >= 52) 3 else 2)
+            put("best", s.account.challengeBest); put("bestShort", short(BigInteger(s.account.challengeBest)))
+            put("active", home != null); put("endsAt", challengeEnds)
+            putJsonArray("deck") { meta.challengeBoard(now).active.forEach { id -> add(buildJsonObject { put("id", id); put("name", Catalog.app(id).name) }) } }
+        }.toString()
+    }
+
+    /** Uses a key and swaps in today's board for 60 seconds. */
+    fun challengeStart(now: Long): String {
+        if (home != null) return buildJsonObject { put("ok", false); put("reason", "active") }.toString()
+        val (used, board) = meta.startChallenge(engine.tick(state, now), now) ?: return buildJsonObject { put("ok", false); put("reason", "keys") }.toString()
+        home = used; state = board; challengeEnds = now + 60_000
+        return buildJsonObject { put("ok", true); put("endsAt", challengeEnds); put("state", snap(state, now)) }.toString()
+    }
+
+    /** Ends the run: score = P earned on the board; back to the main game. */
+    fun challengeEnd(now: Long): String {
+        val h = home ?: return buildJsonObject { put("ok", false) }.toString()
+        val score = state.runEarned
+        val best = BigInteger(h.account.challengeBest)
+        state = engine.tick(meta.finishChallenge(h, state), now); home = null; challengeEnds = 0
+        return buildJsonObject {
+            put("ok", true); put("score", score.toString()); put("scoreShort", short(score)); put("newBest", score > best)
+            put("best", state.account.challengeBest); put("bestShort", short(BigInteger(state.account.challengeBest)))
+            put("piecesGot", if (score > best) 2 else 1); put("pieces", state.account.pieces); put("state", snap(state, now))
+        }.toString()
+    }
 
     private fun act(now: Long, f: (GameState) -> GameState): String {
         val before = tick(now)

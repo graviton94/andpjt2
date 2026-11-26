@@ -134,7 +134,7 @@ cd /tmp/andpjt2-ex-reference
 python3 tools/economy-sim/ex-precheck.py /tmp/ex-precheck-full --seeds 30 --jobs 4
 ```
 
-원본 분산 실행은 6개 프로필, 6개씩의 시드 묶음, 2개 구성 묶음으로 나뉜다. 누락 묶음은 원본과 같은 소스로 이어서 채운다. [분산 실행](https://github.com/graviton94/andpjt2/actions/runs/45578667463) · [누락 작업 복구](https://github.com/graviton94/andpjt2/actions/runs/45580597162)
+원본 분산 실행은 6개 프로필, 6개씩의 시드 묶음, 2개 구성 묶음으로 나뉜다. 누락 묶음은 원본과 같은 소스로 이어서 채운다. [분산 실행](https://github.com/graviton94/donotdisturb/actions/runs/45578667463) · [누락 작업 복구](https://github.com/graviton94/donotdisturb/actions/runs/45580597162)
 
 원래 CI에서는 60묶음 중 58묶음이 성공했고 두 묶음이 종료 코드 1로 끝났다. 원본 리비전에서 두 묶음을 재실행해 1,440개 전체를 병합했다. CI와 별도 로컬 재생의 52개 케이스(진단 4개와 복구 48개)는 CSV 5종에서 바이트 단위로 일치했다. 전체 원자료 SHA-256과 행 수는 매니페스트에 기록했다. [원자료 리비전과 해시](ex-precheck-data/manifest.json) · [도달일 원자료](ex-precheck-data/summary.csv) · [캐시 대조 해시](ex-precheck-checks/cache-parity.txt)
 

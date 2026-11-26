@@ -228,7 +228,7 @@ python3 tools/economy-sim/ex-precheck.py /tmp/integrated-long --integrated --day
   --profiles Free,Spend30,Spend100 --cases none --seeds 2
 ```
 
-위 실행은 기준 커밋의 깨끗한 체크아웃에서 한다. 원본 Actions는 60개 중 56개 묶음을 만들었다. Gradle 단계에서 실패한 4묶음은 같은 리비전·Kotlin 소스·시드로 다시 실행했고, 복구 워크플로가 전체 1,440개를 병합했다. 병합 결과는 도달 요약 1,440행, 시점 5,760행, 환생 171,703행, 조건 19,440행, 지급 표본 2,160행이다. 다섯 표의 SHA-256, 기본·격리 코어의 소스와 재실행 증거를 아래 자료에서 확인할 수 있다. [원본 분산 실행](https://github.com/graviton94/andpjt2/actions/runs/45603785627) · [복구와 원자료 게시](https://github.com/graviton94/andpjt2/actions/runs/45605456907) · [소스·원자료 매니페스트](ex-integrated-data/manifest.json)
+위 실행은 기준 커밋의 깨끗한 체크아웃에서 한다. 원본 Actions는 60개 중 56개 묶음을 만들었다. Gradle 단계에서 실패한 4묶음은 같은 리비전·Kotlin 소스·시드로 다시 실행했고, 복구 워크플로가 전체 1,440개를 병합했다. 병합 결과는 도달 요약 1,440행, 시점 5,760행, 환생 171,703행, 조건 19,440행, 지급 표본 2,160행이다. 다섯 표의 SHA-256, 기본·격리 코어의 소스와 재실행 증거를 아래 자료에서 확인할 수 있다. [원본 분산 실행](https://github.com/graviton94/donotdisturb/actions/runs/45603785627) · [복구와 원자료 게시](https://github.com/graviton94/donotdisturb/actions/runs/45605456907) · [소스·원자료 매니페스트](ex-integrated-data/manifest.json)
 
 복구된 4묶음의 96경로를 로컬 격리 코어에서 별도로 재생했다. Actions 결과에 대응하는 다섯 CSV의 행이 바이트 단위로 일치했다. 자연 168일 실행의 첫 56일 체크포인트 24개 행도 84일 실행과 일치했다. 두 분석 명령을 새 폴더에서 다시 실행했을 때 14개 통계 CSV가 모두 동일했다. [로컬과 Actions 재생 비교](ex-integrated-checks/reproduction.csv)
 

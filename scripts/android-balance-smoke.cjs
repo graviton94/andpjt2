@@ -138,7 +138,14 @@ async function run() {
   if (phase === 'purchase' || desktop) {
     checkpointStage('claim attendance');
     await until(async () => (await bm()).claimedToday, 'The game did not claim attendance');
-    if (!(await page.locator('#sheet.open').count())) await open('attend');
+    const attendance = page.locator('#sheet.open #sheet-t').getByText('매일 들르기', { exact: true });
+    try {
+      // The core can record the claim before the page finishes opening the attendance sheet.
+      await attendance.waitFor({ timeout: 2500 });
+    } catch (error) {
+      if (error.name !== 'TimeoutError') throw error;
+      await open('attend');
+    }
     assert.equal((await bm()).streak, 1);
     await shot('00-attendance');
     await open('data');

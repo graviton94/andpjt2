@@ -1,0 +1,92 @@
+name: Android signing key (one time)
+
+# 서명 키를 GitHub 안에서 만든다 (mint-and-friends와 같은 방식).
+#   sideload = 시험용 APK 키, Secrets 의 SIDELOAD_PASSPHRASE 로 잠가 keystore/sideload.jks.gpg
+#   upload   = Google Play 업로드 키, Secrets 의 ANDROID_UPLOAD_PASSPHRASE 로 잠가 keystore/upload.jks.gpg
+# 잠그지 않은 키 · 암호는 어디에도 남지 않는다. 실행 요약에는 공개해도 되는 인증서 지문(SHA-1 · SHA-256)만 찍는다
+# (Firebase 프로젝트 설정 → 내 앱 → 디지털 지문, 카카오 키 해시에 넣는 값).
+# 이 파일이 브랜치에 처음 푸시되면 없는 키만 만든다(main 에 합치기 전에도 쓸 수 있게). 이미 있는 키는 절대 바꾸지 않는다.
+on:
+  push:
+    branches: [main, 'ccr-*']
+    paths: ['.github/workflows/android-signing-key.yml']
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "어떤 키"
+        type: choice
+        options: [sideload, upload]
+        default: sideload
+      replace:
+        description: "이미 있는 키를 새 키로 바꾸기 (시험 폰은 모두 지우고 다시 설치해야 함)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: signing-key-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  make-key:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Make and lock the keys
+        env:
+          P_UPLOAD: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          P_SIDELOAD: ${{ secrets.SIDELOAD_PASSPHRASE }}
+          KINDS: ${{ github.event_name == 'workflow_dispatch' && inputs.kind || 'sideload upload' }}
+          REPLACE: ${{ github.event_name == 'workflow_dispatch' && inputs.replace || false }}
+        run: |
+          set -euo pipefail
+          mkdir -p keystore
+          made=""
+          for KIND in $KINDS; do
+            if [ "$KIND" = upload ]; then NAME=ANDROID_UPLOAD_PASSPHRASE; P="$P_UPLOAD"; else NAME=SIDELOAD_PASSPHRASE; P="$P_SIDELOAD"; fi
+            if [ "$KIND" = upload ] && [ -n "$P_UPLOAD" ] && [ "$P_UPLOAD" = "$P_SIDELOAD" ]; then echo "::error::업로드 키 암호는 시험용 암호와 달라야 합니다"; exit 1; fi
+            if [ -z "$P" ]; then echo "::warning::Secrets 에 $NAME 가 없어 $KIND 키를 건너뜁니다"; continue; fi
+            if [ "${#P}" -lt 16 ]; then echo "::error::$NAME 는 16자 이상이어야 합니다"; exit 1; fi
+            OUT=keystore/$KIND.jks.gpg
+            if [ -f "$OUT" ] && [ "$REPLACE" != "true" ]; then echo "$KIND 키가 이미 있습니다 (그대로 둠)"; continue; fi
+            KS="$RUNNER_TEMP/$KIND.jks"
+            export P
+            keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias "$KIND" -keyalg RSA -keysize 4096 -validity 10000 \
+              -storepass:env P -keypass:env P -dname "CN=Do Not Disturb $KIND, O=graviton94" >/dev/null
+            { echo "### $KIND"; keytool -list -v -keystore "$KS" -storepass:env P -alias "$KIND" | grep -E "SHA1:|SHA256:" | head -2; } | tee -a "$GITHUB_STEP_SUMMARY"
+            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 -o "$OUT" "$KS" 3<<<"$P"
+            rm -f "$KS"
+            made="$made $KIND"
+          done
+          if [ -z "$made" ]; then echo "만든 키 없음"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add keystore/*.jks.gpg
+          git commit -m "New signing key(s):$made, locked with their passphrase secrets"
+          for i in 1 2 3 4 5; do git push && break; sleep $((i * 3)); git pull --rebase; done
+
+  fingerprints:
+    # 이미 있는 키의 지문을 다시 보고 싶을 때 (수동 실행 시 함께 찍힘)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show fingerprints
+        env:
+          P_UPLOAD: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          P_SIDELOAD: ${{ secrets.SIDELOAD_PASSPHRASE }}
+        run: |
+          for KIND in sideload upload; do
+            f=keystore/$KIND.jks.gpg; [ -f "$f" ] || continue
+            if [ "$KIND" = upload ]; then P="$P_UPLOAD"; else P="$P_SIDELOAD"; fi; [ -n "$P" ] || continue
+            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 -d -o "$RUNNER_TEMP/k.jks" "$f" 3<<<"$P"
+            export P; { echo "### $KIND"; keytool -list -v -keystore "$RUNNER_TEMP/k.jks" -storepass:env P -alias "$KIND" | grep -E "SHA1:|SHA256:" | head -2; } | tee -a "$GITHUB_STEP_SUMMARY"
+            rm -f "$RUNNER_TEMP/k.jks"
+          done

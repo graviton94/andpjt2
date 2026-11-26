@@ -9,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 
-PACKAGE = "com.graviton94.notificationcleaner.playtest"
+PACKAGE = "io.github.graviton94.donotdisturb"
 ACTIVITY = "com.graviton94.notificationcleaner.MainActivity"
 OUTPUT = pathlib.Path("build/smoke")
 

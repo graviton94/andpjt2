@@ -1,6 +1,6 @@
 # 유료 EX 누적 효과 구현 전 검토 보고서
 
-대상은 `graviton94/andpjt2`의 `ccr-balance-port` 브랜치다. 검증 기준 커밋은 `2a52ed8`이다. 이 커밋에는 제안서, 시뮬레이터, 결과 CSV가 있다. 앱의 EX 상품·보유권·정산·구매 화면은 구현 승인 대기 상태다. [검증 기준 커밋](https://github.com/graviton94/andpjt2/commit/2a52ed8) · [상품 상세](cosmetics-proposal.md) · [검토 요청문](ex-review-prompt.md)
+대상은 `graviton94/donotdisturb`의 `ccr-balance-port` 브랜치다. 검증 기준 커밋은 `2a52ed8`이다. 이 커밋에는 제안서, 시뮬레이터, 결과 CSV가 있다. 앱의 EX 상품·보유권·정산·구매 화면은 구현 승인 대기 상태다. [검증 기준 커밋](https://github.com/graviton94/donotdisturb/commit/2a52ed8) · [상품 상세](cosmetics-proposal.md) · [검토 요청문](ex-review-prompt.md)
 
 ## 의사결정의 출처
 

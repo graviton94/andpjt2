@@ -1,8 +1,8 @@
 # 다른 세션에 전달할 EX 승인 검토 요청
 
-알림 청소부의 유료 EX 꾸미기 도입을 독립적으로 검토해 주세요. 이번 요청의 산출물은 **구현 전 리뷰와 승인 권고**입니다. 제품 구현은 사용자 최종 결정 후 시작합니다.
+방해 금지!의 유료 EX 꾸미기 도입을 독립적으로 검토해 주세요. 이번 요청의 산출물은 **구현 전 리뷰와 승인 권고**입니다. 제품 구현은 사용자 최종 결정 후 시작합니다.
 
-저장소는 `graviton94/andpjt2`, 검토 브랜치는 `ccr-balance-port`, 설계·시뮬레이션 기준 커밋은 `2a52ed8`입니다. 먼저 [구현 전 검토 보고서](ex-review-report.md)를 읽고, [아이템·세트 상세](cosmetics-proposal.md), [풀세트 시드별 CSV](cosmetic-ex-collection-seeds.csv), [기본 비교 결과](offline-pass-review.md), [시뮬레이터](../../tools/economy-sim/cosmetic-probe.py), [결정 기록](../bible/11-decision-log.md)을 확인해 주세요.
+저장소는 `graviton94/donotdisturb`, 검토 브랜치는 `ccr-balance-port`, 설계·시뮬레이션 기준 커밋은 `2a52ed8`입니다. 먼저 [구현 전 검토 보고서](ex-review-report.md)를 읽고, [아이템·세트 상세](cosmetics-proposal.md), [풀세트 시드별 CSV](cosmetic-ex-collection-seeds.csv), [기본 비교 결과](offline-pass-review.md), [시뮬레이터](../../tools/economy-sim/cosmetic-probe.py), [결정 기록](../bible/11-decision-log.md)을 확인해 주세요.
 
 ## 사용자가 직접 결정한 사항
 

@@ -1,6 +1,6 @@
 # 다른 세션에 보낼 통합 밸런스 검토 요청
 
-알림 청소부의 유료 EX, 강화형 오프라인, 일일 도전 ★ 보정, 장기 무한성장을 독립적으로 검토해 주세요. 저장소는 `graviton94/andpjt2`, 브랜치는 `ccr-balance-port`입니다. 통합 30시드 후보의 기준은 `d074352913e42215e56c96b3275f18e340679125`입니다. [통합 결과 보고서](INTEGRATED-REPORT.md) · [이전 30시드 결과와 완료 기준](ex-precheck.md) · [확장 후보 패치](../../tools/economy-sim/precheck/integrated-core.patch) · [코어 회귀 패치](../../tools/economy-sim/precheck/integrated-tests.patch)
+방해 금지!의 유료 EX, 강화형 오프라인, 일일 도전 ★ 보정, 장기 무한성장을 독립적으로 검토해 주세요. 저장소는 `graviton94/donotdisturb`, 브랜치는 `ccr-balance-port`입니다. 통합 30시드 후보의 기준은 `d074352913e42215e56c96b3275f18e340679125`입니다. [통합 결과 보고서](INTEGRATED-REPORT.md) · [이전 30시드 결과와 완료 기준](ex-precheck.md) · [확장 후보 패치](../../tools/economy-sim/precheck/integrated-core.patch) · [코어 회귀 패치](../../tools/economy-sim/precheck/integrated-tests.patch)
 
 ## 사용자가 직접 결정한 사항
 

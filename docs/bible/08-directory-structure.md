@@ -3,7 +3,7 @@
 ## 현재 (2026-11-23)
 
 ```text
-andpjt2/
+donotdisturb/
 ├── README.md                         저장소 입구: 바이블 링크, 빌드 방법
 ├── build.gradle.kts · settings.gradle.kts · gradle/ · gradlew   Android 빌드 (app 모듈, 시연 앱)
 ├── .github/workflows/android.yml     CI: core 테스트 → 시연 앱 테스트·린트·APK → 에뮬레이터 스모크
@@ -44,7 +44,7 @@ andpjt2/
 ## 목표 (그레이박스 · 3단계 이후)
 
 ```text
-andpjt2/
+donotdisturb/
 ├── settings.gradle.kts               include(":core", ":app") — core를 Android 빌드에도 포함
 ├── core/                             (현재 그대로, 판정·데이터)
 │   └── src/main/resources/rules/rules-v3.json     직렬화한 RuleSet·Catalog (원격 설정 기본값)

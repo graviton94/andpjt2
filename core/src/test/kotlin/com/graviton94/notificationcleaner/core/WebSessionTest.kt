@@ -40,4 +40,24 @@ class WebSessionTest {
         assertEquals("false", o.getValue("ok").jsonPrimitive.content)
         assertEquals("gone", o.getValue("reason").jsonPrimitive.content)
     }
+
+    @Test fun dailyChallengeSwapsBoardsAndSavesTheMainGame() {
+        val w = WebSession(state = Engine().newGame(t0, 11), now = t0)
+        val mainSave = w.save()
+        val m = parse(w.meta(t0))
+        assertEquals(2, m.getValue("keys").jsonPrimitive.content.toInt())
+        assertEquals(9, m.getValue("achievements").jsonArray.size)
+        assertEquals("true", parse(w.challengeStart(t0)).getValue("ok").jsonPrimitive.content)
+        assertEquals("active", parse(w.challengeStart(t0)).getValue("reason").jsonPrimitive.content)
+        assertEquals(40, w.state.level)                     // the shared challenge board
+        assertEquals(1, SaveCodec.decode(w.save()).level)   // a save mid-run still writes the main game
+        val id = parse(w.snapshot(t0 + 1000)).getValue("rows").jsonArray.first().jsonObject.getValue("id").jsonPrimitive.long
+        w.swipe(id, t0 + 1000)
+        val e = parse(w.challengeEnd(t0 + 60_000))
+        assertEquals("true", e.getValue("ok").jsonPrimitive.content)
+        assertEquals(1, w.state.level)
+        assertTrue(w.state.account.pieces >= 1)
+        assertEquals(1, parse(w.meta(t0 + 60_000)).getValue("keys").jsonPrimitive.content.toInt())
+        assertTrue(mainSave.isNotEmpty())
+    }
 }

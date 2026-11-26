@@ -1,6 +1,6 @@
 # 다른 세션에 보낼 무한 증분·환생 가속 검토 요청
 
-알림 청소부의 새 밸런스 후보를 검토해 주세요. 저장소는 graviton94/andpjt2, 브랜치는 ccr-balance-port입니다. 전체 결과는 docs/balance/GROWTH-LOOP-REPORT.md, 화면 계약은 docs/balance/api-changes.md에 있습니다. [통합 보고서](GROWTH-LOOP-REPORT.md) · [화면 계약과 응답 예시](api-changes.md)
+방해 금지!의 새 밸런스 후보를 검토해 주세요. 저장소는 graviton94/donotdisturb, 브랜치는 ccr-balance-port입니다. 전체 결과는 docs/balance/GROWTH-LOOP-REPORT.md, 화면 계약은 docs/balance/api-changes.md에 있습니다. [통합 보고서](GROWTH-LOOP-REPORT.md) · [화면 계약과 응답 예시](api-changes.md)
 
 ## 사용자가 직접 방향을 바꾼 사항
 

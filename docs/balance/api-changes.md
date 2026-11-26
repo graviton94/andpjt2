@@ -1,5 +1,13 @@
 # 화면 계약
 
+## 이름과 배포 호환 기준
+
+앱 이름은 기본 영어 **Do Not Disturb!**, 한국어 **방해 금지!**다. Android 설치 ID는 디버그 빌드까지 `io.github.graviton94.donotdisturb`를 사용한다. Kotlin 네임스페이스는 `com.graviton94.notificationcleaner`다. adb의 컴포넌트 이름은 `io.github.graviton94.donotdisturb/com.graviton94.notificationcleaner.MainActivity`이며, `scripts/android-smoke.py`가 같은 설치 ID를 `balance_smoke`, 프로세스 조회, `run-as` 저장 검증에 전달한다. [프로젝트 인수인계 `8aca804`](https://github.com/graviton94/donotdisturb/blob/8aca804/docs/HANDOFF.md) · [공개 사이트](https://graviton94.github.io/donotdisturb/)
+
+Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1이다. 배포 상품 ID는 인수인계 문서를 따른다. Play Billing의 지급 ID는 구매 토큰이며, AdMob 광고의 `ad-` 지급 ID는 SDK가 보상을 확정한 뒤 발급한다. 기존 `fakead-` 기록의 광고 원장 이관을 유지한다. 복귀, 업적, 일일 도전, BM 응답의 기존 필드와 단위를 유지하고 새 필드만 추가한다.
+
+`main` 병합 시점에 Android 광고 SDK의 `earned` 콜백과 디버그 스모크의 테스트 영수증 경로를 각각 유지했다. 출시 빌드에서 SDK의 보상 확인을 실제 `ad-` 영수증으로 코어에 연결하는 작업은 화면 호스트에 남아 있다.
+
 ## 오프라인 보너스
 
 `bm()`과 `snapshot`에 같은 `offlineBonus` 객체를 추가했다. `bm().state`와 다른 응답의 상태 스냅샷에서도 읽을 수 있다.

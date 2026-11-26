@@ -24,7 +24,7 @@ JDK 17, Android SDK Platform 36, Build Tools 35.0.0을 사용합니다. Android 
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-생성 파일은 `app/build/outputs/apk/debug/app-debug.apk`입니다. [Android test build](https://github.com/graviton94/andpjt2/actions/workflows/android.yml)에는 APK와 에뮬레이터 스모크 결과가 남습니다.
+생성 파일은 `app/build/outputs/apk/debug/app-debug.apk`입니다. [Android test build](https://github.com/graviton94/donotdisturb/actions/workflows/android.yml)에는 APK와 에뮬레이터 스모크 결과가 남습니다.
 
 1. 첫 화면의 **문앞왔**을 옆으로 밀면 같은 앱 세 쌍이 충돌해 과부하가 이어집니다. 시연판 기준 **7연쇄 · 14,967개 처리 · 117,645 P**입니다.
 2. **자동 꺼짐**을 눌러 자동 정리를 켜거나, **앱 상점**에서 새 앱을 사고 강화합니다. **최고점 기록**에서 연쇄와 권역·카테고리 배율을 확인합니다.

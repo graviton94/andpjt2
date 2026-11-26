@@ -116,7 +116,7 @@ SoftReplay의 45초 풀세트는 **20/24**였다. 미달 4개는 모두 7일차�
 
 ## 6. 재현
 
-별도 워크트리에서 JDK 17로 실행한다. 원자료 파일은 각각의 하위 디렉터리에 `daily.csv.gz`, `prestige.csv.gz`, `reaches.csv.gz`라는 이름으로 보존했다. 파일별 해시는 압축 해제 기준이다.
+보고 당시 소스가 있는 `dbdf26c`의 별도 워크트리에서 JDK 17로 실행한다. 원자료 파일은 각각의 하위 디렉터리에 `daily.csv.gz`, `prestige.csv.gz`, `reaches.csv.gz`라는 이름으로 보존했다. 파일별 해시는 압축 해제 기준이다.
 
 ```sh
 git apply --unidiff-zero tools/economy-sim/precheck/integrated-core.patch
