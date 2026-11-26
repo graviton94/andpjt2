@@ -2334,7 +2334,7 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
   // daily check-in on the 30-day board: claim and show it once a day
   const fresh = st.swipes === 0 && st.level === 1 && !new URLSearchParams(location.search).has('noftue');
   if (FT.step < 9 && fresh) setTimeout(() => ftue('boot'), 1500);
-  else { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
+  else if (!/[?&]noattend/.test(location.search)) { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
 })();
 
 // ---------- return-from-away card (bible 16 #13, B6) ----------
