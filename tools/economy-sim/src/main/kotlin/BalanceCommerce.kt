@@ -106,13 +106,13 @@ fun balanceCommerce(output: File) {
     val products = offers.packs.map { pack ->
         listOf(pack.id, "consumable", pack.won, pack.data, offers.dataReceived(pack, true), pack.data, offers.dataReceived(pack, true))
     } + listOf(
-        listOf("starter_pack", "one_time", offers.starterWon, offers.starterData, offers.starterData, offers.starterValue(rules), offers.starterValue(rules)),
-        listOf("rookie_pass", "one_time", offers.rookieWon, offers.rookieNow + offers.rookieDaily * offers.rookieDays,
+        listOf(offers.starterProductId, "one_time", offers.starterWon, offers.starterData, offers.starterData, offers.starterValue(rules), offers.starterValue(rules)),
+        listOf(offers.rookieProductId, "one_time", offers.rookieWon, offers.rookieNow + offers.rookieDaily * offers.rookieDays,
             offers.rookieNow + offers.rookieDaily * offers.rookieDays, offers.rookieValue(rules), offers.rookieValue(rules)),
-        listOf("pass_monthly", "subscription", offers.passWon, basePassData, basePassData, basePassData + dailyClockEquivalent, basePassData + dailyClockEquivalent),
+        listOf(offers.monthlyProductId, "subscription", offers.passWon, basePassData, basePassData, basePassData + dailyClockEquivalent, basePassData + dailyClockEquivalent),
     ) + com.graviton94.notificationcleaner.core.SpeedPass.entries.map { pass ->
         val data = basePassData + pass.dailyData * totalDays
-        listOf("pass_" + pass.name.lowercase(java.util.Locale.ROOT), "subscription", pass.won, data, data, data + dailyClockEquivalent, data + dailyClockEquivalent)
+        listOf(pass.productId, "subscription", pass.won, data, data, data + dailyClockEquivalent, data + dailyClockEquivalent)
     }
     csv(File(output, "commerce-skus.csv"), listOf("id", "type", "won", "data", "first_data", "data_equivalent", "first_data_equivalent"), products.asSequence())
 

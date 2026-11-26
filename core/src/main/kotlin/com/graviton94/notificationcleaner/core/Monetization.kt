@@ -34,9 +34,9 @@ enum class CreditItem(val label: String, val price: Long, val daily: Int) {
 }
 
 /** Speed subscriptions, each including the month pass. */
-enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long, val prestigePermille: Int) {
-    Turbo("터보 패스", 33_000, 3_500, 0, 1_750),
-    Ultra("울트라 패스", 99_000, 8_000, 200, 4_000),
+enum class SpeedPass(val label: String, val won: Int, val speedPermille: Int, val dailyData: Long, val prestigePermille: Int, val productId: String) {
+    Turbo("터보 패스", 33_000, 3_500, 0, 1_750, "pass_turbo"),
+    Ultra("울트라 패스", 99_000, 8_000, 200, 4_000, "pass_ultra"),
 }
 
 /** One day of the 30-day attendance board: data, free uses of credit items, premium star vouchers, a title. */
@@ -59,6 +59,9 @@ data class CommerceOffers(
     val rookieDaily: Long = 50,
     val rookieDays: Int = 7,
     val passWon: Int = 5_500,
+    val starterProductId: String = "starter_pack",
+    val rookieProductId: String = "rookie_pass",
+    val monthlyProductId: String = "pass_monthly",
 ) {
     val baseWonPerData: Double get() = packs.first().won.toDouble() / packs.first().data
 

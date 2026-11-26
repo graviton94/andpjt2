@@ -38,6 +38,11 @@ class CommerceTest {
             w.buyData("data_100", "second", now)
             assertEquals(amount + bonus + 100, w.state.account.credits)
         }
+        val bm = Json.parseToJsonElement(session().bm(now)).jsonObject
+        assertEquals("starter_pack", bm.getValue("starterProductId").jsonPrimitive.content)
+        assertEquals("rookie_pass", bm.getValue("rookieProductId").jsonPrimitive.content)
+        assertEquals(mapOf("month" to "pass_monthly", "Turbo" to "pass_turbo", "Ultra" to "pass_ultra"),
+            bm.getValue("passProductIds").jsonObject.mapValues { it.value.jsonPrimitive.content })
     }
 
     @Test fun anOldReceiptRemainsSettledAcrossSaveAndReset() {

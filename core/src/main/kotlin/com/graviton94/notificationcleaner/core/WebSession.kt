@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import java.math.BigInteger
 
 /**
@@ -205,6 +206,12 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
             put("vouchers", a.starVouchers)
             putJsonArray("packs") { offers.packs.forEach { p -> add(buildJsonObject { put("id", p.id); put("data", p.data); put("gets", packGets(s, p)); put("won", p.won) }) } }
             put("firstData", firstData(s)); put("firstBonusCap", offers.firstBonusCap); put("baseWon", offers.baseWonPerData)
+            put("starterProductId", offers.starterProductId)
+            put("rookieProductId", offers.rookieProductId)
+            putJsonObject("passProductIds") {
+                put("month", offers.monthlyProductId)
+                SpeedPass.entries.forEach { put(it.name, it.productId) }
+            }
             put("starterLeftMs", starterLeftMs(s, now)); put("starterWon", offers.starterWon); put("starterData", offers.starterData)
             put("voucherData", offers.voucherValue(r))
             put("starterValue", offers.starterValue(r))
