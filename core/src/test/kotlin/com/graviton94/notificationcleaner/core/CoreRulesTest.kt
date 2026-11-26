@@ -192,6 +192,22 @@ class CoreRulesTest {
     }
 
     @Test
+    fun upgradeQuoteRetainsRoundingAndAllDeckMultipliers() {
+        val base = e.newGame(now, 11)
+        val apps = listOf("ai", "jobs", "contacts", "green", "photo")
+        val count = valueOf(1_000)
+        for (rank in listOf(1, 9, 24, 149, 499, 2_000)) {
+            val state = base.copy(active = apps, appLevels = apps.associateWith { rank }, pro = apps.toSet(),
+                backup = Backup(lifetime = 100_000, items = mapOf(BackupItem.Value to 10)))
+            for (app in apps) {
+                val upgraded = state.copy(appLevels = state.appLevels + (app to rank + 1))
+                val gain = e.earn(upgraded, app, count, 0) - e.earn(state, app, count, 0)
+                assertEquals(gain, e.upgradeEarnGain(state, app, count))
+            }
+        }
+    }
+
+    @Test
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)

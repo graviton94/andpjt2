@@ -89,8 +89,7 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
         val ups = s.active.asSequence().map { id -> id to e.upgradePrice(s, id) }
             .filter { (_, price) -> s.wallet >= price }
             .map { (id, price) ->
-                val lv = s.appLevels.getValue(id)
-                val gain = perNotification(s.copy(appLevels = s.appLevels + (id to lv + 1)), id) - perNotification(s, id)
+                val gain = e.upgradeEarnGain(s, id, valuationCount)
                 Triple(id, price, gain.toDouble() / price.toDouble())
             }
         val up = ups.maxByOrNull { it.third } ?: break

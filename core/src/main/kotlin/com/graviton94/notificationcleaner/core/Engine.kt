@@ -332,8 +332,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     private fun digits(n: BigInteger?) = if (n == null || n.signum() <= 0) 1 else n.toString().length
 
-    private fun valueBase(s: GameState, app: AppDef): Pair<BigInteger, BigInteger> {
-        val (num, den) = rules.baseValue(app, s.appLevels[app.id] ?: 1, s.backup)
+    private fun valueBase(s: GameState, app: AppDef, level: Int = s.appLevels[app.id] ?: 1): Pair<BigInteger, BigInteger> {
+        val (num, den) = rules.baseValue(app, level, s.backup)
         val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
         val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
         val pro = if (app.id in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
@@ -363,6 +363,17 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val premium = rules.premiumPermille(s.account.stars(appId)) * (if (ctx.boosted) rules.boostPermille.toLong() else 1_000L)
         return valueAfterMultipliers(valueBase(s, app), count, deckMultiplier(s, app, DeckGroups(s.active)),
             chainNum, effectPermille(s, app, count, chain, ctx), premium)
+    }
+
+    /** Difference between the exact rounded values before and after one app rank, holding the deck fixed. */
+    fun upgradeEarnGain(s: GameState, appId: String, count: BigInteger): BigInteger {
+        val app = Catalog.app(appId)
+        val deck = deckMultiplier(s, app, DeckGroups(s.active))
+        val effect = effectPermille(s, app, count, 0, EarnCtx())
+        val premium = rules.premiumPermille(s.account.stars(appId)) * 1_000L
+        val current = s.appLevels.getValue(appId)
+        fun income(level: Int) = valueAfterMultipliers(valueBase(s, app, level), count, deck, 10L, effect, premium)
+        return income(current + 1) - income(current)
     }
 
     /** Compare many decks at one unchanged progression state with the same per-app rounding as [earn]. */

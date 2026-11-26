@@ -40,6 +40,7 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "overloadMinIntervalMs" -> r.copy(overloadMinIntervalMs = v.toLong())
             "majorEventCooldownMs" -> r.copy(majorEventCooldownMs = v.toLong())
             "resetLevel" -> r.copy(resetLevel = v.toInt())
+            "syncLevel" -> r.copy(syncLevel = v.toInt())
             "gaugePerMerge" -> r.copy(gaugePerMerge = v.toInt())
             "gaugePerBurst" -> r.copy(gaugePerBurst = v.toInt())
             "igniterGaugePerTier" -> r.copy(igniterGaugePerTier = v.toInt())
@@ -63,6 +64,9 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
 }
 private val engine = Engine(simRules())
 private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
+private val traceDays = System.getenv("SIM_TRACE") != null
+private val traceResets = System.getenv("SIM_RESETS") != null
+private val traceSeed = System.getenv("SIM_SEED")?.toLongOrNull() ?: 1L
 
 /** Spending profiles (docs/bible/17-monetization.md). */
 /** [adsPerDay]: rewarded ads watched a day; [speed]: speed subscription kept up; [monthlyData]: data bought each 30 days. */
@@ -218,7 +222,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             observe()
             if (reachedTarget(day)) break@play
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
-            if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
+            if (traceDays && seed == traceSeed && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
             audit?.startSession(day + 1, s, t)
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
@@ -236,7 +240,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 }
                 val actor = if (input == InputPolicy.Auto) Actor.Auto else Actor.Player
                 val o0 = target?.let { engine.swipe(s, it, t, actor) }
-                if (o0 == null && System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
+                if (o0 == null && traceDays && seed == traceSeed && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
                 val o = o0 ?: continue
                 audit?.swipe(engine, s, o, t)
@@ -281,7 +285,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             }
             audit?.endSession()
             stallSessions = if (s.level > levelAtStart) 0 else stallSessions + 1
-            if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && resets && day in 4..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets} 배터리 ${s.energy} 속도 ${s.earnRate} 부스트 ${s.account.boostUntil - t} 레벨P ${s.runEarned}")
+            if (traceDays && seed == traceSeed && resets && day in 4..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets} 배터리 ${s.energy} 속도 ${s.earnRate} 부스트 ${s.account.boostUntil - t} 레벨P ${s.runEarned}")
             // Reset when it raises the lifetime-file bonus by 60% or more, or when the run has stalled for 3 sessions.
             val offer = engine.backupFilesNow(s)
             val pct = engine.rules.lifetimeFilePercent
@@ -290,7 +294,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             // 2nd prestige: sync at the wall, when resets have stopped paying for a while.
             val gb = engine.cloudGbNow(s)
             if (resets && gb > 0 && sinceReset >= 4 && stallSessions >= 2) {
-                if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
+                if (traceResets && seed == traceSeed) println("  동기화 d${"%.1f".format(dayOf(t))} Lv${s.level} +$gb GB 평생 ${s.backup.cloud.lifetime + gb} 이번 주기 파일 ${s.backup.lifetime}")
                 tl.lastSyncLevel = s.level
                 val synced = engine.sync(s, t)!!
                 audit?.prestige("sync", s, synced, t, gain, stallSessions, sinceReset)
@@ -304,7 +308,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 continue
             }
             if (resets && s.level >= engine.rules.resetLevel && offer > 0 && (gain >= 1.6 || stallSessions >= 3)) {
-                if (System.getenv("SIM_RESETS") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L)) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
+                if (traceResets && seed == traceSeed) println("  초기화 d${"%.1f".format(dayOf(t))} Lv${s.level} P${s.runEarned.toString().length}자리 +$offer 파일 평생 ${s.backup.lifetime + offer} 가치Lv${s.backup.lv(com.graviton94.notificationcleaner.core.BackupItem.Value)} 유효초기화 ${s.backup.resets} 덱 ${s.active.size} 최고티어 ${s.appLevels.keys.maxOf { com.graviton94.notificationcleaner.core.Catalog.app(it).tier }} 정체 $stallSessions")
                 tl.lastResetLevel = s.level
                 s = shop.useTicket(s, CreditItem.BackupBoost, t) ?: if (payer.monthlyData > 0) shop.buyItem(s, CreditItem.BackupBoost, t) ?: s else s
                 val reset = engine.factoryReset(s, t)!!
