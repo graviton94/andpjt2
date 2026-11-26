@@ -136,7 +136,7 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
   - 서명 키, AAB 워크플로
 - 웹사이트 이름 · 주소 변경, 스토어 그래픽 이미지(새 제목)
 - VFX 3차(빛 계열 통일) — 점검 릴 승인(11-26)
-- **영어 기본 + 한국어**: `tools/game-page/i18n/en.json`(키 = 한국어 문장, 숫자·영문은 `#`), 앱 이름·대사 `docs/content/l10n/en.json`, 효과 `docs/content/app-effects.en.json`. 화면 전체 크롤로 미번역 0 확인. 테스트는 `&lang=ko`
+- **언어(키 기반)**: 화면 문구는 `$t('key')`, 언어 파일 `tools/game-page/i18n/ko.json`(원본)·`en.json`, 코어 라벨 `core-en.json`(id 기준). 규칙·언어 추가 방법 `tools/game-page/i18n/README.md`. 빌드가 한글 하드코딩·빠진 키를 거부. 설정 > 언어. 영·한 화면 전체 크롤 누락 0. 테스트는 `&lang=ko`
 
 ### 진행 중 · 다음 (화면 세션)
 1. 첫 AAB(0.1.0, 가짜 결제) → 사용자가 내부 테스트에 직접 업로드 (API 열기용)
