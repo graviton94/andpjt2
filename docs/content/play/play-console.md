@@ -90,12 +90,25 @@
 
 ## 5. 앱 서명
 
-로그인이 없어 Firebase·카카오 지문 등록은 필요 없다. 다만 Play 앱 서명 키 SHA-256을 기록해 두고(설정 → 앱 무결성), AdMob 앱 등록 시 패키지명 일치만 확인.
+- 업로드 키·시험 키: `keystore/*.jks.gpg` (CI가 만든 키, 지문은 `docs/platform/firebase-admob-setup.md` 5절). Firebase·카카오에 등록 완료.
+- **첫 AAB를 올린 뒤**: 설정 → 앱 무결성 → 앱 서명 키의 SHA-1·SHA-256을 Firebase(디지털 지문)와 카카오(키 해시 = SHA-1을 base64)에 추가. 스토어 설치본은 이 키로 서명된다.
 
 ## 6. AdMob
 
-앱 추가(미게시) → **보상형 광고 단위 8개**(지면별: best_double, offline_double, boost, overclock, warp, battery, data_box, free_upgrade — 지면별 eCPM·완료율을 따로 보려고) → ID는 GitHub 비밀값 → `app-ads.txt`를 Pages 루트에 → GDPR·US 주 개인정보 메시지(UMP) 만들기 → 미디에이션 그룹(AppLovin·Unity·Pangle).
+완료(11-26): 앱 등록 · Firebase 연결 · 보상형 단위 1개 `DD_Rewarded_All`(지면은 Analytics 이벤트 `ad_show/ad_reward`의 slot으로 구분) · ID는 비밀값 `ADMOB_APP_ID`/`ADMOB_REWARDED_ID` · GDPR·미국 주 메시지 게시. 남은 것: `app-ads.txt` 확인, 미디에이션(출시 후).
 
-## 7. 테스트 트랙
+## 7. 비공개 테스트까지 체크리스트 (11-26)
+
+| # | 화면 | 할 일 | 값 |
+|---|---|---|---|
+| 1 | 테스트 및 출시 › 내부 테스트 | 새 버전 만들기 → **첫 AAB 직접 업로드**(Actions › Android AAB (Play) 결과물) | 버전 0.1.0 |
+| 2 | 앱 콘텐츠 | 개인정보처리방침 · 앱 액세스 · 광고 · 콘텐츠 등급 · 타깃층 · 데이터 보안 · 정부 앱 · 금융 · 건강 | 2절 답안 그대로 |
+| 3 | 스토어 등록정보 | 앱 이름 · 간단한 설명 · 자세한 설명 · 아이콘 · 그래픽 이미지 · 폰 스크린샷 2장 이상 | 3절, `store-listing.md`, `docs/design/brand/` |
+| 4 | 스토어 설정 | 카테고리 게임 › 캐주얼 · 연락처 이메일 · 웹사이트 `https://graviton94.github.io/donotdisturb/` | |
+| 5 | 테스트 및 출시 › 비공개 테스트 | 트랙 만들기 → 테스터 이메일 목록(12명 이상) → 국가 → AAB(내부 버전 승격) → 검토 제출 | 개인 계정은 12명 × 14일 연속 후 프로덕션 신청 가능 |
+| 6 | 앱 무결성 | 앱 서명 키 SHA → Firebase·카카오 | 5절 |
+| 7 | 수익 창출 | 결제 프로필 확인 → 인앱 상품·구독 등록 (결제 권한 있는 AAB가 올라간 뒤 열림) | 4절 |
+
+## 8. 테스트 트랙
 
 내부 테스트 → **비공개 테스트 12명 × 14일 연속** → 프로덕션 신청. 14일 동안 볼 지표: D1·D7, 첫 초기화 도달(목표 2일), 첫 결제까지 일수, 광고 시청 분포, 크래시·ANR, 결제 퍼널(`iap_view → iap_start → iap_success`), 프로필별 Lv124 속도(17장 시뮬과 비교).
