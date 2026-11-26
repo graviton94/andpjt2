@@ -644,6 +644,10 @@ const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 42
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const backOut = p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
 const tier = n => LADDER.find(l => n >= l.from && n <= l.to);
+// colour of a pop: the app's own colour for small chains, then the combo bands take over (one hue family at a time, never a rainbow)
+const comboCol = (k, app) => k <= 3 ? app : k <= 5 ? [255, 150, 40] : k <= 8 ? [255, 64, 52] : mixc([186, 104, 255], [255, 204, 90], clamp((k - 9) / 6, 0, 1));
+const REGION_COL = { Global: [90, 170, 255], SEA: [60, 220, 140], Asia: [255, 90, 90], West: [120, 140, 255], Basic: [200, 200, 210] };
+const toHex = c => '#' + c.map(v => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
 const spring = (v = 1) => ({ x: v, v: 0, t: v });
 const kick = (s, a) => { s.v += a; };
 const stepSpring = (s, dt, k = 340, d = 13) => { s.v += (-k * (s.x - s.t) - d * s.v) * dt; s.x += s.v * dt; };
@@ -1277,7 +1281,7 @@ function drawLights() {
   for (const l of lights) {
     const f = l.t / l.life;
     if (l.kind === 'flare') { const e = 1 - Math.pow(1 - Math.min(1, f * 4), 3), a = f < .15 ? 1 : Math.pow(1 - (f - .15) / .85, 1.6); flareAt(l.x, l.y, (90 + 260 * e) * l.size, (10 + 16 * (1 - f)) * l.size, a, l.col); }
-    else if (l.kind === 'rays') { const a = Math.min(1, f * 6) * Math.pow(1 - f, 1.2); rays(l.x, l.y, 260 * l.size * (.7 + .3 * Math.min(1, f * 3)), l.t * .6, a, l.col); rays(l.x, l.y, 190 * l.size, -l.t * .9 + .2, a * .6, [255, 255, 255], 10); }
+    else if (l.kind === 'rays') { const a = Math.min(1, f * 6) * Math.pow(1 - f, 1.2); rays(l.x, l.y, 260 * l.size * (.7 + .3 * Math.min(1, f * 3)), l.t * .6, a, l.col); rays(l.x, l.y, 170 * l.size, -l.t * .9 + .2, a * .28, mixc(l.col, [255, 255, 255], .5), 10); }
     else if (l.kind === 'sweep') { const yy = l.y - f * l.dist + (l.down ? 140 : 0), a = Math.sin(Math.PI * Math.min(1, f)) * .9, g = ctx.createLinearGradient(0, yy - 140, 0, yy + 30); g.addColorStop(0, rgb(l.col, 0)); g.addColorStop(.8, rgb(l.col, .45 * a)); g.addColorStop(.92, `rgba(255,255,255,${.7 * a})`); g.addColorStop(1, rgb(l.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, yy - 140, W, 170); }
   }
   ctx.restore();
@@ -1721,16 +1725,23 @@ function burstRow(b, k, quiet) {
   const ix = 110 + rnd() * 170, iy = y + 18 + rnd() * 24;
   pixelBurst(r, y, ix, iy, 1 + Math.min(k, 10) * .08);
   pfx(k >= 4 ? 'critHit' : 'hitSpark', ix, iy, { angle: (rnd() - .5) * .6 });
-  if (k >= 6) pfx('smallExplosion', ix, y + CH, { size: .55, big: 1 });
-  if (k >= 9) pfx('impactFrame', 195, iy);
   ripple(ix, iy, .014 + Math.min(k, 12) * .0022);
-  if (k >= 9 && (!crack || crack.age > .5)) crackAt(ix, iy, .85);
   chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
-  spawn('LASER', 195, cy, 0, 0, .14, balc(k), 8 + Math.min(k, 10));
-  if (k >= 4) for (let j = 0; j < Math.min(k - 3, 3); j++) after(.03 * (j + 1), () => spawn('LASER', 195, y + (j + 1) * CH / 4, 0, 0, .1, balc(k + j + 1), 4 + j * 2));
-  pixT = Math.max(pixT, .12 + Math.min(k, 10) * .02); psyT = Math.min(1, Math.max(psyT, (k - 1) * .16)); noiT = Math.max(noiT, .5);
+  // colour: the app's own hue, then the combo band; tier adds layers, combo adds scale
+  const appC = hex(colOf(d)), cc = comboCol(k, appC), tr = clamp(d.tier || 1, 1, 10), tl = tr >= 9 ? 5 : tr >= 7 ? 4 : tr >= 5 ? 3 : tr >= 3 ? 2 : 1;
+  spawn('LASER', 195, cy, 0, 0, .14, mixc(cc, [255, 255, 255], .25), 8 + Math.min(k, 10));
+  if (k >= 4) for (let j = 0; j < Math.min(k - 3, 3); j++) after(.03 * (j + 1), () => spawn('LASER', 195, y + (j + 1) * CH / 4, 0, 0, .1, cc, 4 + j * 2));
+  for (let j = 0; j < (reduce ? 4 : 10 + tl * 4); j++) { const a = rnd() * 6.28, sp = 220 + rnd() * (260 + tl * 70); spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp * .7, .28 + tl * .04, j % 3 ? cc : mixc(cc, [255, 255, 255], .6), 2 + tl * .3); }
+  if (tl >= 2 || k >= 4) light('flare', ix, iy, { col: cc, size: .45 + tl * .12 + Math.min(k, 12) * .04, life: .35 + tl * .04 });
+  if (tl >= 3 || k >= 6) light('rays', k >= 9 ? 195 : ix, cy, { col: cc, size: k >= 9 ? .95 + Math.min(k - 9, 6) * .04 : .45 + tl * .08 + Math.min(k, 12) * .03, life: k >= 9 ? 1 : .7 + tl * .1 });
+  if (tl >= 4) { for (let j = 0; j < (reduce ? 6 : 22); j++) spawn('SPARK', CX0 + rnd() * CW, y + rnd() * CH, (rnd() - .5) * 160, -120 - rnd() * 260, .7, [255, 214, 120], 2.2); light('flare', 195, cy, { col: [255, 205, 110], size: .9, life: .5 }); }
+  if (tl >= 5) { if (!reduce) flash = Math.max(flash, .16); stop = Math.max(stop, .03); light('sweep', 0, y + CH + 40, { col: [255, 236, 190], dist: 260, life: .45 }); }
+  if (k === 6) { light('sweep', 0, H + 40, { col: cc, dist: H + 160, life: .55 }); }
+  if (k >= 9) { light('flare', 195, cy, { col: cc, size: 1.2, life: .5 }); if (!reduce) flash = Math.max(flash, .12); }
+  if (b.synergy && REGION_COL[b.synergy.key]) light('flare', 195, cy - 10, { col: REGION_COL[b.synergy.key], size: 1.2, life: .5 });
+  pixT = Math.max(pixT, .08 + Math.min(k, 10) * .012); noiT = Math.max(noiT, .35);
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
-  pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
+  pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 + tl * 1.5, col0: ['#FFFFFF', toHex(mixc(cc, [255, 255, 255], .15))] });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
   while (pops.length > 8) pops.shift();
   tokens.push({ x0: 318, y0: cy, cx: 60 + rnd() * 60, cy: cy - 120, x1: CHIPX, y1: BOXY, t: 0, dur: .3, col: [120, 190, 255], r: 7, done: () => { plate.chips = Ladd(plate.chips, val); plate.chipSum = Ladd(plate.chipSum, val); kick(plate.cs, 14); if (!quiet) sfx.chip(k); ripple(CHIPX, BOXY, .006); } });
@@ -2576,7 +2587,7 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
     if (k === 'reset' || k === 'sync') return prestigeShow(k, a || '12345', S);
     if (k === 'levelup') { say2(`레벨 업! Lv ${(S && S.level || 1) + 1}`, 150, 28); phone('ui.levelup', .4); return; }
     if (k === 'unit') return addWallet(wallet.v + 3.2);
-  }, swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
+  }, pop: (k, app, t, i = 3) => { const r = board[i]; if (!r) return; Object.assign(r.d, { app, tier: t, kind: 'App' }); burstRow({ row: { id: r.id }, chips: '5', chipsShort: '5' }, k); }, swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
 (async () => {
