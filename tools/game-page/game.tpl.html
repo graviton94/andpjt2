@@ -428,11 +428,47 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #coach.on{opacity:1}
 #coach .hole{position:absolute;border-radius:22px;box-shadow:0 0 0 9999px rgba(6,8,16,.62),0 0 0 2px rgba(255,255,255,.9),0 0 24px 4px rgba(255,255,255,.35);animation:holeP 1.6s var(--ease-std) infinite}
 @keyframes holeP{50%{box-shadow:0 0 0 9999px rgba(6,8,16,.62),0 0 0 3px #fff,0 0 34px 8px rgba(255,255,255,.5)}}
-#coach .fing{position:absolute;width:54px;height:54px;margin:-6px 0 0 -14px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
-#coach .fing.swipe{animation:fSw 1.5s var(--ease-std) infinite}#coach .fing.tap{animation:fTap 1.2s var(--ease-std) infinite}#coach .fing.pull{animation:fPull 1.6s var(--ease-std) infinite}
-@keyframes fSw{0%{transform:translateX(-70px);opacity:0}15%{opacity:1}70%{transform:translateX(90px);opacity:1}100%{transform:translateX(100px);opacity:0}}
-@keyframes fTap{0%,100%{transform:scale(1)}40%{transform:scale(.86) translateY(4px)}}
-@keyframes fPull{0%{transform:translateY(-10px);opacity:0}15%{opacity:1}75%{transform:translateY(90px);opacity:1}100%{transform:translateY(100px);opacity:0}}
+#coach .g{position:absolute;width:0;height:0;pointer-events:none;--c:#fff}
+#coach .fing{position:absolute;left:0;top:0;width:54px;height:54px;margin:-3px 0 0 -25px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));z-index:3}
+#coach .rip,#coach .ring,#coach .dot{position:absolute;left:0;top:0;border-radius:50%}
+#coach .rip{width:44px;height:44px;margin:-22px 0 0 -22px;border:2.5px solid var(--c);opacity:0}
+#coach .trk{position:absolute;background:rgba(255,255,255,.14);border-radius:6px}
+#coach .trail{position:absolute;border-radius:6px;background:linear-gradient(var(--dir),rgba(255,255,255,0),rgba(255,255,255,.85))}
+#coach .chev{position:absolute;display:flex;color:#fff}#coach .chev svg{width:22px;height:22px;opacity:.25;animation:chev 1.6s infinite}
+#coach .chev svg:nth-child(2){animation-delay:.15s}#coach .chev svg:nth-child(3){animation-delay:.3s}
+@keyframes chev{0%,100%{opacity:.2}30%{opacity:1}}
+/* swipe → */
+#coach .sw{--dir:90deg}#coach .sw .trk{left:-110px;top:-5px;width:220px;height:10px}
+#coach .sw .trail{left:-100px;top:-5px;width:200px;height:10px;transform-origin:left;animation:trailX 1.6s var(--ease-std) infinite}
+#coach .sw .chev{left:58px;top:-36px}
+#coach .sw .fing{animation:fingX 1.6s var(--ease-std) infinite}#coach .sw .rip{left:-100px;animation:rip 1.6s infinite}
+@keyframes fingX{0%{transform:translate(-100px,0) scale(1.08);opacity:0}10%{transform:translate(-100px,0) scale(1);opacity:1}70%{transform:translate(100px,0);opacity:1}85%,100%{transform:translate(110px,0);opacity:0}}
+@keyframes trailX{0%,10%{transform:scaleX(0);opacity:1}70%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+/* pull ↓ */
+#coach .pl{--dir:180deg}#coach .pl .trk{left:-5px;top:0;width:10px;height:150px}
+#coach .pl .trail{left:-5px;top:0;width:10px;height:140px;transform-origin:top;animation:trailY 1.6s var(--ease-std) infinite}
+#coach .pl .chev{left:22px;top:60px;flex-direction:column}#coach .pl .chev svg{transform:rotate(90deg);margin:-4px 0}
+#coach .pl .fing{animation:fingY 1.6s var(--ease-std) infinite}#coach .pl .rip{animation:rip 1.6s infinite}
+@keyframes fingY{0%{transform:translate(0,0) scale(1.08);opacity:0}10%{transform:none;opacity:1}70%{transform:translate(0,140px);opacity:1}85%,100%{transform:translate(0,150px);opacity:0}}
+@keyframes trailY{0%,10%{transform:scaleY(0);opacity:1}70%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+@keyframes rip{0%,6%{transform:scale(.3);opacity:0}12%{opacity:1}40%,100%{transform:scale(1.6);opacity:0}}
+/* tap ● */
+#coach .tp .dot{width:18px;height:18px;margin:-9px 0 0 -9px;background:#fff;box-shadow:0 0 16px 4px rgba(255,255,255,.7);animation:dot 1.2s infinite}
+#coach .tp .ring{width:60px;height:60px;margin:-30px 0 0 -30px;border:3px solid #fff;animation:ring 1.2s var(--ease-out) infinite}
+#coach .tp .r2{animation-delay:.25s}
+#coach .tp .fing{animation:fTap 1.2s var(--ease-std) infinite}
+@keyframes fTap{0%,100%{transform:translate(6px,10px)}35%,55%{transform:translate(0,0) scale(.92)}}
+@keyframes dot{0%,30%{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1)}80%,100%{opacity:0;transform:scale(1.2)}}
+@keyframes ring{0%,35%{transform:scale(.3);opacity:0}45%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+/* gesture glyph in the bubble */
+#coach .bt{display:flex;align-items:center;gap:10px}
+#coach .gi{flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--m-primary-c);color:var(--m-on-primary-c)}
+#coach .gi svg{width:20px;height:20px}
+#coach .gi.swipe svg{animation:giX 1.6s var(--ease-std) infinite}#coach .gi.pull svg{animation:giY 1.6s var(--ease-std) infinite}#coach .gi.tap svg{animation:giT 1.2s infinite}
+@keyframes giX{0%,100%{transform:translateX(-3px)}60%{transform:translateX(4px)}}
+@keyframes giY{0%,100%{transform:translateY(-3px)}60%{transform:translateY(4px)}}
+@keyframes giT{0%,100%{transform:scale(1)}40%{transform:scale(.8)}}
+@media (prefers-reduced-motion: reduce){#coach .g *,#coach .gi svg{animation-duration:3.2s!important}}
 #coach .bub{position:absolute;left:20px;right:20px;pointer-events:auto;padding:16px 18px 10px;border-radius:24px;color:var(--m-on-surface);
  background:color-mix(in srgb,var(--m-s-high) 82%,transparent);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
  border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);animation:bubIn .5s var(--ease-out) both}
@@ -440,6 +476,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #coach .bub::before{content:"";position:absolute;left:50%;width:16px;height:16px;margin-left:-8px;background:inherit;border:inherit;transform:rotate(45deg);border-radius:3px;backdrop-filter:none}
 #coach .bub.below::before{top:-8.5px;border-right:0;border-bottom:0}#coach .bub.above::before{bottom:-8.5px;border-left:0;border-top:0}
 @keyframes bubIn{from{opacity:0;scale:.92}to{opacity:1;scale:1}}
+#coach .bt b{min-width:0;flex:1}
 #coach .bub b{display:block;font:800 21px/1.3 var(--font);letter-spacing:-.02em}
 #coach .bub>span{display:block;font:500 14px/1.45 var(--font);color:var(--m-on-sv);margin-top:2px}
 #coach .ft{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
@@ -2141,12 +2178,28 @@ function showReturn(o, awayMs) {
 
 // ---------- first-run guide (bible 16 §2): one thing at a time, game-native bubble, always skippable ----------
 const COACH_FINGER = '<svg viewBox="0 0 48 48"><path d="M19 6a3.5 3.5 0 0 1 7 0v15l9.5 2a4.5 4.5 0 0 1 3.5 5l-2 11a6 6 0 0 1-6 5H22a6 6 0 0 1-4.6-2.2L8.3 30.6a3.2 3.2 0 0 1 4.6-4.4L19 31z" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/></svg>';
+// gesture demo layer: the finger moves along a visible track, touch-down ripples, chevrons show the direction
+const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>';
+const GI = {
+  swipe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h15M14 7l5 5-5 5"/></svg>',
+  pull: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v15M7 14l5 5 5-5"/></svg>',
+  tap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.5" fill="currentColor"/><circle cx="12" cy="12" r="8.5" opacity=".5"/></svg>',
+};
+function gesture(kind, r) {
+  const F = `<div class="fing">${COACH_FINGER}</div>`;
+  if (kind === 'swipe') { const cx = r.x + r.w * .5, cy = r.y + r.h * .5;
+    return `<div class="g sw" style="left:${cx}px;top:${cy}px"><i class="trk"></i><i class="trail"></i><span class="chev">${CHEV}${CHEV}${CHEV}</span><i class="rip"></i>${F}</div>`; }
+  if (kind === 'pull') { const cx = innerWidth / 2, cy = r.y + r.h * .45;
+    return `<div class="g pl" style="left:${cx}px;top:${cy}px"><i class="trk"></i><i class="trail"></i><span class="chev">${CHEV}${CHEV}${CHEV}</span><i class="rip"></i>${F}</div>`; }
+  const cx = r.x + r.w * .5, cy = r.y + r.h * .5;
+  return `<div class="g tp" style="left:${cx}px;top:${cy}px"><i class="ring"></i><i class="ring r2"></i><i class="dot"></i>${F}</div>`;
+}
 function coach({ rect, text, sub = '', finger = 'tap', step = '', place = 'below' }) {
   const el = $('coach'), k = cv.clientWidth / W;
   const r = rect.canvas ? { x: rect.x * k, y: rect.y * k, w: rect.w * k, h: rect.h * k } : rect;
   el.innerHTML = `<div class="hole" style="left:${r.x - 6}px;top:${r.y - 6}px;width:${r.w + 12}px;height:${r.h + 12}px"></div>
-    <div class="fing ${finger}" style="left:${r.x + r.w * .5}px;top:${r.y + r.h * .55}px">${COACH_FINGER}</div>
-    <div class="bub ${place}" style="${place === 'below' ? `top:${r.y + r.h + 22}px` : `top:${r.y - 22}px`}"><b class="fit1">${text}</b>${sub ? `<span class="fit1">${sub}</span>` : ''}
+    ${gesture(finger, r)}
+    <div class="bub ${place}" style="${place === 'below' ? `top:${r.y + r.h + (finger === 'pull' ? 150 : 22)}px` : `top:${r.y - 22}px`}"><div class="bt"><span class="gi ${finger}">${GI[finger]}</span><b class="fit1">${text}</b></div>${sub ? `<span class="fit1">${sub}</span>` : ''}
       <div class="ft"><span class="st">${step}</span><button id="coach-skip">가이드 건너뛰기</button></div></div>`;
   el.classList.add('on'); fitLines(el);
   $('coach-skip').onclick = () => { el.classList.remove('on'); if (FT.step < 9) ftEnd(); };
