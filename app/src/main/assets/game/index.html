@@ -250,6 +250,29 @@ input[type=range]{accent-color:var(--m-primary)}
 .it{border-radius:20px}
 /* content enters in a short stagger (Android 'fade through') */
 .sheet-b>*,#shade .grid>*{animation:rise .38s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+.bk-hero{position:relative;overflow:hidden;isolation:isolate;text-align:center;padding:22px 14px 16px;border-radius:24px;margin-bottom:12px;color:#EAF6FF;background:radial-gradient(120% 90% at 50% 0%,#1E5A8C 0%,#0F2747 45%,#0A1426 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 30px rgba(10,40,90,.35)}
+.bk-hero::before{content:"";position:absolute;left:50%;top:62px;width:520px;height:520px;margin:-260px 0 0 -260px;z-index:-1;background:repeating-conic-gradient(from 0deg,rgba(120,210,255,.22) 0 7deg,rgba(120,210,255,0) 7deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 20%,transparent 100%);mask:radial-gradient(closest-side,#000 20%,transparent 100%);animation:bkspin 18s linear infinite}
+.bk-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);background-size:250% 100%;animation:sheen 3.2s ease-in-out infinite}
+.bk-hero img{width:84px;height:84px;filter:drop-shadow(0 0 18px rgba(120,210,255,.75));animation:bkbob 2.4s ease-in-out infinite}
+.bk-hero .k{font-size:12.5px;font-weight:700;color:#9FD4FF;letter-spacing:.04em;margin-top:4px}
+.bk-hero b{display:block;font:900 46px/1.05 "Pretendard",sans-serif;letter-spacing:-.02em;color:#fff;text-shadow:0 0 18px rgba(110,200,255,.9),0 2px 0 #2B6CB0}
+.bk-hero .s{font-size:12px;color:#BFE0FF;margin-top:6px}
+.bk-hero .chips{display:flex;gap:6px;justify-content:center;margin-top:10px}.bk-hero .chips span{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(160,220,255,.35)}
+.bk-it{position:relative;overflow:hidden;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:20px;margin-bottom:8px;background:linear-gradient(135deg,rgba(40,110,190,.22),rgba(20,40,80,.12));border:1px solid rgba(120,200,255,.35);animation:rise .45s cubic-bezier(.2,1.4,.4,1) both}
+.bk-it .tier{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(160deg,#5CC8FF,#2A6FD6);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 12px rgba(40,120,220,.4);font:900 13px "Pretendard",sans-serif;color:#fff;text-align:center;line-height:1.05}
+.bk-it .tier small{display:block;font-size:9px;opacity:.85}
+.bk-it .t b{font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-it .bar{display:flex;gap:2px;margin-top:6px;height:7px}.bk-it .bar i{flex:1;border-radius:2px;background:rgba(127,160,200,.25)}.bk-it .bar i.on{background:linear-gradient(180deg,#9FE3FF,#3A9BFF);box-shadow:0 0 6px rgba(90,180,255,.7)}
+.bk-it .pr{height:7px;border-radius:4px;margin-top:6px;background:rgba(127,160,200,.25);overflow:hidden}.bk-it .pr i{display:block;height:100%;background:linear-gradient(90deg,#3A9BFF,#9FE3FF);box-shadow:0 0 8px rgba(90,180,255,.8)}
+.bk-it .lvl{font-size:11px;color:var(--sub);margin-top:3px}
+.bk-it .btn{min-width:84px}.bk-it .btn img{width:16px;height:16px;vertical-align:-3px;margin-right:3px}
+.bk-it.lock{background:rgba(127,127,140,.08);border-color:rgba(127,127,140,.2);animation:none}.bk-it.lock .tier{background:linear-gradient(160deg,#6B7280,#3F4552);box-shadow:none}.bk-it.lock .t b{opacity:.55}
+.bk-it.max .tier{background:linear-gradient(160deg,#FFE07A,#F59E0B)}
+.bk-it .new{position:absolute;top:8px;right:10px;font:900 10px "Pretendard",sans-serif;color:#2A1800;background:#FFD23F;padding:2px 7px;border-radius:99px;box-shadow:0 0 10px rgba(255,210,63,.8)}
+.bk-it.pop{animation:bkpop .55s cubic-bezier(.2,1.6,.4,1)}.bk-it.pop::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:250% 100%;animation:sheen .6s ease-out 1 both;pointer-events:none}
+@keyframes bkspin{to{transform:rotate(360deg)}}@keyframes bkbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes bkpop{0%{transform:scale(1)}35%{transform:scale(1.045);box-shadow:0 0 0 2px #9FE3FF,0 0 28px rgba(110,200,255,.8)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.bk-hero::before,.bk-hero::after,.bk-hero img,.bk-it{animation:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 /* dialog: scale + fade in, quick fade out */
 #cf{display:grid!important;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
@@ -533,14 +556,55 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 <canvas id="stage" aria-label="알림 판"></canvas>
 <div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb">일일 도전</span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" aria-label="그만하기">그만</button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
+// ---------- i18n: English by default, Korean on a Korean device (?lang=ko|en overrides) ----------
+// Text is translated where it is drawn (canvas fillText/measureText, DOM text nodes and labels), so every
+// string — page copy and core labels alike — goes through one dictionary. Numbers and Latin words inside a
+// string become '#' in the key ("60연타!" -> "#연타!"), so the balance session can change numbers freely.
+window.I18N = (() => {
+  const q = new URLSearchParams(location.search).get('lang');
+  const dev = (window.Game && window.Game.lang && window.Game.lang()) || navigator.language || 'en';
+  const lang = (q || dev).toLowerCase().startsWith('ko') ? 'ko' : 'en';
+  document.documentElement.lang = lang;
+  const D = lang === 'en' ? {"# # · 가치 #": "# # · value #", "# #부터": "From # #", "# / #일": "# / # days", "# 무료 강화 → # #": "# free upgrade → # #", "# 배율": "# multiplier", "# 추가 인정": "# extra counted", "# 파일": "# files", "# 프리미엄 ★#": "# Premium ★#", "## 돌파!": "## reached!", "#/#칸": "#/# slots", "#내 기록": "#My best", "#는 영원히 남아요 · 클라우드 상점으로": "# stays forever · to the Cloud Shop", "#배 이득": "# better value", "#배 이득은 데이터 # (#) 기준": "# value is based on Data # (#)", "#보유": "#owned", "#분": "#m", "#시간#": "#h#", "#연쇄 #!": "#-chain #!", "#연타": "# taps", "#연타!": "# TAPS!", "#이(가) 중지됨": "# has stopped", "#일": "# days", "#일 · 자동 갱신 · 언제든 해지": "# days · auto-renews · cancel anytime", "#일 동안 매일 데이터 # (총 #)": "Data # daily for # days (# total)", "#일 연속 출석": "# day streak", "#일 자동 갱신 · 언제든 해지": "# days, auto-renews · cancel anytime", "#일째": "Day #", "#잠김": "#locked", "#초 동안 적용": "Active for #s", "#초 타임어택!": "#s time attack!", "#칸": "# slots", "#티어": "Tier #", "#티어 · 가치 ×#": "Tier # · value ×#", "#회": "# times", "(#단계 남음)": "(# steps left)", "(높은 티어 앱일수록 효율이 좋아요)": "(higher-tier apps pay off better)", "+# 파일": "+# files", "+#단계": "+# steps", "/ #일 결제": "/ # days", "@모두 공지 · 다음 알림 #개가 샌드위치로!": "@everyone · next # notifications become sandwiches!", "DO NOT DISTURB": "DO NOT DISTURB", "[!] 되돌릴 수 없어요": "[!] This can't be undone", "[!] 지금 결제는 테스트용 가짜": "[!] Purchases are test-only for now", "[광고] 축하합니다! 당첨되셨습니다…": "[AD] Congratulations! You've won…", "★ 강화": "★ Upgrade", "★ 선택권 #장": "★ voucher ×#", "★ 선택권·부스트는 데이터 가격으로 환산": "★ vouchers and boosts valued at Data prices", "★ 추천": "★ Pick", "★ 하나마다 그 앱 가치 #": "Each ★: that app's value #", "「#」 칭호를 달았어요": "Title equipped: 「#」", "가격": "Price", "가이드 건너뛰기": "Skip guide", "가치 ×#로": "value to ×#", "강화": "Upgrade", "강화 #": "Upgrade #", "강화 단계": "Upgrade level", "강화했어요": "Upgraded", "같은 권역·기능 앱을 #개 이상 넣으면 시너지가 붙어요": "Put # or more apps of one region or type in your deck for synergy", "같은 앱 #개가 모이면 펑!": "# of the same app — POP!", "같은 앱끼리 붙어서 합쳐져요 · #개 모이면 펑!": "Same apps snap together · # in a row POP!", "같은 앱이 위아래로 붙어요": "Same apps stick together", "개인정보처리방침": "Privacy Policy", "게임 데이터 초기화": "Erase game data", "게임 데이터를 지웠어요 · 처음부터 시작해요": "Game data erased · starting fresh", "결재 요청이 도착했어요": "An approval request arrived", "결제": "Pay", "결제·환불 안내 포함": "Includes payment & refund info", "결제가 완료됐어요": "Payment complete", "경고 · #": "WARNING · #", "경고 · WARNING": "WARNING · WARNING", "공장 초기화": "Factory reset", "공장 초기화 처음 하기": "Do your first factory reset", "공장 초기화!": "FACTORY RESET!", "과부하": "Overload", "과부하 파동 #단까지": "Overload wave up to #", "과부하 파동 #번": "# overload waves", "과부하 파동 ×#": "OVERLOAD WAVE ×#", "과열 보호": "Overheat guard", "광고": "Ad", "광고 # 연결 전 가짜 광고예요": "Placeholder ad until # is connected", "광고 동의 화면을 먼저 확인해 주세요": "Please answer the ad consent screen first", "광고 보고": "Watch ad:", "광고 보너스": "Ad bonus", "광고 없이 광고 보상 즉시": "Ad rewards instantly, no ads", "광고를 불러오는 중이에요 · 잠시 뒤 다시 눌러 주세요": "Loading the ad · tap again in a moment", "구매 #": "Buy #", "구매 가능": "Available", "그만": "Stop", "그만하기": "Quit", "글로벌": "Global", "금융": "Finance", "기록": "Records", "기본 앱": "Built-in", "기본 정산": "Base payout", "기본가": "Base price", "기억된 앱": "Remembered apps", "꽝": "Miss", "꽝...": "Miss...", "꾸미기 조각": "Cosmetic pieces", "꾹 눌러서 충전": "HOLD TO CHARGE", "남는 것": "What stays", "내 기록": "My records", "내 최고 기록": "My best", "내려서 상점을 열어요": "Pull down to open the shop", "내일 다시": "Again tomorrow", "넓은 알림창 #": "Wider shade #", "넘친 만큼 버림": "Overflow discarded", "다시 시작": "Restart", "다음 #": "Next #", "다음 강화": "Next upgrade", "다음 마일스톤": "Next milestone", "다음 복귀부터 # 적용돼요": "Applies from your next return: #", "다음 회차는 더 빨라요 · 백업 상점에서 강화하세요": "Your next run is faster · upgrade in the Backup Shop", "단체 문자 · 모든 줄 #!": "Group text · every row #!", "단톡방에 새 글 #+": "# + new posts in the group chat", "닫기": "Close", "대폭주": "MEGA RAMPAGE", "더 빠르게": "Go faster", "데이터": "Data", "데이터 # · ★ 선택권 # · 부스트·오버클럭 각 #": "Data # · ★ voucher # · boost & overclock # each", "데이터 # · ★ 선택권 #장 (데이터 # 가치)": "Data # · ★ voucher ×# (worth Data #)", "데이터 상자": "Data box", "데이터 상점": "Data Shop", "데이터 충전": "Top up Data", "데이터를 충전했어요": "Data added", "덱": "Deck", "덱 #": "Deck #", "덱 #/#": "Deck #/#", "덱 밖": "Out of deck", "덱 슬롯은 최소": "Deck needs at least", "덱 안": "In deck", "덱을 바꿨어요": "Deck updated", "도전": "Challenge", "도전 중에는 패널을 열 수 없어요": "Can't open the panel during a challenge", "동기화 가치 · 알림 가치 #": "Sync value · notification value #", "동남아권": "SE Asia", "둘러보기": "Look around", "라이브가 시작됐어요": "A live stream started", "레벨": "Level", "레벨 업! # #": "LEVEL UP! # #", "마구 두드리세요 · 탭마다 수입 # (최대 #)": "Tap like crazy · each tap income # (max #)", "마일스톤 #": "Milestones #", "마지막 앱까지 손에 넣기": "Collect every last app", "매일 데이터 #": "Data # daily", "매일 데이터 # + 즉시 #": "Data # daily + # now", "매일 들르기": "Daily visit", "매일 오버클럭 #시간": "Overclock #h daily", "먹통 재부팅 #번": "Reboot frozen apps # times", "모두 강화": "Upgrade all", "모두 강화 (싼 것부터)": "Upgrade all (cheapest first)", "모든 진행과 재화가 지워져요. 구매한 상품은 # 구매 기록으로 다시 받을 수 있어요.": "All progress and currency will be erased. Purchases can be restored from your # purchase history.", "모은 백업파일": "Backup Files collected", "모은 조각 # / #": "Pieces # / #", "모은 칭호": "Titles earned", "무료 강화": "Free upgrade", "미디어": "Media", "미션 보상 받기": "Claim mission reward", "미션 보상을 받았어요": "Mission reward claimed", "밀어서 지워요": "Swipe to clear", "받기": "Accept", "받을 #": "You get #", "받을 백업파일": "Backup Files you'll get", "방금": "now", "방해 금지": "Do Not Disturb", "방해 금지 · 소리를 껐어요": "Do Not Disturb · sound off", "방해 금지 · 자동 정리 #": "Do Not Disturb · auto-clean #", "방해 금지 · 조용한 밤": "Do Not Disturb · quiet night", "방해 금지!": "Do Not Disturb!", "배속": "Speed", "배송이 출발했어요": "Your delivery is on its way", "배터리 # · 충전 #초": "Battery # · charge #s", "배터리 부족 · 손을 떼면 다시 줄어요": "Low battery · let go and it drains", "배터리가 부족해요 · 잠시 충전 중": "Battery low · charging for a moment", "백업 부스트 (다음 초기화 파일 #)": "Backup boost (next reset files #)", "백업 상점": "Backup Shop", "백업 상점 #": "Backup Shop #", "백업 상점 · 가진 파일 #개": "Backup Shop · # files", "백업 상점 강화 완료": "Backup Shop upgraded", "백업 상점 단계 유지 #": "Keep Backup Shop levels #", "백업 상점 열림!": "BACKUP SHOP OPEN!", "백업파일": "Backup Files", "백업파일·# #": "Backup Files · # #", "백업파일·백업 상점까지 비우고 #로 바꿔요. #와 클라우드 상점은 영원히 남아요": "Clears Backup Files and the Backup Shop too, turning them into #. # and the Cloud Shop stay forever", "버전 #": "Version #", "보상": "Reward", "보상을 받았어요": "Reward claimed", "보유 백업파일": "Backup Files owned", "보유한 앱": "Owned apps", "보조배터리": "Power bank", "부족": "Short", "빠른 부팅 · 레벨 기준 # #": "Fast boot · level cost # #", "사용": "Use", "사용했어요": "Used", "사이 알림을 옆으로 밀어 치우면": "Swipe away the one in between", "상위 패스로 바꾸면 차액만 결제": "Upgrade your pass and pay only the difference", "상점에서 앱을 사면 여기에 나와요": "Apps you buy in the shop show up here", "상한 #": "Cap #", "새 메시지가 도착했어요": "New message", "새 메일 #통": "# new emails", "새 앱 #": "New app #", "새 앱을 사면 판이 더 커져요": "Buy new apps to grow your board", "새 앱을 샀어요 · 덱에 넣으면 판에 와요": "App bought · add it to your deck to see it on the board", "새 영상이 올라왔어요": "New video uploaded", "샌드위치 #": "Sandwich #", "생일 축하 보너스!": "Birthday bonus!", "생활": "Lifestyle", "서양권": "Western", "선택권 #": "Voucher #", "설정": "Settings", "세트 #개": "Set of #", "소리를 켰어요": "Sound on", "소리와 진동": "Sound & vibration", "소통": "Social", "손가락을 따라 옆으로 쓱": "Follow the finger — swipe sideways", "수입 # 획득!": "Income # earned!", "수입 ×#": "INCOME ×#", "수입 부스트 #": "Income boost #", "수입 부스트 #회 · 오버클럭 #회": "Income boost # · overclock #", "수집 항목과 삭제 방법": "What we collect and how to delete it", "스와이프": "Swipes", "스타터 팩": "Starter Pack", "스타터 팩 #": "Starter Pack #", "스타터 팩을 받았어요": "Starter Pack claimed", "스팸 #개 치우기": "Clear # spam", "스팸 문자": "Spam text", "스팸 사냥꾼": "Spam Hunter", "스팸 의심": "Suspected spam", "스팸 의심 전화 · 밀어서 거절": "Suspected spam call · swipe to decline", "스팸 전화": "Spam call", "슬롯 #/# · 최소 # · 덱에 있는 앱만 판에 알림이 와요. 눌러서 빼기/넣기": "Slots #/# · min # · only apps in your deck send notifications. Tap to add or remove", "시간 도약": "Time warp", "시너지": "Synergy", "시너지 #": "Synergy #", "시너지 미리보기": "Synergy preview", "시스템 알림 · 밀어서 처리": "System alert · swipe to handle", "시작 과부하 깊이 #": "Starting overload depth #", "시작 자금": "Starting funds", "아래로 끌어 상점 · 강화 · 덱": "Pull down: shop · upgrades · deck", "아무 앱 ★#까지 무료로 · 아래에서 \"선택권\" 누르기": "Any app to ★# for free · tap \"Voucher\" below", "아시아권": "Asian", "알람이 울려요": "Alarm ringing", "알림": "Notifications", "알림 #번 밀기": "Swipe # notifications", "알림 가치 #": "Notification value #", "알림 가치 한도 #": "Notification value cap #", "알림 개근왕": "Perfect Attendance", "알림 없는 사람": "Inbox Zero", "알림 판": "Notification board", "알림 해일": "Notification Tsunami", "알림 훈련": "ALERT DRILL", "알림 훈련 시작! 연타!": "Alert drill! Tap tap tap!", "알림 훈련 중": "ALERT DRILL", "압축 백업 · 백업파일 #": "Compressed backup · Backup Files #", "앱": "Apps", "앱 닫기": "Close app", "앱 상점": "App Store", "앱 상점을 눌러요": "Tap the App Store", "앱 슬롯 #": "App slot #", "앱 재시작 · 다음 폭발 #": "App restarted · next burst #", "앱스토어 세일 · 다음 앱 반값!": "App store sale · next app half price!", "앱이 응답하지 않습니다": "isn't responding", "어떤 앱 알림과도 합쳐져요": "Merges with any app", "업데이트 설치!": "Update installed!", "업무": "Work", "업적": "Achievements", "업적 · 칭호": "Achievements · Titles", "업적을 달성하면 칭호를 달 수 있어요": "Earn achievements to unlock titles", "없음": "None", "여기를 밀면 합쳐져요": "Swipe this one to merge", "연속 출석": "Streak", "연쇄": "Chain", "연쇄 반응": "Chain Reaction", "연쇄 증폭 #": "Chain amp #", "열린 강화 #/#": "Unlocked #/#", "열쇠 #": "Keys #", "열쇠 #/#": "Keys #/#", "옆으로 밀어서 치워요": "Swipe sideways to clear", "오늘 # 받기": "Claim today's #", "오늘 #/#": "Today #/#", "오늘 #번 남음": "# left today", "오늘 남은 열쇠": "Keys left today", "오늘 받음 · 내일 또": "Claimed today · back tomorrow", "오늘 열쇠를 다 썼어요": "No keys left today", "오늘의 데이터 #을 받았어요": "Today's Data # claimed", "오늘의 미션 · 모두 하면 데이터 #": "Today's missions · finish all for Data #", "오늘의 일정을 확인하세요": "Check today's schedule", "오버클럭 #시간": "Overclock #h", "오프라인 #": "Offline #", "오프라인 상한 #시간": "Offline cap #h", "오프라인 정산 # · #시간": "Offline earnings # · #h", "와일드 알림": "Wild notification", "와일드 알림 #": "Wild notifications #", "완료": "Done", "완료 시 #": "On completion #", "울트라 보너스": "Ultra bonus", "울트라 패스": "Ultra Pass", "월간 패스": "Monthly Pass", "월간 패스 전부 포함": "Everything in the Monthly Pass", "이미 도전 중이에요": "Challenge already running", "이미 사라진 알림이에요": "That notification is gone", "이번 판이 지난 최고를 넘어야 받아요": "Beat your previous best this run to earn some", "이벤트 슬롯 #": "Event slot #", "이벤트 카드 · 밀어서 받기": "Event card · swipe to claim", "이용약관": "Terms of Service", "인증번호 · 직전 한 방 #!": "Verification code · last hit #!", "일일 도전": "Daily Challenge", "일일 도전 끝!": "Daily Challenge over!", "입금 알림": "Deposit received", "자동": "Auto", "자동 정리 #초": "Auto-clean #s", "자동 정리 멈춤": "Auto-clean paused", "자동 정리를 껐어요": "Auto-clean off", "자동 정리를 켰어요": "Auto-clean on", "자리 비운 동안": "While you were away", "잘했어요! 이제 강화로 가치를 올려 보세요": "Nice! Now upgrade to raise its value", "잠김": "Locked", "장착": "Equip", "장착 중": "Equipped", "장착한 칭호": "Equipped title", "재부팅 장인": "Reboot Master", "재시작! 수입 #": "RESTARTED! INCOME #", "잭팟 ×#!": "JACKPOT ×#!", "저장공간 정리 완료": "Storage cleaned up", "전체": "All", "절반 확률로 직전 스와이프 × ##": "50/50: last swipe × ##", "절전 모드 · 배터리 #": "Power saving · battery #", "정말 동기화할까요? 한 번 더 누르기": "Really sync? Tap again", "정말 초기화할까요? 한 번 더 누르기": "Really reset? Tap again", "정보": "Info", "줄": "rows", "즉시 # + #일 매일 # + ★ 선택권 #": "# now + # daily for # days + ★ voucher #", "지금 바로 데이터 #": "Data # right now", "지금 지우기": "Erase now", "지금부터 적용": "Active now", "지금은 할 수 없어요": "Not right now", "지난 최고 기록을 넘긴 만큼만 받아요": "You only get what beats your previous best", "지우기": "Erase", "진동": "Vibration", "진행·재화·출석·설정을 모두 지워요": "Erases progress, currency, attendance and settings", "차단!": "BLOCKED!", "처리": "Handled", "첫 데이터 구매 #번만 #배 (보너스 최대 +#) · 어느 팩이든": "First Data purchase # time only: # (bonus up to +#) · any pack", "첫 앱을 사 볼까요?": "Buy your first app?", "초 뒤 보상": "s to reward", "초기화": "Reset", "초기화 #회": "# resets", "초기화 #회 후": "after # resets", "초기화 · 동기화": "Reset · Sync", "초기화 입문": "First Reset", "초기화·동기화해도 남아요": "Kept through resets and syncs", "초기화되는 것": "What resets", "초기화해도 남아요": "Kept through resets", "초기화해도 사라지지 않는 영구 강화": "Permanent upgrades that survive resets", "초심자 패스": "Beginner Pass", "초심자 패스가 시작됐어요": "Beginner Pass started", "최고 기록 #": "Best #", "최고 기록 # (+#)": "Best # (+#)", "최고 기록 #!": "Best #!", "최고 기록 갱신 시 #": "# on a new best", "최고 기록 경신!": "NEW BEST!", "최고 기록!": "NEW BEST!", "최고 연쇄": "Best chain", "최고 한 방": "Best hit", "최대 #!": "MAX #!", "추천 콘텐츠가 도착했어요": "Recommended for you", "출석": "Check-in", "출석하기": "Check in", "출석했어요": "Checked in", "충전 완료! 배터리 #": "CHARGED! BATTERY #", "충전 완료! 배터리 +2": "CHARGED! BATTERY +2", "충전 중 #%": "CHARGING #%", "취소": "Cancel", "친구가 회원님을 언급했어요": "A friend mentioned you", "칭호": "Titles", "칭호 #": "Titles #", "칭호 #/#": "Titles #/#", "칸이에요": "slots", "쿠폰이 곧 만료돼요": "Your coupon expires soon", "클라우드 동기화": "Cloud sync", "클라우드 동기화 · 두 번째 환생": "Cloud Sync · second prestige", "클라우드 동기화 처음 하기": "Do your first cloud sync", "클라우드 동기화!": "CLOUD SYNC!", "클라우드 상점 · 가진 # #": "Cloud Shop · # # owned", "클라우드 상점 강화 완료": "Cloud Shop upgraded", "클라우드 이민자": "Cloud Migrant", "탭해서 차단": "Tap to block", "터보 패스": "Turbo Pass", "테마": "Theme", "티어": "Tier", "팡": "POP", "팡!": "POP!", "패스": "Pass", "패스 #일": "Pass # days", "패스 보너스": "Pass bonus", "패스 혜택 ·": "Pass perk ·", "패스가 시작됐어요": "Pass started", "펌웨어 · 덱 전체 # 레벨!": "Firmware · whole deck # levels!", "펑 할 때마다 #가 쌓여요": "Every POP stacks #", "폭주": "RAMPAGE", "프로 버전 앱 #개 모으기": "Collect # Pro apps", "프로 정리왕": "Pro Cleaner", "프리미엄": "Premium", "프리미엄 ★ 선택권 #장 (데이터 # 가치)": "Premium ★ voucher ×# (worth Data #)", "프리미엄 ★을 올렸어요": "Premium ★ raised", "프리미엄 버전": "Premium version", "하나만 더!": "One more!", "하루 종일 게임 속도 #": "Game speed # all day", "하루라도 빠지면 #일차부터": "Miss a day and you restart from day #", "한 번에 #연쇄 터뜨리기": "Pop a #-chain in one go", "합계": "TOTAL", "합쳐지지 않음": "Doesn't merge", "해금": "Unlock", "해금 후 공개": "Revealed on unlock", "해지해도 남은 기간은 그대로": "Cancel anytime; remaining days stay", "행운 알림": "LUCKY ALERT", "화면": "Display", "확률형 상품 없음": "No random-chance items", "확인": "OK", "회": "times", "회의가 #분 뒤 시작돼요": "Meeting starts in # min", "획득!": "EARNED!", "효과음": "Sound effects", "효과음 크기": "Effect volume", "휴대전화 · 신고 #건": "Mobile · # reports", "휴대폰 설정(라이트·다크)을 따라가요 · 지금 #": "Follows your phone (light/dark) · now #"} : {}, cache = new Map(), miss = new Set();
+  const HAN = /[가-힣ㄱ-ㆎ]/;
+  const TOK = /[+\-−×÷₩$~]?[0-9A-Za-z][0-9A-Za-z.,:%/'’]*(?: [0-9A-Za-z][0-9A-Za-z.,:%/'’]*)*%?/g;
+  function tr(s) {
+    if (lang !== 'en' || typeof s !== 'string' || !HAN.test(s)) return s;
+    let r = cache.get(s); if (r !== undefined) return r;
+    const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim(), args = [];
+    const key = core.replace(TOK, m => { args.push(m); return '#'; });
+    const v = D[key];
+    if (v == null) { miss.add(key); r = s; }
+    else { let i = 0; r = lead + v.replace(/#([1-9])?/g, (m, n) => n ? (args[+n - 1] ?? '') : (args[i++] ?? '')) + trail; }
+    cache.set(s, r); return r;
+  }
+  if (lang === 'en') {
+    const P = CanvasRenderingContext2D.prototype;
+    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P[f]; P[f] = function (t, ...a) { return o.call(this, tr(t), ...a); }; }
+    const ATTR = ['aria-label', 'title', 'placeholder', 'alt'];
+    const fix = n => {
+      if (n.nodeType === 3) { if (HAN.test(n.nodeValue)) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
+      if (n.nodeType !== 1) return;
+      for (const a of ATTR) { const v = n.getAttribute(a); if (v && HAN.test(v)) n.setAttribute(a, tr(v)); }
+      for (const c of n.childNodes) fix(c);
+    };
+    const mo = new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') fix(m.target); else if (m.type === 'attributes') fix(m.target); else m.addedNodes.forEach(fix); } });
+    const go = () => { fix(document.body); mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTR }); document.title = tr(document.title); };
+    document.body ? go() : addEventListener('DOMContentLoaded', go);
+  }
+  return { lang, tr, miss, apps: lang === 'en' ? {"alarm": "Clock", "weather": "Weather", "memo": "Memo", "flash": "Flashlight", "calc": "Calculator", "recorder": "Voice Recorder", "phone": "Phone", "sms": "Messages", "camera": "Camera", "gallery": "Gallery", "contacts": "Contacts", "settings": "Settings", "music": "Mellow", "papago": "Mamago", "zalo": "Zaloo", "momo": "MoMoMo", "airbnb": "Airbnbnb", "duo": "Duolingu", "ctaxi": "Cocoa T", "pay": "Toast", "glints": "Glintz", "bigo": "Bigogo", "pin": "Pinrest", "meet": "Zooom", "food": "Hungry Tribe", "edit": "CupCut", "travel": "Travelocka", "joox": "Jooxx", "reddit": "Raddit", "career": "LinkedOut", "mall": "Coupbang", "portal": "MAVER", "michat": "MiChatChat", "agoda": "Agodada", "paypal": "PayPalPal", "match": "Tender", "superapp": "WeChad", "line": "LYING", "jobs": "JobStreat", "lazada": "Lazadada", "ride": "Ubah", "robin": "Robinhoot", "dance": "TikTuk", "chat": "CocoaTalk", "grab": "Grabb", "shopee": "Shopippy", "beat": "Spotifly", "why": "Y", "mega": "Amazin'", "ott": "Netplug", "secret": "Telegrim", "mail": "Qmail", "maps": "Qoogle Maps", "store": "Qoogle Play", "tube": "YouTub", "photo": "Instagrand", "feed": "Takebook", "green": "WhatsUpp", "search": "Qoogle", "ai": "ChatGTP", "gemini": "Jeminai", "claude": "Claudy", "copilot": "Copylot", "perplexity": "Purplexity", "deepseek": "DeepSick", "midjourney": "Midjourneyer"} : null };
+})();
+</script>
+<script src="pfx.bundle.js"></script>
+<script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
 const LADDER = [
-  { from: 1, to: 1, name: '팡', stop: 28, shake: 1.5, shreds: 12 },
-  { from: 2, to: 3, name: '연쇄', stop: 36, shake: 2.0, shreds: 20 },
-  { from: 4, to: 5, name: '폭주', stop: 48, shake: 2.5, shreds: 32 },
-  { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
-  { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
+  { from: 1, to: 1, name: '팡', stop: 55, shake: 2.6, shreds: 12 },
+  { from: 2, to: 3, name: '연쇄', stop: 65, shake: 3.4, shreds: 20 },
+  { from: 4, to: 5, name: '폭주', stop: 78, shake: 4.4, shreds: 32 },
+  { from: 6, to: 8, name: '대폭주', stop: 92, shake: 5.4, shreds: 48 },
+  { from: 9, to: 99, name: '알림 해일', stop: 110, shake: 6.5, shreds: 64 },
 ];
 const W = 390, H = Math.max(740, Math.round(390 * (innerHeight || 740) / (innerWidth || 390))), EX = H - 740, SIM = 1 / 120, POOL = 600;
 const FD = '"Black Han Sans","Pretendard","Noto Sans KR",system-ui,sans-serif', FB = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
@@ -556,6 +620,7 @@ const bgT = document.createElement('canvas'); bgT.width = 18; bgT.height = 34; c
 const HANDSET = new Image(); HANDSET.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAMZ0lEQVR42u1de7BVVRn/feccRC/gDYZ3Gog8cpSMAR1lCJnIRxnWmD0gytGaaESNoOgPJ6fRPypysBknG7SkF5o16iTQqKNNFFKCQbxCSJGkLBk13uDlnP3rj/0t72p7zr3n3rP3Xnvvu76ZM2dfHvess37f9/sea61vCbwkLiTLIlLT52EAPgzgQwAuADASwGkADgHYC+B5AGtFZL31/0siEviZzB/wQlL0eSzJu0i+wu6lRnI9yc/YSuRnNF/gl6znr5E8GAG4qu+B9TJ/bss6khcaJTAK5SUH4JMcSnKNBeYpBZpNsoBRhmMkF1qsUvKznH3wR5Pc2gvgo2Izwv0k+3mXkG2fXyI5kORfFLQOti6BKhFJPk1yqFeCjEb7+v6TGMFnxIWQ5A6S5+hnVfzMZwv8ORGwmJAS7CN5nleCbFF/f5K7lLKrTE7M7/4XyaneHWTH+r9SJ3BLWgneIDmtt0rgc8oYrF8fBwP4G4DhAAggjVStBqAM4D8AZorI33taNfT5ZOtSEhECWAJgBIAgxXktqxKMBLCa5BARCXpSJ/AM0HrOTwCjAewEMEjnNO15rQKoAHgGwFU6pkAV0zNAgiI6yUsBtKv1uzCqiirBbADLdeGp7BkgHet/D4AdAAZkYE4NE8wXkVX2KqRngOSsfxGAgeqLXRtUWVnoXi0UdRsPeAZozfpHauTfnqH5NPT/WxG5ujsW8AzQWuR/E4B3ZcT6o5nBR0h+QkRqXdUHPAPkK+9vVkwwugfAhQA61GfRM0AMFqYTOc9B3t80Q+m4JgGYq+MtewaIjwHKADapdQXNplwOYoESgC0ALm5UF/AM0DPwjfVfAuD9ls/NJFPp+xQA00SE9WIBrwC9k7mWlWVZTHD6yUaM7xWgB9SvEXUbgKtzMn9mfLPUddW8ArQ+mVMAjMlg5N9VjPdeAO9WN1DyCtDaZM7ICf2bMRNhmXpSPTfgFaAHXkDfp+YsgzJ7A87xCtDiRKofHZtTxR3dlV/z0n0ASLWetpwxgJFhEYXwCtC0I+0soBBaVs2hVLwLaI0FzALQv+tZUg6kw7uAeNLAzTlVgENeAeIJplbndO5e9wrQWhxQ0yLKJgBP69xVc1ILAIBXfRAYix4IASwGcBKdy655cF3/8AwQDwuURWQ7gC/q/EmGlcCkrocB7PcMEK8SrAJwIzrX3asZVQBj/Qd0/IFXgPiUYCWAyxE2dzJ787OUHRiwt+uJIb8fIGYlqIjI7wFMB/CIKkHdZVfH8mwkIPQKEJMSVJUJXhOR6wDcCuAEwt04WXAJFVXG9RFG8BKro7UaN5GcQvI5q7VLjW7EfO4uq6+QZ4CEmIDqYysisgXATADLlHJdBYjG2p8QkVM6Nnq0kmcDuz/gbJIvpNg0oh4DzNKx+A4iKbuEij63k1wRASUt8F8k2b8R/XsXkKxLMAHiIRFZAOA2pFc5NJ/xqIi8ZW1n9+LCJVg9hNanxASmSdX7om7JM0D6bBAAEGshKel0zNQg1onItu56BnkFSCkiVxAmNirIxKlz+vphMxj7s4EpBIS6H384wtO67ehcpEnC95cA7ANwvhal0JX/9wyQvJj069MKfpK9BAzV/1hEjqPzJLNnAFfWr4/9AWxVF5DUcXID9BEA5yHcuyjd9Qz0DJCw9asFzlXwawnOuWGWX4nIqwi7mHQbbHoGSNb6BcDpALYjPJmT5HlCqhJM1c8rddchzDNAsmIs8GYA45BsJxFj/WtFZJtSf1NL0p4BkrF+00VsFMIOomci2Q6ihuovFZGNzfQH9AyQrJjNo99B2EWMCYJv4oo1PQXfSzLWb8q+V6S0Cmgul/L3BmQh8NPafxvJPSlsCDHK9QsPfjYUwCwB35OC9RvlOkpynL9OLjvUf2VK1G/uDrqjFev3WUC8Uf8QhH35zko45zedQPcDmAzgKAD2Zs3fU0Z8OT8BrABwNpKt+MHKKpaIyGEr6/Di0O/fkvB1cdHA7/E4Aj/vAlr0+3pA5CIAf0S4D7+U4LxSX8cRdirdiyYWfLwLSM7vByQHA3gI4Ypf0vcFmXLy7SLyEppc8PGSTL5vqP83KUX95vc/a/YZ+qvk3fv9O1Py+2aT5wmSky0G8uIQ/HkxXA3f05z/6/YYvLgDfybJk1qJC1Ki/nXqejz1u4r49X0SyQMp7u+vkTxM8lxP/W4jfpAcpos8aZ31M9T/+Thyfi+9BF+pt00j8LTBX+X9vtt0z6Rcq1OK+G3XskcPl5a833cDvvH7D6YIvkn5Okhe7KnfPfj3pQi+/Tm3eOp3D/49jsBf6cF3D/7ylME3geUWDTi933cI/t0pg28KSq+THO/zfUfRviPaN0FfQPLKPhP06aS//XKd5+vz/SmDb3/WosL7fauWXa5Xak27zm1ZfTnlVC8K/r2FBt/2rxHLO1MLHdG/K6cwJuPvT7fW9F2A/6QL5TciSQMP65QqyYEArkF49epkhDdZlRF2st4MYC2Ax0XkRJJHnKytXIMB/BrAbITNHNOywJp+710IL6L8L1rc2pVFqy9bz+0kF2vfuu5kJ8lrkmICa0n3bJKbHVi+KfMeIDmhcBG/Urvxrf1JLiS5N5LvVq3UJ7DOt9mLLEvj9osW+OeTfMkB+Ob7Hic5vVARf9TPk/wYyb9GgK81aSHVuHfAWOB/wFrPr6YMvkn3ri1U0BcB/gKSj/UC+OhkGcu8oZXJimzg/JTuq3MBvvk+Xy4M+JHqWRvJb5E8ZllyLQaLqZG8qjd0Gcnxv1HHD6cd8d9WJPBtq7+C5LY6de24SqQHrd2w5Z6Mj2TFWtFLYw9fI/CXWeORvINvKHUQyR9EvmyQUNS8h+TQZqJma3wjSD6V4u7dRuCvsApOknfKNxH+DJI7YqL7ZlfKfkeyX6OJjLikSx1F+lHwf1oU8O2LEBbrjhUXa+UPWFRastYTKtb4FjgK9oyYuXkoGovk2t+THEjy4ciWZRdW9e0G4xxO8mcOg73/A9/URIoC/hiSmxz606g7eIDkBJIDSJ5F8maS+61/Ezik/Ucsdsp0lU+6o329DOlcAE8hbHh4CkA/x+M2p2TfQtgTdwjCXnx2nT1tMWsJDwOYB+3dm/XGDdIE+KMA/AHA+JQXTJpdULF/Nrd0uQJ/FYDPvT25OejaUepiFc8EVr/MIPhQ8KlsQP3ZJfj3ich8Y1R5adnSaMLMEu5ShHfgncoY+DaDJdmRo0sPqaxTAXC3iCxQf8889euRBukeAYxF2HX6DCTf+SJ3sTE6u4DdKSK3a7Ac5K1ZUz2rFvX9iwAMyCD1u5bAYp4lIrI8r+C/gwHYeb/NIAC7AYxEsv3u8gh+San/BhH5OcMrWat5/UKVOjFBDeF16KOQbI/7vInJOo4AmCcia/IOfj0FMIxwkRVhewXodIP/BHCdiDxXBPDrKYDxYRN94PcO8LcCuFZE9hYF/K7SwIEed9ACfy2AWQp+uSjgd6UAfb3vbGAx5PcBzBGRg1odLdRtHKUGMcAbfVgRTKNnArhVRL4Kvfu3iF05G+X3O/q4v38NwPUi8mSec/zeKIDR8D/re19pTWKXdTcC+KyIvFikYK8pF6AVQEF46cEOixKL7u9FwV8J4DIFv1x08BsFgWUROQXgRzoxRY4DqjoHHervbxSRk0UM9hpJ3Y2V+jhAc9+krzx1RfmBurjdCMu6fyq6v2+KAfTLl0TkKICFqiRFin7NxpEywg0c0xX8iojU+trVK3WtWo9Ol0XkCQB3qX8sgj+sKvDHANwkIvNF5M2+4u+bcgERV1BSZXgMwMeR36XhwFL4jQC+JCJb+yLlN60AlhKYK9CfAXBJDpXAHu8yAN8UkY6+kOLFEy11ngQaQXKXw8MWvT1XSD23ODv6nbw0rwTmbMBYq9lDVpUgsMZWI/k9kgPM9/DNF1tXggkkX8moEtjj2UhyRnT8XuJRgokkX3Z48LIe3ZtjYAdJLiV5mrf6ZJVgHMkXHCtBLWL1D5pWq97q01GCkSTXO+q0ZQO/geTl1vgq3urTU4I2PQyZRp+AKPA7SV5vZSolH+E7SBH1+Y6EOoUEdRpN7db2c2d4unevBHbXkDlWV45WFCGo0zeQJJ8n+QWT1nngs+kSBmvufaSBFQcNAK81aCl3hOSjJD8aYRwf3WdVCfR5PMnvRhihWXlTmygvJDkm+hke+PhEElCCaIPodgAfBHAZgGkIm0wMQedx7g6EzaJfRrgLaQOADSKyLxJrCPr4wk0S8j8a6RKW6/h1wQAAAABJRU5ErkJggg==';
 const ICON = {};
 const icon = id => ICON[id] || (ICON[id] = Object.assign(new Image(), { src: 'icons/' + id + '.svg' }));
+const BKIMG = Object.assign(new Image(), { src: 'img/bm/currency-backup.webp' });
 const GLOVE = Object.assign(new Image(), { src: 'img/hand-swipe.png' });
 const colOf = d => d.kind === 'Spam' || d.kind === 'Call' ? '#FF3B30' : d.kind === 'Wild' ? '#9B5CFF' : d.kind === 'Event' ? '#EFA03F' : d.kind === 'Alert' ? '#8E8E93' : (COLORS[d.app] || '#EFA03F');
 let dpr = 1;
@@ -567,7 +632,7 @@ const lightQ = matchMedia('(prefers-color-scheme: light)');
 const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
 let sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
 const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce })); } catch (e) {} };
-const TEXTS = {"alarm": [["이 앱이 폭발하면", "다음 새 줄 하나가 같은 앱", "(스누즈)"], ["5분 뒤에 다시 알려 드릴게요(7번째)", "알람이 꺼졌습니다. 일어나셨나요?", "내일 알람이 아직 설정되지 않았어요"]], "weather": [["하루 첫 접속 때", "판의 이 앱 줄 수량 +1", ""], ["오후에 비 소식이 있어요(우산은 집에)", "미세먼지 나쁨, 창문을 닫으세요", "체감 온도 영하 12도"]], "memo": [["손으로 직접 밀면", "이 앱 줄 가치 ×2", "[!] 자동 정리는 제외"], ["작성 중인 메모가 있어요: ㅁㄴㅇㄹ", "장보기 목록: 우유(3주 전)", "메모를 클라우드에 백업할까요?"]], "flash": [["이 앱이 폭발하면", "스팸 문자 줄 하나를 지움", ""], ["손전등이 켜져 있어요(주머니 속)", "배터리를 많이 쓰는 앱: 손전등", "밝기 최대로 설정됐습니다"]], "calc": [["4의 배수 개수로 터지면", "그 폭발 +50%", ""], ["계산 기록이 99+개 있어요", "더치페이: 1인당 13,333.33원", "공학용 계산기로 전환할까요?"]], "recorder": [["폭발 직후 3스와이프 동안", "직전 폭발 P의 10% 추가", "(다시 듣기)"], ["녹음 파일 23개가 저장 공간을 차지해요", "녹음이 중지됐어요(전화 수신)", "새 녹음 1(3시간 12분)"]], "phone": [["스팸 전화를 밀면", "거절 대신 받아서 배터리 +2", ""], ["부재중 전화 3통", "발신번호 표시 제한", "스팸 의심 전화입니다"]], "sms": [["이 앱이 폭발하면", "바로 위 줄 수량 +1", "(답장)"], ["[Web발신] 고객님 택배가 도착했습니다", "인증번호 [482913]", "(광고) 오늘만 특가"]], "camera": [["연쇄 2 이상이면", "다음 판에 한 줄 복제", "(그 순간 판을 찰칵)"], ["사진 1,024장이 백업되지 않았어요", "저장 공간이 부족해 촬영할 수 없어요", "새 필터가 추가됐어요"]], "gallery": [["5스와이프마다", "직전 폭발 P의 10% 추가", "(추억 다시 보기)"], ["1년 전 오늘의 추억이 도착했어요", "비슷한 사진 432장을 정리할까요?", "새로운 추억 앨범: 내 손가락"]], "contacts": [["덱에 소통 앱이 있으면", "1개당 이 앱 가치 +15%", ""], ["생일인 연락처: 3명", "중복된 연락처 18개를 합칠까요?", "'김부장님(새 번호)'이 추가됐어요"]], "settings": [["자동 정리를 켜 두면", "정리 간격 −0.3초", ""], ["소프트웨어 업데이트 1건", "알림 권한을 확인하세요", "배터리 최적화를 켤까요?"]], "music": [["이 앱이 터지면", "이후 연쇄 번호 +1", ""], ["실시간 차트 1위 변동!", "이용권이 곧 만료돼요", "좋아요한 곡 플레이리스트가 갱신됐어요"]], "papago": [["덱에 있으면", "모든 권역 시너지 +10%", ""], ["이 페이지를 번역할까요?(이미 한국어)", "대화 모드를 켜 볼까요?", "오늘의 회화: 안녕하세요"]], "zalo": [["이 앱이 폭발하면", "동남아권 앱 1개당 게이지 +2", ""], ["새 친구 요청 4건", "그룹 통화가 시작됐어요", "공식 계정 소식이 도착했어요"]], "momo": [["하루 첫 폭발이면", "그 폭발 ×3", "(출석 캐시백)"], ["캐시백 5,000동이 적립됐어요", "전기요금 납부일이에요", "친구가 돈을 보냈어요"]], "airbnb": [["하루 첫 폭발이면", "그 폭발 ×5", "(얼리 체크인)"], ["호스트가 메시지를 보냈어요", "찜한 숙소 가격이 내려갔어요", "후기를 남겨 주세요"]], "duo": [["연속 플레이 1일마다", "이 앱 가치 +2%", "(최대 +60%)"], ["오늘 레슨을 안 했어요. 부엉이가 슬퍼요", "연속 학습 0일째", "리그에서 강등 위기!"]], "ctaxi": [["이 앱 줄이 합쳐질 때", "옆 같은 앱 줄도 끌어와 합침", ""], ["기사님이 3분 뒤 도착해요(11분째)", "주변에 차가 없어요. 다시 호출할까요?", "탑승 후 별점을 남겨 주세요"]], "pay": [["이 앱이 폭발하면", "배터리 +1", "(송금 완료는 곧 충전)"], ["송금이 완료됐어요(3,000원)", "이번 달 소비 리포트가 도착했어요", "만보기로 10원 받기"]], "glints": [["덱에 있으면", "업무 앱 강화 가격 −10%", ""], ["새 채용 공고 23건", "면접 일정이 잡혔어요", "이력서를 업데이트하세요"]], "bigo": [["이 앱이 터질 때", "과부하 파동 배수 3 → 4", ""], ["좋아하는 BJ가 방송을 시작했어요", "선물 랭킹 1위가 바뀌었어요", "라이브 PK 시작!"]], "pin": [["같은 앱 줄이 3개 이상이면", "그 앱 가치 +20%", ""], ["회원님을 위한 아이디어 48개", "보드에 새 핀이 추가됐어요", "저장한 핀이 인기 급상승"]], "meet": [["스팸 전화를 밀면", "최근 1분 수입만큼 P", "(회의 참석)"], ["회의가 시작됐어요(마이크 켜짐)", "호스트가 카메라를 켜 달래요", "40분 무료 회의가 곧 끝나요"]], "food": [["폭발에 포함되면", "다음 3스와이프 배터리 0", ""], ["주문하신 음식이 출발했어요(반대 방향)", "리뷰 쓰면 음료 서비스!", "오늘 저녁도 같은 메뉴?"]], "edit": [["과부하 파동마다", "이 앱 줄 수량 +1", ""], ["렌더링 87%… 앱을 닫지 마세요", "새 템플릿이 유행 중", "워터마크를 지우려면 구독하세요"]], "travel": [["앱을 산 직후 첫 폭발이면", "그 폭발 ×3", "(여행 출발)"], ["항공권 가격이 내려갔어요", "체크인까지 D-30", "포인트가 곧 소멸돼요"]], "joox": [["과부하 파동 중이면", "이 앱 가치 +50%", ""], ["노래방 모드 신곡 업데이트", "VIP 무료 체험 7일", "친구가 플레이리스트를 공유했어요"]], "reddit": [["이 앱이 폭발하면", "다른 소통 앱 줄 수량 +1", "(추천 폭주)"], ["내 글이 인기 글이 됐어요", "댓글 스레드에 답글 87개", "카르마가 올랐어요"]], "career": [["덱의 다른 카테고리마다", "이 앱 가치 +10%", ""], ["누군가 당신의 프로필을 봤어요", "새 채용 공고 48건", "옛 동료가 승진했어요"]], "mall": [["밤(22~7시)에 돌아오면", "첫 3스와이프 ×2", "(새벽 배송)"], ["내일 새벽 도착 보장(오늘 주문 시)", "장바구니 상품이 품절 임박", "재구매 추천: 생수 2L"]], "portal": [["10스와이프마다", "화제 카테고리 앱 가치 ×2", "(카테고리는 무작위)"], ["지금 뜨는 소식", "오늘의 날씨와 운세", "메일함에 새 소식 3건"]], "michat": [["이 앱이 폭발하면", "바로 아래 줄 수량 +1", ""], ["근처 사람이 인사했어요", "새 메시지 12개", "모먼트에 좋아요"]], "agoda": [["복귀 정산 후 첫 폭발이면", "그 폭발 ×3", "(숙소 도착)"], ["지금 이 숙소를 12명이 보고 있어요", "비밀 특가가 열렸어요", "예약이 확정됐어요"]], "paypal": [["덱에 있으면", "금융 앱 강화 가격 −10%", ""], ["결제가 완료됐어요", "송금을 받았어요", "계정 보안을 확인하세요"]], "match": [["이 앱 두 줄이 맞닿으면", "기준과 상관없이 즉시 폭발", ""], ["새로운 매칭이 있어요", "누군가 당신의 프로필을 봤어요", "대화가 3일째 멈춰 있어요"]], "superapp": [["이 앱이 폭발하면", "모든 카테고리 처리량 함께 증가", ""], ["모멘트에 새 소식", "미니 프로그램이 업데이트됐어요", "결제가 완료됐어요"]], "line": [["이 앱이 폭발하면", "아시아권 앱 1개당 게이지 +2", ""], ["스티커 신상 출시!", "그룹 채팅 메시지 99+", "공식 계정 쿠폰이 도착했어요"]], "jobs": [["업무 앱이 3개 이상이면", "모든 업무 앱 가치 +20%", ""], ["프로필에 맞는 공고 48건", "지원한 회사가 이력서를 열람했어요", "연봉 정보가 업데이트됐어요"]], "lazada": [["이 앱이 폭발하면", "25% 확률로 이 앱 줄 +1", "(할인 폭탄)"], ["11.11 최대 90% 할인", "라즈몰 신상 도착", "쿠폰 받으러 가기"]], "ride": [["같은 줄 4개가 터지면", "다음 자동 대기 −2초", ""], ["기사님이 도착했어요", "요금이 1.8배 할증 중이에요", "이번 여행은 어떠셨나요?"]], "robin": [["이 앱이 폭발하면", "P ×0.5~×3 무작위", "(기댓값 약 ×1.4)"], ["보유 주식이 3% 올랐어요", "무료 주식 1주를 받으세요", "장 시작 5분 전"]], "dance": [["이 앱이 폭발할 때마다", "25% 확률로 이 앱 줄 복제", "(유행)"], ["당신을 위한 추천 영상", "친구가 새 영상에 태그했어요", "라이브가 시작됐어요"]], "chat": [["이 앱이 폭발하면", "위쪽 코코아톡 줄 수량 +1", "(단톡은 또 온다)"], ["조용한 단톡방에 메시지가 쌓였어요", "“ㅋㅋㅋ” 외 999+", "선물하기: 생일인 친구 5명"]], "grab": [["덱에 있으면", "배터리 최대치 +2", ""], ["음식이 배달 중이에요", "라이드 할인 코드", "리워드 포인트가 곧 소멸돼요"]], "shopee": [["가격이 낮은 앱을 살 때", "10% 할인", ""], ["9.9 메가 세일 시작!", "무료 배송 바우처 3장", "장바구니 상품 가격이 내려갔어요"]], "beat": [["자동 정리 중이면", "이 앱 폭발 가치 +30%", ""], ["당신을 위한 믹스가 업데이트됐어요", "연말 결산이 도착했어요", "프리미엄 3개월 무료"]], "why": [["이 앱이 터질 때마다", "소통 앱 가치 +2% 누적", "(최대 +30%, 회차마다 초기화)"], ["지금 트렌드 1위", "회원님의 게시물이 재게시됐어요", "프리미엄 구독으로 파란 체크를"]], "mega": [["이 앱이 폭발할 때마다", "이 앱 가격의 0.2% 적립", ""], ["주문하신 상품이 배송 중입니다", "최근 본 상품 할인!", "정기 구독 갱신 예정"]], "ott": [["복귀한 뒤", "첫 3스와이프 ×2", "(정주행)"], ["다음 화가 5초 후 재생됩니다", "새 시즌이 공개됐어요", "시청 중인 콘텐츠가 곧 종료돼요"]], "secret": [["덱에 있으면", "스팸 문자 복제 차단", "(스팸 전화 정지 시간 절반)"], ["새 채널에 초대됐어요(1.2만 명)", "비밀 대화가 자동 삭제됐어요", "스티커 팩이 업데이트됐어요"]], "mail": [["2연쇄 이상에 포함되면", "그 폭발 가치 +50%", ""], ["프로모션 탭에 새 메일 99+", "회신: 회신: 회신: 확인 부탁드립니다", "저장용량 15GB 중 14.9GB 사용"]], "maps": [["권역이 다른 앱끼리 맞닿으면", "그대로 합쳐짐", "(시너지 와일드)"], ["경로를 다시 탐색합니다", "리뷰를 남겨 주세요: 방문한 장소", "이 장소는 지금 붐벼요"]], "store": [["새 앱을 살 때마다", "그 앱 강화 +1", ""], ["업데이트 가능한 앱 37개", "추천 앱: 알림 끄기 앱", "결제 수단을 확인하세요"]], "tube": [["덱에 있으면", "덱 전체 연쇄 번호 +1", ""], ["구독 채널의 새 영상", "나중에 볼 동영상 1,204개", "광고 2개 후 영상이 재생됩니다"]], "photo": [["덱의 미디어 앱마다", "이 앱 가치 +15%", ""], ["회원님을 위한 릴스 추천", "친구가 스토리를 올렸어요", "게시물 좋아요 3개"]], "feed": [["이 앱이 새 줄로 올 때", "샌드위치 확률 +10%p", ""], ["이미 본 피드를 다시 추천합니다", "3년 전 오늘의 추억을 확인하세요", "친구 요청 12건"]], "green": [["이 앱 줄은", "3개만 모여도 터짐", "(기준 3)"], ["그룹에 메시지 248개", "음성 메시지(4분 12초)", "백업이 완료되지 않았어요"]], "search": [["자동 정리를 켜 두면", "한 수 앞을 보고 민다", ""], ["검색 기록 기반 추천", "오늘의 기념일 그림", "계정 보안을 점검하세요"]], "ai": [["자동 정리를 켜 두면", "간격 −0.5초, 두 수 앞을 봄", ""], ["답변을 생성하는 중…", "무엇이든 물어보세요", "대화 한도에 도달했어요(1시간 후)"]]};  // app id → [effect line, [messages]] (docs/content/app-texts.json)
+const TEXTS = I18N.lang === 'en' ? {"alarm": [["When this app bursts", "next new row is this app", "(snooze)"], ["Snoozing for 5 more minutes (7th time)", "Alarm dismissed. Are you actually up?", "No alarm set for tomorrow"]], "weather": [["First visit of the day", "this app's rows +1 count", ""], ["Rain this afternoon (umbrella: at home)", "Air quality: bad. Close the windows", "Feels like -12°C"]], "memo": [["When you swipe by hand", "this app's rows value ×2", "[!] not auto-clean"], ["You have an unfinished note: asdf", "Shopping list: milk (3 weeks ago)", "Back up your notes to the cloud?"]], "flash": [["When this app bursts", "wipes one spam text row", ""], ["Flashlight is on (in your pocket)", "Top battery drain: Flashlight", "Brightness set to maximum"]], "calc": [["Burst on an even chain", "that burst +50%", ""], ["99+ calculations in history", "Split the bill: 13.33333 each", "Switch to scientific mode?"]], "recorder": [["3 swipes after a burst", "+10% of that burst's P", "(replay)"], ["23 recordings are filling your storage", "Recording stopped (incoming call)", "New Recording 1 (3h 12m)"]], "phone": [["Swipe a spam call", "pick up: battery +2", ""], ["3 missed calls", "Unknown caller", "Suspected spam call"]], "sms": [["When this app bursts", "row just above +1 count", "(reply)"], ["Your parcel has arrived (click link)", "Your code is 482913", "(Ad) Today only!"]], "camera": [["Chain of 2 or more", "copy a row onto next board", "(snap the moment)"], ["1,024 photos not backed up", "Not enough storage to take photos", "New filters added"]], "gallery": [["Every 5 swipes", "+10% of last burst's P", "(memories)"], ["Your memories from a year ago", "Clean up 432 similar photos?", "New memory album: My Finger"]], "contacts": [["Social apps in your deck", "+15% value each", ""], ["3 contacts have birthdays today", "Merge 18 duplicate contacts?", "'Boss (new number)' added"]], "settings": [["With auto-clean on", "clean interval −0.3s", ""], ["1 software update", "Check notification permissions", "Turn on battery optimization?"]], "music": [["When this app pops", "later chain steps +1", ""], ["Live chart: new #1!", "Your subscription expires soon", "Your liked songs playlist was updated"]], "papago": [["While in your deck", "all region synergy +10%", ""], ["Translate this page? (It's already in English)", "Try conversation mode?", "Phrase of the day: Hello"]], "zalo": [["When this app bursts", "gauge +2 per SEA app", ""], ["4 new friend requests", "A group call has started", "News from an official account"]], "momo": [["First burst of the day", "that burst ×3", "(check-in cashback)"], ["5,000 VND cashback earned", "Your electricity bill is due", "A friend sent you money"]], "airbnb": [["First burst of the day", "that burst ×5", "(early check-in)"], ["Your host sent a message", "A saved stay dropped in price", "Leave a review"]], "duo": [["Each day of your streak", "this app's value +2%", "(max +60%)"], ["You skipped today's lesson. The owl is sad", "Streak: 0 days", "Danger of demotion from your league!"]], "ctaxi": [["When these rows merge", "same app next door pops too", ""], ["Driver arrives in 3 min (for 11 min now)", "No cars nearby. Try again?", "Rate your ride"]], "pay": [["When this app bursts", "battery +1", "(sent = charged)"], ["Transfer complete ($3)", "Your monthly spending report is here", "Walk 10,000 steps, earn 1 cent"]], "glints": [["While in your deck", "work app upgrades −10%", ""], ["23 new job posts", "Interview scheduled", "Update your résumé"]], "bigo": [["When this app pops", "overload wave ×3 → ×4", ""], ["Your favorite streamer just went live", "Gift ranking #1 changed", "Live PK battle starting!"]], "pin": [["3+ rows of the same app", "that app's value +20%", ""], ["48 ideas for you", "New pin added to your board", "Your saved pin is trending"]], "meet": [["Swipe a spam call", "earn last minute's P", "(joined the meeting)"], ["Meeting started (your mic is on)", "The host asks you to turn on your camera", "Your 40-minute free meeting ends soon"]], "food": [["Caught in a burst", "next 3 swipes cost 0 battery", ""], ["Your order is on its way (the other way)", "Write a review, get a free drink!", "Same dinner again tonight?"]], "edit": [["Every overload wave", "this app's rows +1 count", ""], ["Rendering 87%… don't close the app", "A new template is trending", "Subscribe to remove the watermark"]], "travel": [["First burst after buying", "that burst ×3", "(bon voyage)"], ["Flight prices dropped", "Check-in in 30 days", "Your points expire soon"]], "joox": [["During an overload wave", "this app's value +50%", ""], ["New karaoke songs added", "7-day VIP free trial", "A friend shared a playlist"]], "reddit": [["When this app bursts", "other social rows +1 count", "(front page)"], ["Your post hit the front page", "87 replies in your thread", "Your karma went up"]], "career": [["Each other category in deck", "this app's value +10%", ""], ["Someone viewed your profile", "48 new job posts", "Your ex-coworker got promoted"]], "mall": [["Back at night (10pm–7am)", "first 3 swipes ×2", "(dawn delivery)"], ["Guaranteed dawn delivery (order today)", "An item in your cart is almost sold out", "Buy again: 2L water"]], "portal": [["Every 10 swipes", "trending category ×2", "(category is random)"], ["Trending now", "Today's weather and horoscope", "3 new messages in your inbox"]], "michat": [["When this app bursts", "row just below +1 count", ""], ["Someone nearby said hi", "12 new messages", "Someone liked your moment"]], "agoda": [["First burst after return", "that burst ×3", "(checked in)"], ["12 people are viewing this stay right now", "A secret deal unlocked", "Your booking is confirmed"]], "paypal": [["While in your deck", "finance app upgrades −10%", ""], ["Payment complete", "You received money", "Review your account security"]], "match": [["When two of its rows touch", "chain step +2", "(it's a match)"], ["You have a new match", "Someone viewed your profile", "This chat has been quiet for 3 days"]], "superapp": [["When this app bursts", "every category clears more", ""], ["New posts in Moments", "A mini program was updated", "Payment complete"]], "line": [["When this app bursts", "gauge +2 per Asia app", ""], ["New stickers out!", "99+ group chat messages", "A coupon from an official account"]], "jobs": [["3+ work apps in deck", "all work apps value +20%", ""], ["48 jobs match your profile", "A company opened your résumé", "Salary insights updated"]], "lazada": [["When this app bursts", "25%: one more of its rows", "(flash sale)"], ["11.11 up to 90% off", "New arrivals in the mall", "Grab your coupons"]], "ride": [["Pops with count 4+", "next auto wait −2s", ""], ["Your driver has arrived", "Prices are 1.8× right now", "How was your trip?"]], "robin": [["When this app bursts", "P ×0.5 to ×3 at random", "(about ×1.4 on average)"], ["Your stocks are up 3%", "Claim your free stock", "Market opens in 5 minutes"]], "dance": [["Every time this app bursts", "25%: copies its row", "(going viral)"], ["Videos picked for you", "A friend tagged you in a video", "A live just started"]], "chat": [["When this app bursts", "CocoaTalk row above +1", "(the group chat again)"], ["Messages piling up in a quiet group chat", "\"lol\" and 999+ more", "Send a gift: 5 friends have birthdays"]], "grab": [["While in your deck", "max battery +2", ""], ["Your food is on the way", "Ride discount code", "Reward points expire soon"]], "shopee": [["Buying a cheaper app", "10% off", ""], ["9.9 Mega Sale is live!", "3 free shipping vouchers", "An item in your cart dropped in price"]], "beat": [["While auto-clean runs", "this app's bursts +30%", ""], ["Your mix was updated", "Your year in review is here", "3 months of Premium free"]], "why": [["Every time this app pops", "social value +2%, stacking", "(max +30%, per run)"], ["#1 trending now", "Your post was reposted", "Get a blue check with Premium"]], "mega": [["Every time this app bursts", "bank 0.2% of its price", ""], ["Your order has shipped", "Recently viewed item on sale!", "Subscription renews soon"]], "ott": [["When you come back", "first 3 swipes ×2", "(binge mode)"], ["Next episode in 5 seconds", "A new season is out", "What you're watching leaves soon"]], "secret": [["While in your deck", "spam texts can't copy", "(spam calls stall half)"], ["You were invited to a channel (12K members)", "A secret chat self-destructed", "Sticker pack updated"]], "mail": [["Part of a 2+ chain", "that burst +50%", ""], ["99+ new in Promotions", "Re: Re: Re: Please confirm", "14.9 GB of 15 GB used"]], "maps": [["Different regions touch", "they merge anyway", "(synergy wild)"], ["Rerouting", "Review a place you visited", "This place is busy right now"]], "store": [["Every new app you buy", "that app upgrade +1", ""], ["37 apps can be updated", "Recommended: an app to turn off notifications", "Check your payment method"]], "tube": [["While in your deck", "whole deck chain step +1", ""], ["New video from a subscription", "1,204 videos in Watch Later", "Video plays after 2 ads"]], "photo": [["Each media app in deck", "this app's value +15%", ""], ["Reels picked for you", "A friend posted a story", "3 likes on your post"]], "feed": [["Arriving as a new row", "sandwich chance +10%p", ""], ["Showing you posts you already saw", "Your memories from 3 years ago", "12 friend requests"]], "green": [["Every time this app pops", "overload gauge +10", ""], ["248 messages in a group", "Voice message (4:12)", "Backup not completed"]], "search": [["With auto-clean on", "plans one move ahead", ""], ["Recommended from your search history", "Today's doodle", "Run a security checkup"]], "ai": [["With auto-clean on", "−0.5s, plans two moves ahead", ""], ["Generating a response…", "Ask me anything", "You've hit the limit (try again in 1 hour)"]]} : {"alarm": [["이 앱이 폭발하면", "다음 새 줄 하나가 같은 앱", "(스누즈)"], ["5분 뒤에 다시 알려 드릴게요(7번째)", "알람이 꺼졌습니다. 일어나셨나요?", "내일 알람이 아직 설정되지 않았어요"]], "weather": [["하루 첫 접속 때", "판의 이 앱 줄 수량 +1", ""], ["오후에 비 소식이 있어요(우산은 집에)", "미세먼지 나쁨, 창문을 닫으세요", "체감 온도 영하 12도"]], "memo": [["손으로 직접 밀면", "이 앱 줄 가치 ×2", "[!] 자동 정리는 제외"], ["작성 중인 메모가 있어요: ㅁㄴㅇㄹ", "장보기 목록: 우유(3주 전)", "메모를 클라우드에 백업할까요?"]], "flash": [["이 앱이 폭발하면", "스팸 문자 줄 하나를 지움", ""], ["손전등이 켜져 있어요(주머니 속)", "배터리를 많이 쓰는 앱: 손전등", "밝기 최대로 설정됐습니다"]], "calc": [["짝수 연쇄에서 터지면", "그 폭발 +50%", ""], ["계산 기록이 99+개 있어요", "더치페이: 1인당 13,333.33원", "공학용 계산기로 전환할까요?"]], "recorder": [["폭발 직후 3스와이프 동안", "직전 폭발 P의 10% 추가", "(다시 듣기)"], ["녹음 파일 23개가 저장 공간을 차지해요", "녹음이 중지됐어요(전화 수신)", "새 녹음 1(3시간 12분)"]], "phone": [["스팸 전화를 밀면", "거절 대신 받아서 배터리 +2", ""], ["부재중 전화 3통", "발신번호 표시 제한", "스팸 의심 전화입니다"]], "sms": [["이 앱이 폭발하면", "바로 위 줄 수량 +1", "(답장)"], ["[Web발신] 고객님 택배가 도착했습니다", "인증번호 [482913]", "(광고) 오늘만 특가"]], "camera": [["연쇄 2 이상이면", "다음 판에 한 줄 복제", "(그 순간 판을 찰칵)"], ["사진 1,024장이 백업되지 않았어요", "저장 공간이 부족해 촬영할 수 없어요", "새 필터가 추가됐어요"]], "gallery": [["5스와이프마다", "직전 폭발 P의 10% 추가", "(추억 다시 보기)"], ["1년 전 오늘의 추억이 도착했어요", "비슷한 사진 432장을 정리할까요?", "새로운 추억 앨범: 내 손가락"]], "contacts": [["덱에 소통 앱이 있으면", "1개당 이 앱 가치 +15%", ""], ["생일인 연락처: 3명", "중복된 연락처 18개를 합칠까요?", "'김부장님(새 번호)'이 추가됐어요"]], "settings": [["자동 정리를 켜 두면", "정리 간격 −0.3초", ""], ["소프트웨어 업데이트 1건", "알림 권한을 확인하세요", "배터리 최적화를 켤까요?"]], "music": [["이 앱이 터지면", "이후 연쇄 번호 +1", ""], ["실시간 차트 1위 변동!", "이용권이 곧 만료돼요", "좋아요한 곡 플레이리스트가 갱신됐어요"]], "papago": [["덱에 있으면", "모든 권역 시너지 +10%", ""], ["이 페이지를 번역할까요?(이미 한국어)", "대화 모드를 켜 볼까요?", "오늘의 회화: 안녕하세요"]], "zalo": [["이 앱이 폭발하면", "동남아권 앱 1개당 게이지 +2", ""], ["새 친구 요청 4건", "그룹 통화가 시작됐어요", "공식 계정 소식이 도착했어요"]], "momo": [["하루 첫 폭발이면", "그 폭발 ×3", "(출석 캐시백)"], ["캐시백 5,000동이 적립됐어요", "전기요금 납부일이에요", "친구가 돈을 보냈어요"]], "airbnb": [["하루 첫 폭발이면", "그 폭발 ×5", "(얼리 체크인)"], ["호스트가 메시지를 보냈어요", "찜한 숙소 가격이 내려갔어요", "후기를 남겨 주세요"]], "duo": [["연속 플레이 1일마다", "이 앱 가치 +2%", "(최대 +60%)"], ["오늘 레슨을 안 했어요. 부엉이가 슬퍼요", "연속 학습 0일째", "리그에서 강등 위기!"]], "ctaxi": [["이 앱 줄이 합쳐질 때", "옆 같은 앱 줄도 함께 펑", ""], ["기사님이 3분 뒤 도착해요(11분째)", "주변에 차가 없어요. 다시 호출할까요?", "탑승 후 별점을 남겨 주세요"]], "pay": [["이 앱이 폭발하면", "배터리 +1", "(송금 완료는 곧 충전)"], ["송금이 완료됐어요(3,000원)", "이번 달 소비 리포트가 도착했어요", "만보기로 10원 받기"]], "glints": [["덱에 있으면", "업무 앱 강화 가격 −10%", ""], ["새 채용 공고 23건", "면접 일정이 잡혔어요", "이력서를 업데이트하세요"]], "bigo": [["이 앱이 터질 때", "과부하 파동 배수 3 → 4", ""], ["좋아하는 BJ가 방송을 시작했어요", "선물 랭킹 1위가 바뀌었어요", "라이브 PK 시작!"]], "pin": [["같은 앱 줄이 3개 이상이면", "그 앱 가치 +20%", ""], ["회원님을 위한 아이디어 48개", "보드에 새 핀이 추가됐어요", "저장한 핀이 인기 급상승"]], "meet": [["스팸 전화를 밀면", "최근 1분 수입만큼 P", "(회의 참석)"], ["회의가 시작됐어요(마이크 켜짐)", "호스트가 카메라를 켜 달래요", "40분 무료 회의가 곧 끝나요"]], "food": [["폭발에 포함되면", "다음 3스와이프 배터리 0", ""], ["주문하신 음식이 출발했어요(반대 방향)", "리뷰 쓰면 음료 서비스!", "오늘 저녁도 같은 메뉴?"]], "edit": [["과부하 파동마다", "이 앱 줄 수량 +1", ""], ["렌더링 87%… 앱을 닫지 마세요", "새 템플릿이 유행 중", "워터마크를 지우려면 구독하세요"]], "travel": [["앱을 산 직후 첫 폭발이면", "그 폭발 ×3", "(여행 출발)"], ["항공권 가격이 내려갔어요", "체크인까지 D-30", "포인트가 곧 소멸돼요"]], "joox": [["과부하 파동 중이면", "이 앱 가치 +50%", ""], ["노래방 모드 신곡 업데이트", "VIP 무료 체험 7일", "친구가 플레이리스트를 공유했어요"]], "reddit": [["이 앱이 폭발하면", "다른 소통 앱 줄 수량 +1", "(추천 폭주)"], ["내 글이 인기 글이 됐어요", "댓글 스레드에 답글 87개", "카르마가 올랐어요"]], "career": [["덱의 다른 카테고리마다", "이 앱 가치 +10%", ""], ["누군가 당신의 프로필을 봤어요", "새 채용 공고 48건", "옛 동료가 승진했어요"]], "mall": [["밤(22~7시)에 돌아오면", "첫 3스와이프 ×2", "(새벽 배송)"], ["내일 새벽 도착 보장(오늘 주문 시)", "장바구니 상품이 품절 임박", "재구매 추천: 생수 2L"]], "portal": [["10스와이프마다", "화제 카테고리 앱 가치 ×2", "(카테고리는 무작위)"], ["지금 뜨는 소식", "오늘의 날씨와 운세", "메일함에 새 소식 3건"]], "michat": [["이 앱이 폭발하면", "바로 아래 줄 수량 +1", ""], ["근처 사람이 인사했어요", "새 메시지 12개", "모먼트에 좋아요"]], "agoda": [["복귀 정산 후 첫 폭발이면", "그 폭발 ×3", "(숙소 도착)"], ["지금 이 숙소를 12명이 보고 있어요", "비밀 특가가 열렸어요", "예약이 확정됐어요"]], "paypal": [["덱에 있으면", "금융 앱 강화 가격 −10%", ""], ["결제가 완료됐어요", "송금을 받았어요", "계정 보안을 확인하세요"]], "match": [["이 앱 두 줄이 맞닿으면", "연쇄 번호 +2", "(짝 맞추기 보너스)"], ["새로운 매칭이 있어요", "누군가 당신의 프로필을 봤어요", "대화가 3일째 멈춰 있어요"]], "superapp": [["이 앱이 폭발하면", "모든 카테고리 처리량 함께 증가", ""], ["모멘트에 새 소식", "미니 프로그램이 업데이트됐어요", "결제가 완료됐어요"]], "line": [["이 앱이 폭발하면", "아시아권 앱 1개당 게이지 +2", ""], ["스티커 신상 출시!", "그룹 채팅 메시지 99+", "공식 계정 쿠폰이 도착했어요"]], "jobs": [["업무 앱이 3개 이상이면", "모든 업무 앱 가치 +20%", ""], ["프로필에 맞는 공고 48건", "지원한 회사가 이력서를 열람했어요", "연봉 정보가 업데이트됐어요"]], "lazada": [["이 앱이 폭발하면", "25% 확률로 이 앱 줄 +1", "(할인 폭탄)"], ["11.11 최대 90% 할인", "라즈몰 신상 도착", "쿠폰 받으러 가기"]], "ride": [["수량 4 이상으로 터지면", "다음 자동 대기 −2초", ""], ["기사님이 도착했어요", "요금이 1.8배 할증 중이에요", "이번 여행은 어떠셨나요?"]], "robin": [["이 앱이 폭발하면", "P ×0.5~×3 무작위", "(기댓값 약 ×1.4)"], ["보유 주식이 3% 올랐어요", "무료 주식 1주를 받으세요", "장 시작 5분 전"]], "dance": [["이 앱이 폭발할 때마다", "25% 확률로 이 앱 줄 복제", "(유행)"], ["당신을 위한 추천 영상", "친구가 새 영상에 태그했어요", "라이브가 시작됐어요"]], "chat": [["이 앱이 폭발하면", "위쪽 코코아톡 줄 수량 +1", "(단톡은 또 온다)"], ["조용한 단톡방에 메시지가 쌓였어요", "“ㅋㅋㅋ” 외 999+", "선물하기: 생일인 친구 5명"]], "grab": [["덱에 있으면", "배터리 최대치 +2", ""], ["음식이 배달 중이에요", "라이드 할인 코드", "리워드 포인트가 곧 소멸돼요"]], "shopee": [["가격이 낮은 앱을 살 때", "10% 할인", ""], ["9.9 메가 세일 시작!", "무료 배송 바우처 3장", "장바구니 상품 가격이 내려갔어요"]], "beat": [["자동 정리 중이면", "이 앱 폭발 가치 +30%", ""], ["당신을 위한 믹스가 업데이트됐어요", "연말 결산이 도착했어요", "프리미엄 3개월 무료"]], "why": [["이 앱이 터질 때마다", "소통 앱 가치 +2% 누적", "(최대 +30%, 회차마다 초기화)"], ["지금 트렌드 1위", "회원님의 게시물이 재게시됐어요", "프리미엄 구독으로 파란 체크를"]], "mega": [["이 앱이 폭발할 때마다", "이 앱 가격의 0.2% 적립", ""], ["주문하신 상품이 배송 중입니다", "최근 본 상품 할인!", "정기 구독 갱신 예정"]], "ott": [["복귀한 뒤", "첫 3스와이프 ×2", "(정주행)"], ["다음 화가 5초 후 재생됩니다", "새 시즌이 공개됐어요", "시청 중인 콘텐츠가 곧 종료돼요"]], "secret": [["덱에 있으면", "스팸 문자 복제 차단", "(스팸 전화 정지 시간 절반)"], ["새 채널에 초대됐어요(1.2만 명)", "비밀 대화가 자동 삭제됐어요", "스티커 팩이 업데이트됐어요"]], "mail": [["2연쇄 이상에 포함되면", "그 폭발 가치 +50%", ""], ["프로모션 탭에 새 메일 99+", "회신: 회신: 회신: 확인 부탁드립니다", "저장용량 15GB 중 14.9GB 사용"]], "maps": [["권역이 다른 앱끼리 맞닿으면", "그대로 합쳐짐", "(시너지 와일드)"], ["경로를 다시 탐색합니다", "리뷰를 남겨 주세요: 방문한 장소", "이 장소는 지금 붐벼요"]], "store": [["새 앱을 살 때마다", "그 앱 강화 +1", ""], ["업데이트 가능한 앱 37개", "추천 앱: 알림 끄기 앱", "결제 수단을 확인하세요"]], "tube": [["덱에 있으면", "덱 전체 연쇄 번호 +1", ""], ["구독 채널의 새 영상", "나중에 볼 동영상 1,204개", "광고 2개 후 영상이 재생됩니다"]], "photo": [["덱의 미디어 앱마다", "이 앱 가치 +15%", ""], ["회원님을 위한 릴스 추천", "친구가 스토리를 올렸어요", "게시물 좋아요 3개"]], "feed": [["이 앱이 새 줄로 올 때", "샌드위치 확률 +10%p", ""], ["이미 본 피드를 다시 추천합니다", "3년 전 오늘의 추억을 확인하세요", "친구 요청 12건"]], "green": [["이 앱이 터질 때마다", "과부하 게이지 +10", ""], ["그룹에 메시지 248개", "음성 메시지(4분 12초)", "백업이 완료되지 않았어요"]], "search": [["자동 정리를 켜 두면", "한 수 앞을 보고 민다", ""], ["검색 기록 기반 추천", "오늘의 기념일 그림", "계정 보안을 점검하세요"]], "ai": [["자동 정리를 켜 두면", "간격 −0.5초, 두 수 앞을 봄", ""], ["답변을 생성하는 중…", "무엇이든 물어보세요", "대화 한도에 도달했어요(1시간 후)"]]};  // app id → [effect line, [messages]] (docs/content/app-texts.json, l10n/en.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -678,7 +743,7 @@ const sfx = {
   stamp() { tone('sine', 120, 38, .32, 1); hiss(.16, .55, { type: 'lowpass', f0: 1400, f1: 250 }); hiss(.7, .12, { type: 'highpass', f0: 2500, f1: 7000, a: .1, at: .1 }); },
   wave(w) { hiss(.55, .32, { f0: 260, f1: 5200, q: 2, a: .06 }); tone('sine', 110 - w * 12, 32, .7, .95); const f = 196 * Math.pow(2, w * 5 / 12); tone('sawtooth', f, f * 2, .4, .08, { filt: 2200, q: 6 }); },
 };
-const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} };
 
 
 // ---------- phone sound layer (CC0 uisfx + self-made vibration, docs/bible/20-sound.md §7) ----------
@@ -705,12 +770,13 @@ if (gl) {
 varying vec2 vq;
 uniform sampler2D T,UI;
 uniform float glitch,crt,sat,bright,alarm;uniform vec4 tint;
-uniform float A,t,seed,heat,chroma,amt,band,bandAmp;
+uniform float A,t,seed,heat,chroma,amt,band,bandAmp;uniform float pix,noi,psy;
 uniform vec4 rip[8];
 uniform vec4 crk;
 vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return fract(sin(p)*43758.5453);}
 void main(){
   vec2 v=vq;float on=1.;
+  if(pix>0.){float b=floor(mix(1.,6.,pix));vec2 st=vec2(b/390.,b*A/390.);v=(floor(v/st)+.5)*st;}
   if(crt>0.){float sy=max(1.-crt*1.12,.004);v.y=.5+(v.y-.5)/sy;float sx=crt>.86?max(1.-(crt-.86)/.14,.004):1.;v.x=.5+(v.x-.5)/sx;on=step(abs(v.y-.5),.5)*step(abs(v.x-.5),.5);}
   vec2 off=vec2(0.);float lit=0.,ca=chroma,dark=0.;
   if(glitch>0.){
@@ -753,6 +819,10 @@ void main(){
   vec2 u=v+off,cd=v-.5;
   vec3 col=vec3(texture2D(T,u+cd*ca).r,texture2D(T,u).g,texture2D(T,u-cd*ca).b);
   col=col*(1.-dark*.6)+vec3(1.,.96,.88)*lit*.32;
+  if(psy>0.){vec2 q=(v-.5)*vec2(A,1.)*3.2;float a2=t*.55;for(int i=0;i<4;i++){q+=vec2(sin(q.y*1.6+a2+float(i)),cos(q.x*1.35-a2*1.2))*.62;}
+    float hh=fract(length(q)*.16+t*.04);vec3 sw=.5+.5*cos(6.2831*(hh+vec3(0.,.33,.67)));sw=floor(sw*5.)/5.;
+    float l0=dot(col,vec3(.299,.587,.114));col=mix(col,col*.45+sw*.85,psy*(1.-smoothstep(.25,.85,l0))*.7);}
+  {float n=fract(sin(dot(floor(v*vec2(390.,390./A)*.5)+floor(t*24.),vec2(12.9898,78.233)))*43758.5453);col+=(n-.5)*noi*.22;col*=1.-noi*.12*step(.5,fract(v.y*211.));}
   float lu=dot(col,vec3(.299,.587,.114));col=mix(vec3(lu),col,sat)*bright;col=mix(col,tint.rgb,tint.a);
   col+=vec3(1.,.12,.06)*alarm*smoothstep(.28,.78,length((v-.5)*vec2(1.25,1.)));
   vec4 s=texture2D(UI,v);col=mix(col,s.rgb,s.a);
@@ -768,7 +838,7 @@ void main(){
     [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
   });
-  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
   gl.uniform1i(U.T, 0); gl.uniform1i(U.UI, 1); gl.uniform1f(U.A, W / H);
 }
 const ripArr = new Float32Array(32);
@@ -780,7 +850,7 @@ function present(t) {
   gl.uniform4fv(U.rip, ripArr);
   gl.uniform4f(U.crk, crack ? crack.x : 0, crack ? crack.y : 0, crack ? crack.age : 0, crack ? crack.amp : 0);
   gl.uniform1f(U.seed, crack ? crack.seed : 0); gl.uniform1f(U.heat, heat); gl.uniform1f(U.chroma, chroma);
-  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000);
+  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000); gl.uniform1f(U.pix, reduce ? 0 : pixT); gl.uniform1f(U.noi, reduce ? .02 : .05 + noiT * .8); gl.uniform1f(U.psy, 0);
   gl.uniform1f(U.glitch, reduce ? 0 : fx.glitch); gl.uniform1f(U.crt, fx.crt); gl.uniform1f(U.sat, fx.sat); gl.uniform1f(U.bright, fx.bright); gl.uniform1f(U.alarm, reduce ? fx.alarm * .4 : fx.alarm); gl.uniform4f(U.tint, ...fx.tint);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
@@ -795,15 +865,16 @@ const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Wild' ? '와일드 �
 const ROW0 = 176 + Math.round(EX * .35), ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
 const board = [];  // what is on screen: engine rows + springs
-const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
+const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), q: spring(0), vy: 0, a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
 const byId = id => board.find(r => r.id === id);
-const layout = () => board.forEach((r, i) => { r.y.t = rowY(i); });
+let boardCap = 0;
+const layout = () => { boardCap = Math.max(board.length, S && S.rows ? S.rows.length : 0); const off = Math.max(0, boardCap - board.length); board.forEach((r, i) => { r.y.t = rowY(i + off); }); };
 const wallet = { v: -Infinity, shown: -Infinity, from: -Infinity, to: -Infinity, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '', tick: 0, note: null };
 const CHIPX = 118, MULTX = 272, BOXY = 129, REVEAL_Y = 360 + Math.round(EX * .35);
 const plate = { chips: -Infinity, chipsShown: -Infinity, chipSum: -Infinity, total: -Infinity, totalShown: -Infinity, earned: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
 const mult = () => plate.base * plate.syn * plate.wmul;
 const parts = [], shards = [], tokens = [], pops = [], timeline = [];
-let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
+let camK = spring(0), lastThud = 0, stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
 const after = (sec, fn) => timeline.push({ at: sec, fn });
 const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
   if (parts.length >= POOL) parts.shift();
@@ -811,6 +882,106 @@ const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
 };
 
 // ---------- drawing helpers ----------
+
+// ---------- game feel: gravity drop with a thud, slam-merge, trauma shake (VFX handbook: anticipation → impact → follow-through) ----------
+const GRAV = 3600;
+function land(r, imp) {  // a falling card hits the one below: squash, dust, rattle, thud
+  const s = clamp((imp - 300) / 1900, 0, 1);
+  r.q.x = Math.max(r.q.x, .07 + .2 * s); r.q.v = 0;
+  const i = board.indexOf(r), below = board[i + 1]; if (below) below.q.v += 4 + 9 * s;  // the stack underneath rattles
+  const y = r.y.x + CH, n = reduce ? 2 : Math.round(3 + 7 * s);
+  for (let k = 0; k < n; k++) { const side = k % 2 ? 1 : -1; spawn('DUST', 195 + side * (60 + rnd() * 120), y, side * (80 + rnd() * 200), -20 - rnd() * 50, .45 + rnd() * .25, day ? [120, 130, 150] : [230, 215, 200], 7 + rnd() * 7); }
+  if (!reduce) shake = Math.max(shake, .9 + 2.6 * s);
+  const now = performance.now(); if (now - lastThud > 45) { lastThud = now; sfx.thud(s); buzz(Math.round(5 + 12 * s)); }
+}
+function stepRowY(r, dt) {
+  if (r.slam) {  // the upper card is thrown down onto its match
+    const m = r.slam; m.t += dt; const e = Math.min(1, m.t / m.dur), ee = e * e * e;
+    r.y.x = m.y0 + (m.y1 - m.y0) * ee; r.q.x = -.12 * ee;  // stretches as it accelerates
+    if (e >= 1) { r.slam = null; m.hit(); }
+    return;
+  }
+  const d = r.y.t - r.y.x;
+  if (r.vy < 0 || d > .5) {
+    r.vy += GRAV * dt; r.y.x += r.vy * dt;
+    if (r.vy > 0 && r.y.x >= r.y.t) { const imp = r.vy; r.y.x = r.y.t; if (imp > 320) { r.vy = -imp * .13; land(r, imp); } else r.vy = 0; }
+  } else if (d < -.5) { stepSpring(r.y, dt, 260, 20); r.vy = 0; }
+  else { r.y.x = r.y.t; r.y.v = 0; r.vy = 0; }
+}
+function slamMerge(from, into, k, onHit) {  // the upper card is thrown onto the lower one, whichever the engine keeps
+  if (from.y.x > into.y.x) { const ty = from.y.x; from.y.x = into.y.x; into.y.x = ty; into.y.t = Math.max(into.y.t, ty); }
+  const y1 = into.y.x - CH * .55;
+  from.slam = { t: 0, dur: .085, y0: from.y.x, y1, hit: () => {
+    const i = board.indexOf(from); if (i >= 0) board.splice(i, 1);
+    into.q.x = .3 + Math.min(k, 8) * .02; into.q.v = 0; into.charge = 1;
+    const cy = into.y.x + 2;
+    pfx('hitSpark', 195, cy + 2, { angle: Math.PI / 2 }); pfx('hitSpark', 195, cy + 2, { angle: -Math.PI / 2, flip: true });
+    for (let j = 0; j < (reduce ? 4 : 14); j++) { const side = j % 2 ? 1 : -1; spawn('DUST', 195 + side * (40 + rnd() * 140), cy, side * (260 + rnd() * 420), (rnd() - .5) * 80, .35 + rnd() * .2, [255, 244, 225], 6 + rnd() * 6); }
+    stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35); pixT = Math.max(pixT, .22); noiT = Math.max(noiT, .35);
+    sfx.thud(1); buzz(18); onHit && onHit();
+  } };
+}
+
+// ---------- pixel VFX (Balatro-style): everything is snapped square pixels, dithered, in a loud palette ----------
+const BAL = [[254, 95, 85], [0, 157, 255], [253, 162, 0], [75, 194, 146], [138, 113, 225], [255, 255, 255]];
+const balc = i => BAL[((i % BAL.length) + BAL.length) % BAL.length];
+let pixT = 0, psyT = 0, noiT = 0, frameNo = 0;
+function px(x, y, s, col, a) { if (a <= .01) return; ctx.fillStyle = rgb(col, Math.min(1, a)); ctx.fillRect(Math.round(x / 4) * 4 - s / 2, Math.round(y / 4) * 4 - s / 2, s, s); }
+function pblob(x, y, r, col, a, dither) {  // a cloud of square pixels with a checker-dithered edge (never a circle outline)
+  if (a <= .01 || r < 2) return; const g = r > 18 ? 8 : r > 9 ? 6 : 4, n = Math.ceil(r / g);
+  const gx = Math.round(x / g), gy = Math.round(y / g);
+  for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+    const d = Math.hypot(i, j) * g / r; if (d > 1) continue;
+    if (dither && d > .62 && ((i + j + frameNo) & 1)) continue;
+    ctx.fillStyle = rgb(col, a * (d > .62 ? .55 : 1)); ctx.fillRect((gx + i) * g, (gy + j) * g, g, g);
+  }
+}
+function pstar(x, y, r, col, a) {  // flash: a pixel cross + diagonal sparkle, white core
+  const g = 4, n = Math.max(2, Math.round(r / g / 2));
+  for (let i = -n; i <= n; i++) { const w = 1 - Math.abs(i) / (n + 1); px(x + i * g, y, g + 4 * w, i ? col : [255, 255, 255], a * w); px(x, y + i * g, g + 4 * w, i ? col : [255, 255, 255], a * w); }
+  for (let i = -Math.floor(n / 2); i <= Math.floor(n / 2); i++) { px(x + i * g, y + i * g, g, [255, 255, 255], a * .7); px(x + i * g, y - i * g, g, [255, 255, 255], a * .7); }
+}
+function pring(p, f) {  // shockwave as a pixel-art diamond wave (no vector circles): chunky steps, rainbow-cycling, moving dither
+  const e = 1 - f, x = p.k === 'RING' ? 1 - Math.pow(2, -10 * e) : 1 - e * e, r = p.k === 'RING' ? 6 + p.size * x : p.size * (1 - x) + 4;
+  const g = p.k === 'RING' ? (r > 120 ? 8 : 6) : 4, n = Math.max(8, Math.floor(r / g));
+  for (let i = 0; i < n; i++) {
+    const u = i / n, ox = r * u, oy = r * (1 - u) * .7;
+    for (let q = 0; q < 4; q++) {
+      if (p.k === 'RING' && ((i + q + frameNo) % 3) === 0) continue;
+      const sx = q & 1 ? -1 : 1, sy = q & 2 ? -1 : 1, c = p.col[0] === 255 && p.col[1] === 255 ? balc(Math.floor(i / 2) + q + frameNo) : p.col;
+      px(p.x + sx * ox, p.y + sy * oy, g + (p.k === 'RING' ? 4 * f : 0), c, (p.k === 'RING' ? 1 : .8) * f);
+    }
+  }
+}
+function plaser(p, f) {  // a short, thin, hot horizontal cut through the popped row: stepped pixel edge, white core, colour rim
+  const e = 1 - f, th = Math.max(2, Math.round(p.size * (f > .7 ? (1 - f) / .3 : f / .7) / 2) * 2), y = Math.round(p.y / 2) * 2, reach = W * Math.min(1, e * 6);
+  for (let x = 0; x < reach; x += 6) { const w = th + ((x / 6 + frameNo) % 3 === 0 ? 2 : 0); ctx.fillStyle = rgb(p.col, .9 * f); ctx.fillRect(195 - reach / 2 + x, y - w / 2 - 2, 6, w + 4); }
+  ctx.fillStyle = `rgba(255,255,255,${f})`; ctx.fillRect(195 - reach / 2, y - th / 2, reach, th);
+}
+function pbeam(p, f) {  // a laser bolt from the pop to the score: stepped pixel line with a hot core
+  const x0 = p.x, y0 = p.y, x1 = p.vx, y1 = p.vy, d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6), w = 4 + p.size * f;
+  for (let i = 0; i <= n; i++) { const u = i / n, jx = (rnd() - .5) * 6 * f, x = x0 + (x1 - x0) * u + jx, y = y0 + (y1 - y0) * u; px(x, y, w, p.col, .9 * f); px(x, y, Math.max(2, w * .4), [255, 255, 255], f); }
+}
+
+// ---------- pixelfx layer (patch-gg/pixelfx, MIT): effects drawn at half resolution into colour + light buffers,
+// stepped at 120 Hz, composited (light added on top) and scaled up as hard pixels ----------
+const PXS = 3, PFW = Math.ceil(W / PXS), PFH = Math.ceil(H / PXS);
+const pfxOn = !!(window.PFX && PFX.createFrame);
+const pfxFrame = pfxOn ? PFX.createFrame(PFW, PFH) : null, pfxImg = pfxOn ? new ImageData(PFW, PFH) : null;
+const pfxCv = document.createElement('canvas'); pfxCv.width = PFW; pfxCv.height = PFH; const pfxCtx = pfxCv.getContext('2d');
+const pfxLive = [];
+function pfx(name, x, y, o = {}) {
+  if (!pfxOn || !PFX.FX[name] || (reduce && o.big)) return;
+  const fx = PFX.createFx(PFX.FX[name], Object.assign({ x: x / PXS, y: y / PXS, seed: (rnd() * 1e6) | 0 }, o));
+  pfxLive.push(fx); if (pfxLive.length > 18) pfxLive.shift();
+}
+function pfxStep(dt) { for (let i = pfxLive.length - 1; i >= 0; i--) { const f = pfxLive[i]; f.update(dt); if (!f.meta.loop && f.t >= (f.meta.duration || 1)) pfxLive.splice(i, 1); } }
+function pfxDraw() {
+  if (!pfxOn || !pfxLive.length) return;
+  PFX.clearFrame(pfxFrame); for (const f of pfxLive) f.draw(pfxFrame);
+  PFX.composite(pfxFrame, pfxImg.data, null); pfxCtx.putImageData(pfxImg, 0, 0);
+  const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false; ctx.drawImage(pfxCv, 0, 0, PFW * PXS, PFH * PXS); ctx.imageSmoothingEnabled = sm;
+}
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
 function gtext(str, x, y, size, o = {}) {
@@ -919,6 +1090,18 @@ function snapCard(r, y) {
   const c = s.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, (4 - CX0) * dpr, (4 - y) * dpr); drawCard(c, r, y); return s;
 }
 // crack an image (card, call screen) into a spider web of shards around the impact point
+
+// the card breaks into its own pixels: 10 px blocks sampled from the card, flung out from the hit, falling, shrinking in steps
+function pixelBurst(r, y, ix, iy, power) {
+  const snap = snapCard(r, y), g = snap.getContext('2d'), B = 10, sx = dpr, data = g.getImageData(0, 0, snap.width, snap.height).data;
+  const step = reduce ? 2 : 1;
+  for (let by = 0; by < CH; by += B * step) for (let bx = 0; bx < CW; bx += B * step) {
+    const px0 = Math.floor((bx + B / 2 + 4) * sx), py0 = Math.floor((by + B / 2 + 4) * sx), o = (py0 * snap.width + px0) * 4;
+    if (data[o + 3] < 40) continue;
+    const x = CX0 + bx + B / 2, yy = y + by + B / 2, dx = x - ix, dy = yy - iy, d = Math.hypot(dx, dy) + 8, sp = (220 + rnd() * 380) * power * (60 / (d + 40));
+    spawn('BLOCK', x, yy, dx / d * sp * 4 + (rnd() - .5) * 120, dy / d * sp * 3 - 160 - rnd() * 220, .55 + rnd() * .45, [data[o], data[o + 1], data[o + 2]], B);
+  }
+}
 function shatter(r, y, ix, iy, power) { shatterImg(snapCard(r, y), CX0, y, CW, CH, 18, ix, iy, power, 1); }
 function shatterImg(snap, x0, y0, w, h, rad0, ix, iy, power, scale) {
   const N = 9 + Math.floor(rnd() * 3), a0 = rnd() * 6.28;
@@ -1029,6 +1212,7 @@ Object.assign(sfx, {
   pad() { [261.63, 392, 523.25, 659.25].forEach((f, i) => tone('sine', f, f, 3.2, .06, { a: .9, at: i * .05 })); },
   soft() { hiss(.32, .07, { type: 'lowpass', f0: 1300, f1: 400, a: .08 }); tone('sine', 1568, 1568, .45, .035); },
   snapback() { tone('sine', 900, 1400, .08, .06); },
+  thud(s = .5) { tone('sine', 150 - 50 * s, 42, .16 + .12 * s, .3 + .35 * s); hiss(.07, .05 + .12 * s, { type: 'lowpass', f0: 1100, f1: 180 }); tone('square', 260 + s * 90, 170, .035, .03 + .03 * s, { filt: 1600, at: .025 }); },
 });
 function startEvent(type) {
   if (busy || ev) return;
@@ -1061,6 +1245,50 @@ function hazard(alpha, t) {
     for (let x = -270 + o; x < 260; x += 36) { ctx.beginPath(); ctx.moveTo(x, 13); ctx.lineTo(x + 18, 13); ctx.lineTo(x + 36, -13); ctx.lineTo(x + 18, -13); ctx.closePath(); ctx.fill(); }
     ctx.restore();
   });
+}
+// ---------- light: anamorphic flares, sunburst rays, sweeps (smooth additive light, matches the glass UI) ----------
+const lights = [];
+function light(kind, x, y, o = {}) { if (reduce && kind !== 'sweep') return; lights.push(Object.assign({ kind, x, y, t: 0, life: kind === 'rays' ? 1.6 : kind === 'sweep' ? .7 : .5, col: [255, 255, 255], size: 1 }, o)); }
+function stepLights(dt) { for (let i = lights.length - 1; i >= 0; i--) { const l = lights[i]; l.t += dt; if (l.t > l.life) lights.splice(i, 1); } }
+function rays(x, y, R, rot, a, col, n = 14) {  // soft sunburst: tapered wedges fading out radially
+  const g = ctx.createRadialGradient(x, y, 0, x, y, R); g.addColorStop(0, rgb(col, .55 * a)); g.addColorStop(.35, rgb(col, .22 * a)); g.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g; ctx.beginPath();
+  for (let i = 0; i < n; i++) { const a0 = rot + i * 6.2832 / n, w = (i % 2 ? .07 : .12); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a0 - w) * R, y + Math.sin(a0 - w) * R); ctx.lineTo(x + Math.cos(a0 + w) * R, y + Math.sin(a0 + w) * R); ctx.closePath(); }
+  ctx.fill();
+}
+function flareAt(x, y, w, h, a, col) {  // anamorphic streak: long thin horizontal light with a hot core
+  const g = ctx.createLinearGradient(x - w, 0, x + w, 0); g.addColorStop(0, rgb(col, 0)); g.addColorStop(.5, rgb(col, a)); g.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g; ctx.fillRect(x - w, y - h / 2, w * 2, h);
+  const g2 = ctx.createLinearGradient(x - w * .35, 0, x + w * .35, 0); g2.addColorStop(0, 'rgba(255,255,255,0)'); g2.addColorStop(.5, `rgba(255,255,255,${a})`); g2.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g2; ctx.fillRect(x - w * .35, y - h * .18, w * .7, h * .36);
+  const g3 = ctx.createRadialGradient(x, y, 0, x, y, h * 2.2); g3.addColorStop(0, `rgba(255,255,255,${a})`); g3.addColorStop(.3, rgb(col, .5 * a)); g3.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g3; ctx.fillRect(x - h * 2.2, y - h * 2.2, h * 4.4, h * 4.4);
+}
+function drawLights() {
+  if (!lights.length) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const l of lights) {
+    const f = l.t / l.life;
+    if (l.kind === 'flare') { const e = 1 - Math.pow(1 - Math.min(1, f * 4), 3), a = f < .15 ? 1 : Math.pow(1 - (f - .15) / .85, 1.6); flareAt(l.x, l.y, (90 + 260 * e) * l.size, (10 + 16 * (1 - f)) * l.size, a, l.col); }
+    else if (l.kind === 'rays') { const a = Math.min(1, f * 6) * Math.pow(1 - f, 1.2); rays(l.x, l.y, 260 * l.size * (.7 + .3 * Math.min(1, f * 3)), l.t * .6, a, l.col); rays(l.x, l.y, 190 * l.size, -l.t * .9 + .2, a * .6, [255, 255, 255], 10); }
+    else if (l.kind === 'sweep') { const yy = l.y - f * l.dist + (l.down ? 140 : 0), a = Math.sin(Math.PI * Math.min(1, f)) * .9, g = ctx.createLinearGradient(0, yy - 140, 0, yy + 30); g.addColorStop(0, rgb(l.col, 0)); g.addColorStop(.8, rgb(l.col, .45 * a)); g.addColorStop(.92, `rgba(255,255,255,${.7 * a})`); g.addColorStop(1, rgb(l.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, yy - 140, W, 170); }
+  }
+  ctx.restore();
+}
+// police-line tape across the screen: yellow/black chevrons with a printed word, scrolling
+function tape(y, rot, a, t, speed, word) {
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(195, y); ctx.rotate(rot);
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.fillStyle = '#FFC400'; ctx.fillRect(-320, -15, 640, 30); ctx.shadowColor = 'transparent';
+  ctx.beginPath(); ctx.rect(-320, -15, 640, 30); ctx.clip();
+  const g = ctx.createLinearGradient(0, -15, 0, 15); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,.18)');
+  ctx.font = `900 15px ${FB}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const ww = ctx.measureText(word).width, per = ww + 92, o = ((t * speed) % per + per) % per;
+  ctx.fillStyle = '#16100A';
+  for (let x = -340 - per + o; x < 340; x += per) {
+    ctx.fillText(word, x, 1);
+    for (let k = 0; k < 3; k++) { const sx = x + ww + 14 + k * 20; ctx.beginPath(); ctx.moveTo(sx, 15); ctx.lineTo(sx + 9, 15); ctx.lineTo(sx + 21, -15); ctx.lineTo(sx + 12, -15); ctx.closePath(); ctx.fill(); }
+  }
+  ctx.fillStyle = g; ctx.fillRect(-320, -15, 640, 30); ctx.restore();
 }
 function bolt(x0, y0, x1, y1, n) {
   const pts = [[x0, y0]];
@@ -1136,10 +1364,40 @@ const EVENTS = {
     update(e, dt, t) {
       sstep(e.d.bs, dt, 220, 16); sstep(e.d.ms, dt);
       if (!e.d.done) { fx.alarm = .22 + .2 * Math.sin(t * 9); if (e.t > e.d.dur) this.finish(e); }
-      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 1.7) endEvent(); }
+      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 2.4) endEvent(); }
     },
-    world(e) { ctx.fillStyle = 'rgba(8,5,3,.5)'; ctx.fillRect(-20, ROW0 - 8, W + 40, H); },
-    finish(e) { e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; tone('sawtooth', 880, 330, .6, .08, { filt: 1800 }); say(e.d.real ? `훈련 끝 · 30초 동안 수입 ×${e.d.mult.toFixed(2)}` : `훈련 종료 ×${e.d.mult.toFixed(2)} 적용`, 470, 26, '#FFFFFF', '#FFD66B', 1.6); },
+    world(e, t) {
+      const d = e.d, k = d.done ? 1 : clamp(e.t / d.dur, 0, 1), out = d.done ? Math.max(0, 1 - (e.t - d.endT) * 2.5) : 1, inA = Math.min(1, e.t * 3);
+      ctx.fillStyle = `rgba(14,3,2,${.74 * inA})`; ctx.fillRect(-20, -20, W + 40, H + 40);
+      if (reduce) return;
+      ctx.save(); ctx.globalAlpha = out;
+      // siren: two red/amber beams sweeping from the top corners, faster as time runs out
+      ctx.globalCompositeOperation = 'lighter';
+      const sp = 2.2 + k * 4;
+      [[0, [255, 40, 30], 1], [W, [255, 150, 20], -1]].forEach(([bx, col, dir], i) => {
+        const ang = Math.PI / 2 + dir * (.55 + .5 * Math.sin(t * sp + i * 1.6)), L = 900;
+        const g = ctx.createRadialGradient(bx, 40, 0, bx, 40, L); g.addColorStop(0, rgb(col, .42 * inA)); g.addColorStop(1, rgb(col, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(bx, 40); ctx.lineTo(bx + Math.cos(ang - .2) * L, 40 + Math.sin(ang - .2) * L); ctx.lineTo(bx + Math.cos(ang + .2) * L, 40 + Math.sin(ang + .2) * L); ctx.closePath(); ctx.fill();
+      });
+      // red edge pulse, quickening
+      const pu = .5 + .5 * Math.sin(t * (5 + k * 9)), vg = ctx.createRadialGradient(195, 420, 200, 195, 420, 560); vg.addColorStop(0, 'rgba(255,30,20,0)'); vg.addColorStop(1, `rgba(255,30,20,${(.18 + .3 * k) * pu * inA})`);
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+      // big warning triangles flashing alternately behind everything
+      [[64, 290, -.12], [326, 610, .1], [70, 700, .08]].forEach(([x, y, r], i) => { const on = Math.sin(t * (4 + k * 6) + i * 2.1) > 0; ctx.save(); ctx.globalAlpha = out * (on ? .5 : .16) * inA; ctx.translate(x, y); ctx.rotate(r); warnSign(0, 0, 2.2); ctx.restore(); });
+      // police-line tape: one more strip slaps on every few seconds
+      const TP = [[204, -.07, 160, 'DO NOT DISTURB'], [598, .06, -190, '경고 · WARNING'], [690, -.04, 220, '알림 훈련 중'], [318, .11, -250, 'DO NOT DISTURB']];
+      const n = Math.min(TP.length, 1 + Math.floor(k * 4));
+      for (let i = 0; i < n; i++) { const [y, r, v, w] = TP[i], at = i * d.dur / 4, ap = clamp((e.t - at) / .18, 0, 1), sl = (1 - Math.pow(1 - ap, 3)) * 1; if (ap > 0 && ap < 1 && !d['tp' + i]) { d['tp' + i] = 1; if (i) { buzz(30); if (!reduce) shake = Math.max(shake, 3); } }
+        ctx.save(); ctx.translate((1 - sl) * (v > 0 ? -420 : 420), 0); tape(y, r, inA, t, v * (1 + k), w); ctx.restore(); }
+      ctx.restore();
+    },
+    finish(e) {  // the payout lands like loot: freeze, flash, fireworks, coins, a huge stamped multiplier
+      e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; e.d.win = { t: 0 };
+      stop = Math.max(stop, .09); if (!reduce) { flash = .45; shake = 7; } noiT = 1; light('flare', 195, 440, { col: [255, 190, 70], size: 1.4 }); light('rays', 195, 440, { col: [255, 180, 60], size: 1.1, life: 2.2 });
+      pfx('fireworkBurst', 195, 560, { big: 1 }); pfx('critHit', 195, 420); pfx('coinCollect', 195, 470); pfx('confetti', 195, 520, { big: 1 });
+      sfx.payoff(9); sfx.jackpot(); buzz([60, 40, 60, 40, 200]); ripple(195, 420, .07);
+    },
     tap(e, x, y) {
       const d = e.d; if (d.done) return;
       d.taps++; d.mult = Math.min(2, 1 + d.taps * .01); kick(d.ms, 7); if (d.real) api('drill');
@@ -1147,7 +1405,7 @@ const EVENTS = {
       for (let i = 0; i < (reduce ? 2 : 7); i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', x, y, Math.cos(a) * sp, Math.sin(a) * sp, .2, [255, 170, 120], 2); }
       pops.push({ x: x + (rnd() - .5) * 30, y: y - 10, text: '+1%', t: 0, life: .55, rot: (rnd() - .5) * .4, size: 22, red: 1 }); while (pops.length > 10) pops.shift();
       sfx.drill(d.taps); if (d.taps % 3 === 0) phone('phone.typing', .25); buzz(8); if (!reduce) shake = Math.max(shake, 1.6); chroma = Math.max(chroma, .006);
-      if (d.taps % 10 === 0) { d.ms2 = { text: `${d.taps}연타!`, t: 0 }; sfx.badge(); ripple(x, y, .04); }
+      if (d.taps % 10 === 0) { const st = Math.min(4, Math.floor(d.taps / 20)); d.ms2 = { text: `${d.taps}연타!`, t: 0, st }; sfx.badge(); ripple(x, y, .04); pfx(['hitSpark', 'hitSpark', 'critHit', 'critHit', 'critHit'][st], 195, 250); if (st >= 2) light('flare', 195, 256 - st * 6, { col: [[255, 196, 0], [255, 138, 31], [255, 59, 48], [79, 184, 255], [179, 107, 255]][st], size: .5 + st * .12, life: .4 }); if (st >= 3) pfx('collectBurst', 195, 250); }
       if (d.mult >= 2 && !d.max) {
         d.max = true; crackAt(x, y, 1); collapse(1.25); sfx.payoff(8); if (!reduce) { flash = .3; shake = 6; }
         d.ms2 = { text: '최대 ×2!', t: 0 }; after(.9, () => this.finish(e));
@@ -1164,10 +1422,21 @@ const EVENTS = {
       ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(30, 146, 330, 6, 3); ctx.fill(); ctx.fillStyle = '#FFC400'; rr(30, 146, 330 * left, 6, 3); ctx.fill();
       ctx.restore();
       const m = d.mult, hotc = m > 1.7 ? '#FFC23D' : m > 1.35 ? '#FF8A1F' : '#FF6B5A';
-      gtext('×' + m.toFixed(2), 195, 440, 70, { scale: d.ms.x, top: '#FFFFFF', bot: hotc, wob: 1.4, t });
-      ctx.fillStyle = 'rgba(0,0,0,.4)'; rr(70, 462, 250, 10, 5); ctx.fill(); ctx.fillStyle = hotc; rr(70, 462, 250 * (m - 1), 10, 5); ctx.fill();
-      gtext(`${d.taps}연타`, 195, 504, 24, { top: '#FFFFFF', bot: '#FFD3CC' });
-      if (d.ms2 && d.ms2.t < 1) { d.ms2.t += 1 / 60; gtext(d.ms2.text, 195, 372, 36, { appear: d.ms2.t * 6, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: -.05, top: '#FFFFFF', bot: '#FFC400', wob: 2, t }); }
+      if (!d.win) gtext('×' + m.toFixed(2), 195, 440, 70, { scale: d.ms.x, top: '#FFFFFF', bot: hotc, wob: 1.4, t });
+      if (!d.win) { ctx.fillStyle = 'rgba(0,0,0,.4)'; rr(70, 462, 250, 10, 5); ctx.fill(); ctx.fillStyle = hotc; rr(70, 462, 250 * (m - 1), 10, 5); ctx.fill();
+      gtext(`${d.taps}연타`, 195, 504, 24, { top: '#FFFFFF', bot: '#FFD3CC' }); }
+      if (d.win) {  // final: "수입 ×N 획득!" stamped over everything
+        d.win.t += 1 / 60; const k = Math.min(1, d.win.t * 5), sc = k < 1 ? 2.4 - 1.4 * k : 1 + .04 * Math.sin(d.win.t * 30);
+        
+        gtext('획득!', 195, 372, 30, { appear: d.win.t * 8, top: '#FFFFFF', bot: '#7CE0FF', wob: 2, t });
+        gtext(`수입 ×${m.toFixed(2)}`, 195, 450, 64, { scale: sc, top: '#FFF6C8', bot: '#FFB020', wob: 2.2, t });
+        ctx.fillStyle = '#FFE9B8'; ctx.font = `800 14px ${FB}`; ctx.textAlign = 'center'; ctx.fillText(e.d.real ? '30초 동안 적용' : '지금부터 적용', 195, 492);
+      }
+      if (d.ms2 && d.ms2.t < 1) {  // streak callout: each stage bigger, hotter and higher, slammed in
+        d.ms2.t += 1 / 60; const st = d.ms2.st || 0, STG = [['#FFFFFF', '#FFC400', 34], ['#FFFFFF', '#FF8A1F', 40], ['#FFF3A6', '#FF3B30', 48], ['#E9F6FF', '#4FB8FF', 54], ['#FFFFFF', '#B36BFF', 62]][st];
+        const k = Math.min(1, d.ms2.t * 7), sc = k < 1 ? 1.8 - .8 * k : 1 + .05 * Math.sin(d.ms2.t * 40) * (1 - d.ms2.t);
+        gtext(d.ms2.text, 195, 262 - st * 6, STG[2], { scale: sc, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: (st % 2 ? .06 : -.06), top: STG[0], bot: STG[1], wob: 1 + st, t });
+      }
     },
   },
   // app crash: glitch tears -> "stopped" dialog -> tap -> CRT off/on reboot
@@ -1177,8 +1446,8 @@ const EVENTS = {
       const d = e.d; sstep(d.dlg, dt, 300, 15);
       if (d.phase === 'glitch') { fx.glitch = Math.min(1, e.t / .3); fxT.sat = .45; if (!reduce) shake = 2; if (e.t > .45) { d.phase = 'dialog'; d.dlg.t = 1; sfx.glitch(); } }
       else if (d.phase === 'dialog') { fx.glitch = rnd() < .08 ? .5 : .06; fxT.sat = .3; fxT.bright = .8; if (e.t > 3) this.tap(e); }
-      else if (d.phase === 'off') { d.ct += dt; fx.crt = Math.min(1, d.ct / .28); fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
-      else if (d.phase === 'on') { d.ct += dt; fx.crt = Math.max(0, 1 - d.ct / .32); if (d.ct > .32) { d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp, .3, [140, 220, 255], 2.2); } } }
+      else if (d.phase === 'off') { d.ct += dt; const u = Math.min(1, d.ct / .3); fx.crt = u * u * u * u; if (u > .9 && !d.dot) { d.dot = 1; light('flare', 195, 422, { col: [140, 200, 255], size: 1.1, life: .55 }); } fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; light('flare', 195, 422, { col: [160, 215, 255], size: .9, life: .45 }); sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
+      else if (d.phase === 'on') { d.ct += dt; const u = Math.min(1, d.ct / .42), eb = 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2); fx.crt = Math.max(0, 1 - eb); fx.bright = 1 + .6 * Math.max(0, 1 - u * 2.2); if (d.ct > .42) { light('flare', 195, 400, { col: [120, 210, 255], size: 1.3 }); light('rays', 195, 400, { col: [110, 200, 255], size: .9, life: 1.2 }); d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 22; i++) { const a = rnd() * 6.28, sp = 220 + rnd() * 380; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp * .45, .35, [170, 230, 255], 2); } } }
       else if (d.phase === 'done') { d.ct += dt; if (d.ct > 1.3) endEvent(); }
     },
     tap(e) { if (e.d.phase !== 'dialog') return; e.d.phase = 'off'; e.d.ct = 0; e.d.dlg.t = 0; sfx.powerDown(); phone('phone.lock', .6); buzz(40); },
@@ -1239,24 +1508,58 @@ const EVENTS = {
   },
   // low battery: colour drains, heartbeat; tap -> lightning, colour floods back
   battery: {
-    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, pts: null }); lowBat = true; },
+    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, fill: 0, hold: false, pts: null, bs: spring(0), idle: 0 }); e.d.bs.t = 1; lowBat = true; },
     update(e, dt) {
-      const d = e.d;
-      if (d.phase === 'low') { fxT.sat = .15; fxT.bright = .55; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); if (!reduce) shake = 1.2; } if (e.t > 3.2) this.tap(e); }
-      else { d.bt += dt; if (d.bt < .35) d.pts = bolt(356, 24, 195 + (rnd() - .5) * 40, 420, 10); else d.pts = null; if (d.bt > 1.4) endEvent(); }
+      const d = e.d; sstep(d.bs, dt, 260, 14);
+      if (d.phase === 'low') {
+        fxT.sat = .15 + d.fill * .85; fxT.bright = .55 + d.fill * .45;
+        if (d.hold) { d.fill = Math.min(1, d.fill + dt / 1.5); d.zt = (d.zt || 0) - dt; if (d.zt <= 0) { d.zt = .09; sfx.reel(); buzz(6); if (!reduce) shake = Math.max(shake, .6 + d.fill * 2); } }
+        else { d.fill = Math.max(0, d.fill - dt * .5); d.idle += dt; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); } }
+        if (d.idle > 5 && !d.hold) d.hold = true;  // demo/auto: charges itself if nobody holds
+        if (d.fill >= 1) this.full(e);
+      } else { d.bt += dt; if (d.bt > 1.5) endEvent(); }
     },
-    tap(e) {
-      const d = e.d; if (d.phase !== 'low') return;
-      d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
-      if (!reduce) flash = .35; ripple(356, 24, .05); ripple(195, 420, .05); chroma = .02; phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]); if (!reduce) shake = 5;
-      for (let i = 0; i < (reduce ? 12 : 50); i++) { const side = Math.floor(rnd() * 4), p = rnd(); const [x, y, vx, vy] = side === 0 ? [p * W, 2, 600, 0] : side === 1 ? [W - 2, p * H, 0, 600] : side === 2 ? [p * W, H - 2, -600, 0] : [2, p * H, 0, -600]; spawn('SPARK', x, y, vx * (rnd() < .5 ? 1 : -1), vy * (rnd() < .5 ? 1 : -1), .35, [150, 200, 255], 2.4); }
-      say('충전 완료! 배터리 +2', 440, 30, '#FFFFFF', '#7CC0FF', 1.3);
+    tap(e) { const d = e.d; if (d.phase !== 'low') return; d.hold = true; d.idle = 0;  },
+    up(e) { e.d.hold = false; },
+    full(e) {
+      const d = e.d; d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
+      if (!reduce) { flash = .35; shake = 6; } stop = Math.max(stop, .07); ripple(195, 420, .06); chroma = .012;
+      light('flare', 195, 420, { col: [90, 255, 150], size: 1.3 }); light('rays', 195, 420, { col: [110, 255, 160], size: 1, life: 1.3 }); light('sweep', 0, H + 60, { col: [90, 255, 150], dist: H + 200, life: .8 }); for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (rnd() - .5) * 2.4, sp = 260 + rnd() * 420; spawn('SPARK', 195 + (rnd() - .5) * 120, 420, Math.cos(a) * sp, Math.sin(a) * sp, .5, [150, 255, 190], 2.2); } phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]);
+      say('충전 완료! 배터리 +2', 540, 30, '#FFFFFF', '#7CF0A0', 1.3);
     },
     world(e) { if (e.d.pts) strokeBolt(e.d.pts, 1); },
-    ui(e) {
-      if (e.d.phase !== 'low') return;
-      const a = .6 + .4 * Math.sin(e.t * 7);
-      ctx.fillStyle = `rgba(255,59,48,${a})`; rr(95, 600, 200, 34, 17); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = `700 13px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 탭해서 충전', 195, 622);
+    ui(e, t) {
+      const d = e.d, s = d.bs.x; if (d.phase !== 'low' && d.bt > .5) return;
+      const f = d.phase === 'low' ? d.fill : 1, fade = d.phase === 'low' ? 1 : Math.max(0, 1 - d.bt * 3);
+      // the dark lifts as it charges: dim at 0%, almost clear at 100%
+      ctx.fillStyle = `rgba(0,0,0,${(.62 - .5 * f) * Math.min(1, e.t * 4) * fade})`; ctx.fillRect(0, 0, W, H);
+      // translucent green light rising from the bottom, smooth surface with a bright meniscus
+      const top = H - (H - 60) * f;
+      if (f > 0 && fade > 0) {
+        ctx.save(); ctx.globalAlpha = fade; ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 10) ctx.lineTo(x, top + Math.sin(x * .03 + t * 5) * 6 + Math.sin(x * .071 - t * 3.7) * 4); ctx.lineTo(W, H); ctx.closePath();
+        const g = ctx.createLinearGradient(0, top - 10, 0, H); g.addColorStop(0, 'rgba(120,255,170,.34)'); g.addColorStop(.25, 'rgba(50,220,120,.16)'); g.addColorStop(1, 'rgba(20,160,80,.08)'); ctx.fillStyle = g; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(190,255,215,.7)'; ctx.beginPath(); for (let x = 0; x <= W; x += 10) { const yy = top + Math.sin(x * .03 + t * 5) * 6 + Math.sin(x * .071 - t * 3.7) * 4; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); } ctx.stroke();
+        const gl2 = ctx.createLinearGradient(0, top - 70, 0, top + 10); gl2.addColorStop(0, 'rgba(120,255,170,0)'); gl2.addColorStop(1, `rgba(120,255,170,${.22 + .2 * f})`); ctx.fillStyle = gl2; ctx.fillRect(0, top - 70, W, 80);
+        for (let i = 0; i < 14; i++) { const by = H - ((t * (60 + i * 13) + i * 97) % (H - top + 40)), bx = (i * 61 + Math.sin(t * 2 + i) * 14) % W; if (by > top + 6) { ctx.fillStyle = 'rgba(200,255,220,.35)'; ctx.fillRect(bx, by, 3, 3); } }
+        ctx.restore();
+      }
+      // the battery icon, centre screen: rounded glossy shell, nub, liquid level inside
+      ctx.save(); ctx.translate(195, 420); ctx.scale(s, s); ctx.globalAlpha = fade || (d.phase === 'low' ? 1 : 0);
+      const bw = 128, bh = 66, low = f < .2, blink = low && Math.sin(t * 10) > 0, lc = low ? (blink ? [255, 70, 58] : [150, 30, 24]) : [60, 235, 125];
+      ctx.shadowColor = low ? 'rgba(255,60,40,.5)' : `rgba(80,255,150,${.3 + .5 * f})`; ctx.shadowBlur = 28;
+      ctx.fillStyle = 'rgba(14,16,18,.82)'; rr(-bw / 2, -bh / 2, bw, bh, 14); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.lineWidth = 5; ctx.strokeStyle = '#F4F1EA'; rr(-bw / 2, -bh / 2, bw, bh, 14); ctx.stroke();
+      ctx.fillStyle = '#F4F1EA'; rr(bw / 2 + 3, -13, 9, 26, 4); ctx.fill();
+      const iw = (bw - 16) * Math.max(.1, f); ctx.save(); rr(-bw / 2 + 8, -bh / 2 + 8, bw - 16, bh - 16, 8); ctx.clip();
+      const lg = ctx.createLinearGradient(0, -bh / 2, 0, bh / 2); lg.addColorStop(0, rgb(lc.map(v => Math.min(255, v + 70)), 1)); lg.addColorStop(1, rgb(lc, 1)); ctx.fillStyle = lg; ctx.fillRect(-bw / 2 + 8, -bh / 2 + 8, iw, bh - 16);
+      if (d.hold && f < 1) { const sx = -bw / 2 + 8 + ((t * 160) % (bw + 20)) - 20; const sg = ctx.createLinearGradient(sx, 0, sx + 26, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.55)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = sg; ctx.fillRect(sx, -bh / 2, 26, bh); }
+      ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(-bw / 2 + 8, -bh / 2 + 8, bw - 16, (bh - 16) * .4); ctx.restore();
+      ctx.restore();
+      if (d.phase === 'low') {
+        gtext(d.hold ? `충전 중 ${Math.round(f * 100)}%` : '꾹 눌러서 충전', 195, 500, 26, { top: '#FFFFFF', bot: d.hold ? '#7CF0A0' : '#FF8A80', wob: d.hold ? 1.5 : 0, t });
+        ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 손을 떼면 다시 줄어요', 195, 526);
+      }
     },
   },
   // lotto: slot reel; jackpot = gold shower + glass break, miss = deflate + sad trombone
@@ -1269,9 +1572,9 @@ const EVENTS = {
         if (e.t > d.spin) {
           d.phase = 'res'; d.endT = e.t; d.val = d.res;
           if (d.res > 0) {
-            crackAt(195, 400, 1); collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
-            for (let i = 0; i < (reduce ? 30 : 110); i++) spawn('GLASS', rnd() * W, -20 - rnd() * 200, (rnd() - .5) * 80, 200 + rnd() * 300, 2, [255, 214, 90], 3 + rnd() * 5);
-            say(`잭팟 ×${d.res}!`, 500, 42, '#FFFFFF', '#FFC23D', 1.6);
+            collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
+            pfx('critHit', 195, 400); pfx('coinCollect', 195, 440); pfx('fireworkBurst', 195, 600, { big: 1 }); pfx('confetti', 195, 520, { big: 1 }); stop = Math.max(stop, .08); pixT = Math.max(pixT, .3); psyT = .45;
+            say(`잭팟 ×${d.res}!`, 490, 46, '#FFFFFF', '#FFC23D', 1.8);
           } else {
             sfx.fail(); d.bs.t = .72; fx.sat = .25;
             for (let i = 0; i < 12; i++) spawn('VAPOUR', 195 + (rnd() - .5) * 120, 400, (rnd() - .5) * 120, -40 - rnd() * 80, 1.2, [150, 150, 150], 12 + rnd() * 10);
@@ -1317,10 +1620,14 @@ const EVENTS = {
 // ---------- chain choreography ----------
 // ---------- engine bridge: the Android app (window.Game) or the desktop dev server ----------
 let S = null;  // last engine snapshot
+function enNames(o) {  // core sends Korean app names; English builds swap them by app id
+  if (Array.isArray(o)) { o.forEach(enNames); return o; }
+  if (o && typeof o === 'object') { const id = o.app || o.id; if (typeof o.name === 'string' && id && I18N.apps[id]) o.name = I18N.apps[id]; for (const k in o) if (o[k] && typeof o[k] === 'object') enNames(o[k]); }
+  return o;
+}
 async function api(method, args = {}) {
-  if (window.Game) return JSON.parse(window.Game.call(method, JSON.stringify(args)));
-  const q = new URLSearchParams(args).toString();
-  return (await fetch('/api/' + method + (q ? '?' + q : ''))).json();
+  const o = window.Game ? JSON.parse(window.Game.call(method, JSON.stringify(args))) : await (await fetch('/api/' + method + (new URLSearchParams(args).toString() ? '?' + new URLSearchParams(args).toString() : ''))).json();
+  return I18N.apps ? enNames(o) : o;
 }
 let pendingCall = null, boardBusy = false, idleT = 0, hintId = null, hintT = 0, autoClock = 1.5, swipes = 0;
 const say2 = (text, y, size = 26) => say(text, y, size, '#FFFFFF', '#FFD66B', 1.3);
@@ -1376,22 +1683,19 @@ function play(o, quiet = false) {
       after(t + .05, () => { const i = board.indexOf(r); if (i >= 0) board.splice(i, 1); layout(); });
       const e = L(b.earned), es = shortOf(b.earned, b.earnedShort);
       if (e > -Infinity && o.chain === 0) after(t + .08, () => pops.push({ x: 300, y: (r ? r.y.x : 300) + 10, text: '+' + es, t: 0, life: .8, rot: -.1, size: 22 }));
-      t += .16;
+      t += .07;
     } else if (b.t === 'merged') {
       const tt = t;
       after(tt, () => {
         const into = byId(b.into.id), from = byId(b.from);
-        if (from && into) { from.y.t = into.y.x; from.fade = true; after(.09, () => { const i = board.indexOf(from); if (i >= 0) board.splice(i, 1); layout(); }); }
-        if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
-        if (!quiet) sfx.chip(2); buzz(6);
-        const y = into ? into.y.x : 300;
-        pops.push({ x: 300, y: y + 4, text: `${b.into.count}/${b.into.threshold}`, t: 0, life: .5, rot: .08, size: 20 });
+        if (from && into) slamMerge(from, into, k, () => { into.d = b.into; layout(); if (!quiet) sfx.chip(2); pops.push({ x: 300, y: into.y.x + 4, text: `×${b.into.count}`, t: 0, life: .5, rot: .08, size: 22 }); });
+        else if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
       });
-      t += .13;
+      t += .17;
     } else if (b.t === 'burst') {
       k++; const kk = k, tt = t;
-      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; kick(r.sc, 3); } });
-      after(tt + .05, () => burstRow(b, kk, quiet));
+      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 50); } });
+      after(tt + .06, () => burstRow(b, kk, quiet));
       t += Math.max(.1, .19 - (kk - 1) * .011);
     } else if (b.t === 'wave') {
       const w = b.index - 1; after(t + .2, () => waveHit(w)); t += .45;
@@ -1408,13 +1712,16 @@ function burstRow(b, k, quiet) {
   const r = byId(b.row.id); if (!r) return;
   const d = r.d, pal = ramp(colOf(d)), T = tier(k), y = r.y.x, cy = y + CH / 2, q = reduce ? .3 : 1;
   const ix = 110 + rnd() * 170, iy = y + 18 + rnd() * 24;
-  shatter(r, y, ix, iy, 1 + Math.min(k, 12) * .06);
+  pixelBurst(r, y, ix, iy, 1 + Math.min(k, 10) * .08);
+  pfx(k >= 4 ? 'critHit' : 'hitSpark', ix, iy, { angle: (rnd() - .5) * .6 });
+  if (k >= 6) pfx('smallExplosion', ix, y + CH, { size: .55, big: 1 });
+  if (k >= 9) pfx('impactFrame', 195, iy);
   ripple(ix, iy, .014 + Math.min(k, 12) * .0022);
   if (k >= 9 && (!crack || crack.age > .5)) crackAt(ix, iy, .85);
   chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
-  for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
-  for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
-  spawn('CORE', ix, iy, 0, 0, .12, pal[3], 70 + k * 5);
+  spawn('LASER', 195, cy, 0, 0, .14, balc(k), 8 + Math.min(k, 10));
+  if (k >= 4) for (let j = 0; j < Math.min(k - 3, 3); j++) after(.03 * (j + 1), () => spawn('LASER', 195, y + (j + 1) * CH / 4, 0, 0, .1, balc(k + j + 1), 4 + j * 2));
+  pixT = Math.max(pixT, .12 + Math.min(k, 10) * .02); psyT = Math.min(1, Math.max(psyT, (k - 1) * .16)); noiT = Math.max(noiT, .5);
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
   pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
@@ -1423,7 +1730,7 @@ function burstRow(b, k, quiet) {
   plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); if (!quiet) sfx.mult(k);
   plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
   stop = Math.max(stop, T.stop / 1000);
-  if (!reduce) shake = Math.max(shake, T.shake * 1.3);
+  if (!reduce) shake = Math.max(shake, T.shake + Math.min(k, 12) * .25);
   heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
   if (k >= 9) { slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .25; flashTimes.push(now); } } }
   if (!quiet) { sfx.pop(k); buzz(Math.min(40, 8 + k * 3)); }
@@ -1437,10 +1744,12 @@ function finishPlate() {
   wallet.to = wallet.v; wallet.t = Math.min(wallet.t, .999);
 }
 function waveHit(w) {
-  for (let i = 0; i < (reduce ? 20 : 70); i++) spawn('GLASS', rnd() * W, 150 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 380, 1.2, [255, 220, 170], 3 + rnd() * 5);
-  bandT = 0; plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
+  // the wave: a hot light sheet sweeps down the board, the multiplier pill flares
+  light('sweep', 0, 120, { col: [255, 150, 60], dist: -(H + 160), life: .6, down: 1 }); light('flare', MULTX, BOXY, { col: [255, 110, 70], size: .9 + w * .15, life: .5 });
+  for (let i = 0; i < (reduce ? 6 : 22); i++) spawn('STREAK', rnd() * W, 140 + rnd() * 30, (rnd() - .5) * 60, 1400 + rnd() * 900, .22, [255, 200, 140], 1.4 + rnd() * 1.4);
+  plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
   plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
-  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1; chroma = Math.max(chroma, .012);
+  stop = Math.max(stop, .04); if (!reduce) shake = 4; chroma = Math.max(chroma, .008);
   sfx.wave(w); buzz([20, 30, 40]);
 }
 function payoff() {
@@ -1458,12 +1767,11 @@ function payoff() {
   });
 }
 function slam() { // end of the count-up: the screen glass takes the hit
-  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
+  plate.landed = true; light('flare', 195, REVEAL_Y - 24, { col: [255, 170, 70], size: .7 + Math.min(plate.k, 12) * .05 }); kick(plate.ts, 34); noiT = Math.max(noiT, .3); sfx.payoff(plate.k); buzz([30, 40, 70]);
   // the glass takes the hit in proportion: small tallies thump, big chains crack the screen
-  if (plate.k >= 3) crackAt(195, REVEAL_Y - 18, Math.min(1, .55 + plate.k * .05)); ripple(195, REVEAL_Y - 18, .02 + Math.min(plate.k, 10) * .0025); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
+  ripple(195, REVEAL_Y - 18, .012 + Math.min(plate.k, 10) * .001); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
   for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
-  for (let i = 0; i < (reduce ? 8 : 26); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('GLASS', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp - 100, .9 + rnd() * .4, [255, 236, 200], 4 + rnd() * 5); }
-  spawn('CORE', 195, REVEAL_Y - 18, 0, 0, .22, [255, 210, 120], 220);
+  if (plate.k >= 5 || plate.wmul > 1) light('rays', 195, REVEAL_Y - 24, { col: [255, 170, 60], size: .8 + Math.min(plate.k, 12) * .03, life: 1.4 });
   if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
   if (plate.record) after(.08, () => sfx.badge());
   if (plate.record) after(1.2, () => offerDouble(plate.total));
@@ -1487,6 +1795,10 @@ function step(dt) {
     else if (p.k === 'GLASS') { p.vy += 900 * dt; p.vx *= Math.pow(.4, dt); p.rot += p.vr * dt; }
     else if (p.k === 'SPARK') { p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; }
     else if (p.k === 'VAPOUR') { p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); }
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { p.vx *= Math.pow(.02, dt); p.vy = p.vy * Math.pow(.05, dt) - (p.k === 'SMOKE' ? 30 : 10) * dt; }
+    else if (p.k === 'EMBERF') { p.vx *= Math.pow(.25, dt); p.vy = p.vy * Math.pow(.4, dt) + 700 * dt; }
+    else if (p.k === 'STREAK') { p.vx *= Math.pow(.05, dt); }
+    else if (p.k === 'BLOCK') { p.vx *= Math.pow(.35, dt); p.vy += 1500 * dt; }
     p.x += p.vx * dt; p.y += p.vy * dt;
   }
   for (let i = shards.length - 1; i >= 0; i--) {
@@ -1511,12 +1823,18 @@ function draw(t) {
   ctx.drawImage(bgS, 0, 0, W, H);
   ctx.fillStyle = day ? 'rgba(255,255,255,.25)' : 'rgba(8,5,3,.3)'; ctx.fillRect(0, 0, W, H);
   drawDecor();
-  const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
-  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
+  // trauma shake: amplitude ∝ trauma², smooth high-frequency noise plus a little roll; camK = swipe-direction kick
+  // pixel-art shake: a few hard pixel steps, no roll; camK = swipe-direction kick
+  const tr = Math.min(1, shake / 7), amp = 14 * tr * tr, q2 = v => Math.round(v / 2) * 2, ph = Math.floor(t * 40), sx = q2(amp * (((ph * 7) % 5) / 2 - 1) + camK.x), sy = q2(amp * (((ph * 3) % 5) / 2 - 1) * .7), sr = 0;
+  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.rotate(sr); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
   ctx.save(); shaken();
   board.forEach(r => {
     const y = r.y.x;
-    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH / 2); ctx.scale(r.sc.x, r.sc.x); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH / 2));
+    if (r.fly && !reduce) for (let g = 3; g >= 1; g--) {  // afterimages behind a flung card
+      ctx.save(); ctx.globalAlpha = r.a * (.32 - g * .08); ctx.translate(195 + r.dx - r.fly * g * 34, y + CH / 2); ctx.scale(1.08, .94); ctx.translate(-195, -(y + CH / 2)); drawCard(ctx, r, y); ctx.restore();
+    }
+    const qx = r.q.x, st = r.fly ? 1.1 : 1 + qx * .45, sv = r.fly ? .92 : 1 - qx;
+    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH); ctx.scale(r.sc.x * st, r.sc.x * sv); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH));
     drawCard(ctx, r, y);
     if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .85})`; rr(CX0, y, CW, CH, 18); ctx.fill(); }
     ctx.restore();
@@ -1537,16 +1855,23 @@ function draw(t) {
   for (const p of parts) {
     const f = p.life / p.max;
     if (p.k === 'GLASS') { const g = .35 + .65 * Math.abs(Math.sin(p.rot * 2)); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, f * 2.5); ctx.beginPath(); ctx.moveTo(-p.size, -p.size * .4); ctx.lineTo(p.size * .8, -p.size * .7); ctx.lineTo(p.size * .2, p.size * .8); ctx.closePath(); ctx.fillStyle = rgb(mixc(p.col, [255, 255, 255], g), .35 + .5 * g); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
-    else if (p.k === 'INK') { ctx.fillStyle = rgb(p.col, Math.min(.85, f)); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
-    else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
+    else if (p.k === 'BLOCK') { const sz = f > .6 ? p.size : f > .3 ? p.size * .6 : p.size * .3; if (f > .15 || (frameNo + (p.x | 0)) & 1) { ctx.fillStyle = rgb(p.col, 1); ctx.fillRect(Math.round(p.x / 2) * 2 - sz / 2, Math.round(p.y / 2) * 2 - sz / 2, sz, sz); if (f > .75) { ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(Math.round(p.x / 2) * 2 - sz / 2, Math.round(p.y / 2) * 2 - sz / 2, sz, 2); } } }
+    else if (p.k === 'INK') pblob(p.x, p.y, p.size, p.col, Math.min(.85, f));
+    else if (p.k === 'VAPOUR') pblob(p.x, p.y, p.size * (1.8 - f), p.col, .3 * f, true);
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { const e = 1 - f; pblob(p.x, p.y, p.size * (1 + e * (p.k === 'SMOKE' ? 1.6 : 1.1)), p.col, (p.k === 'SMOKE' ? .62 : .5) * f, true); }
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
-    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
-    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { const r = p.size * (p.k === 'DROP' ? 2.6 : 3), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,230,${f})`); g.addColorStop(.35, rgb(p.col, .8 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
-    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
+    if (p.k === 'RING' || p.k === 'RINGIN') pring(p, f);
+    else if (p.k === 'LASER') plaser(p, f);
+    else if (p.k === 'BEAM') pbeam(p, f);
+    else if (p.k === 'STREAK') { const n = 5; for (let j = 0; j < n; j++) px(p.x - p.vx * .012 * j, p.y, 6, j ? p.col : [255, 255, 255], .7 * f * (1 - j / n)); }
+    else if (p.k === 'EMBERF') px(p.x, p.y, p.size > 2.5 ? 8 : 4, (Math.floor(p.life * 30) % 2) ? p.col : [255, 255, 210], f);
+    else if (p.k === 'SPARK') { const sp = Math.hypot(p.vx, p.vy) || 1, n = Math.min(4, 1 + Math.floor(sp / 260)); for (let j = 0; j < n; j++) px(p.x - p.vx / sp * j * 5, p.y - p.vy / sp * j * 5, j ? 4 : 6, j ? p.col : [255, 255, 255], f * (1 - j * .22)); }
+    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { px(p.x, p.y, p.k === 'DROP' ? 6 : 4, [255, 255, 230], f); pblob(p.x, p.y, p.size * 2.2, p.col, .55 * f, true); }
+    else if (p.k === 'CORE') pstar(p.x, p.y, p.size * (1.15 - f * .5), p.col, f);
   }
   for (const o of tokens) {
     if (o.text || o.big) continue;
@@ -1560,6 +1885,7 @@ function draw(t) {
     ctx.fillStyle = gg; rr(gx, gy, Math.max(8, gw * Math.min(1, S.gauge / 100)), 8, 4); ctx.fill();
     ctx.fillStyle = S.gauge >= 80 ? (day ? '#D81E2A' : '#FF8A80') : (day ? '#5F6674' : '#B3A89B'); ctx.font = `600 12px ${FB}`; ctx.textAlign = 'right'; ctx.fillText(`${S.gauge}%`, 372, gy + 8);
   }
+  pfxDraw();
   if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
   if (plate.phase === 'show') { ctx.fillStyle = `rgba(8,5,3,${.55 * Math.min(1, plate.showT * 6)})`; ctx.fillRect(-20, ROW0 - 8, W + 40, H); drawOverheatWorld(t); }
@@ -1587,7 +1913,6 @@ function draw(t) {
     stext(fmtL(plate.chipsShown), cxp, BOXY + 1, 22, { scale: pcs });
     stext('×' + fmtMult(plate.multShown), mxp, BOXY + 1, 22, { scale: pms });
     ctx.globalAlpha = 1;
-    if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
   if (plate.phase === 'show') {
     const a = Math.min(1, plate.showT * 6), big = clamp((plate.total - 6) / 3, 0, 1);
@@ -1595,7 +1920,7 @@ function draw(t) {
     if (!plate.vented) gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
     const num = fmtL(plate.totalShown), size = 58 + big * 14;
     ctx.font = `${size}px ${FD}`; const mw = ctx.measureText(num).width, sc = Math.min(1, 340 / mw);
-    if (plate.landed && !reduce && !plate.vented) flames(195, REVEAL_Y - size * .3, mw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
+    if (plate.landed && !reduce && !plate.vented && big > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const ra = Math.min(1, (plate.showT - .5) * 4) * (.35 + .4 * big); rays(195, REVEAL_Y - size * .3, 230 + 60 * big, t * .35, Math.max(0, ra), [255, 176, 60], 16); ctx.restore(); }
     const hot = plate.hot || 0, jx = hot ? (rnd() - .5) * hot * 9 : 0, jy = hot ? (rnd() - .5) * hot * 5 : 0;
     gtext(num, 195 + jx, REVEAL_Y + jy, size * sc, { scale: plate.ts.x * (1 + hot * .06), top: hot > .5 ? '#FFF6B0' : plate.vented ? '#FFFFFF' : '#FFFFFF', bot: hot > .2 ? '#FF2A1A' : plate.vented ? '#9FD8FF' : plate.landed ? '#FF9A1F' : '#FFD66B', wob: plate.landed ? 2.2 + hot * 3 : .6, t });
     drawOverheatUI(t);
@@ -1618,11 +1943,12 @@ function draw(t) {
     if (o.text) gtext(o.text, x, y, 17, { top: '#FFFFFF', bot: '#FFD66B', scale: 1 - e * .3 });
     else { gtext(o.big, x, y + 12, 40, { top: '#FFFFFF', bot: '#FFC23D', scale: 1 - e * .55 }); ctx.globalCompositeOperation = 'lighter'; for (let j = 1; j < 6; j++) { const [tx, ty] = tokPos(o, Math.max(0, e - j * .05)); ctx.fillStyle = `rgba(255,190,80,${.35 - j * .06})`; ctx.beginPath(); ctx.arc(tx, ty, 12 - j * 1.5, 0, 6.28); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; }
   }
+  if (!pres) drawLights();
+  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   for (const p of pops) {
     const f = p.t / p.life;
     if (p.t > 0) gtext(p.text, p.x, p.y - Math.pow(f, .5) * 34, p.size, { appear: p.t * 9, rot: p.rot, alpha: Math.min(1, (1 - f) * 3), top: p.col0 ? p.col0[0] : '#FFFFFF', bot: p.col0 ? p.col0[1] : p.red ? '#FF6B5A' : '#6FB6FF', wob: 1.2, t });
   }
-  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   drawHint(t);
   ctx = sctx;
   present(t);
@@ -1643,14 +1969,14 @@ function frame(now) {
     for (const e of due) timeline.splice(timeline.indexOf(e), 1);
     due.forEach(e => e.fn());
   }
-  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; }
+  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; } pfxStep(gdt); stepLights(dt);
   const n = Math.ceil(dt / (1 / 240)), sd = dt / Math.max(1, n);
   for (let i = 0; i < n; i++) {
     [plate.cs, plate.ms, plate.xs, plate.ts, wallet.s, wallet.us, zoom].forEach(s => stepSpring(s, sd));
-    board.forEach(r => { stepSpring(r.sc, sd, 300, 16); stepSpring(r.y, sd, 260, 20); });
+    const rsd = gdt / Math.max(1, n); if (rsd > 0) board.forEach(r => { stepSpring(r.sc, rsd, 300, 16); stepSpring(r.q, rsd, 900, 11); stepRowY(r, rsd); }); stepSpring(camK, sd, 220, 13);
   }
-  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 14); if (r.fly) r.dx += r.fly * dt * 2400; else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
-  shake *= Math.pow(.0008, dt); if (shake < .05) shake = 0;
+  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 11); if (r.fly) { r.dx += r.fly * dt * 3800; if (!r.streaked) { r.streaked = 1; camK.v += r.fly * 260; for (let j = 0; j < (reduce ? 3 : 9); j++) spawn('STREAK', 195 + r.fly * (40 + rnd() * 120), r.y.x + 8 + rnd() * (CH - 16), r.fly * (1400 + rnd() * 900), 0, .18 + rnd() * .1, [255, 255, 255], 1.5 + rnd() * 2); } } else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
+  shake = Math.max(0, shake - dt * 16); frameNo++; pixT = Math.max(0, pixT - dt * 7); psyT = Math.max(0, psyT - dt * (plate.phase === 'idle' ? 1.2 : .35)); noiT = Math.max(0, noiT - dt * 2.5);
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
@@ -1710,6 +2036,7 @@ cv.addEventListener('pointermove', e => {
   drag.r.dx = x - drag.x0; if (Math.abs(drag.r.dx) > 6) drag.moved = true;
 });
 const release = async e => {
+  if (ev && EVENTS[ev.type].up) EVENTS[ev.type].up(ev);
   pull.on = false;
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);
@@ -1744,8 +2071,10 @@ function prestigeShow(kind, amount, st) {
   pres = { kind, amount: L(amount), t: 0, t0: performance.now(), landed: false };
   busy = boardBusy = true;
   if (!reduce) { flash = .45; shake = 8; kick(zoom, 1.4); }
-  chroma = .025; crackAt(195, REVEAL_Y - 30, 1); ripple(195, REVEAL_Y - 30, .07); collapse(1.6);
-  board.forEach((r, i) => after(.04 * i, () => { shatter(r, r.y.x, 120 + rnd() * 150, r.y.x + 30, 1.4); r.a = 0; }));
+  chroma = .02; ripple(195, REVEAL_Y - 30, .07); light('flare', 195, REVEAL_Y - 30, { col: kind === 'reset' ? [110, 200, 255] : [190, 140, 255], size: 1.5, life: .7 });
+  board.slice().forEach((r, i) => after(.05 * i, () => { pixelBurst(r, r.y.x, 195, r.y.x + CH / 2, 1.3); const bi = board.indexOf(r); if (bi >= 0) board.splice(bi, 1); sfx.thud && sfx.thud(.5); if (!reduce) shake = Math.max(shake, 4); }));
+  pres.files = []; const nf = reduce ? 8 : 26; for (let i = 0; i < nf; i++) pres.files.push({ x: 30 + rnd() * 330, y: 140 + rnd() * 560, d: .35 + i * .028 + rnd() * .05, done: 0, s: .8 + rnd() * .5 });
+  after(.3, () => light('rays', 195, REVEAL_Y - 20, { col: kind === 'reset' ? [90, 190, 255] : [170, 120, 255], size: 1.25, life: 3 }));
   sfx.unit(); phone('ui.levelup', .5); buzz([60, 40, 60, 40, 160]);
   after(1.9, () => {
     // the new run: fresh board drops in, wallet back to its start
@@ -1753,15 +2082,23 @@ function prestigeShow(kind, amount, st) {
     board.length = 0; reconcile(st); board.forEach((r, i) => { r.y.x = rowY(i) - 260 - i * 40; r.a = 0; });
     busy = boardBusy = false;
   });
-  after(3.4, () => { pres = null; openSheet(kind === 'reset' ? 'backup' : 'reset').then(() => { if (kind === 'sync') { const h = [...document.querySelectorAll('#sheet-b .h3')].find(e => /클라우드 상점/.test(e.textContent)); if (h) h.scrollIntoView({ block: 'start' }); } }); });
+  after(3.4, () => { pres = null; bkFresh = kind === 'reset'; setTimeout(() => { bkFresh = false; }, 2500); openSheet(kind === 'reset' ? 'backup' : 'reset').then(() => { if (kind === 'sync') { const h = [...document.querySelectorAll('#sheet-b .h3')].find(e => /클라우드 상점/.test(e.textContent)); if (h) h.scrollIntoView({ block: 'start' }); } }); });
 }
 function drawPrestige(t) {
   if (!pres) return;
   pres.t = (performance.now() - pres.t0) / 1000;
   const e = Math.min(1, pres.t / .9), shown = e > 0 ? pres.amount + Math.log10(1 - Math.pow(1 - e, 3) || 1e-9) : -Infinity;
-  if (e >= 1 && !pres.landed) { pres.landed = true; sfx.payoff(9); if (!reduce) shake = 6; spawn('CORE', 195, REVEAL_Y - 20, 0, 0, .3, [255, 214, 107], 260); }
+  if (e >= 1 && !pres.landed) { pres.landed = true; sfx.payoff(9); if (!reduce) shake = 6; stop = Math.max(stop, .06); light('flare', 195, REVEAL_Y - 20, { col: [140, 215, 255], size: 1.6 }); pfx('collectBurst', 195, REVEAL_Y - 20); }
   const a = Math.min(1, pres.t * 4) * (pres.t > 3 ? Math.max(0, 1 - (pres.t - 3) * 3) : 1);
   ctx.fillStyle = `rgba(8,5,3,${.62 * a})`; ctx.fillRect(0, 0, W, H);
+  drawLights();
+  // backup files fly out of the wreck into the counter, each landing ticks it
+  if (BKIMG.complete && pres.files) { ctx.save(); ctx.globalAlpha = a; for (const f of pres.files) { const u = clamp((pres.t - f.d) / .55, 0, 1); if (u <= 0 || f.done) continue; const ee = u * u * (3 - 2 * u), cx = 195, cy = REVEAL_Y - 20, bx = f.x + (cx - f.x) * ee, by = f.y + (cy - f.y) * ee - Math.sin(Math.PI * ee) * 120, sz = 30 * f.s * (1 - .45 * ee);
+    ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(bx, by, 0, bx, by, sz); gg.addColorStop(0, 'rgba(120,210,255,.5)'); gg.addColorStop(1, 'rgba(120,210,255,0)'); ctx.fillStyle = gg; ctx.fillRect(bx - sz, by - sz, sz * 2, sz * 2); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(BKIMG, bx - sz / 2, by - sz / 2, sz, sz); if (u >= 1) { f.done = 1; sfx.reel && sfx.reel(); } } ctx.restore(); }
+  if (pres.t > 2.4 && pres.kind === 'reset') { const u = clamp((pres.t - 2.4) * 4, 0, 1), sc = u < 1 ? 1.6 - .6 * u : 1;
+    ctx.save(); ctx.globalAlpha = a * u; ctx.translate(195, REVEAL_Y + 130); ctx.scale(sc, sc); const gb = ctx.createLinearGradient(-150, 0, 150, 0); gb.addColorStop(0, 'rgba(30,110,220,0)'); gb.addColorStop(.2, 'rgba(30,110,220,.95)'); gb.addColorStop(.8, 'rgba(30,110,220,.95)'); gb.addColorStop(1, 'rgba(30,110,220,0)'); ctx.fillStyle = gb; ctx.fillRect(-190, -24, 380, 48); ctx.fillStyle = 'rgba(160,225,255,.9)'; ctx.fillRect(-150, -24, 300, 2); ctx.fillRect(-150, 22, 300, 2); ctx.restore();
+    gtext('백업 상점 열림!', 195, REVEAL_Y + 131, 26 * sc, { alpha: a * u, top: '#FFFFFF', bot: '#9FE3FF', wob: 1.5, t }); }
   gtext(pres.kind === 'reset' ? '공장 초기화!' : '클라우드 동기화!', 195, REVEAL_Y - 110, 30, { alpha: a, appear: pres.t * 5, top: '#FFFFFF', bot: '#FFD66B', wob: 2, t });
   gtext('+' + fmtL(shown), 195, REVEAL_Y - 10, 84, { alpha: a, scale: pres.landed ? 1 + .4 * Math.exp(-(pres.t - .9) * 6) : 1, top: '#FFFFFF', bot: pres.kind === 'reset' ? '#7CE0FF' : '#B98CFF', wob: 2.5, t });
   gtext(pres.kind === 'reset' ? '백업파일' : 'GB', 195, REVEAL_Y + 34, 26, { alpha: a, top: '#FFFFFF', bot: '#BFD9FF' });
@@ -1916,8 +2253,7 @@ function renderSheet() {
       <button class="btn big" data-act="sync" ${P.canSync && P.gbNow > 0 ? '' : 'disabled'}>${armSync ? '정말 동기화할까요? 한 번 더 누르기' : '클라우드 동기화'}</button>
       <div class="h3">클라우드 상점 · 가진 GB ${shortOf(P.gb)}</div>`
       + P.cloudShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 동기화 ${x.minSyncs}회 후`}</div></div><button class="btn" data-act="buyCloud" data-item="${x.id}" ${x.open && geq(P.gb, x.price) ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : shortOf(x.price) + ' GB'}</button></div>`).join('') : '')
-      + `<div class="h3">백업 상점 · 가진 파일 ${shortOf(P.files)}개</div>`
-      + P.backupShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 초기화 ${x.minResets}회 후`}</div></div><button class="btn skin gold" data-act="buyBackup" data-item="${x.id}" ${x.open && geq(P.files, x.price) ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : shortOf(x.price) + '개'}</button></div>`).join('');
+      + backupShopHTML(sheetKind === 'backup');
   } else if (sheetKind === 'rec') {
     $('sheet-t').textContent = '기록';
     b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
@@ -2161,6 +2497,19 @@ function payPrompt(x) {
   if (act === 'premium' && x.dataset.voucher !== '1') { const a = m.premium.find(q => q.id === x.dataset.id); return [`${a.name} 프리미엄 ★${a.stars + 1}`, `가치 ×${(a.permille * 2 / 1000)}로`, D(a.price) + ' 사용']; }
   return null;
 }
+let bkPop = null, bkFresh = false;
+function backupShopHTML(full) {
+  const items = P.backupShop.slice().sort((a, b) => (b.open - a.open) || a.minResets - b.minResets);
+  const hero = full ? `<div class="bk-hero"><img src="img/bm/currency-backup.webp" alt=""><div class="k">보유 백업파일</div><b>${shortOf(P.files)}</b><div class="s">초기화해도 사라지지 않는 영구 강화</div><div class="chips"><span>초기화 ${P.resets}회</span><span>열린 강화 ${items.filter(x => x.open).length}/${items.length}</span></div></div>`
+    : `<div class="h3">백업 상점 · 가진 파일 ${shortOf(P.files)}개</div>`;
+  return hero + items.map((x, i) => {
+    const done = x.lv >= x.max, bar = x.max <= 12 ? `<div class="bar">${Array.from({ length: x.max }, (_, k) => `<i class="${k < x.lv ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="pr"><i style="width:${x.lv / x.max * 100}%"></i></div>`;
+    const isNew = x.open && x.minResets === P.resets && x.lv === 0;
+    return `<div class="bk-it ${x.open ? '' : 'lock'} ${done ? 'max' : ''} ${bkPop === x.id ? 'pop' : ''}" style="animation-delay:${bkFresh ? .5 + i * .07 : i * .03}s"><div class="tier">${x.open ? (done ? 'MAX' : `Lv<small>${x.lv}</small>`) : '🔒'}</div>
+      <div class="t"><b>${x.label}</b>${x.open ? bar + `<div class="lvl">${x.lv}/${x.max}</div>` : `<div class="lvl">초기화 ${x.minResets}회 후 열림</div>`}</div>
+      <button class="btn skin gold" data-act="buyBackup" data-item="${x.id}" ${x.open && !done && geq(P.files, x.price) ? '' : 'disabled'}>${done ? '완료' : `<img src="img/bm/currency-backup.webp" alt="">${shortOf(x.price)}`}</button>${isNew ? '<span class="new">NEW</span>' : ''}</div>`;
+  }).join('');
+}
 async function sheetAct(x) {
   const act = x.dataset.act;
   const ask = payPrompt(x);
@@ -2170,6 +2519,7 @@ async function sheetAct(x) {
   if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd(x.dataset.slot))) return; }
   const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
+  if (act === 'buyBackup' && o.ok) { bkPop = x.dataset.item; sfx.unit(); buzz([20, 30, 40]); setTimeout(() => { bkPop = null; }, 700); }
   if ((act === 'reset' || act === 'sync') && o.ok) { const got = act === 'reset' ? P.state.backupFilesNow : P.gbNow; closeAll(); armSync = false; prestigeShow(act, got, o.state); }
   afterAct(o, null, act);
 }
@@ -2212,7 +2562,14 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+    if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
+    if (k === 'wave') return waveHit(a || 0);
+    if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
+    if (k === 'reset' || k === 'sync') return prestigeShow(k, a || '12345', S);
+    if (k === 'levelup') { say2(`레벨 업! Lv ${(S && S.level || 1) + 1}`, 150, 28); phone('ui.levelup', .4); return; }
+    if (k === 'unit') return addWallet(wallet.v + 3.2);
+  }, swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
 (async () => {
@@ -2222,7 +2579,7 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
   // daily check-in on the 30-day board: claim and show it once a day
   const fresh = st.swipes === 0 && st.level === 1 && !new URLSearchParams(location.search).has('noftue');
   if (FT.step < 9 && fresh) setTimeout(() => ftue('boot'), 1500);
-  else { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
+  else if (!/[?&]noattend/.test(location.search)) { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
 })();
 
 // ---------- return-from-away card (bible 16 #13, B6) ----------

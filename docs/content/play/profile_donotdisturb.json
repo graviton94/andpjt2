@@ -1,0 +1,20 @@
+{
+  "_comment": "방해 금지! (Do Not Disturb!): WebView 게임 + Kotlin 셸. 게스트(로컬) 또는 선택 로그인(Google · 카카오 → Firebase Auth), 로그인 시 Firestore 진행 백업. Firebase Analytics · Crashlytics · Remote Config, AdMob 보상형(UMP 동의), Play Billing(구매 토큰 서버 확인). 사용자 입력 텍스트·채팅 없음. 개인정보처리방침 https://graviton94.github.io/donotdisturb/privacy/",
+  "collects": true,
+  "encrypted_in_transit": true,
+  "account_methods": ["PSL_ACM_OAUTH"],
+  "account_deletion_url": "https://graviton94.github.io/donotdisturb/privacy/#delete",
+  "data_deletion_url": "https://graviton94.github.io/donotdisturb/privacy/#delete",
+  "types": {
+    "PSL_NAME":                    {"cat": "PSL_DATA_TYPES_PERSONAL",        "shared": false, "optional": true,  "collect": ["PSL_APP_FUNCTIONALITY","PSL_ACCOUNT_MANAGEMENT"], "share": []},
+    "PSL_EMAIL":                   {"cat": "PSL_DATA_TYPES_PERSONAL",        "shared": false, "optional": true,  "collect": ["PSL_APP_FUNCTIONALITY","PSL_ACCOUNT_MANAGEMENT"], "share": []},
+    "PSL_USER_ACCOUNT":            {"cat": "PSL_DATA_TYPES_PERSONAL",        "shared": false, "optional": true,  "collect": ["PSL_APP_FUNCTIONALITY","PSL_ACCOUNT_MANAGEMENT"], "share": []},
+    "PSL_APPROX_LOCATION":         {"cat": "PSL_DATA_TYPES_LOCATION",        "shared": true,  "optional": false, "collect": ["PSL_ANALYTICS","PSL_ADVERTISING"], "share": ["PSL_ADVERTISING"]},
+    "PSL_PURCHASE_HISTORY":        {"cat": "PSL_DATA_TYPES_FINANCIAL",       "shared": false, "optional": false, "collect": ["PSL_APP_FUNCTIONALITY","PSL_ANALYTICS","PSL_FRAUD_PREVENTION_SECURITY"], "share": []},
+    "PSL_PERFORMANCE_DIAGNOSTICS": {"cat": "PSL_DATA_TYPES_APP_PERFORMANCE", "shared": true,  "optional": false, "collect": ["PSL_ANALYTICS"], "share": ["PSL_ADVERTISING"]},
+    "PSL_CRASH_LOGS":              {"cat": "PSL_DATA_TYPES_APP_PERFORMANCE", "shared": false, "optional": false, "collect": ["PSL_ANALYTICS"], "share": []},
+    "PSL_USER_INTERACTION":        {"cat": "PSL_DATA_TYPES_APP_ACTIVITY",    "shared": true,  "optional": false, "collect": ["PSL_APP_FUNCTIONALITY","PSL_ANALYTICS","PSL_ADVERTISING"], "share": ["PSL_ADVERTISING"]},
+    "PSL_OTHER_APP_ACTIVITY":      {"cat": "PSL_DATA_TYPES_APP_ACTIVITY",    "shared": false, "optional": true,  "collect": ["PSL_APP_FUNCTIONALITY"], "share": []},
+    "PSL_DEVICE_ID":               {"cat": "PSL_DATA_TYPES_IDENTIFIERS",     "shared": true,  "optional": false, "collect": ["PSL_ANALYTICS","PSL_ADVERTISING"], "share": ["PSL_ADVERTISING"]}
+  }
+}

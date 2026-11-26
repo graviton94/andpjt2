@@ -44,19 +44,19 @@ window.__ready=false;
 const L=new URLSearchParams(location.search).get('lang')||'ko';
 document.body.classList.add(L);document.documentElement.lang=L;
 const T={
- ko:{title:['알림','청소부'],ts:'126px',verbs:['밀고!','합치고!','터뜨려라!'],gs:'46px',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',pf:'150px',
+ ko:{title:['방해','금지!'],ts:'126px',verbs:['밀고!','합치고!','터뜨려라!'],gs:'46px',pang:'팡!',kwang:'쾅!!',chain:'9연쇄!',pf:'150px',
    list:[['톡','새 메시지 3개','#F5C400','톡'],['메일','새 메일 12개','#2F7BF5','M'],['쇼핑','배송 출발','#FF5A36','쇼'],['뱅킹','입금 알림','#1BA784','₩'],['영상','새 동영상','#E0262B','▶'],['날씨','비 소식','#3AA0FF','☂']],
    fly:[['스팸','당첨되셨습니다?!','#FF3B30','!','99+'],['톡','ㅋㅋㅋㅋㅋ','#F5C400','톡','12'],['메일','광고) 오늘만 특가','#2F7BF5','M','5']]},
- en:{title:['NOTIFICATION','SWEEPER'],ts:'92px',verbs:['SWIPE!','MERGE!','POP IT!'],gs:'40px',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',pf:'118px',
+ en:{title:['DO\u2002NOT','DISTURB!'],ts:'90px',verbs:['SWIPE!','MERGE!','POP IT!'],gs:'40px',pang:'POP!',kwang:'BOOM!!',chain:'9 CHAIN!',pf:'118px',
    list:[['Chat','3 new messages','#F5C400','C'],['Mail','12 new emails','#2F7BF5','M'],['Shop','Out for delivery','#FF5A36','S'],['Bank','Deposit received','#1BA784','$'],['Video','New upload','#E0262B','▶'],['Weather','Rain later','#3AA0FF','☂']],
    fly:[['Spam','You WON?!','#FF3B30','!','99+'],['Chat','lololol','#F5C400','C','12'],['Mail','Today only: 90% off','#2F7BF5','M','5']]},
- 'zh-TW':{title:['通知','大掃除'],ts:'114px',verbs:['滑動!','合併!','引爆!'],gs:'44px',pang:'砰!',kwang:'轟!!',chain:'9連鎖!',pf:'150px',
+ 'zh-TW':{title:['DO\u2002NOT','DISTURB!'],ts:'90px',verbs:['滑動!','合併!','引爆!'],gs:'44px',pang:'砰!',kwang:'轟!!',chain:'9連鎖!',pf:'150px',
    list:[['聊天','3則新訊息','#F5C400','聊'],['郵件','12封新郵件','#2F7BF5','M'],['購物','已出貨','#FF5A36','購'],['銀行','入帳通知','#1BA784','$'],['影片','新影片上傳','#E0262B','▶'],['天氣','今天下雨','#3AA0FF','☂']],
    fly:[['垃圾簡訊','恭喜中獎了?!','#FF3B30','!','99+'],['聊天','哈哈哈哈','#F5C400','聊','12'],['郵件','今日限定特賣','#2F7BF5','M','5']]},
- es:{title:['¡LIMPIA','NOTIS!'],ts:'112px',verbs:['¡DESLIZA!','¡FUSIONA!','¡REVIENTA!'],gs:'34px',pang:'¡PUM!',kwang:'¡BUM!!',chain:'¡COMBO x9!',pf:'104px',
+ es:{title:['DO\u2002NOT','DISTURB!'],ts:'90px',verbs:['¡DESLIZA!','¡FUSIONA!','¡REVIENTA!'],gs:'34px',pang:'¡PUM!',kwang:'¡BUM!!',chain:'¡COMBO x9!',pf:'104px',
    list:[['Chat','3 mensajes nuevos','#F5C400','C'],['Correo','12 correos nuevos','#2F7BF5','M'],['Tienda','Pedido enviado','#FF5A36','T'],['Banco','Depósito recibido','#1BA784','$'],['Video','Nuevo video','#E0262B','▶'],['Clima','Lluvia hoy','#3AA0FF','☂']],
    fly:[['Spam','¿¡GANASTE?!','#FF3B30','!','99+'],['Chat','jajajaja','#F5C400','C','12'],['Correo','Solo hoy: -90%','#2F7BF5','M','5']]},
- ja:{title:['通知','おそうじ'],ts:'112px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
+ ja:{title:['DO\u2002NOT','DISTURB!'],ts:'90px',verbs:['スワイプ!','合体!','はじけろ!'],gs:'36px',pang:'パン!',kwang:'ドカン!!',chain:'9連鎖!',pf:'100px',
    list:[['チャット','新着メッセージ3件','#F5C400','C'],['メール','新着メール12件','#2F7BF5','M'],['ショップ','発送しました','#FF5A36','S'],['バンク','入金のお知らせ','#1BA784','¥'],['動画','新着動画','#E0262B','▶'],['天気','雨のお知らせ','#3AA0FF','☂']],
    fly:[['迷惑','当選しました?!','#FF3B30','!','99+'],['チャット','www','#F5C400','C','12'],['メール','本日限定セール','#2F7BF5','M','5']]}}[L];
 const FAM={ko:'Black Han Sans',ja:'Dela Gothic One','zh-TW':'Noto Sans TC'}[L]||'Luckiest Guy', WT=L==='zh-TW'?900:400;

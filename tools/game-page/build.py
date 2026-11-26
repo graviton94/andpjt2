@@ -16,6 +16,11 @@ for k, v in effects.items():  # 3-line grammar: when / then / note, each one lin
     assert v.get("when") and v.get("then") and set(v) <= {"when", "then", "note"}, k
     assert all(len(x) <= 20 and "\n" not in x for x in v.values()), f"effect line too long: {k}"
 texts = {k: [[effects[k]["when"], effects[k]["then"], effects[k].get("note", "")], v[4]] for k, v in json.loads((ROOT / "docs/content/app-texts.json").read_text()).items()}
+en = json.loads((ROOT / "docs/content/l10n/en.json").read_text())
+eff_en = {k: v for k, v in json.loads((ROOT / "docs/content/app-effects.en.json").read_text()).items() if not k.startswith("_")}
+texts_en = {k: [[eff_en[k]["when"], eff_en[k]["then"], eff_en[k].get("note", "")], en["lines"][k]] for k in texts}
+i18n_en = json.loads((ROOT / "tools/game-page/i18n/en.json").read_text())
+page = page.replace("__I18N_EN__", json.dumps(i18n_en, ensure_ascii=False)).replace("__APPS_EN__", json.dumps(en["apps"], ensure_ascii=False)).replace("__TEXTS_EN__", json.dumps(texts_en, ensure_ascii=False))
 page = page.replace("__COLORS__", json.dumps(colors)).replace("__TEXTS__", json.dumps(texts, ensure_ascii=False)).replace("__HANDSET__", repr((FX / "handset.b64").read_text().strip())).replace("__PHONE__", (FX / "phone-sfx.json").read_text())
 assert "__" not in re.sub(r"__(proto|dirname)__", "", page.split("<script>")[1])[:0] + "", "placeholder left"
 if OUT.exists(): shutil.rmtree(OUT)
@@ -24,6 +29,7 @@ if OUT.exists(): shutil.rmtree(OUT)
 for f in (ROOT / "docs/design/app-icons").glob("*.svg"): shutil.copy(f, OUT / "icons" / f.name)
 shutil.copytree(ROOT / "tools/brand/fonts/black-han-sans", OUT / "fonts/black-han-sans")
 shutil.copytree(ROOT / "tools/brand/fonts/pretendard", OUT / "fonts/pretendard")
+shutil.copy(ROOT / "tools/game-page/pfx.bundle.js", OUT / "pfx.bundle.js")  # pixelfx (MIT) — rebuild with build-pfx.mjs
 (OUT / "img").mkdir()
 shutil.copy(ROOT / "docs/design/ui-assets/tutorial/hand-swipe.png", OUT / "img/hand-swipe.png")
 shutil.copytree(ROOT / "docs/design/bm-screens/img", OUT / "img/bm")

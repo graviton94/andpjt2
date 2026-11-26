@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- Store screenshot 1080x1920: caption + real game capture (tools/brand/shots/*.png). node tools/brand/render-shots.js -->
+<link rel="stylesheet" href="fonts/black-han-sans/index.css"><link rel="stylesheet" href="fonts/luckiest-guy/index.css"><link rel="stylesheet" href="fonts/pretendard/index.css">
+<style>
+*{margin:0;box-sizing:border-box}
+body{width:1080px;height:1920px;overflow:hidden;position:relative;background:radial-gradient(120% 70% at 50% 0%,#FF8A2A 0%,#C2410C 38%,#3B1406 78%,#1A0903 100%);font-family:'Black Han Sans',sans-serif}
+body.en{font-family:'Luckiest Guy',sans-serif}
+.rays{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 18%,#fff1 0 6deg,transparent 6deg 14deg);mix-blend-mode:overlay}
+.cap{position:absolute;left:60px;right:60px;top:92px;text-align:center}
+.t{font-size:112px;line-height:1.02;color:#FFE34D;letter-spacing:-.01em;-webkit-text-stroke:10px #2A0F04;paint-order:stroke fill;text-shadow:0 12px 0 #2A0F04}
+body.en .t{font-size:104px;letter-spacing:.01em;line-height:1.05}
+.s{margin-top:28px;font:700 46px/1.3 'Pretendard',sans-serif;color:#fff;text-shadow:0 3px 10px #0008}
+.phone{position:absolute;left:50%;bottom:-120px;width:860px;height:1528px;transform:translateX(-50%);border-radius:96px;padding:22px;background:#0B0B0F;
+ box-shadow:0 0 0 6px #2A2A33,0 40px 90px #000a,inset 0 0 0 2px #444}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:76px;display:block}
+.burst{position:absolute;right:46px;top:560px;width:220px;height:220px;display:grid;place-items:center;transform:rotate(12deg);z-index:3}
+.burst::before{content:"";position:absolute;inset:0;background:#FFE34D;clip-path:polygon(50% 0,61% 31%,95% 18%,72% 45%,100% 62%,66% 66%,72% 100%,50% 75%,28% 100%,34% 66%,0 62%,28% 45%,5% 18%,39% 31%);filter:drop-shadow(0 8px 0 #2A0F04)}
+.burst b{position:relative;font-size:56px;color:#E0261C;-webkit-text-stroke:6px #2A0F04;paint-order:stroke fill}
+</style></head><body><div class="rays"></div>
+<div class="cap"><div class="t" id="t"></div><div class="s" id="s"></div></div>
+<div class="phone"><img id="img"></div><div class="burst" id="burst" style="display:none"><b id="bw"></b></div>
+<script>
+window.__ready = false;
+const q = new URLSearchParams(location.search), L = q.get('lang') || 'en', k = q.get('k');
+document.body.classList.add(L);
+const T = {
+  chain:  { en: ['SWIPE. MERGE.<br>POP!', 'Chain reactions that shatter the screen', 'POP!'], ko: ['밀고! 합치고!<br>터뜨려라!', '화면이 깨지는 연쇄의 손맛', '팡!'] },
+  show:   { en: ['WATCH THE<br>NUMBERS EXPLODE', 'Chips × multiplier, slammed down'], ko: ['숫자가<br>폭발한다', '처리량 × 배수, 합계가 쾅!'] },
+  upgrade:{ en: ['UPGRADE TO<br>INFINITY', 'Milestones, gold and holo tiers'], ko: ['강화는<br>끝이 없다', '마일스톤마다 금빛 · 홀로 등급'] },
+  detail: { en: ['COLLECT 60<br>PARODY APPS', 'Every app has its own perk'], ko: ['패러디 앱<br>60종 수집', '앱마다 다른 고유 효과'] },
+  shade:  { en: ['PULL DOWN<br>FOR EVERYTHING', 'Shop, upgrades, prestige, daily time attack'], ko: ['당기면<br>다 있다', '상점 · 강화 · 환생 · 60초 타임어택'] },
+  attend: { en: ['COME BACK,<br>GROW BIGGER', '30-day streak rewards'], ko: ['매일 들르면<br>더 커진다', '30일 연속 출석 보상'] },
+}[k][L];
+document.getElementById('t').innerHTML = T[0]; document.getElementById('s').textContent = T[1];
+if (T[2]) { document.getElementById('burst').style.display = 'grid'; document.getElementById('bw').textContent = T[2]; }
+const img = document.getElementById('img'); img.onload = () => { window.__ready = true; }; img.src = 'shots/' + k + '.png';
+</script></body></html>

@@ -250,6 +250,29 @@ input[type=range]{accent-color:var(--m-primary)}
 .it{border-radius:20px}
 /* content enters in a short stagger (Android 'fade through') */
 .sheet-b>*,#shade .grid>*{animation:rise .38s var(--ease-out) both;animation-delay:calc(var(--i,0) * 22ms)}
+.bk-hero{position:relative;overflow:hidden;isolation:isolate;text-align:center;padding:22px 14px 16px;border-radius:24px;margin-bottom:12px;color:#EAF6FF;background:radial-gradient(120% 90% at 50% 0%,#1E5A8C 0%,#0F2747 45%,#0A1426 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 30px rgba(10,40,90,.35)}
+.bk-hero::before{content:"";position:absolute;left:50%;top:62px;width:520px;height:520px;margin:-260px 0 0 -260px;z-index:-1;background:repeating-conic-gradient(from 0deg,rgba(120,210,255,.22) 0 7deg,rgba(120,210,255,0) 7deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 20%,transparent 100%);mask:radial-gradient(closest-side,#000 20%,transparent 100%);animation:bkspin 18s linear infinite}
+.bk-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);background-size:250% 100%;animation:sheen 3.2s ease-in-out infinite}
+.bk-hero img{width:84px;height:84px;filter:drop-shadow(0 0 18px rgba(120,210,255,.75));animation:bkbob 2.4s ease-in-out infinite}
+.bk-hero .k{font-size:12.5px;font-weight:700;color:#9FD4FF;letter-spacing:.04em;margin-top:4px}
+.bk-hero b{display:block;font:900 46px/1.05 "Pretendard",sans-serif;letter-spacing:-.02em;color:#fff;text-shadow:0 0 18px rgba(110,200,255,.9),0 2px 0 #2B6CB0}
+.bk-hero .s{font-size:12px;color:#BFE0FF;margin-top:6px}
+.bk-hero .chips{display:flex;gap:6px;justify-content:center;margin-top:10px}.bk-hero .chips span{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(160,220,255,.35)}
+.bk-it{position:relative;overflow:hidden;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:20px;margin-bottom:8px;background:linear-gradient(135deg,rgba(40,110,190,.22),rgba(20,40,80,.12));border:1px solid rgba(120,200,255,.35);animation:rise .45s cubic-bezier(.2,1.4,.4,1) both}
+.bk-it .tier{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(160deg,#5CC8FF,#2A6FD6);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 12px rgba(40,120,220,.4);font:900 13px "Pretendard",sans-serif;color:#fff;text-align:center;line-height:1.05}
+.bk-it .tier small{display:block;font-size:9px;opacity:.85}
+.bk-it .t b{font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-it .bar{display:flex;gap:2px;margin-top:6px;height:7px}.bk-it .bar i{flex:1;border-radius:2px;background:rgba(127,160,200,.25)}.bk-it .bar i.on{background:linear-gradient(180deg,#9FE3FF,#3A9BFF);box-shadow:0 0 6px rgba(90,180,255,.7)}
+.bk-it .pr{height:7px;border-radius:4px;margin-top:6px;background:rgba(127,160,200,.25);overflow:hidden}.bk-it .pr i{display:block;height:100%;background:linear-gradient(90deg,#3A9BFF,#9FE3FF);box-shadow:0 0 8px rgba(90,180,255,.8)}
+.bk-it .lvl{font-size:11px;color:var(--sub);margin-top:3px}
+.bk-it .btn{min-width:84px}.bk-it .btn img{width:16px;height:16px;vertical-align:-3px;margin-right:3px}
+.bk-it.lock{background:rgba(127,127,140,.08);border-color:rgba(127,127,140,.2);animation:none}.bk-it.lock .tier{background:linear-gradient(160deg,#6B7280,#3F4552);box-shadow:none}.bk-it.lock .t b{opacity:.55}
+.bk-it.max .tier{background:linear-gradient(160deg,#FFE07A,#F59E0B)}
+.bk-it .new{position:absolute;top:8px;right:10px;font:900 10px "Pretendard",sans-serif;color:#2A1800;background:#FFD23F;padding:2px 7px;border-radius:99px;box-shadow:0 0 10px rgba(255,210,63,.8)}
+.bk-it.pop{animation:bkpop .55s cubic-bezier(.2,1.6,.4,1)}.bk-it.pop::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:250% 100%;animation:sheen .6s ease-out 1 both;pointer-events:none}
+@keyframes bkspin{to{transform:rotate(360deg)}}@keyframes bkbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes bkpop{0%{transform:scale(1)}35%{transform:scale(1.045);box-shadow:0 0 0 2px #9FE3FF,0 0 28px rgba(110,200,255,.8)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.bk-hero::before,.bk-hero::after,.bk-hero img,.bk-it{animation:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 /* dialog: scale + fade in, quick fade out */
 #cf{display:grid!important;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
@@ -533,14 +556,55 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 <canvas id="stage" aria-label="알림 판"></canvas>
 <div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb">일일 도전</span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" aria-label="그만하기">그만</button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
+// ---------- i18n: English by default, Korean on a Korean device (?lang=ko|en overrides) ----------
+// Text is translated where it is drawn (canvas fillText/measureText, DOM text nodes and labels), so every
+// string — page copy and core labels alike — goes through one dictionary. Numbers and Latin words inside a
+// string become '#' in the key ("60연타!" -> "#연타!"), so the balance session can change numbers freely.
+window.I18N = (() => {
+  const q = new URLSearchParams(location.search).get('lang');
+  const dev = (window.Game && window.Game.lang && window.Game.lang()) || navigator.language || 'en';
+  const lang = (q || dev).toLowerCase().startsWith('ko') ? 'ko' : 'en';
+  document.documentElement.lang = lang;
+  const D = lang === 'en' ? __I18N_EN__ : {}, cache = new Map(), miss = new Set();
+  const HAN = /[가-힣ㄱ-ㆎ]/;
+  const TOK = /[+\-−×÷₩$~]?[0-9A-Za-z][0-9A-Za-z.,:%/'’]*(?: [0-9A-Za-z][0-9A-Za-z.,:%/'’]*)*%?/g;
+  function tr(s) {
+    if (lang !== 'en' || typeof s !== 'string' || !HAN.test(s)) return s;
+    let r = cache.get(s); if (r !== undefined) return r;
+    const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim(), args = [];
+    const key = core.replace(TOK, m => { args.push(m); return '#'; });
+    const v = D[key];
+    if (v == null) { miss.add(key); r = s; }
+    else { let i = 0; r = lead + v.replace(/#([1-9])?/g, (m, n) => n ? (args[+n - 1] ?? '') : (args[i++] ?? '')) + trail; }
+    cache.set(s, r); return r;
+  }
+  if (lang === 'en') {
+    const P = CanvasRenderingContext2D.prototype;
+    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P[f]; P[f] = function (t, ...a) { return o.call(this, tr(t), ...a); }; }
+    const ATTR = ['aria-label', 'title', 'placeholder', 'alt'];
+    const fix = n => {
+      if (n.nodeType === 3) { if (HAN.test(n.nodeValue)) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
+      if (n.nodeType !== 1) return;
+      for (const a of ATTR) { const v = n.getAttribute(a); if (v && HAN.test(v)) n.setAttribute(a, tr(v)); }
+      for (const c of n.childNodes) fix(c);
+    };
+    const mo = new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') fix(m.target); else if (m.type === 'attributes') fix(m.target); else m.addedNodes.forEach(fix); } });
+    const go = () => { fix(document.body); mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTR }); document.title = tr(document.title); };
+    document.body ? go() : addEventListener('DOMContentLoaded', go);
+  }
+  return { lang, tr, miss, apps: lang === 'en' ? __APPS_EN__ : null };
+})();
+</script>
+<script src="pfx.bundle.js"></script>
+<script>
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
 const LADDER = [
-  { from: 1, to: 1, name: '팡', stop: 28, shake: 1.5, shreds: 12 },
-  { from: 2, to: 3, name: '연쇄', stop: 36, shake: 2.0, shreds: 20 },
-  { from: 4, to: 5, name: '폭주', stop: 48, shake: 2.5, shreds: 32 },
-  { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
-  { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
+  { from: 1, to: 1, name: '팡', stop: 55, shake: 2.6, shreds: 12 },
+  { from: 2, to: 3, name: '연쇄', stop: 65, shake: 3.4, shreds: 20 },
+  { from: 4, to: 5, name: '폭주', stop: 78, shake: 4.4, shreds: 32 },
+  { from: 6, to: 8, name: '대폭주', stop: 92, shake: 5.4, shreds: 48 },
+  { from: 9, to: 99, name: '알림 해일', stop: 110, shake: 6.5, shreds: 64 },
 ];
 const W = 390, H = Math.max(740, Math.round(390 * (innerHeight || 740) / (innerWidth || 390))), EX = H - 740, SIM = 1 / 120, POOL = 600;
 const FD = '"Black Han Sans","Pretendard","Noto Sans KR",system-ui,sans-serif', FB = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
@@ -556,6 +620,7 @@ const bgT = document.createElement('canvas'); bgT.width = 18; bgT.height = 34; c
 const HANDSET = new Image(); HANDSET.src = __HANDSET__;
 const ICON = {};
 const icon = id => ICON[id] || (ICON[id] = Object.assign(new Image(), { src: 'icons/' + id + '.svg' }));
+const BKIMG = Object.assign(new Image(), { src: 'img/bm/currency-backup.webp' });
 const GLOVE = Object.assign(new Image(), { src: 'img/hand-swipe.png' });
 const colOf = d => d.kind === 'Spam' || d.kind === 'Call' ? '#FF3B30' : d.kind === 'Wild' ? '#9B5CFF' : d.kind === 'Event' ? '#EFA03F' : d.kind === 'Alert' ? '#8E8E93' : (COLORS[d.app] || '#EFA03F');
 let dpr = 1;
@@ -567,7 +632,7 @@ const lightQ = matchMedia('(prefers-color-scheme: light)');
 const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
 let sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
 const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce })); } catch (e) {} };
-const TEXTS = __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json)
+const TEXTS = I18N.lang === 'en' ? __TEXTS_EN__ : __TEXTS__;  // app id → [effect line, [messages]] (docs/content/app-texts.json, l10n/en.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -678,7 +743,7 @@ const sfx = {
   stamp() { tone('sine', 120, 38, .32, 1); hiss(.16, .55, { type: 'lowpass', f0: 1400, f1: 250 }); hiss(.7, .12, { type: 'highpass', f0: 2500, f1: 7000, a: .1, at: .1 }); },
   wave(w) { hiss(.55, .32, { f0: 260, f1: 5200, q: 2, a: .06 }); tone('sine', 110 - w * 12, 32, .7, .95); const f = 196 * Math.pow(2, w * 5 / 12); tone('sawtooth', f, f * 2, .4, .08, { filt: 2200, q: 6 }); },
 };
-const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} };
 
 
 // ---------- phone sound layer (CC0 uisfx + self-made vibration, docs/bible/20-sound.md §7) ----------
@@ -705,12 +770,13 @@ if (gl) {
 varying vec2 vq;
 uniform sampler2D T,UI;
 uniform float glitch,crt,sat,bright,alarm;uniform vec4 tint;
-uniform float A,t,seed,heat,chroma,amt,band,bandAmp;
+uniform float A,t,seed,heat,chroma,amt,band,bandAmp;uniform float pix,noi,psy;
 uniform vec4 rip[8];
 uniform vec4 crk;
 vec2 h2(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return fract(sin(p)*43758.5453);}
 void main(){
   vec2 v=vq;float on=1.;
+  if(pix>0.){float b=floor(mix(1.,6.,pix));vec2 st=vec2(b/390.,b*A/390.);v=(floor(v/st)+.5)*st;}
   if(crt>0.){float sy=max(1.-crt*1.12,.004);v.y=.5+(v.y-.5)/sy;float sx=crt>.86?max(1.-(crt-.86)/.14,.004):1.;v.x=.5+(v.x-.5)/sx;on=step(abs(v.y-.5),.5)*step(abs(v.x-.5),.5);}
   vec2 off=vec2(0.);float lit=0.,ca=chroma,dark=0.;
   if(glitch>0.){
@@ -753,6 +819,10 @@ void main(){
   vec2 u=v+off,cd=v-.5;
   vec3 col=vec3(texture2D(T,u+cd*ca).r,texture2D(T,u).g,texture2D(T,u-cd*ca).b);
   col=col*(1.-dark*.6)+vec3(1.,.96,.88)*lit*.32;
+  if(psy>0.){vec2 q=(v-.5)*vec2(A,1.)*3.2;float a2=t*.55;for(int i=0;i<4;i++){q+=vec2(sin(q.y*1.6+a2+float(i)),cos(q.x*1.35-a2*1.2))*.62;}
+    float hh=fract(length(q)*.16+t*.04);vec3 sw=.5+.5*cos(6.2831*(hh+vec3(0.,.33,.67)));sw=floor(sw*5.)/5.;
+    float l0=dot(col,vec3(.299,.587,.114));col=mix(col,col*.45+sw*.85,psy*(1.-smoothstep(.25,.85,l0))*.7);}
+  {float n=fract(sin(dot(floor(v*vec2(390.,390./A)*.5)+floor(t*24.),vec2(12.9898,78.233)))*43758.5453);col+=(n-.5)*noi*.22;col*=1.-noi*.12*step(.5,fract(v.y*211.));}
   float lu=dot(col,vec3(.299,.587,.114));col=mix(vec3(lu),col,sat)*bright;col=mix(col,tint.rgb,tint.a);
   col+=vec3(1.,.12,.06)*alarm*smoothstep(.28,.78,length((v-.5)*vec2(1.25,1.)));
   vec4 s=texture2D(UI,v);col=mix(col,s.rgb,s.a);
@@ -768,7 +838,7 @@ void main(){
     [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
   });
-  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
   gl.uniform1i(U.T, 0); gl.uniform1i(U.UI, 1); gl.uniform1f(U.A, W / H);
 }
 const ripArr = new Float32Array(32);
@@ -780,7 +850,7 @@ function present(t) {
   gl.uniform4fv(U.rip, ripArr);
   gl.uniform4f(U.crk, crack ? crack.x : 0, crack ? crack.y : 0, crack ? crack.age : 0, crack ? crack.amp : 0);
   gl.uniform1f(U.seed, crack ? crack.seed : 0); gl.uniform1f(U.heat, heat); gl.uniform1f(U.chroma, chroma);
-  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000);
+  gl.uniform1f(U.amt, reduce ? 0 : 1); gl.uniform1f(U.band, band); gl.uniform1f(U.bandAmp, bandAmp); gl.uniform1f(U.t, t % 1000); gl.uniform1f(U.pix, reduce ? 0 : pixT); gl.uniform1f(U.noi, reduce ? .02 : .05 + noiT * .8); gl.uniform1f(U.psy, 0);
   gl.uniform1f(U.glitch, reduce ? 0 : fx.glitch); gl.uniform1f(U.crt, fx.crt); gl.uniform1f(U.sat, fx.sat); gl.uniform1f(U.bright, fx.bright); gl.uniform1f(U.alarm, reduce ? fx.alarm * .4 : fx.alarm); gl.uniform4f(U.tint, ...fx.tint);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
@@ -795,15 +865,16 @@ const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Wild' ? '와일드 �
 const ROW0 = 176 + Math.round(EX * .35), ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
 const board = [];  // what is on screen: engine rows + springs
-const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
+const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), q: spring(0), vy: 0, a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
 const byId = id => board.find(r => r.id === id);
-const layout = () => board.forEach((r, i) => { r.y.t = rowY(i); });
+let boardCap = 0;
+const layout = () => { boardCap = Math.max(board.length, S && S.rows ? S.rows.length : 0); const off = Math.max(0, boardCap - board.length); board.forEach((r, i) => { r.y.t = rowY(i + off); }); };
 const wallet = { v: -Infinity, shown: -Infinity, from: -Infinity, to: -Infinity, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '', tick: 0, note: null };
 const CHIPX = 118, MULTX = 272, BOXY = 129, REVEAL_Y = 360 + Math.round(EX * .35);
 const plate = { chips: -Infinity, chipsShown: -Infinity, chipSum: -Infinity, total: -Infinity, totalShown: -Infinity, earned: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
 const mult = () => plate.base * plate.syn * plate.wmul;
 const parts = [], shards = [], tokens = [], pops = [], timeline = [];
-let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
+let camK = spring(0), lastThud = 0, stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
 const after = (sec, fn) => timeline.push({ at: sec, fn });
 const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
   if (parts.length >= POOL) parts.shift();
@@ -811,6 +882,106 @@ const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
 };
 
 // ---------- drawing helpers ----------
+
+// ---------- game feel: gravity drop with a thud, slam-merge, trauma shake (VFX handbook: anticipation → impact → follow-through) ----------
+const GRAV = 3600;
+function land(r, imp) {  // a falling card hits the one below: squash, dust, rattle, thud
+  const s = clamp((imp - 300) / 1900, 0, 1);
+  r.q.x = Math.max(r.q.x, .07 + .2 * s); r.q.v = 0;
+  const i = board.indexOf(r), below = board[i + 1]; if (below) below.q.v += 4 + 9 * s;  // the stack underneath rattles
+  const y = r.y.x + CH, n = reduce ? 2 : Math.round(3 + 7 * s);
+  for (let k = 0; k < n; k++) { const side = k % 2 ? 1 : -1; spawn('DUST', 195 + side * (60 + rnd() * 120), y, side * (80 + rnd() * 200), -20 - rnd() * 50, .45 + rnd() * .25, day ? [120, 130, 150] : [230, 215, 200], 7 + rnd() * 7); }
+  if (!reduce) shake = Math.max(shake, .9 + 2.6 * s);
+  const now = performance.now(); if (now - lastThud > 45) { lastThud = now; sfx.thud(s); buzz(Math.round(5 + 12 * s)); }
+}
+function stepRowY(r, dt) {
+  if (r.slam) {  // the upper card is thrown down onto its match
+    const m = r.slam; m.t += dt; const e = Math.min(1, m.t / m.dur), ee = e * e * e;
+    r.y.x = m.y0 + (m.y1 - m.y0) * ee; r.q.x = -.12 * ee;  // stretches as it accelerates
+    if (e >= 1) { r.slam = null; m.hit(); }
+    return;
+  }
+  const d = r.y.t - r.y.x;
+  if (r.vy < 0 || d > .5) {
+    r.vy += GRAV * dt; r.y.x += r.vy * dt;
+    if (r.vy > 0 && r.y.x >= r.y.t) { const imp = r.vy; r.y.x = r.y.t; if (imp > 320) { r.vy = -imp * .13; land(r, imp); } else r.vy = 0; }
+  } else if (d < -.5) { stepSpring(r.y, dt, 260, 20); r.vy = 0; }
+  else { r.y.x = r.y.t; r.y.v = 0; r.vy = 0; }
+}
+function slamMerge(from, into, k, onHit) {  // the upper card is thrown onto the lower one, whichever the engine keeps
+  if (from.y.x > into.y.x) { const ty = from.y.x; from.y.x = into.y.x; into.y.x = ty; into.y.t = Math.max(into.y.t, ty); }
+  const y1 = into.y.x - CH * .55;
+  from.slam = { t: 0, dur: .085, y0: from.y.x, y1, hit: () => {
+    const i = board.indexOf(from); if (i >= 0) board.splice(i, 1);
+    into.q.x = .3 + Math.min(k, 8) * .02; into.q.v = 0; into.charge = 1;
+    const cy = into.y.x + 2;
+    pfx('hitSpark', 195, cy + 2, { angle: Math.PI / 2 }); pfx('hitSpark', 195, cy + 2, { angle: -Math.PI / 2, flip: true });
+    for (let j = 0; j < (reduce ? 4 : 14); j++) { const side = j % 2 ? 1 : -1; spawn('DUST', 195 + side * (40 + rnd() * 140), cy, side * (260 + rnd() * 420), (rnd() - .5) * 80, .35 + rnd() * .2, [255, 244, 225], 6 + rnd() * 6); }
+    stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35); pixT = Math.max(pixT, .22); noiT = Math.max(noiT, .35);
+    sfx.thud(1); buzz(18); onHit && onHit();
+  } };
+}
+
+// ---------- pixel VFX (Balatro-style): everything is snapped square pixels, dithered, in a loud palette ----------
+const BAL = [[254, 95, 85], [0, 157, 255], [253, 162, 0], [75, 194, 146], [138, 113, 225], [255, 255, 255]];
+const balc = i => BAL[((i % BAL.length) + BAL.length) % BAL.length];
+let pixT = 0, psyT = 0, noiT = 0, frameNo = 0;
+function px(x, y, s, col, a) { if (a <= .01) return; ctx.fillStyle = rgb(col, Math.min(1, a)); ctx.fillRect(Math.round(x / 4) * 4 - s / 2, Math.round(y / 4) * 4 - s / 2, s, s); }
+function pblob(x, y, r, col, a, dither) {  // a cloud of square pixels with a checker-dithered edge (never a circle outline)
+  if (a <= .01 || r < 2) return; const g = r > 18 ? 8 : r > 9 ? 6 : 4, n = Math.ceil(r / g);
+  const gx = Math.round(x / g), gy = Math.round(y / g);
+  for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+    const d = Math.hypot(i, j) * g / r; if (d > 1) continue;
+    if (dither && d > .62 && ((i + j + frameNo) & 1)) continue;
+    ctx.fillStyle = rgb(col, a * (d > .62 ? .55 : 1)); ctx.fillRect((gx + i) * g, (gy + j) * g, g, g);
+  }
+}
+function pstar(x, y, r, col, a) {  // flash: a pixel cross + diagonal sparkle, white core
+  const g = 4, n = Math.max(2, Math.round(r / g / 2));
+  for (let i = -n; i <= n; i++) { const w = 1 - Math.abs(i) / (n + 1); px(x + i * g, y, g + 4 * w, i ? col : [255, 255, 255], a * w); px(x, y + i * g, g + 4 * w, i ? col : [255, 255, 255], a * w); }
+  for (let i = -Math.floor(n / 2); i <= Math.floor(n / 2); i++) { px(x + i * g, y + i * g, g, [255, 255, 255], a * .7); px(x + i * g, y - i * g, g, [255, 255, 255], a * .7); }
+}
+function pring(p, f) {  // shockwave as a pixel-art diamond wave (no vector circles): chunky steps, rainbow-cycling, moving dither
+  const e = 1 - f, x = p.k === 'RING' ? 1 - Math.pow(2, -10 * e) : 1 - e * e, r = p.k === 'RING' ? 6 + p.size * x : p.size * (1 - x) + 4;
+  const g = p.k === 'RING' ? (r > 120 ? 8 : 6) : 4, n = Math.max(8, Math.floor(r / g));
+  for (let i = 0; i < n; i++) {
+    const u = i / n, ox = r * u, oy = r * (1 - u) * .7;
+    for (let q = 0; q < 4; q++) {
+      if (p.k === 'RING' && ((i + q + frameNo) % 3) === 0) continue;
+      const sx = q & 1 ? -1 : 1, sy = q & 2 ? -1 : 1, c = p.col[0] === 255 && p.col[1] === 255 ? balc(Math.floor(i / 2) + q + frameNo) : p.col;
+      px(p.x + sx * ox, p.y + sy * oy, g + (p.k === 'RING' ? 4 * f : 0), c, (p.k === 'RING' ? 1 : .8) * f);
+    }
+  }
+}
+function plaser(p, f) {  // a short, thin, hot horizontal cut through the popped row: stepped pixel edge, white core, colour rim
+  const e = 1 - f, th = Math.max(2, Math.round(p.size * (f > .7 ? (1 - f) / .3 : f / .7) / 2) * 2), y = Math.round(p.y / 2) * 2, reach = W * Math.min(1, e * 6);
+  for (let x = 0; x < reach; x += 6) { const w = th + ((x / 6 + frameNo) % 3 === 0 ? 2 : 0); ctx.fillStyle = rgb(p.col, .9 * f); ctx.fillRect(195 - reach / 2 + x, y - w / 2 - 2, 6, w + 4); }
+  ctx.fillStyle = `rgba(255,255,255,${f})`; ctx.fillRect(195 - reach / 2, y - th / 2, reach, th);
+}
+function pbeam(p, f) {  // a laser bolt from the pop to the score: stepped pixel line with a hot core
+  const x0 = p.x, y0 = p.y, x1 = p.vx, y1 = p.vy, d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6), w = 4 + p.size * f;
+  for (let i = 0; i <= n; i++) { const u = i / n, jx = (rnd() - .5) * 6 * f, x = x0 + (x1 - x0) * u + jx, y = y0 + (y1 - y0) * u; px(x, y, w, p.col, .9 * f); px(x, y, Math.max(2, w * .4), [255, 255, 255], f); }
+}
+
+// ---------- pixelfx layer (patch-gg/pixelfx, MIT): effects drawn at half resolution into colour + light buffers,
+// stepped at 120 Hz, composited (light added on top) and scaled up as hard pixels ----------
+const PXS = 3, PFW = Math.ceil(W / PXS), PFH = Math.ceil(H / PXS);
+const pfxOn = !!(window.PFX && PFX.createFrame);
+const pfxFrame = pfxOn ? PFX.createFrame(PFW, PFH) : null, pfxImg = pfxOn ? new ImageData(PFW, PFH) : null;
+const pfxCv = document.createElement('canvas'); pfxCv.width = PFW; pfxCv.height = PFH; const pfxCtx = pfxCv.getContext('2d');
+const pfxLive = [];
+function pfx(name, x, y, o = {}) {
+  if (!pfxOn || !PFX.FX[name] || (reduce && o.big)) return;
+  const fx = PFX.createFx(PFX.FX[name], Object.assign({ x: x / PXS, y: y / PXS, seed: (rnd() * 1e6) | 0 }, o));
+  pfxLive.push(fx); if (pfxLive.length > 18) pfxLive.shift();
+}
+function pfxStep(dt) { for (let i = pfxLive.length - 1; i >= 0; i--) { const f = pfxLive[i]; f.update(dt); if (!f.meta.loop && f.t >= (f.meta.duration || 1)) pfxLive.splice(i, 1); } }
+function pfxDraw() {
+  if (!pfxOn || !pfxLive.length) return;
+  PFX.clearFrame(pfxFrame); for (const f of pfxLive) f.draw(pfxFrame);
+  PFX.composite(pfxFrame, pfxImg.data, null); pfxCtx.putImageData(pfxImg, 0, 0);
+  const sm = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false; ctx.drawImage(pfxCv, 0, 0, PFW * PXS, PFH * PXS); ctx.imageSmoothingEnabled = sm;
+}
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
 function gtext(str, x, y, size, o = {}) {
@@ -919,6 +1090,18 @@ function snapCard(r, y) {
   const c = s.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, (4 - CX0) * dpr, (4 - y) * dpr); drawCard(c, r, y); return s;
 }
 // crack an image (card, call screen) into a spider web of shards around the impact point
+
+// the card breaks into its own pixels: 10 px blocks sampled from the card, flung out from the hit, falling, shrinking in steps
+function pixelBurst(r, y, ix, iy, power) {
+  const snap = snapCard(r, y), g = snap.getContext('2d'), B = 10, sx = dpr, data = g.getImageData(0, 0, snap.width, snap.height).data;
+  const step = reduce ? 2 : 1;
+  for (let by = 0; by < CH; by += B * step) for (let bx = 0; bx < CW; bx += B * step) {
+    const px0 = Math.floor((bx + B / 2 + 4) * sx), py0 = Math.floor((by + B / 2 + 4) * sx), o = (py0 * snap.width + px0) * 4;
+    if (data[o + 3] < 40) continue;
+    const x = CX0 + bx + B / 2, yy = y + by + B / 2, dx = x - ix, dy = yy - iy, d = Math.hypot(dx, dy) + 8, sp = (220 + rnd() * 380) * power * (60 / (d + 40));
+    spawn('BLOCK', x, yy, dx / d * sp * 4 + (rnd() - .5) * 120, dy / d * sp * 3 - 160 - rnd() * 220, .55 + rnd() * .45, [data[o], data[o + 1], data[o + 2]], B);
+  }
+}
 function shatter(r, y, ix, iy, power) { shatterImg(snapCard(r, y), CX0, y, CW, CH, 18, ix, iy, power, 1); }
 function shatterImg(snap, x0, y0, w, h, rad0, ix, iy, power, scale) {
   const N = 9 + Math.floor(rnd() * 3), a0 = rnd() * 6.28;
@@ -1029,6 +1212,7 @@ Object.assign(sfx, {
   pad() { [261.63, 392, 523.25, 659.25].forEach((f, i) => tone('sine', f, f, 3.2, .06, { a: .9, at: i * .05 })); },
   soft() { hiss(.32, .07, { type: 'lowpass', f0: 1300, f1: 400, a: .08 }); tone('sine', 1568, 1568, .45, .035); },
   snapback() { tone('sine', 900, 1400, .08, .06); },
+  thud(s = .5) { tone('sine', 150 - 50 * s, 42, .16 + .12 * s, .3 + .35 * s); hiss(.07, .05 + .12 * s, { type: 'lowpass', f0: 1100, f1: 180 }); tone('square', 260 + s * 90, 170, .035, .03 + .03 * s, { filt: 1600, at: .025 }); },
 });
 function startEvent(type) {
   if (busy || ev) return;
@@ -1061,6 +1245,50 @@ function hazard(alpha, t) {
     for (let x = -270 + o; x < 260; x += 36) { ctx.beginPath(); ctx.moveTo(x, 13); ctx.lineTo(x + 18, 13); ctx.lineTo(x + 36, -13); ctx.lineTo(x + 18, -13); ctx.closePath(); ctx.fill(); }
     ctx.restore();
   });
+}
+// ---------- light: anamorphic flares, sunburst rays, sweeps (smooth additive light, matches the glass UI) ----------
+const lights = [];
+function light(kind, x, y, o = {}) { if (reduce && kind !== 'sweep') return; lights.push(Object.assign({ kind, x, y, t: 0, life: kind === 'rays' ? 1.6 : kind === 'sweep' ? .7 : .5, col: [255, 255, 255], size: 1 }, o)); }
+function stepLights(dt) { for (let i = lights.length - 1; i >= 0; i--) { const l = lights[i]; l.t += dt; if (l.t > l.life) lights.splice(i, 1); } }
+function rays(x, y, R, rot, a, col, n = 14) {  // soft sunburst: tapered wedges fading out radially
+  const g = ctx.createRadialGradient(x, y, 0, x, y, R); g.addColorStop(0, rgb(col, .55 * a)); g.addColorStop(.35, rgb(col, .22 * a)); g.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g; ctx.beginPath();
+  for (let i = 0; i < n; i++) { const a0 = rot + i * 6.2832 / n, w = (i % 2 ? .07 : .12); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a0 - w) * R, y + Math.sin(a0 - w) * R); ctx.lineTo(x + Math.cos(a0 + w) * R, y + Math.sin(a0 + w) * R); ctx.closePath(); }
+  ctx.fill();
+}
+function flareAt(x, y, w, h, a, col) {  // anamorphic streak: long thin horizontal light with a hot core
+  const g = ctx.createLinearGradient(x - w, 0, x + w, 0); g.addColorStop(0, rgb(col, 0)); g.addColorStop(.5, rgb(col, a)); g.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g; ctx.fillRect(x - w, y - h / 2, w * 2, h);
+  const g2 = ctx.createLinearGradient(x - w * .35, 0, x + w * .35, 0); g2.addColorStop(0, 'rgba(255,255,255,0)'); g2.addColorStop(.5, `rgba(255,255,255,${a})`); g2.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g2; ctx.fillRect(x - w * .35, y - h * .18, w * .7, h * .36);
+  const g3 = ctx.createRadialGradient(x, y, 0, x, y, h * 2.2); g3.addColorStop(0, `rgba(255,255,255,${a})`); g3.addColorStop(.3, rgb(col, .5 * a)); g3.addColorStop(1, rgb(col, 0));
+  ctx.fillStyle = g3; ctx.fillRect(x - h * 2.2, y - h * 2.2, h * 4.4, h * 4.4);
+}
+function drawLights() {
+  if (!lights.length) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const l of lights) {
+    const f = l.t / l.life;
+    if (l.kind === 'flare') { const e = 1 - Math.pow(1 - Math.min(1, f * 4), 3), a = f < .15 ? 1 : Math.pow(1 - (f - .15) / .85, 1.6); flareAt(l.x, l.y, (90 + 260 * e) * l.size, (10 + 16 * (1 - f)) * l.size, a, l.col); }
+    else if (l.kind === 'rays') { const a = Math.min(1, f * 6) * Math.pow(1 - f, 1.2); rays(l.x, l.y, 260 * l.size * (.7 + .3 * Math.min(1, f * 3)), l.t * .6, a, l.col); rays(l.x, l.y, 190 * l.size, -l.t * .9 + .2, a * .6, [255, 255, 255], 10); }
+    else if (l.kind === 'sweep') { const yy = l.y - f * l.dist + (l.down ? 140 : 0), a = Math.sin(Math.PI * Math.min(1, f)) * .9, g = ctx.createLinearGradient(0, yy - 140, 0, yy + 30); g.addColorStop(0, rgb(l.col, 0)); g.addColorStop(.8, rgb(l.col, .45 * a)); g.addColorStop(.92, `rgba(255,255,255,${.7 * a})`); g.addColorStop(1, rgb(l.col, 0)); ctx.fillStyle = g; ctx.fillRect(0, yy - 140, W, 170); }
+  }
+  ctx.restore();
+}
+// police-line tape across the screen: yellow/black chevrons with a printed word, scrolling
+function tape(y, rot, a, t, speed, word) {
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(195, y); ctx.rotate(rot);
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.fillStyle = '#FFC400'; ctx.fillRect(-320, -15, 640, 30); ctx.shadowColor = 'transparent';
+  ctx.beginPath(); ctx.rect(-320, -15, 640, 30); ctx.clip();
+  const g = ctx.createLinearGradient(0, -15, 0, 15); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,.18)');
+  ctx.font = `900 15px ${FB}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const ww = ctx.measureText(word).width, per = ww + 92, o = ((t * speed) % per + per) % per;
+  ctx.fillStyle = '#16100A';
+  for (let x = -340 - per + o; x < 340; x += per) {
+    ctx.fillText(word, x, 1);
+    for (let k = 0; k < 3; k++) { const sx = x + ww + 14 + k * 20; ctx.beginPath(); ctx.moveTo(sx, 15); ctx.lineTo(sx + 9, 15); ctx.lineTo(sx + 21, -15); ctx.lineTo(sx + 12, -15); ctx.closePath(); ctx.fill(); }
+  }
+  ctx.fillStyle = g; ctx.fillRect(-320, -15, 640, 30); ctx.restore();
 }
 function bolt(x0, y0, x1, y1, n) {
   const pts = [[x0, y0]];
@@ -1136,10 +1364,40 @@ const EVENTS = {
     update(e, dt, t) {
       sstep(e.d.bs, dt, 220, 16); sstep(e.d.ms, dt);
       if (!e.d.done) { fx.alarm = .22 + .2 * Math.sin(t * 9); if (e.t > e.d.dur) this.finish(e); }
-      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 1.7) endEvent(); }
+      else { fx.alarm *= Math.pow(.02, dt); if (e.t > e.d.endT + 2.4) endEvent(); }
     },
-    world(e) { ctx.fillStyle = 'rgba(8,5,3,.5)'; ctx.fillRect(-20, ROW0 - 8, W + 40, H); },
-    finish(e) { e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; tone('sawtooth', 880, 330, .6, .08, { filt: 1800 }); say(e.d.real ? `훈련 끝 · 30초 동안 수입 ×${e.d.mult.toFixed(2)}` : `훈련 종료 ×${e.d.mult.toFixed(2)} 적용`, 470, 26, '#FFFFFF', '#FFD66B', 1.6); },
+    world(e, t) {
+      const d = e.d, k = d.done ? 1 : clamp(e.t / d.dur, 0, 1), out = d.done ? Math.max(0, 1 - (e.t - d.endT) * 2.5) : 1, inA = Math.min(1, e.t * 3);
+      ctx.fillStyle = `rgba(14,3,2,${.74 * inA})`; ctx.fillRect(-20, -20, W + 40, H + 40);
+      if (reduce) return;
+      ctx.save(); ctx.globalAlpha = out;
+      // siren: two red/amber beams sweeping from the top corners, faster as time runs out
+      ctx.globalCompositeOperation = 'lighter';
+      const sp = 2.2 + k * 4;
+      [[0, [255, 40, 30], 1], [W, [255, 150, 20], -1]].forEach(([bx, col, dir], i) => {
+        const ang = Math.PI / 2 + dir * (.55 + .5 * Math.sin(t * sp + i * 1.6)), L = 900;
+        const g = ctx.createRadialGradient(bx, 40, 0, bx, 40, L); g.addColorStop(0, rgb(col, .42 * inA)); g.addColorStop(1, rgb(col, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(bx, 40); ctx.lineTo(bx + Math.cos(ang - .2) * L, 40 + Math.sin(ang - .2) * L); ctx.lineTo(bx + Math.cos(ang + .2) * L, 40 + Math.sin(ang + .2) * L); ctx.closePath(); ctx.fill();
+      });
+      // red edge pulse, quickening
+      const pu = .5 + .5 * Math.sin(t * (5 + k * 9)), vg = ctx.createRadialGradient(195, 420, 200, 195, 420, 560); vg.addColorStop(0, 'rgba(255,30,20,0)'); vg.addColorStop(1, `rgba(255,30,20,${(.18 + .3 * k) * pu * inA})`);
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+      // big warning triangles flashing alternately behind everything
+      [[64, 290, -.12], [326, 610, .1], [70, 700, .08]].forEach(([x, y, r], i) => { const on = Math.sin(t * (4 + k * 6) + i * 2.1) > 0; ctx.save(); ctx.globalAlpha = out * (on ? .5 : .16) * inA; ctx.translate(x, y); ctx.rotate(r); warnSign(0, 0, 2.2); ctx.restore(); });
+      // police-line tape: one more strip slaps on every few seconds
+      const TP = [[204, -.07, 160, 'DO NOT DISTURB'], [598, .06, -190, '경고 · WARNING'], [690, -.04, 220, '알림 훈련 중'], [318, .11, -250, 'DO NOT DISTURB']];
+      const n = Math.min(TP.length, 1 + Math.floor(k * 4));
+      for (let i = 0; i < n; i++) { const [y, r, v, w] = TP[i], at = i * d.dur / 4, ap = clamp((e.t - at) / .18, 0, 1), sl = (1 - Math.pow(1 - ap, 3)) * 1; if (ap > 0 && ap < 1 && !d['tp' + i]) { d['tp' + i] = 1; if (i) { buzz(30); if (!reduce) shake = Math.max(shake, 3); } }
+        ctx.save(); ctx.translate((1 - sl) * (v > 0 ? -420 : 420), 0); tape(y, r, inA, t, v * (1 + k), w); ctx.restore(); }
+      ctx.restore();
+    },
+    finish(e) {  // the payout lands like loot: freeze, flash, fireworks, coins, a huge stamped multiplier
+      e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; e.d.win = { t: 0 };
+      stop = Math.max(stop, .09); if (!reduce) { flash = .45; shake = 7; } noiT = 1; light('flare', 195, 440, { col: [255, 190, 70], size: 1.4 }); light('rays', 195, 440, { col: [255, 180, 60], size: 1.1, life: 2.2 });
+      pfx('fireworkBurst', 195, 560, { big: 1 }); pfx('critHit', 195, 420); pfx('coinCollect', 195, 470); pfx('confetti', 195, 520, { big: 1 });
+      sfx.payoff(9); sfx.jackpot(); buzz([60, 40, 60, 40, 200]); ripple(195, 420, .07);
+    },
     tap(e, x, y) {
       const d = e.d; if (d.done) return;
       d.taps++; d.mult = Math.min(2, 1 + d.taps * .01); kick(d.ms, 7); if (d.real) api('drill');
@@ -1147,7 +1405,7 @@ const EVENTS = {
       for (let i = 0; i < (reduce ? 2 : 7); i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', x, y, Math.cos(a) * sp, Math.sin(a) * sp, .2, [255, 170, 120], 2); }
       pops.push({ x: x + (rnd() - .5) * 30, y: y - 10, text: '+1%', t: 0, life: .55, rot: (rnd() - .5) * .4, size: 22, red: 1 }); while (pops.length > 10) pops.shift();
       sfx.drill(d.taps); if (d.taps % 3 === 0) phone('phone.typing', .25); buzz(8); if (!reduce) shake = Math.max(shake, 1.6); chroma = Math.max(chroma, .006);
-      if (d.taps % 10 === 0) { d.ms2 = { text: `${d.taps}연타!`, t: 0 }; sfx.badge(); ripple(x, y, .04); }
+      if (d.taps % 10 === 0) { const st = Math.min(4, Math.floor(d.taps / 20)); d.ms2 = { text: `${d.taps}연타!`, t: 0, st }; sfx.badge(); ripple(x, y, .04); pfx(['hitSpark', 'hitSpark', 'critHit', 'critHit', 'critHit'][st], 195, 250); if (st >= 2) light('flare', 195, 256 - st * 6, { col: [[255, 196, 0], [255, 138, 31], [255, 59, 48], [79, 184, 255], [179, 107, 255]][st], size: .5 + st * .12, life: .4 }); if (st >= 3) pfx('collectBurst', 195, 250); }
       if (d.mult >= 2 && !d.max) {
         d.max = true; crackAt(x, y, 1); collapse(1.25); sfx.payoff(8); if (!reduce) { flash = .3; shake = 6; }
         d.ms2 = { text: '최대 ×2!', t: 0 }; after(.9, () => this.finish(e));
@@ -1164,10 +1422,21 @@ const EVENTS = {
       ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(30, 146, 330, 6, 3); ctx.fill(); ctx.fillStyle = '#FFC400'; rr(30, 146, 330 * left, 6, 3); ctx.fill();
       ctx.restore();
       const m = d.mult, hotc = m > 1.7 ? '#FFC23D' : m > 1.35 ? '#FF8A1F' : '#FF6B5A';
-      gtext('×' + m.toFixed(2), 195, 440, 70, { scale: d.ms.x, top: '#FFFFFF', bot: hotc, wob: 1.4, t });
-      ctx.fillStyle = 'rgba(0,0,0,.4)'; rr(70, 462, 250, 10, 5); ctx.fill(); ctx.fillStyle = hotc; rr(70, 462, 250 * (m - 1), 10, 5); ctx.fill();
-      gtext(`${d.taps}연타`, 195, 504, 24, { top: '#FFFFFF', bot: '#FFD3CC' });
-      if (d.ms2 && d.ms2.t < 1) { d.ms2.t += 1 / 60; gtext(d.ms2.text, 195, 372, 36, { appear: d.ms2.t * 6, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: -.05, top: '#FFFFFF', bot: '#FFC400', wob: 2, t }); }
+      if (!d.win) gtext('×' + m.toFixed(2), 195, 440, 70, { scale: d.ms.x, top: '#FFFFFF', bot: hotc, wob: 1.4, t });
+      if (!d.win) { ctx.fillStyle = 'rgba(0,0,0,.4)'; rr(70, 462, 250, 10, 5); ctx.fill(); ctx.fillStyle = hotc; rr(70, 462, 250 * (m - 1), 10, 5); ctx.fill();
+      gtext(`${d.taps}연타`, 195, 504, 24, { top: '#FFFFFF', bot: '#FFD3CC' }); }
+      if (d.win) {  // final: "수입 ×N 획득!" stamped over everything
+        d.win.t += 1 / 60; const k = Math.min(1, d.win.t * 5), sc = k < 1 ? 2.4 - 1.4 * k : 1 + .04 * Math.sin(d.win.t * 30);
+        
+        gtext('획득!', 195, 372, 30, { appear: d.win.t * 8, top: '#FFFFFF', bot: '#7CE0FF', wob: 2, t });
+        gtext(`수입 ×${m.toFixed(2)}`, 195, 450, 64, { scale: sc, top: '#FFF6C8', bot: '#FFB020', wob: 2.2, t });
+        ctx.fillStyle = '#FFE9B8'; ctx.font = `800 14px ${FB}`; ctx.textAlign = 'center'; ctx.fillText(e.d.real ? '30초 동안 적용' : '지금부터 적용', 195, 492);
+      }
+      if (d.ms2 && d.ms2.t < 1) {  // streak callout: each stage bigger, hotter and higher, slammed in
+        d.ms2.t += 1 / 60; const st = d.ms2.st || 0, STG = [['#FFFFFF', '#FFC400', 34], ['#FFFFFF', '#FF8A1F', 40], ['#FFF3A6', '#FF3B30', 48], ['#E9F6FF', '#4FB8FF', 54], ['#FFFFFF', '#B36BFF', 62]][st];
+        const k = Math.min(1, d.ms2.t * 7), sc = k < 1 ? 1.8 - .8 * k : 1 + .05 * Math.sin(d.ms2.t * 40) * (1 - d.ms2.t);
+        gtext(d.ms2.text, 195, 262 - st * 6, STG[2], { scale: sc, alpha: Math.min(1, (1 - d.ms2.t) * 4), rot: (st % 2 ? .06 : -.06), top: STG[0], bot: STG[1], wob: 1 + st, t });
+      }
     },
   },
   // app crash: glitch tears -> "stopped" dialog -> tap -> CRT off/on reboot
@@ -1177,8 +1446,8 @@ const EVENTS = {
       const d = e.d; sstep(d.dlg, dt, 300, 15);
       if (d.phase === 'glitch') { fx.glitch = Math.min(1, e.t / .3); fxT.sat = .45; if (!reduce) shake = 2; if (e.t > .45) { d.phase = 'dialog'; d.dlg.t = 1; sfx.glitch(); } }
       else if (d.phase === 'dialog') { fx.glitch = rnd() < .08 ? .5 : .06; fxT.sat = .3; fxT.bright = .8; if (e.t > 3) this.tap(e); }
-      else if (d.phase === 'off') { d.ct += dt; fx.crt = Math.min(1, d.ct / .28); fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
-      else if (d.phase === 'on') { d.ct += dt; fx.crt = Math.max(0, 1 - d.ct / .32); if (d.ct > .32) { d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 30; i++) { const a = rnd() * 6.28, sp = 200 + rnd() * 300; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp, .3, [140, 220, 255], 2.2); } } }
+      else if (d.phase === 'off') { d.ct += dt; const u = Math.min(1, d.ct / .3); fx.crt = u * u * u * u; if (u > .9 && !d.dot) { d.dot = 1; light('flare', 195, 422, { col: [140, 200, 255], size: 1.1, life: .55 }); } fx.glitch = 0; if (d.ct > .55) { d.phase = 'on'; d.ct = 0; light('flare', 195, 422, { col: [160, 215, 255], size: .9, life: .45 }); sfx.boot(); phone('phone.wake', .5); fxT.sat = 1; fxT.bright = 1; fx.sat = 1.3; } }
+      else if (d.phase === 'on') { d.ct += dt; const u = Math.min(1, d.ct / .42), eb = 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2); fx.crt = Math.max(0, 1 - eb); fx.bright = 1 + .6 * Math.max(0, 1 - u * 2.2); if (d.ct > .42) { light('flare', 195, 400, { col: [120, 210, 255], size: 1.3 }); light('rays', 195, 400, { col: [110, 200, 255], size: .9, life: 1.2 }); d.phase = 'done'; d.ct = 0; fx.crt = 0; ripple(195, 400, .045); say('재시작! 수입 +30%', 420, 34, '#FFFFFF', '#7CE0FF', 1.3); sfx.badge(); for (let i = 0; i < 22; i++) { const a = rnd() * 6.28, sp = 220 + rnd() * 380; spawn('SPARK', 195, 400, Math.cos(a) * sp, Math.sin(a) * sp * .45, .35, [170, 230, 255], 2); } } }
       else if (d.phase === 'done') { d.ct += dt; if (d.ct > 1.3) endEvent(); }
     },
     tap(e) { if (e.d.phase !== 'dialog') return; e.d.phase = 'off'; e.d.ct = 0; e.d.dlg.t = 0; sfx.powerDown(); phone('phone.lock', .6); buzz(40); },
@@ -1239,24 +1508,58 @@ const EVENTS = {
   },
   // low battery: colour drains, heartbeat; tap -> lightning, colour floods back
   battery: {
-    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, pts: null }); lowBat = true; },
+    start(e) { Object.assign(e.d, { phase: 'low', hb: .2, bt: 0, fill: 0, hold: false, pts: null, bs: spring(0), idle: 0 }); e.d.bs.t = 1; lowBat = true; },
     update(e, dt) {
-      const d = e.d;
-      if (d.phase === 'low') { fxT.sat = .15; fxT.bright = .55; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); if (!reduce) shake = 1.2; } if (e.t > 3.2) this.tap(e); }
-      else { d.bt += dt; if (d.bt < .35) d.pts = bolt(356, 24, 195 + (rnd() - .5) * 40, 420, 10); else d.pts = null; if (d.bt > 1.4) endEvent(); }
+      const d = e.d; sstep(d.bs, dt, 260, 14);
+      if (d.phase === 'low') {
+        fxT.sat = .15 + d.fill * .85; fxT.bright = .55 + d.fill * .45;
+        if (d.hold) { d.fill = Math.min(1, d.fill + dt / 1.5); d.zt = (d.zt || 0) - dt; if (d.zt <= 0) { d.zt = .09; sfx.reel(); buzz(6); if (!reduce) shake = Math.max(shake, .6 + d.fill * 2); } }
+        else { d.fill = Math.max(0, d.fill - dt * .5); d.idle += dt; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); } }
+        if (d.idle > 5 && !d.hold) d.hold = true;  // demo/auto: charges itself if nobody holds
+        if (d.fill >= 1) this.full(e);
+      } else { d.bt += dt; if (d.bt > 1.5) endEvent(); }
     },
-    tap(e) {
-      const d = e.d; if (d.phase !== 'low') return;
-      d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
-      if (!reduce) flash = .35; ripple(356, 24, .05); ripple(195, 420, .05); chroma = .02; phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]); if (!reduce) shake = 5;
-      for (let i = 0; i < (reduce ? 12 : 50); i++) { const side = Math.floor(rnd() * 4), p = rnd(); const [x, y, vx, vy] = side === 0 ? [p * W, 2, 600, 0] : side === 1 ? [W - 2, p * H, 0, 600] : side === 2 ? [p * W, H - 2, -600, 0] : [2, p * H, 0, -600]; spawn('SPARK', x, y, vx * (rnd() < .5 ? 1 : -1), vy * (rnd() < .5 ? 1 : -1), .35, [150, 200, 255], 2.4); }
-      say('충전 완료! 배터리 +2', 440, 30, '#FFFFFF', '#7CC0FF', 1.3);
+    tap(e) { const d = e.d; if (d.phase !== 'low') return; d.hold = true; d.idle = 0;  },
+    up(e) { e.d.hold = false; },
+    full(e) {
+      const d = e.d; d.phase = 'charge'; d.bt = 0; lowBat = false; fxT.sat = 1; fxT.bright = 1; fx.sat = 1.8; fx.bright = 1.25;
+      if (!reduce) { flash = .35; shake = 6; } stop = Math.max(stop, .07); ripple(195, 420, .06); chroma = .012;
+      light('flare', 195, 420, { col: [90, 255, 150], size: 1.3 }); light('rays', 195, 420, { col: [110, 255, 160], size: 1, life: 1.3 }); light('sweep', 0, H + 60, { col: [90, 255, 150], dist: H + 200, life: .8 }); for (let i = 0; i < 26; i++) { const a = -Math.PI / 2 + (rnd() - .5) * 2.4, sp = 260 + rnd() * 420; spawn('SPARK', 195 + (rnd() - .5) * 120, 420, Math.cos(a) * sp, Math.sin(a) * sp, .5, [150, 255, 190], 2.2); } phone('phone.connect', .6); sfx.zap(); buzz([20, 20, 20, 20, 80]);
+      say('충전 완료! 배터리 +2', 540, 30, '#FFFFFF', '#7CF0A0', 1.3);
     },
     world(e) { if (e.d.pts) strokeBolt(e.d.pts, 1); },
-    ui(e) {
-      if (e.d.phase !== 'low') return;
-      const a = .6 + .4 * Math.sin(e.t * 7);
-      ctx.fillStyle = `rgba(255,59,48,${a})`; rr(95, 600, 200, 34, 17); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.font = `700 13px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 탭해서 충전', 195, 622);
+    ui(e, t) {
+      const d = e.d, s = d.bs.x; if (d.phase !== 'low' && d.bt > .5) return;
+      const f = d.phase === 'low' ? d.fill : 1, fade = d.phase === 'low' ? 1 : Math.max(0, 1 - d.bt * 3);
+      // the dark lifts as it charges: dim at 0%, almost clear at 100%
+      ctx.fillStyle = `rgba(0,0,0,${(.62 - .5 * f) * Math.min(1, e.t * 4) * fade})`; ctx.fillRect(0, 0, W, H);
+      // translucent green light rising from the bottom, smooth surface with a bright meniscus
+      const top = H - (H - 60) * f;
+      if (f > 0 && fade > 0) {
+        ctx.save(); ctx.globalAlpha = fade; ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 10) ctx.lineTo(x, top + Math.sin(x * .03 + t * 5) * 6 + Math.sin(x * .071 - t * 3.7) * 4); ctx.lineTo(W, H); ctx.closePath();
+        const g = ctx.createLinearGradient(0, top - 10, 0, H); g.addColorStop(0, 'rgba(120,255,170,.34)'); g.addColorStop(.25, 'rgba(50,220,120,.16)'); g.addColorStop(1, 'rgba(20,160,80,.08)'); ctx.fillStyle = g; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(190,255,215,.7)'; ctx.beginPath(); for (let x = 0; x <= W; x += 10) { const yy = top + Math.sin(x * .03 + t * 5) * 6 + Math.sin(x * .071 - t * 3.7) * 4; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); } ctx.stroke();
+        const gl2 = ctx.createLinearGradient(0, top - 70, 0, top + 10); gl2.addColorStop(0, 'rgba(120,255,170,0)'); gl2.addColorStop(1, `rgba(120,255,170,${.22 + .2 * f})`); ctx.fillStyle = gl2; ctx.fillRect(0, top - 70, W, 80);
+        for (let i = 0; i < 14; i++) { const by = H - ((t * (60 + i * 13) + i * 97) % (H - top + 40)), bx = (i * 61 + Math.sin(t * 2 + i) * 14) % W; if (by > top + 6) { ctx.fillStyle = 'rgba(200,255,220,.35)'; ctx.fillRect(bx, by, 3, 3); } }
+        ctx.restore();
+      }
+      // the battery icon, centre screen: rounded glossy shell, nub, liquid level inside
+      ctx.save(); ctx.translate(195, 420); ctx.scale(s, s); ctx.globalAlpha = fade || (d.phase === 'low' ? 1 : 0);
+      const bw = 128, bh = 66, low = f < .2, blink = low && Math.sin(t * 10) > 0, lc = low ? (blink ? [255, 70, 58] : [150, 30, 24]) : [60, 235, 125];
+      ctx.shadowColor = low ? 'rgba(255,60,40,.5)' : `rgba(80,255,150,${.3 + .5 * f})`; ctx.shadowBlur = 28;
+      ctx.fillStyle = 'rgba(14,16,18,.82)'; rr(-bw / 2, -bh / 2, bw, bh, 14); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.lineWidth = 5; ctx.strokeStyle = '#F4F1EA'; rr(-bw / 2, -bh / 2, bw, bh, 14); ctx.stroke();
+      ctx.fillStyle = '#F4F1EA'; rr(bw / 2 + 3, -13, 9, 26, 4); ctx.fill();
+      const iw = (bw - 16) * Math.max(.1, f); ctx.save(); rr(-bw / 2 + 8, -bh / 2 + 8, bw - 16, bh - 16, 8); ctx.clip();
+      const lg = ctx.createLinearGradient(0, -bh / 2, 0, bh / 2); lg.addColorStop(0, rgb(lc.map(v => Math.min(255, v + 70)), 1)); lg.addColorStop(1, rgb(lc, 1)); ctx.fillStyle = lg; ctx.fillRect(-bw / 2 + 8, -bh / 2 + 8, iw, bh - 16);
+      if (d.hold && f < 1) { const sx = -bw / 2 + 8 + ((t * 160) % (bw + 20)) - 20; const sg = ctx.createLinearGradient(sx, 0, sx + 26, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.55)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = sg; ctx.fillRect(sx, -bh / 2, 26, bh); }
+      ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(-bw / 2 + 8, -bh / 2 + 8, bw - 16, (bh - 16) * .4); ctx.restore();
+      ctx.restore();
+      if (d.phase === 'low') {
+        gtext(d.hold ? `충전 중 ${Math.round(f * 100)}%` : '꾹 눌러서 충전', 195, 500, 26, { top: '#FFFFFF', bot: d.hold ? '#7CF0A0' : '#FF8A80', wob: d.hold ? 1.5 : 0, t });
+        ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'center'; ctx.fillText('배터리 부족 · 손을 떼면 다시 줄어요', 195, 526);
+      }
     },
   },
   // lotto: slot reel; jackpot = gold shower + glass break, miss = deflate + sad trombone
@@ -1269,9 +1572,9 @@ const EVENTS = {
         if (e.t > d.spin) {
           d.phase = 'res'; d.endT = e.t; d.val = d.res;
           if (d.res > 0) {
-            crackAt(195, 400, 1); collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
-            for (let i = 0; i < (reduce ? 30 : 110); i++) spawn('GLASS', rnd() * W, -20 - rnd() * 200, (rnd() - .5) * 80, 200 + rnd() * 300, 2, [255, 214, 90], 3 + rnd() * 5);
-            say(`잭팟 ×${d.res}!`, 500, 42, '#FFFFFF', '#FFC23D', 1.6);
+            collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
+            pfx('critHit', 195, 400); pfx('coinCollect', 195, 440); pfx('fireworkBurst', 195, 600, { big: 1 }); pfx('confetti', 195, 520, { big: 1 }); stop = Math.max(stop, .08); pixT = Math.max(pixT, .3); psyT = .45;
+            say(`잭팟 ×${d.res}!`, 490, 46, '#FFFFFF', '#FFC23D', 1.8);
           } else {
             sfx.fail(); d.bs.t = .72; fx.sat = .25;
             for (let i = 0; i < 12; i++) spawn('VAPOUR', 195 + (rnd() - .5) * 120, 400, (rnd() - .5) * 120, -40 - rnd() * 80, 1.2, [150, 150, 150], 12 + rnd() * 10);
@@ -1317,10 +1620,14 @@ const EVENTS = {
 // ---------- chain choreography ----------
 // ---------- engine bridge: the Android app (window.Game) or the desktop dev server ----------
 let S = null;  // last engine snapshot
+function enNames(o) {  // core sends Korean app names; English builds swap them by app id
+  if (Array.isArray(o)) { o.forEach(enNames); return o; }
+  if (o && typeof o === 'object') { const id = o.app || o.id; if (typeof o.name === 'string' && id && I18N.apps[id]) o.name = I18N.apps[id]; for (const k in o) if (o[k] && typeof o[k] === 'object') enNames(o[k]); }
+  return o;
+}
 async function api(method, args = {}) {
-  if (window.Game) return JSON.parse(window.Game.call(method, JSON.stringify(args)));
-  const q = new URLSearchParams(args).toString();
-  return (await fetch('/api/' + method + (q ? '?' + q : ''))).json();
+  const o = window.Game ? JSON.parse(window.Game.call(method, JSON.stringify(args))) : await (await fetch('/api/' + method + (new URLSearchParams(args).toString() ? '?' + new URLSearchParams(args).toString() : ''))).json();
+  return I18N.apps ? enNames(o) : o;
 }
 let pendingCall = null, boardBusy = false, idleT = 0, hintId = null, hintT = 0, autoClock = 1.5, swipes = 0;
 const say2 = (text, y, size = 26) => say(text, y, size, '#FFFFFF', '#FFD66B', 1.3);
@@ -1376,22 +1683,19 @@ function play(o, quiet = false) {
       after(t + .05, () => { const i = board.indexOf(r); if (i >= 0) board.splice(i, 1); layout(); });
       const e = L(b.earned), es = shortOf(b.earned, b.earnedShort);
       if (e > -Infinity && o.chain === 0) after(t + .08, () => pops.push({ x: 300, y: (r ? r.y.x : 300) + 10, text: '+' + es, t: 0, life: .8, rot: -.1, size: 22 }));
-      t += .16;
+      t += .07;
     } else if (b.t === 'merged') {
       const tt = t;
       after(tt, () => {
         const into = byId(b.into.id), from = byId(b.from);
-        if (from && into) { from.y.t = into.y.x; from.fade = true; after(.09, () => { const i = board.indexOf(from); if (i >= 0) board.splice(i, 1); layout(); }); }
-        if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
-        if (!quiet) sfx.chip(2); buzz(6);
-        const y = into ? into.y.x : 300;
-        pops.push({ x: 300, y: y + 4, text: `${b.into.count}/${b.into.threshold}`, t: 0, life: .5, rot: .08, size: 20 });
+        if (from && into) slamMerge(from, into, k, () => { into.d = b.into; layout(); if (!quiet) sfx.chip(2); pops.push({ x: 300, y: into.y.x + 4, text: `×${b.into.count}`, t: 0, life: .5, rot: .08, size: 22 }); });
+        else if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
       });
-      t += .13;
+      t += .17;
     } else if (b.t === 'burst') {
       k++; const kk = k, tt = t;
-      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; kick(r.sc, 3); } });
-      after(tt + .05, () => burstRow(b, kk, quiet));
+      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 50); } });
+      after(tt + .06, () => burstRow(b, kk, quiet));
       t += Math.max(.1, .19 - (kk - 1) * .011);
     } else if (b.t === 'wave') {
       const w = b.index - 1; after(t + .2, () => waveHit(w)); t += .45;
@@ -1408,13 +1712,16 @@ function burstRow(b, k, quiet) {
   const r = byId(b.row.id); if (!r) return;
   const d = r.d, pal = ramp(colOf(d)), T = tier(k), y = r.y.x, cy = y + CH / 2, q = reduce ? .3 : 1;
   const ix = 110 + rnd() * 170, iy = y + 18 + rnd() * 24;
-  shatter(r, y, ix, iy, 1 + Math.min(k, 12) * .06);
+  pixelBurst(r, y, ix, iy, 1 + Math.min(k, 10) * .08);
+  pfx(k >= 4 ? 'critHit' : 'hitSpark', ix, iy, { angle: (rnd() - .5) * .6 });
+  if (k >= 6) pfx('smallExplosion', ix, y + CH, { size: .55, big: 1 });
+  if (k >= 9) pfx('impactFrame', 195, iy);
   ripple(ix, iy, .014 + Math.min(k, 12) * .0022);
   if (k >= 9 && (!crack || crack.age > .5)) crackAt(ix, iy, .85);
   chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
-  for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
-  for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
-  spawn('CORE', ix, iy, 0, 0, .12, pal[3], 70 + k * 5);
+  spawn('LASER', 195, cy, 0, 0, .14, balc(k), 8 + Math.min(k, 10));
+  if (k >= 4) for (let j = 0; j < Math.min(k - 3, 3); j++) after(.03 * (j + 1), () => spawn('LASER', 195, y + (j + 1) * CH / 4, 0, 0, .1, balc(k + j + 1), 4 + j * 2));
+  pixT = Math.max(pixT, .12 + Math.min(k, 10) * .02); psyT = Math.min(1, Math.max(psyT, (k - 1) * .16)); noiT = Math.max(noiT, .5);
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
   pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
@@ -1423,7 +1730,7 @@ function burstRow(b, k, quiet) {
   plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); if (!quiet) sfx.mult(k);
   plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
   stop = Math.max(stop, T.stop / 1000);
-  if (!reduce) shake = Math.max(shake, T.shake * 1.3);
+  if (!reduce) shake = Math.max(shake, T.shake + Math.min(k, 12) * .25);
   heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
   if (k >= 9) { slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .25; flashTimes.push(now); } } }
   if (!quiet) { sfx.pop(k); buzz(Math.min(40, 8 + k * 3)); }
@@ -1437,10 +1744,12 @@ function finishPlate() {
   wallet.to = wallet.v; wallet.t = Math.min(wallet.t, .999);
 }
 function waveHit(w) {
-  for (let i = 0; i < (reduce ? 20 : 70); i++) spawn('GLASS', rnd() * W, 150 + rnd() * 40, (rnd() - .5) * 120, 300 + rnd() * 380, 1.2, [255, 220, 170], 3 + rnd() * 5);
-  bandT = 0; plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
+  // the wave: a hot light sheet sweeps down the board, the multiplier pill flares
+  light('sweep', 0, 120, { col: [255, 150, 60], dist: -(H + 160), life: .6, down: 1 }); light('flare', MULTX, BOXY, { col: [255, 110, 70], size: .9 + w * .15, life: .5 });
+  for (let i = 0; i < (reduce ? 6 : 22); i++) spawn('STREAK', rnd() * W, 140 + rnd() * 30, (rnd() - .5) * 60, 1400 + rnd() * 900, .22, [255, 200, 140], 1.4 + rnd() * 1.4);
+  plate.wmul *= 3; kick(plate.ms, 26); ripple(MULTX, BOXY, .02);
   plate.label = `과부하 파동 ×${Math.pow(3, w + 1)}`; plate.labelT = 0; plate.labelSize = 30 + w * 3;
-  stop = Math.max(stop, .04); if (!reduce) shake = 4; heat = 1; chroma = Math.max(chroma, .012);
+  stop = Math.max(stop, .04); if (!reduce) shake = 4; chroma = Math.max(chroma, .008);
   sfx.wave(w); buzz([20, 30, 40]);
 }
 function payoff() {
@@ -1458,12 +1767,11 @@ function payoff() {
   });
 }
 function slam() { // end of the count-up: the screen glass takes the hit
-  plate.landed = true; kick(plate.ts, 34); sfx.payoff(plate.k); buzz([30, 40, 70]);
+  plate.landed = true; light('flare', 195, REVEAL_Y - 24, { col: [255, 170, 70], size: .7 + Math.min(plate.k, 12) * .05 }); kick(plate.ts, 34); noiT = Math.max(noiT, .3); sfx.payoff(plate.k); buzz([30, 40, 70]);
   // the glass takes the hit in proportion: small tallies thump, big chains crack the screen
-  if (plate.k >= 3) crackAt(195, REVEAL_Y - 18, Math.min(1, .55 + plate.k * .05)); ripple(195, REVEAL_Y - 18, .02 + Math.min(plate.k, 10) * .0025); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
+  ripple(195, REVEAL_Y - 18, .012 + Math.min(plate.k, 10) * .001); chroma = Math.max(chroma, .006 + Math.min(plate.k, 10) * .0014);
   for (let i = 0; i < (reduce ? 10 : 34); i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 450; spawn('SPARK', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp, .3, [255, 200, 110], 2.6); }
-  for (let i = 0; i < (reduce ? 8 : 26); i++) { const a = rnd() * 6.28, sp = 160 + rnd() * 320; spawn('GLASS', 195, REVEAL_Y - 18, Math.cos(a) * sp, Math.sin(a) * sp - 100, .9 + rnd() * .4, [255, 236, 200], 4 + rnd() * 5); }
-  spawn('CORE', 195, REVEAL_Y - 18, 0, 0, .22, [255, 210, 120], 220);
+  if (plate.k >= 5 || plate.wmul > 1) light('rays', 195, REVEAL_Y - 24, { col: [255, 170, 60], size: .8 + Math.min(plate.k, 12) * .03, life: 1.4 });
   if (!reduce) { shake = Math.max(shake, 5); kick(zoom, .9); }
   if (plate.record) after(.08, () => sfx.badge());
   if (plate.record) after(1.2, () => offerDouble(plate.total));
@@ -1487,6 +1795,10 @@ function step(dt) {
     else if (p.k === 'GLASS') { p.vy += 900 * dt; p.vx *= Math.pow(.4, dt); p.rot += p.vr * dt; }
     else if (p.k === 'SPARK') { p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; }
     else if (p.k === 'VAPOUR') { p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); }
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { p.vx *= Math.pow(.02, dt); p.vy = p.vy * Math.pow(.05, dt) - (p.k === 'SMOKE' ? 30 : 10) * dt; }
+    else if (p.k === 'EMBERF') { p.vx *= Math.pow(.25, dt); p.vy = p.vy * Math.pow(.4, dt) + 700 * dt; }
+    else if (p.k === 'STREAK') { p.vx *= Math.pow(.05, dt); }
+    else if (p.k === 'BLOCK') { p.vx *= Math.pow(.35, dt); p.vy += 1500 * dt; }
     p.x += p.vx * dt; p.y += p.vy * dt;
   }
   for (let i = shards.length - 1; i >= 0; i--) {
@@ -1511,12 +1823,18 @@ function draw(t) {
   ctx.drawImage(bgS, 0, 0, W, H);
   ctx.fillStyle = day ? 'rgba(255,255,255,.25)' : 'rgba(8,5,3,.3)'; ctx.fillRect(0, 0, W, H);
   drawDecor();
-  const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
-  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
+  // trauma shake: amplitude ∝ trauma², smooth high-frequency noise plus a little roll; camK = swipe-direction kick
+  // pixel-art shake: a few hard pixel steps, no roll; camK = swipe-direction kick
+  const tr = Math.min(1, shake / 7), amp = 14 * tr * tr, q2 = v => Math.round(v / 2) * 2, ph = Math.floor(t * 40), sx = q2(amp * (((ph * 7) % 5) / 2 - 1) + camK.x), sy = q2(amp * (((ph * 3) % 5) / 2 - 1) * .7), sr = 0;
+  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.rotate(sr); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
   ctx.save(); shaken();
   board.forEach(r => {
     const y = r.y.x;
-    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH / 2); ctx.scale(r.sc.x, r.sc.x); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH / 2));
+    if (r.fly && !reduce) for (let g = 3; g >= 1; g--) {  // afterimages behind a flung card
+      ctx.save(); ctx.globalAlpha = r.a * (.32 - g * .08); ctx.translate(195 + r.dx - r.fly * g * 34, y + CH / 2); ctx.scale(1.08, .94); ctx.translate(-195, -(y + CH / 2)); drawCard(ctx, r, y); ctx.restore();
+    }
+    const qx = r.q.x, st = r.fly ? 1.1 : 1 + qx * .45, sv = r.fly ? .92 : 1 - qx;
+    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH); ctx.scale(r.sc.x * st, r.sc.x * sv); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH));
     drawCard(ctx, r, y);
     if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .85})`; rr(CX0, y, CW, CH, 18); ctx.fill(); }
     ctx.restore();
@@ -1537,16 +1855,23 @@ function draw(t) {
   for (const p of parts) {
     const f = p.life / p.max;
     if (p.k === 'GLASS') { const g = .35 + .65 * Math.abs(Math.sin(p.rot * 2)); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, f * 2.5); ctx.beginPath(); ctx.moveTo(-p.size, -p.size * .4); ctx.lineTo(p.size * .8, -p.size * .7); ctx.lineTo(p.size * .2, p.size * .8); ctx.closePath(); ctx.fillStyle = rgb(mixc(p.col, [255, 255, 255], g), .35 + .5 * g); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
-    else if (p.k === 'INK') { ctx.fillStyle = rgb(p.col, Math.min(.85, f)); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
-    else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
+    else if (p.k === 'BLOCK') { const sz = f > .6 ? p.size : f > .3 ? p.size * .6 : p.size * .3; if (f > .15 || (frameNo + (p.x | 0)) & 1) { ctx.fillStyle = rgb(p.col, 1); ctx.fillRect(Math.round(p.x / 2) * 2 - sz / 2, Math.round(p.y / 2) * 2 - sz / 2, sz, sz); if (f > .75) { ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(Math.round(p.x / 2) * 2 - sz / 2, Math.round(p.y / 2) * 2 - sz / 2, sz, 2); } } }
+    else if (p.k === 'INK') pblob(p.x, p.y, p.size, p.col, Math.min(.85, f));
+    else if (p.k === 'VAPOUR') pblob(p.x, p.y, p.size * (1.8 - f), p.col, .3 * f, true);
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { const e = 1 - f; pblob(p.x, p.y, p.size * (1 + e * (p.k === 'SMOKE' ? 1.6 : 1.1)), p.col, (p.k === 'SMOKE' ? .62 : .5) * f, true); }
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
-    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
-    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { const r = p.size * (p.k === 'DROP' ? 2.6 : 3), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,230,${f})`); g.addColorStop(.35, rgb(p.col, .8 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
-    else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
+    if (p.k === 'RING' || p.k === 'RINGIN') pring(p, f);
+    else if (p.k === 'LASER') plaser(p, f);
+    else if (p.k === 'BEAM') pbeam(p, f);
+    else if (p.k === 'STREAK') { const n = 5; for (let j = 0; j < n; j++) px(p.x - p.vx * .012 * j, p.y, 6, j ? p.col : [255, 255, 255], .7 * f * (1 - j / n)); }
+    else if (p.k === 'EMBERF') px(p.x, p.y, p.size > 2.5 ? 8 : 4, (Math.floor(p.life * 30) % 2) ? p.col : [255, 255, 210], f);
+    else if (p.k === 'SPARK') { const sp = Math.hypot(p.vx, p.vy) || 1, n = Math.min(4, 1 + Math.floor(sp / 260)); for (let j = 0; j < n; j++) px(p.x - p.vx / sp * j * 5, p.y - p.vy / sp * j * 5, j ? 4 : 6, j ? p.col : [255, 255, 255], f * (1 - j * .22)); }
+    else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { px(p.x, p.y, p.k === 'DROP' ? 6 : 4, [255, 255, 230], f); pblob(p.x, p.y, p.size * 2.2, p.col, .55 * f, true); }
+    else if (p.k === 'CORE') pstar(p.x, p.y, p.size * (1.15 - f * .5), p.col, f);
   }
   for (const o of tokens) {
     if (o.text || o.big) continue;
@@ -1560,6 +1885,7 @@ function draw(t) {
     ctx.fillStyle = gg; rr(gx, gy, Math.max(8, gw * Math.min(1, S.gauge / 100)), 8, 4); ctx.fill();
     ctx.fillStyle = S.gauge >= 80 ? (day ? '#D81E2A' : '#FF8A80') : (day ? '#5F6674' : '#B3A89B'); ctx.font = `600 12px ${FB}`; ctx.textAlign = 'right'; ctx.fillText(`${S.gauge}%`, 372, gy + 8);
   }
+  pfxDraw();
   if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
   if (plate.phase === 'show') { ctx.fillStyle = `rgba(8,5,3,${.55 * Math.min(1, plate.showT * 6)})`; ctx.fillRect(-20, ROW0 - 8, W + 40, H); drawOverheatWorld(t); }
@@ -1587,7 +1913,6 @@ function draw(t) {
     stext(fmtL(plate.chipsShown), cxp, BOXY + 1, 22, { scale: pcs });
     stext('×' + fmtMult(plate.multShown), mxp, BOXY + 1, 22, { scale: pms });
     ctx.globalAlpha = 1;
-    if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
   if (plate.phase === 'show') {
     const a = Math.min(1, plate.showT * 6), big = clamp((plate.total - 6) / 3, 0, 1);
@@ -1595,7 +1920,7 @@ function draw(t) {
     if (!plate.vented) gtext(plate.eq, 195, REVEAL_Y - 70, 22, { appear: plate.showT * 8, top: '#FFFFFF', bot: '#BFD9FF', alpha: a });
     const num = fmtL(plate.totalShown), size = 58 + big * 14;
     ctx.font = `${size}px ${FD}`; const mw = ctx.measureText(num).width, sc = Math.min(1, 340 / mw);
-    if (plate.landed && !reduce && !plate.vented) flames(195, REVEAL_Y - size * .3, mw * sc + 30, size * .9, t, .7 + big * .3, 2.6);
+    if (plate.landed && !reduce && !plate.vented && big > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const ra = Math.min(1, (plate.showT - .5) * 4) * (.35 + .4 * big); rays(195, REVEAL_Y - size * .3, 230 + 60 * big, t * .35, Math.max(0, ra), [255, 176, 60], 16); ctx.restore(); }
     const hot = plate.hot || 0, jx = hot ? (rnd() - .5) * hot * 9 : 0, jy = hot ? (rnd() - .5) * hot * 5 : 0;
     gtext(num, 195 + jx, REVEAL_Y + jy, size * sc, { scale: plate.ts.x * (1 + hot * .06), top: hot > .5 ? '#FFF6B0' : plate.vented ? '#FFFFFF' : '#FFFFFF', bot: hot > .2 ? '#FF2A1A' : plate.vented ? '#9FD8FF' : plate.landed ? '#FF9A1F' : '#FFD66B', wob: plate.landed ? 2.2 + hot * 3 : .6, t });
     drawOverheatUI(t);
@@ -1618,11 +1943,12 @@ function draw(t) {
     if (o.text) gtext(o.text, x, y, 17, { top: '#FFFFFF', bot: '#FFD66B', scale: 1 - e * .3 });
     else { gtext(o.big, x, y + 12, 40, { top: '#FFFFFF', bot: '#FFC23D', scale: 1 - e * .55 }); ctx.globalCompositeOperation = 'lighter'; for (let j = 1; j < 6; j++) { const [tx, ty] = tokPos(o, Math.max(0, e - j * .05)); ctx.fillStyle = `rgba(255,190,80,${.35 - j * .06})`; ctx.beginPath(); ctx.arc(tx, ty, 12 - j * 1.5, 0, 6.28); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; }
   }
+  if (!pres) drawLights();
+  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   for (const p of pops) {
     const f = p.t / p.life;
     if (p.t > 0) gtext(p.text, p.x, p.y - Math.pow(f, .5) * 34, p.size, { appear: p.t * 9, rot: p.rot, alpha: Math.min(1, (1 - f) * 3), top: p.col0 ? p.col0[0] : '#FFFFFF', bot: p.col0 ? p.col0[1] : p.red ? '#FF6B5A' : '#6FB6FF', wob: 1.2, t });
   }
-  if (ev && EVENTS[ev.type].ui) EVENTS[ev.type].ui(ev, t);
   drawHint(t);
   ctx = sctx;
   present(t);
@@ -1643,14 +1969,14 @@ function frame(now) {
     for (const e of due) timeline.splice(timeline.indexOf(e), 1);
     due.forEach(e => e.fn());
   }
-  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; }
+  acc += gdt; while (acc >= SIM) { step(SIM); acc -= SIM; } pfxStep(gdt); stepLights(dt);
   const n = Math.ceil(dt / (1 / 240)), sd = dt / Math.max(1, n);
   for (let i = 0; i < n; i++) {
     [plate.cs, plate.ms, plate.xs, plate.ts, wallet.s, wallet.us, zoom].forEach(s => stepSpring(s, sd));
-    board.forEach(r => { stepSpring(r.sc, sd, 300, 16); stepSpring(r.y, sd, 260, 20); });
+    const rsd = gdt / Math.max(1, n); if (rsd > 0) board.forEach(r => { stepSpring(r.sc, rsd, 300, 16); stepSpring(r.q, rsd, 900, 11); stepRowY(r, rsd); }); stepSpring(camK, sd, 220, 13);
   }
-  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 14); if (r.fly) r.dx += r.fly * dt * 2400; else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
-  shake *= Math.pow(.0008, dt); if (shake < .05) shake = 0;
+  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 11); if (r.fly) { r.dx += r.fly * dt * 3800; if (!r.streaked) { r.streaked = 1; camK.v += r.fly * 260; for (let j = 0; j < (reduce ? 3 : 9); j++) spawn('STREAK', 195 + r.fly * (40 + rnd() * 120), r.y.x + 8 + rnd() * (CH - 16), r.fly * (1400 + rnd() * 900), 0, .18 + rnd() * .1, [255, 255, 255], 1.5 + rnd() * 2); } } else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
+  shake = Math.max(0, shake - dt * 16); frameNo++; pixT = Math.max(0, pixT - dt * 7); psyT = Math.max(0, psyT - dt * (plate.phase === 'idle' ? 1.2 : .35)); noiT = Math.max(0, noiT - dt * 2.5);
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
@@ -1710,6 +2036,7 @@ cv.addEventListener('pointermove', e => {
   drag.r.dx = x - drag.x0; if (Math.abs(drag.r.dx) > 6) drag.moved = true;
 });
 const release = async e => {
+  if (ev && EVENTS[ev.type].up) EVENTS[ev.type].up(ev);
   pull.on = false;
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);
@@ -1744,8 +2071,10 @@ function prestigeShow(kind, amount, st) {
   pres = { kind, amount: L(amount), t: 0, t0: performance.now(), landed: false };
   busy = boardBusy = true;
   if (!reduce) { flash = .45; shake = 8; kick(zoom, 1.4); }
-  chroma = .025; crackAt(195, REVEAL_Y - 30, 1); ripple(195, REVEAL_Y - 30, .07); collapse(1.6);
-  board.forEach((r, i) => after(.04 * i, () => { shatter(r, r.y.x, 120 + rnd() * 150, r.y.x + 30, 1.4); r.a = 0; }));
+  chroma = .02; ripple(195, REVEAL_Y - 30, .07); light('flare', 195, REVEAL_Y - 30, { col: kind === 'reset' ? [110, 200, 255] : [190, 140, 255], size: 1.5, life: .7 });
+  board.slice().forEach((r, i) => after(.05 * i, () => { pixelBurst(r, r.y.x, 195, r.y.x + CH / 2, 1.3); const bi = board.indexOf(r); if (bi >= 0) board.splice(bi, 1); sfx.thud && sfx.thud(.5); if (!reduce) shake = Math.max(shake, 4); }));
+  pres.files = []; const nf = reduce ? 8 : 26; for (let i = 0; i < nf; i++) pres.files.push({ x: 30 + rnd() * 330, y: 140 + rnd() * 560, d: .35 + i * .028 + rnd() * .05, done: 0, s: .8 + rnd() * .5 });
+  after(.3, () => light('rays', 195, REVEAL_Y - 20, { col: kind === 'reset' ? [90, 190, 255] : [170, 120, 255], size: 1.25, life: 3 }));
   sfx.unit(); phone('ui.levelup', .5); buzz([60, 40, 60, 40, 160]);
   after(1.9, () => {
     // the new run: fresh board drops in, wallet back to its start
@@ -1753,15 +2082,23 @@ function prestigeShow(kind, amount, st) {
     board.length = 0; reconcile(st); board.forEach((r, i) => { r.y.x = rowY(i) - 260 - i * 40; r.a = 0; });
     busy = boardBusy = false;
   });
-  after(3.4, () => { pres = null; openSheet(kind === 'reset' ? 'backup' : 'reset').then(() => { if (kind === 'sync') { const h = [...document.querySelectorAll('#sheet-b .h3')].find(e => /클라우드 상점/.test(e.textContent)); if (h) h.scrollIntoView({ block: 'start' }); } }); });
+  after(3.4, () => { pres = null; bkFresh = kind === 'reset'; setTimeout(() => { bkFresh = false; }, 2500); openSheet(kind === 'reset' ? 'backup' : 'reset').then(() => { if (kind === 'sync') { const h = [...document.querySelectorAll('#sheet-b .h3')].find(e => /클라우드 상점/.test(e.textContent)); if (h) h.scrollIntoView({ block: 'start' }); } }); });
 }
 function drawPrestige(t) {
   if (!pres) return;
   pres.t = (performance.now() - pres.t0) / 1000;
   const e = Math.min(1, pres.t / .9), shown = e > 0 ? pres.amount + Math.log10(1 - Math.pow(1 - e, 3) || 1e-9) : -Infinity;
-  if (e >= 1 && !pres.landed) { pres.landed = true; sfx.payoff(9); if (!reduce) shake = 6; spawn('CORE', 195, REVEAL_Y - 20, 0, 0, .3, [255, 214, 107], 260); }
+  if (e >= 1 && !pres.landed) { pres.landed = true; sfx.payoff(9); if (!reduce) shake = 6; stop = Math.max(stop, .06); light('flare', 195, REVEAL_Y - 20, { col: [140, 215, 255], size: 1.6 }); pfx('collectBurst', 195, REVEAL_Y - 20); }
   const a = Math.min(1, pres.t * 4) * (pres.t > 3 ? Math.max(0, 1 - (pres.t - 3) * 3) : 1);
   ctx.fillStyle = `rgba(8,5,3,${.62 * a})`; ctx.fillRect(0, 0, W, H);
+  drawLights();
+  // backup files fly out of the wreck into the counter, each landing ticks it
+  if (BKIMG.complete && pres.files) { ctx.save(); ctx.globalAlpha = a; for (const f of pres.files) { const u = clamp((pres.t - f.d) / .55, 0, 1); if (u <= 0 || f.done) continue; const ee = u * u * (3 - 2 * u), cx = 195, cy = REVEAL_Y - 20, bx = f.x + (cx - f.x) * ee, by = f.y + (cy - f.y) * ee - Math.sin(Math.PI * ee) * 120, sz = 30 * f.s * (1 - .45 * ee);
+    ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(bx, by, 0, bx, by, sz); gg.addColorStop(0, 'rgba(120,210,255,.5)'); gg.addColorStop(1, 'rgba(120,210,255,0)'); ctx.fillStyle = gg; ctx.fillRect(bx - sz, by - sz, sz * 2, sz * 2); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(BKIMG, bx - sz / 2, by - sz / 2, sz, sz); if (u >= 1) { f.done = 1; sfx.reel && sfx.reel(); } } ctx.restore(); }
+  if (pres.t > 2.4 && pres.kind === 'reset') { const u = clamp((pres.t - 2.4) * 4, 0, 1), sc = u < 1 ? 1.6 - .6 * u : 1;
+    ctx.save(); ctx.globalAlpha = a * u; ctx.translate(195, REVEAL_Y + 130); ctx.scale(sc, sc); const gb = ctx.createLinearGradient(-150, 0, 150, 0); gb.addColorStop(0, 'rgba(30,110,220,0)'); gb.addColorStop(.2, 'rgba(30,110,220,.95)'); gb.addColorStop(.8, 'rgba(30,110,220,.95)'); gb.addColorStop(1, 'rgba(30,110,220,0)'); ctx.fillStyle = gb; ctx.fillRect(-190, -24, 380, 48); ctx.fillStyle = 'rgba(160,225,255,.9)'; ctx.fillRect(-150, -24, 300, 2); ctx.fillRect(-150, 22, 300, 2); ctx.restore();
+    gtext('백업 상점 열림!', 195, REVEAL_Y + 131, 26 * sc, { alpha: a * u, top: '#FFFFFF', bot: '#9FE3FF', wob: 1.5, t }); }
   gtext(pres.kind === 'reset' ? '공장 초기화!' : '클라우드 동기화!', 195, REVEAL_Y - 110, 30, { alpha: a, appear: pres.t * 5, top: '#FFFFFF', bot: '#FFD66B', wob: 2, t });
   gtext('+' + fmtL(shown), 195, REVEAL_Y - 10, 84, { alpha: a, scale: pres.landed ? 1 + .4 * Math.exp(-(pres.t - .9) * 6) : 1, top: '#FFFFFF', bot: pres.kind === 'reset' ? '#7CE0FF' : '#B98CFF', wob: 2.5, t });
   gtext(pres.kind === 'reset' ? '백업파일' : 'GB', 195, REVEAL_Y + 34, 26, { alpha: a, top: '#FFFFFF', bot: '#BFD9FF' });
@@ -1916,8 +2253,7 @@ function renderSheet() {
       <button class="btn big" data-act="sync" ${P.canSync && P.gbNow > 0 ? '' : 'disabled'}>${armSync ? '정말 동기화할까요? 한 번 더 누르기' : '클라우드 동기화'}</button>
       <div class="h3">클라우드 상점 · 가진 GB ${shortOf(P.gb)}</div>`
       + P.cloudShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 동기화 ${x.minSyncs}회 후`}</div></div><button class="btn" data-act="buyCloud" data-item="${x.id}" ${x.open && geq(P.gb, x.price) ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : shortOf(x.price) + ' GB'}</button></div>`).join('') : '')
-      + `<div class="h3">백업 상점 · 가진 파일 ${shortOf(P.files)}개</div>`
-      + P.backupShop.map(x => `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${x.label}</b><div class="m">${x.lv}/${x.max}${x.open ? '' : ` · 초기화 ${x.minResets}회 후`}</div></div><button class="btn skin gold" data-act="buyBackup" data-item="${x.id}" ${x.open && geq(P.files, x.price) ? '' : 'disabled'}>${x.lv >= x.max ? '완료' : shortOf(x.price) + '개'}</button></div>`).join('');
+      + backupShopHTML(sheetKind === 'backup');
   } else if (sheetKind === 'rec') {
     $('sheet-t').textContent = '기록';
     b.innerHTML = `<div class="cols"><div><h4>최고 연쇄</h4><b style="font-size:24px">${P.bestChain}</b></div><div><h4>최고 한 방</h4><b style="font-size:24px">${P$(st.bestSwipe)}</b></div>
@@ -2161,6 +2497,19 @@ function payPrompt(x) {
   if (act === 'premium' && x.dataset.voucher !== '1') { const a = m.premium.find(q => q.id === x.dataset.id); return [`${a.name} 프리미엄 ★${a.stars + 1}`, `가치 ×${(a.permille * 2 / 1000)}로`, D(a.price) + ' 사용']; }
   return null;
 }
+let bkPop = null, bkFresh = false;
+function backupShopHTML(full) {
+  const items = P.backupShop.slice().sort((a, b) => (b.open - a.open) || a.minResets - b.minResets);
+  const hero = full ? `<div class="bk-hero"><img src="img/bm/currency-backup.webp" alt=""><div class="k">보유 백업파일</div><b>${shortOf(P.files)}</b><div class="s">초기화해도 사라지지 않는 영구 강화</div><div class="chips"><span>초기화 ${P.resets}회</span><span>열린 강화 ${items.filter(x => x.open).length}/${items.length}</span></div></div>`
+    : `<div class="h3">백업 상점 · 가진 파일 ${shortOf(P.files)}개</div>`;
+  return hero + items.map((x, i) => {
+    const done = x.lv >= x.max, bar = x.max <= 12 ? `<div class="bar">${Array.from({ length: x.max }, (_, k) => `<i class="${k < x.lv ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="pr"><i style="width:${x.lv / x.max * 100}%"></i></div>`;
+    const isNew = x.open && x.minResets === P.resets && x.lv === 0;
+    return `<div class="bk-it ${x.open ? '' : 'lock'} ${done ? 'max' : ''} ${bkPop === x.id ? 'pop' : ''}" style="animation-delay:${bkFresh ? .5 + i * .07 : i * .03}s"><div class="tier">${x.open ? (done ? 'MAX' : `Lv<small>${x.lv}</small>`) : '🔒'}</div>
+      <div class="t"><b>${x.label}</b>${x.open ? bar + `<div class="lvl">${x.lv}/${x.max}</div>` : `<div class="lvl">초기화 ${x.minResets}회 후 열림</div>`}</div>
+      <button class="btn skin gold" data-act="buyBackup" data-item="${x.id}" ${x.open && !done && geq(P.files, x.price) ? '' : 'disabled'}>${done ? '완료' : `<img src="img/bm/currency-backup.webp" alt="">${shortOf(x.price)}`}</button>${isNew ? '<span class="new">NEW</span>' : ''}</div>`;
+  }).join('');
+}
 async function sheetAct(x) {
   const act = x.dataset.act;
   const ask = payPrompt(x);
@@ -2170,6 +2519,7 @@ async function sheetAct(x) {
   if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd(x.dataset.slot))) return; }
   const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
+  if (act === 'buyBackup' && o.ok) { bkPop = x.dataset.item; sfx.unit(); buzz([20, 30, 40]); setTimeout(() => { bkPop = null; }, 700); }
   if ((act === 'reset' || act === 'sync') && o.ok) { const got = act === 'reset' ? P.state.backupFilesNow : P.gbNow; closeAll(); armSync = false; prestigeShow(act, got, o.state); }
   afterAct(o, null, act);
 }
@@ -2212,7 +2562,14 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+    if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
+    if (k === 'wave') return waveHit(a || 0);
+    if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
+    if (k === 'reset' || k === 'sync') return prestigeShow(k, a || '12345', S);
+    if (k === 'levelup') { say2(`레벨 업! Lv ${(S && S.level || 1) + 1}`, 150, 28); phone('ui.levelup', .4); return; }
+    if (k === 'unit') return addWallet(wallet.v + 3.2);
+  }, swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
 (async () => {
@@ -2222,7 +2579,7 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
   // daily check-in on the 30-day board: claim and show it once a day
   const fresh = st.swipes === 0 && st.level === 1 && !new URLSearchParams(location.search).has('noftue');
   if (FT.step < 9 && fresh) setTimeout(() => ftue('boot'), 1500);
-  else { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
+  else if (!/[?&]noattend/.test(location.search)) { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
 })();
 
 // ---------- return-from-away card (bible 16 #13, B6) ----------
