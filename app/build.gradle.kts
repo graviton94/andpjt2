@@ -25,8 +25,9 @@ android {
         applicationId = "io.github.graviton94.donotdisturb"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0-web"
+        // Play versionCode = 1000 + AAB workflow run number (always above the old test builds); local/test builds stay 4
+        versionCode = System.getenv("DND_VERSION_CODE")?.toIntOrNull()?.let { 1000 + it } ?: 4
+        versionName = System.getenv("DND_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "0.4.0-web"
         buildConfigField("boolean", "FIREBASE", hasFirebase.toString())
     }
 
