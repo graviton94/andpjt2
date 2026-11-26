@@ -1581,10 +1581,11 @@ function draw(t) {
     const m = plate.phase === 'merge' ? plate.merge : 0, e = m * m;
     ctx.globalAlpha = (live ? 1 : .4) * (1 - e * .9);
     const cxp = CHIPX + (195 - CHIPX) * e, mxp = MULTX + (195 - MULTX) * e;
-    scorePill(cxp, BOXY, 124, 40, 'rgba(76,140,255,.95)', 'rgba(36,83,214,.95)', plate.cs.x);
-    scorePill(mxp, BOXY, 124, 40, 'rgba(255,107,90,.95)', 'rgba(217,45,58,.95)', plate.ms.x);
-    stext(fmtL(plate.chipsShown), cxp, BOXY + 1, 22, { scale: plate.cs.x });
-    stext('×' + fmtMult(plate.multShown), mxp, BOXY + 1, 22, { scale: plate.ms.x });
+    const pcs = clamp(plate.cs.x, .94, 1.1), pms = clamp(plate.ms.x, .94, 1.1);  // a short pop, never wide enough to touch the neighbour
+    scorePill(cxp, BOXY, 124, 40, 'rgba(76,140,255,.95)', 'rgba(36,83,214,.95)', pcs);
+    scorePill(mxp, BOXY, 124, 40, 'rgba(255,107,90,.95)', 'rgba(217,45,58,.95)', pms);
+    stext(fmtL(plate.chipsShown), cxp, BOXY + 1, 22, { scale: pcs });
+    stext('×' + fmtMult(plate.multShown), mxp, BOXY + 1, 22, { scale: pms });
     ctx.globalAlpha = 1;
     if (live && mult() >= 7) flames(mxp, BOXY, 132, 40, t, clamp((mult() - 5) / 10, .35, 1));
   }
