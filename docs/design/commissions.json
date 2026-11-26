@@ -1,101 +1,6 @@
 {
  "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
- "pending": [
-  {
-   "id": "pass-hero",
-   "title": "패스 3종 대표 아트 (비쌀수록 화려하게)",
-   "priority": 1,
-   "cols": 3,
-   "rows": 1,
-   "cell": [
-    768,
-    768
-   ],
-   "intro": "Three hero illustrations for the subscription pass cards of an idle game about a phone's notification shade. Same sticker style as the rest of the shop, but each pass is clearly richer than the one before it: Monthly = warm gold and friendly, Turbo = electric and fast, Ultra = luxurious obsidian, gold and prism. Each object sits on its own, slightly turned three-quarters to the right, filling about 70% of its cell. No letters or numbers anywhere (prices and names are drawn by code).",
-   "items": [
-    {
-     "id": "monthly",
-     "note": "월간 패스 ₩5,500 · 따뜻한 금색, 친근함",
-     "out": 768,
-     "desc": "MONTHLY PASS: a chubby golden VIP ticket-card standing upright, a small crown of three notification bells on top, a calendar tear-off corner peeking out with tiny sparkles, a gentle warm glow ring behind it. Palette gold #FFE27A to #F0A000 with cream #FFF6D6 and a touch of orange #FF8A1F. Friendly and inviting, the least ornate of the three"
-    },
-    {
-     "id": "turbo",
-     "note": "터보 패스 ₩33,000 · 전기 파랑, 속도",
-     "out": 768,
-     "desc": "TURBO PASS: a sleek phone strapped to a twin rocket booster, blasting forward with bold speed lines and crackling electric arcs, a cyan visor shine across its screen, small lightning sparks around. Palette electric blue #3867F0 to cyan #5CE1E6 with white highlights and a hot magenta-pink exhaust #FF4FA0. Clearly faster and flashier than the monthly ticket, more detail and more energy"
-    },
-    {
-     "id": "ultra",
-     "note": "울트라 패스 ₩99,000 · 흑요석+금+프리즘, 최상위",
-     "out": 768,
-     "desc": "ULTRA PASS: an obsidian-black phone with thick polished gold trim floating above a small gold pedestal, wearing a jewelled crown, surrounded by a halo of prismatic light shards and floating gems (ruby, sapphire, emerald), golden coins orbiting, faint holographic rainbow sheen only on the edges of the gold. Palette obsidian #15101C, gold #FFD23F to #B8860B, gem accents. The most luxurious, most detailed and most radiant of the three; reads as the ultimate tier"
-    }
-   ]
-  },
-  {
-   "id": "pass-perks",
-   "title": "패스 혜택 아이콘 8종",
-   "priority": 1,
-   "cols": 4,
-   "rows": 2,
-   "cell": [
-    384,
-    384
-   ],
-   "intro": "Perk icons for the pass benefit lists, small and readable at 28 px, same sticker style.",
-   "items": [
-    {
-     "id": "ad-free",
-     "note": "광고 없이 보상",
-     "out": 256,
-     "desc": "a play-button tile with a bold diagonal 'no' slash and a small gift ribbon bow on the corner. Tile #EFEFF4, slash #FF3B30, bow gold"
-    },
-    {
-     "id": "daily-data",
-     "note": "매일 데이터",
-     "out": 256,
-     "desc": "a little desk calendar page with the green four-signal-bars gem from the currency set sitting on it. Calendar white with red top band, gem #6BE38A to #12A150"
-    },
-    {
-     "id": "instant-data",
-     "note": "즉시 데이터",
-     "out": 256,
-     "desc": "the green signal-bars gem bursting out of a small open gift box with sparkles. Gem #6BE38A to #12A150, box gold #FFE27A to #F0A000"
-    },
-    {
-     "id": "overclock",
-     "note": "매일 오버클럭",
-     "out": 256,
-     "desc": "a computer chip with a flame on top and a tiny clock on its side. Chip graphite #4A4F5C to #2A2D35, flame #FF8A1F, clock face white"
-    },
-    {
-     "id": "speed",
-     "note": "상시 게임 속도",
-     "out": 256,
-     "desc": "a speedometer gauge with the needle slammed to the far right, little speed lines behind. Dial white, arc gradient green to red, needle #FF3B30"
-    },
-    {
-     "id": "prestige",
-     "note": "환생 재화 배율",
-     "out": 256,
-     "desc": "the blue backup file from the currency set stacked with a puffy sky-blue cloud, a bold upward arrow behind both. File #8CC4FF to #2F6FE0, cloud #BDF1FF to #38B8E8, arrow #34C759"
-    },
-    {
-     "id": "crown",
-     "note": "최상위 표시",
-     "out": 256,
-     "desc": "a chunky three-point gold crown with one red gem in the middle. Gold #FFE27A to #F0A000, gem #FF3B30"
-    },
-    {
-     "id": "ribbon",
-     "note": "홍보 띠 (글자는 코드)",
-     "out": 384,
-     "desc": "a blank horizontal gold ribbon banner with folded tails on both ends, wide and flat enough for a short word to be printed on it later, no text. Gold #FFD23F to #F0A000, tails darker #C27A00"
-    }
-   ]
-  }
- ],
+ "pending": [],
  "delivered": [
   {
    "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",
@@ -146,6 +51,10 @@
   {
    "title": "판촉 딱지·광고 표시·상태 아이콘 16종",
    "date": "11-24"
+  },
+  {
+   "title": "패스 대표 아트 3종 · 혜택 아이콘 8종 (후광·반짝이는 코드로)",
+   "date": "11-27"
   }
  ],
  "sheetRules": "ONE image only: a sprite sheet. Draw every item in its own grid cell, in the exact order listed (left to right, top to bottom). Each item is centred in its cell with at least 12% empty margin on every side; items never touch, overlap or cross cell borders. Same scale, outline weight and lighting for all items. Transparent background; if transparency is impossible, fill everything outside the items with flat solid #FF00FF magenta. No grid lines, no cell borders, no labels, no numbers, no text anywhere.",
