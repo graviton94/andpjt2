@@ -2165,7 +2165,7 @@ async function sheetAct(x) {
   if (ask && !(await confirmPay(...ask))) return;
   if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
   if (act === 'sync' && !armSync) { armSync = true; renderSheet(); sfx.snap(); return; }
-  if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd())) return; }
+  if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd(x.dataset.slot))) return; }
   const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
   if ((act === 'reset' || act === 'sync') && o.ok) { const got = act === 'reset' ? P.state.backupFilesNow : P.gbNow; closeAll(); armSync = false; prestigeShow(act, got, o.state); }
@@ -2180,7 +2180,14 @@ async function offerDouble(total) {
   offerEl.onclick = async () => { offerEl.classList.remove('on'); if (!m.passActive && !(await fakeAd())) return;
     const before = L(S.wallet); const o = await api('watchAd', { slot: 'BestDouble' }); if (o.ok) { addWallet(Lsub(L(o.state.wallet), before)); say2('최고 기록 ×2!', 300, 30); sfx.unit(); } applyState(o.state); };
 }
-function fakeAd() {
+// Rewarded ad: the app's AdMob host when there is one (window.Game.showAd), else the 3-second stand-in for the browser
+const adWait = {};
+window.onAdResult = (id, earned, reason) => { const r = adWait[id]; delete adWait[id]; if (r) r(!!earned, reason); };
+const track = (name, params = {}) => { try { if (window.Game && window.Game.log) window.Game.log(name, JSON.stringify(params)); } catch (e) {} };
+function fakeAd(slot = '') {
+  if (window.Game && window.Game.showAd) return new Promise(res => { const id = 'ad' + Date.now(); track('ad_show', { slot });
+    adWait[id] = (ok, reason) => { track(ok ? 'ad_reward' : 'ad_fail', { slot, code: reason || '' }); if (!ok && reason === 'loading') toast('광고를 불러오는 중이에요 · 잠시 뒤 다시 눌러 주세요', 'err'); else if (!ok && reason === 'consent') toast('광고 동의 화면을 먼저 확인해 주세요', 'err'); res(ok); };
+    window.Game.showAd(id); });
   return new Promise(res => { const ov = $('adov'); let n = 3; $('adt').textContent = n; ov.classList.add('on');
     const iv = setInterval(() => { n--; $('adt').textContent = n; if (n <= 0) { clearInterval(iv); ov.classList.remove('on'); res(true); } }, 1000); });
 }
@@ -2242,7 +2249,7 @@ function showReturn(o, awayMs) {
   (function tick() { const k = Math.min(1, (performance.now() - t0) / 1100), e = 1 - Math.pow(1 - k, 3); v.textContent = '+' + (k < 1 ? fmtL(lerpL(-1, to, e)) : shortOf(o.paid, o.paidShort)); if (k < 1 && el.classList.contains('on')) requestAnimationFrame(tick); })();
   const close = () => el.classList.remove('on');
   $('ret-ok').onclick = () => { close(); sfx.snap(); };
-  if ($('ret-ad')) $('ret-ad').onclick = async () => { if (await fakeAd()) { toast('다음 복귀부터 +70% 적용돼요', 'ok'); close(); } };
+  if ($('ret-ad')) $('ret-ad').onclick = async () => { if (await fakeAd('offline')) { toast('다음 복귀부터 +70% 적용돼요', 'ok'); close(); } };
 }
 
 // ---------- first-run guide (bible 16 §2): one thing at a time, game-native bubble, always skippable ----------
@@ -2340,7 +2347,7 @@ async function endChallenge() {
 
 // ---------- first-run flow: swipe → burst → pull the shade → app shop → first buy (bible 16 #1, #2, #7) ----------
 const FT = { step: +(localStorage.getItem('ftue') || 0) };  // 0 = not started, 9 = done
-const ftSave = n => { FT.step = n; localStorage.setItem('ftue', n); };
+const ftSave = n => { FT.step = n; localStorage.setItem('ftue', n); track('ftue_step', { step: n }); };
 const ftOff = () => $('coach').classList.remove('on');
 const ftEnd = () => { ftSave(9); ftOff(); };
 const rowRect = id => { const r = byId(id); return r ? { canvas: 1, x: CX0, y: r.y.t, w: CW, h: CH } : null; };

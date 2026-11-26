@@ -9,6 +9,8 @@ import android.webkit.JavascriptInterface
 import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.WebSession
+import com.graviton94.notificationcleaner.platform.Ads
+import com.graviton94.notificationcleaner.platform.Telemetry
 import org.json.JSONObject
 import java.io.File
 
@@ -71,6 +73,22 @@ class GameBridge(private val context: Context) {
         if (method != "snapshot" && method != "hint" && method != "panel" && method != "drill" && method != "bm") save()
         out
     }
+
+    /** Set by MainActivity: the rewarded-ad host and a way to call back into the page. */
+    var ads: Ads? = null
+    var js: ((String) -> Unit)? = null
+
+    /** Page asks for a rewarded ad; the answer comes back as window.onAdResult(id, earned, reason). */
+    @JavascriptInterface
+    fun showAd(id: String) {
+        val q = JSONObject.quote(id)
+        val a = ads ?: return run { js?.invoke("window.onAdResult && window.onAdResult($q, false, 'none')") }
+        a.show { earned, reason -> js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})") }
+    }
+
+    /** Analytics event from the page (no-op without Firebase). */
+    @JavascriptInterface
+    fun log(name: String, paramsJson: String) = Telemetry.event(name, paramsJson)
 
     @JavascriptInterface
     fun buzz(ms: Int) {

@@ -22,6 +22,11 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Firebase config (only when the repository secret is set)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; echo "Firebase on"; else echo "Firebase off (no secret)"; fi
       - name: Core rules tests
         run: ./gradlew -p core test
       - name: Test and assemble
