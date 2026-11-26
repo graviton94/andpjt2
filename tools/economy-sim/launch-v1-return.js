@@ -30,7 +30,7 @@ const assert = require('node:assert/strict');
     assert.equal(returned.offlineCapMs, 12 * 3_600_000);
     assert.equal(returned.offlineBonus.multiplierPermille, 1700);
     assert(BigInt(returned.paid) > 0n);
-    await page.goto(root+'/index.html?auto=0');
+    await page.goto(root+'/index.html?auto=0&lang=ko');
     await page.evaluate(response => showReturn(response), returned);
     await page.locator('#ret.on .warn').waitFor();
     await page.waitForFunction(amount => document.querySelector('#ret-v').textContent === '+' + amount, returned.paidShort);
