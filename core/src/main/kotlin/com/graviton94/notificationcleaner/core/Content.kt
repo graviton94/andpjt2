@@ -161,33 +161,33 @@ object Catalog {
         app("pin", "핀트레스트", 4, 4, WE, Category.Media, 28), // Pinterest 패러디
         app("meet", "주움", 4, 5, WE, Category.Work, 29), // Zoom 패러디
         // 5티어
-        app("food", "배다른민족", 5, 0, AS, Category.Daily, 31), // 배달의민족 패러디
+        app("food", "배다른민족", 5, 0, AS, Category.Daily, 25), // 배달의민족 패러디
         app("edit", "컵컷", 5, 1, AS, Category.Media, 33), // CapCut 패러디
         app("travel", "트래블로까", 5, 2, SE, Category.Daily, 35), // Traveloka 패러디
         app("joox", "쥬욱스", 5, 3, SE, Category.Media, 37), // JOOX 패러디
         app("reddit", "래딧", 5, 4, WE, Category.Social, 39), // Reddit 패러디
         app("career", "링크드아웃", 5, 5, WE, Category.Work, 41), // LinkedIn 패러디
         // 6티어
-        app("mall", "쿠빵", 6, 0, AS, Category.Money, 43), // 쿠팡 패러디
-        app("portal", "메이버", 6, 1, AS, Category.Work, 45), // Naver 패러디
-        app("michat", "미챗챗", 6, 2, SE, Category.Social, 47), // MiChat 패러디
-        app("agoda", "아고다다", 6, 3, SE, Category.Daily, 49), // Agoda 패러디
-        app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 51), // PayPal 패러디
-        app("match", "튄더", 6, 5, WE, Category.Social, 53), // Tinder 패러디
+        app("mall", "쿠빵", 6, 0, AS, Category.Money, 72), // 쿠팡 패러디
+        app("portal", "메이버", 6, 1, AS, Category.Work, 74), // Naver 패러디
+        app("michat", "미챗챗", 6, 2, SE, Category.Social, 76), // MiChat 패러디
+        app("agoda", "아고다다", 6, 3, SE, Category.Daily, 78), // Agoda 패러디
+        app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 80), // PayPal 패러디
+        app("match", "튄더", 6, 5, WE, Category.Social, 82), // Tinder 패러디
         // 7티어
-        app("superapp", "위잿", 7, 0, AS, Category.Money, 55), // WeChat 패러디
-        app("line", "라잉", 7, 1, AS, Category.Social, 57), // LINE 패러디
-        app("jobs", "잡스트리트", 7, 2, SE, Category.Work, 59), // JobStreet 패러디
-        app("lazada", "라자다다", 7, 3, SE, Category.Money, 61), // Lazada 패러디
-        app("ride", "우바", 7, 4, WE, Category.Daily, 63), // Uber 패러디
-        app("robin", "로빈훗훗", 7, 5, WE, Category.Money, 65), // Robinhood 패러디
+        app("superapp", "위잿", 7, 0, AS, Category.Money, 73), // WeChat 패러디
+        app("line", "라잉", 7, 1, AS, Category.Social, 74), // LINE 패러디
+        app("jobs", "잡스트리트", 7, 2, SE, Category.Work, 75), // JobStreet 패러디
+        app("lazada", "라자다다", 7, 3, SE, Category.Money, 76), // Lazada 패러디
+        app("ride", "우바", 7, 4, WE, Category.Daily, 77), // Uber 패러디
+        app("robin", "로빈훗훗", 7, 5, WE, Category.Money, 78), // Robinhood 패러디
         // 8티어
-        app("dance", "틱특", 8, 0, AS, Category.Media, 67), // TikTok 패러디
-        app("chat", "코코아톡", 8, 1, AS, Category.Social, 69), // 카카오톡 패러디
-        app("grab", "그래브", 8, 2, SE, Category.Daily, 71), // Grab 패러디
-        app("shopee", "쇼피피", 8, 3, SE, Category.Money, 73), // Shopee 패러디
-        app("beat", "스팟티파이", 8, 4, WE, Category.Media, 75), // Spotify 패러디
-        app("why", "와이", 8, 5, WE, Category.Social, 77), // X 패러디
+        app("dance", "틱특", 8, 0, AS, Category.Media, 74), // TikTok 패러디
+        app("chat", "코코아톡", 8, 1, AS, Category.Social, 75), // 카카오톡 패러디
+        app("grab", "그래브", 8, 2, SE, Category.Daily, 76), // Grab 패러디
+        app("shopee", "쇼피피", 8, 3, SE, Category.Money, 77), // Shopee 패러디
+        app("beat", "스팟티파이", 8, 4, WE, Category.Media, 78), // Spotify 패러디
+        app("why", "와이", 8, 5, WE, Category.Social, 79), // X 패러디
         // 9티어
         app("mega", "아마좀", 9, 0, GL, Category.Money, 79), // Amazon 패러디
         app("ott", "넷플러그", 9, 1, GL, Category.Media, 89), // Netflix 패러디
@@ -205,16 +205,23 @@ object Catalog {
     )
     val starter = listOf("alarm", "memo", "weather")
 
+    /** Previous gates that were raised in rules v5. Keep the app unlocks the player had earned. */
+    internal val legacyAppUnlockLevels = mapOf(
+        "mall" to 43, "portal" to 45, "michat" to 47, "agoda" to 49, "paypal" to 51, "match" to 53,
+        "superapp" to 55, "line" to 57, "jobs" to 59, "lazada" to 61, "ride" to 63, "robin" to 65,
+        "dance" to 67, "chat" to 69, "grab" to 71, "shopee" to 73, "beat" to 75, "why" to 77,
+    )
+
     /** Level at which each app's pro version (×2 value) opens: 25 levels after the app itself. */
     private val launchPro: Map<String, Int> = mapOf(
         "alarm" to 26, "weather" to 26, "memo" to 26, "flash" to 27, "calc" to 28, "recorder" to 29,
         "phone" to 30, "sms" to 31, "camera" to 32, "gallery" to 33, "contacts" to 34, "settings" to 36,
         "music" to 37, "papago" to 38, "zalo" to 39, "momo" to 41, "airbnb" to 42, "duo" to 44,
         "ctaxi" to 45, "pay" to 47, "glints" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
-        "food" to 56, "edit" to 58, "travel" to 60, "joox" to 62, "reddit" to 64, "career" to 66,
-        "mall" to 68, "portal" to 70, "michat" to 72, "agoda" to 74, "paypal" to 76, "match" to 78,
-        "superapp" to 80, "line" to 82, "jobs" to 84, "lazada" to 86, "ride" to 88, "robin" to 90,
-        "dance" to 92, "chat" to 94, "grab" to 96, "shopee" to 98, "beat" to 100, "why" to 102,
+        "food" to 50, "edit" to 58, "travel" to 60, "joox" to 62, "reddit" to 64, "career" to 66,
+        "mall" to 97, "portal" to 99, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
+        "superapp" to 98, "line" to 99, "jobs" to 100, "lazada" to 101, "ride" to 102, "robin" to 103,
+        "dance" to 99, "chat" to 100, "grab" to 101, "shopee" to 102, "beat" to 103, "why" to 104,
         "mega" to 104, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,
         "tube" to 122, "photo" to 133, "feed" to 137, "green" to 141, "search" to 145, "ai" to 149,
     )

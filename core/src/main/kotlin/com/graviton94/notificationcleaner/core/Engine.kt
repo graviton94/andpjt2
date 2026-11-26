@@ -44,8 +44,10 @@ data class Backup(
     val bestLevel: Int = 0,
     /** Best run P ever: backup files pay only for beating it. */
     val bestRunP: BigInteger = BigInteger.ZERO,
-    /** 2nd prestige: survives a sync, which wipes everything else here except [bestLevel]. */
+    /** 2nd prestige: survives a sync together with the app unlock records. */
     val cloud: Cloud = Cloud(),
+    /** Highest level earned before the app unlock gates moved in rules v5. */
+    val legacyAppUnlockLevel: Int = 0,
 ) {
     fun lv(item: BackupItem): Int = items[item] ?: 0
 }
@@ -466,6 +468,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
             lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
             bestRunP = s.backup.bestRunP.max(s.runEarned),
+            legacyAppUnlockLevel = legacyAppUnlockLevel(s),
             cloud = s.backup.cloud.let { c -> if (files > 0 && Catalog.packs.isNotEmpty()) c.copy(packResets = c.packResets + 1) else c }
                 .let { c -> c.copy(account = c.account.copy(backupBoost = false)) },
         )).copy(nextOverloadAt = s.nextOverloadAt, nextMajorEventAt = s.nextMajorEventAt, previousMajorEvent = s.previousMajorEvent)
@@ -510,7 +513,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             gb = c.gb + scalePermille(gb, prestigePermille(s, now)), syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
             bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
         )
-        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
+        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud,
+            legacyAppUnlockLevel = legacyAppUnlockLevel(s)))
             .copy(nextOverloadAt = s.nextOverloadAt, nextMajorEventAt = s.nextMajorEventAt, previousMajorEvent = s.previousMajorEvent)
     }
 
@@ -533,8 +537,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     /** Battery recharge up to [now]. */
     fun tick(input: GameState, now: Long): GameState {
-        val s = if (input.rulesVersion < rules.version) input.copy(rulesVersion = rules.version,
-            rows = input.rows.map { if (it.merges) it.copy(threshold = rules.threshold) else it }) else input
+        val s = if (input.rulesVersion < rules.version) input.copy(
+            rulesVersion = rules.version,
+            rows = input.rows.map { if (it.merges) it.copy(threshold = rules.threshold) else it },
+            backup = input.backup.copy(legacyAppUnlockLevel = legacyAppUnlockLevel(input)),
+        ) else input
         val cap = energyCap(s)
         if (s.energy >= cap) return if (s.nextChargeAt == 0L) s else s.copy(nextChargeAt = 0)
         if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s, now))
@@ -1112,10 +1119,17 @@ class Engine(val rules: RuleSet = RuleSet()) {
         return p
     }
 
+    private fun legacyAppUnlockLevel(s: GameState): Int =
+        if (s.rulesVersion < APP_UNLOCK_RULES_VERSION) maxOf(s.backup.legacyAppUnlockLevel, s.level, s.backup.bestLevel)
+        else s.backup.legacyAppUnlockLevel
+
     /** Unlocks are permanent: the deepest level any run reached (and the reset count) opens apps for good. */
     fun unlocked(s: GameState, appId: String): Boolean {
         val app = Catalog.app(appId)
-        return maxOf(s.level, s.backup.bestLevel) >= app.unlockLevel && s.backup.resets >= app.minResets
+        if (s.backup.resets < app.minResets) return false
+        if (maxOf(s.level, s.backup.bestLevel) >= app.unlockLevel) return true
+        val previousGate = Catalog.legacyAppUnlockLevels[appId] ?: return false
+        return legacyAppUnlockLevel(s) >= previousGate
     }
 
     fun canBuy(s: GameState, appId: String): Boolean =

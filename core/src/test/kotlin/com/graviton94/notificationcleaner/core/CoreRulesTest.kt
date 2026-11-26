@@ -5,6 +5,7 @@ import java.math.BigInteger.ZERO
 import java.math.BigInteger.valueOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -434,7 +435,7 @@ class CoreRulesTest {
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
-        assertTrue(e.unlocked(after, "agoda"), "app unlocks survive")
+        assertTrue(e.unlocked(after, "portal"), "app unlocks survive")
         assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
@@ -521,6 +522,26 @@ class CoreRulesTest {
         val result = e.swipe(green, 101, now)!!
         assertEquals(2, result.beats.filterIsInstance<Beat.Burst>().single().row.threshold)
         assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst + 10, result.state.gauge)
+    }
+
+    @Test
+    fun balanceUpdateKeepsPreviouslyUnlockedAppsThroughBothResets() {
+        val e = Engine()
+        val old = e.newGame(now, 21).copy(rulesVersion = 4, level = 60,
+            runEarned = e.rules.levelP(60))
+        val loaded = SaveCodec.decode(SaveCodec.encode(old))
+        assertTrue(e.unlocked(loaded, "mall"))
+        assertTrue(e.unlocked(loaded, "superapp"))
+        assertFalse(e.unlocked(loaded, "dance"))
+        val migrated = e.tick(loaded, now)
+        assertEquals(60, migrated.backup.legacyAppUnlockLevel)
+        val reset = e.factoryReset(migrated, now)!!
+        assertTrue(e.unlocked(reset, "mall"))
+        val syncLevel = e.rules.syncLevel
+        val synced = e.sync(reset.copy(level = syncLevel, runEarned = e.rules.levelP(syncLevel)), now)!!
+        val reloaded = SaveCodec.decode(SaveCodec.encode(synced))
+        assertEquals(60, reloaded.backup.legacyAppUnlockLevel)
+        assertFalse(e.unlocked(e.newGame(now, 21).copy(level = 60), "mall"))
     }
 
     @Test

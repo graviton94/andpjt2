@@ -6,12 +6,14 @@ import java.math.BigInteger.TEN
 
 private fun big(x: Long): BigInteger = BigInteger.valueOf(x)
 
+internal const val APP_UNLOCK_RULES_VERSION = 5
+
 /**
  * Every tunable number of the core rules. The engine reads only this; a rules change is a new [version].
  * Economy values are drafts until the economy simulator (economy v0.2) fixes them.
  */
 data class RuleSet(
-    val version: Int = 4,
+    val version: Int = APP_UNLOCK_RULES_VERSION,
     // Board
     val baseRows: Int = 7,
     val maxRows: Int = 12,
@@ -148,6 +150,9 @@ data class RuleSet(
     val levelRatioPermille: Int = 2_330,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 1,
+    /** Multiplier on level-to-level P growth from this level onward. */
+    val lateGrowthFrom: Int = 80,
+    val lateGrowthPermille: Int = 1_000,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
     /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
@@ -209,7 +214,8 @@ data class RuleSet(
         for (l in 2..400) {
             t += q.toBigInteger()
             if (l >= levelLateFrom) ratio += levelRatioStepPermille
-            q = q * java.math.BigDecimal(ratio) / java.math.BigDecimal(1_000)
+            val lateMultiplier = if (l >= lateGrowthFrom) lateGrowthPermille else 1_000
+            q = q * java.math.BigDecimal(ratio.toLong() * lateMultiplier) / java.math.BigDecimal(1_000_000)
         }
         t
     }

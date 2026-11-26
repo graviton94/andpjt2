@@ -57,6 +57,8 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "callEverySwipes" -> r.copy(callEverySwipes = v.toInt())
             "backupExponentPermille" -> r.copy(backupExponentPermille = v.toInt())
             "cloudExponentPermille" -> r.copy(cloudExponentPermille = v.toInt())
+            "lateGrowthFrom" -> r.copy(lateGrowthFrom = v.toInt())
+            "lateGrowthPermille" -> r.copy(lateGrowthPermille = v.toInt())
             "levelLateFrom" -> r.copy(levelLateFrom = v.toInt())
             "levelRatioStepPermille" -> r.copy(levelRatioStepPermille = v.toInt())
             else -> error("unknown rule $k")
@@ -187,6 +189,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
         seenLevels = s.appLevels
         for ((app, level) in s.appLevels) {
             tl.appBuys.putIfAbsent(app, dayOf(t))
+            tl.tierDay.putIfAbsent(Catalog.app(app).tier, dayOf(t))
             val milestones = tl.appLevels.getOrPut(app) { sortedMapOf() }
             for (tier in milestonesToRecord) if (level >= tier) milestones.putIfAbsent(tier, dayOf(t))
         }
@@ -278,8 +281,6 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 }
                 observe()
                 if (reachedTarget(day)) break@play
-                val tier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
-                tl.tierDay.putIfAbsent(tier, dayOf(t))
                 if (tl.lastAppDay == null && LAST_APP in s.appLevels) tl.lastAppDay = dayOf(t)
                 // Exploit probe: from week 2, reset the moment Lv25 is reached.
                 if (spam && day >= 7 && s.level >= engine.rules.resetLevel && engine.backupFilesNow(s) > 0) {
@@ -432,9 +433,13 @@ fun monetization(days: Int, seeds: Long, profiles: List<Profile>) {
 /** Standard profiles, or "ablate": no ads, each ad placement alone, all ads. */
 fun profilesFor(arg: String?): List<Profile> = when (arg) {
     null, "all" -> Payer.entries.map { Profile(it.label, it) }
-    "screen" -> Payer.entries.map { Profile(it.label, it, AdSlot.entries.toSet() - AdSlot.OfflineDouble) }
     "ablate" -> listOf(Profile("광고 없음", Payer.Pass, emptySet())) + AdSlot.entries.map { Profile("${it.label}만", Payer.Pass, setOf(it)) } + Profile("광고 전부", Payer.Pass)
-    else -> if (arg.startsWith("slot:")) listOf(Profile(arg, Payer.Pass, setOf(AdSlot.valueOf(arg.removePrefix("slot:"))))) else arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
+    else -> when {
+        arg.startsWith("slot:") -> listOf(Profile(arg, Payer.Pass, setOf(AdSlot.valueOf(arg.removePrefix("slot:")))))
+        arg == "screen" -> profilesFor("all").map { it.copy(slots = it.slots - AdSlot.OfflineDouble) }
+        arg.startsWith("screen:") -> profilesFor(arg.removePrefix("screen:")).map { it.copy(slots = it.slots - AdSlot.OfflineDouble) }
+        else -> arg.split(",").map { Payer.valueOf(it) }.map { Profile(it.label, it) }
+    }
 }
 
 fun daily(days: Int, seeds: Long) {
