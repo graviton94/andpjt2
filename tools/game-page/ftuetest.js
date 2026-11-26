@@ -7,7 +7,7 @@ const out = process.argv[2]; require('fs').mkdirSync(out, { recursive: true });
     await fetch('http://127.0.0.1:8765/api/new?seed=5');
     const p = await b.newPage({ viewport: { width: 390, height: 844 }, colorScheme: scheme });
     const errors = []; p.on('pageerror', e => errors.push(e.message));
-    await p.goto('http://127.0.0.1:8765/index.html?auto=0'); await p.waitForTimeout(3200);
+    await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko'); await p.waitForTimeout(3200);
     const step = () => p.evaluate(() => +localStorage.getItem('ftue'));
     const bubble = () => p.evaluate(() => document.querySelector('#coach.on b') ? document.querySelector('#coach.on b').textContent : '');
     await p.screenshot({ path: `${out}/${scheme}-1.png` }); log.push(scheme + ' boot: ' + (await step()) + ' ' + await bubble());

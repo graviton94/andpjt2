@@ -574,8 +574,14 @@ window.I18N = (() => {
     const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim(), args = [];
     const key = core.replace(TOK, m => { args.push(m); return '#'; });
     const v = D[key];
-    if (v == null) { miss.add(key); r = s; }
+    if (v == null) {
+      const parts = core.split(/( · |「|」)/);
+      if (parts.length > 1) { const out = parts.map(x => /^( · |「|」)$/.test(x) || !HAN.test(x) ? x : tr(x)); r = out.some((x, i) => HAN.test(x) && x === parts[i]) ? s : lead + out.join('') + trail; }
+      else r = s;
+      if (r === s) miss.add(key);
+    }
     else { let i = 0; r = lead + v.replace(/#([1-9])?/g, (m, n) => n ? (args[+n - 1] ?? '') : (args[i++] ?? '')) + trail; }
+    if (r !== s) r = r.replace(/「/g, '“').replace(/」/g, '”');
     cache.set(s, r); return r;
   }
   if (lang === 'en') {
@@ -583,9 +589,9 @@ window.I18N = (() => {
     for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P[f]; P[f] = function (t, ...a) { return o.call(this, tr(t), ...a); }; }
     const ATTR = ['aria-label', 'title', 'placeholder', 'alt'];
     const fix = n => {
-      if (n.nodeType === 3) { if (HAN.test(n.nodeValue)) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
-      if (n.nodeType !== 1) return;
-      for (const a of ATTR) { const v = n.getAttribute(a); if (v && HAN.test(v)) n.setAttribute(a, tr(v)); }
+      if (n.nodeType === 3) { const pt = n.parentNode && n.parentNode.tagName; if (pt === 'SCRIPT' || pt === 'STYLE') return; if (HAN.test(n.nodeValue)) { const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
+      if (n.nodeType !== 1 || n.tagName === 'SCRIPT' || n.tagName === 'STYLE') return;
+      for (const a of ATTR) { const v = n.getAttribute(a); if (v && HAN.test(v)) { const w = tr(v); if (w !== v) n.setAttribute(a, w); } }
       for (const c of n.childNodes) fix(c);
     };
     const mo = new MutationObserver(ms => { for (const m of ms) { if (m.type === 'characterData') fix(m.target); else if (m.type === 'attributes') fix(m.target); else m.addedNodes.forEach(fix); } });
@@ -985,6 +991,7 @@ function pfxDraw() {
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
 function gtext(str, x, y, size, o = {}) {
+  str = I18N.tr(String(str));
   const top = o.top || '#FFFFFF', bot = o.bot || '#FFD66B', ink = o.ink || '#1A0E06', wob = reduce ? 0 : (o.wob || 0), appear = o.appear ?? 9, t = o.t || 0;
   ctx.save(); ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); if (o.scale) ctx.scale(o.scale, o.scale); if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
   ctx.font = `${size}px ${FD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
@@ -1600,7 +1607,7 @@ const EVENTS = {
       const d = e.d; sstep(d.m, dt, 120, 14);
       const inn = Math.min(1, e.t / .6), out = e.t > 4.2 ? Math.max(0, 1 - (e.t - 4.2) / .6) : 1, k = inn * out;
       fx.tint = [.06, .12, .38, .38 * k]; fxT.sat = 1 - .35 * k; heat = 0;
-      if (e.t < 4.2) { d.ct -= dt; if (d.ct <= 0) { d.ct = .55; const r = {}; for (let j = 0; j < 8; j++) spawn('MOTE', 60 + rnd() * 270, rowY(d.i) + 30, (rnd() - .5) * 30, -30 - rnd() * 40, 1.2, [170, 200, 255], 1.5 + rnd() * 2); Object.assign(r, { app: (r.app + 5) % APPS.length, a: 0 }); r.dy.x = -20; sfx.soft(); d.i = (d.i + 6) % 7; } }
+      if (e.t < 4.2) { d.ct -= dt; if (d.ct <= 0) { d.ct = .55; for (let j = 0; j < 8; j++) spawn('MOTE', 60 + rnd() * 270, rowY(d.i) + 30, (rnd() - .5) * 30, -30 - rnd() * 40, 1.2, [170, 200, 255], 1.5 + rnd() * 2); sfx.soft(); d.i = (d.i + 6) % 7; } }
       else d.m.t = 0;
       if (e.t > 4.9) endEvent();
     },

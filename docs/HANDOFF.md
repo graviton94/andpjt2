@@ -135,6 +135,8 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
   - Firebase(꺼짐/켜짐 자동), AdMob 보상형 + UMP, 분석 이벤트(ad_*, ftue_step)
   - 서명 키, AAB 워크플로
 - 웹사이트 이름 · 주소 변경, 스토어 그래픽 이미지(새 제목)
+- VFX 3차(빛 계열 통일) — 점검 릴 승인(11-26)
+- **영어 기본 + 한국어**: `tools/game-page/i18n/en.json`(키 = 한국어 문장, 숫자·영문은 `#`), 앱 이름·대사 `docs/content/l10n/en.json`, 효과 `docs/content/app-effects.en.json`. 화면 전체 크롤로 미번역 0 확인. 테스트는 `&lang=ko`
 
 ### 진행 중 · 다음 (화면 세션)
 1. 첫 AAB(0.1.0, 가짜 결제) → 사용자가 내부 테스트에 직접 업로드 (API 열기용)
@@ -149,9 +151,13 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
    - API 업로드 워크플로(`play-listing`)
 5. 앱 콘텐츠 · 데이터 보안 답안을 실제 로그인 · 결제 기준으로 갱신 → 사용자 입력
 6. 인앱 상품 API 등록 → 비공개 테스트 트랙 출시
-7. 한국어 문구 통합 정리(사용자 검수) → 영어 기본 전환 → 기타 언어
+7. 앱 색·티어·권역·콤보 단계별 VFX(밸런스 세션 burst 필드 추가 후 완성) → 스토어 스크린샷(영·한, 라이트·다크 번갈아)
+8. 기타 언어(ja · zh-TW · es)
 
-### 밸런스 세션 과제 (유지)
+### 밸런스 세션 과제
+- **지시서 v1.0** `docs/prompts/balance-session-v1.0.md`: 규칙 B 엔진 이식, 출시 기준 전면 재밸런싱(손맛 지표 포함), BM·상품 ID, VFX용 데이터
+
+이전 과제(유지)
 1. GB 동기화 직후 가속 복구: Lv60 재도달 비율 ≤0.80이 인접 회차 쌍의 70% 이상
 2. EX: 단조성 역전 0곳, 짧은 부재(45초 ≥22/24, 3스와이프 ≥18/24)
 3. P 대기 목표 구간 70%, 초기화 지급으로 강화 3~8개 ≥60%

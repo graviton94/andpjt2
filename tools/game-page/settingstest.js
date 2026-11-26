@@ -9,7 +9,7 @@ const API = 'http://127.0.0.1:8765/api/';
   for (const sc of ['dark', 'light']) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, colorScheme: sc });
     const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message));
-    await p.goto('http://127.0.0.1:8765/index.html?auto=0'); await p.waitForTimeout(3500);
+    await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko&noftue'); await p.waitForTimeout(3500);
     await p.evaluate(() => document.querySelector('#scrim').click()); await p.waitForTimeout(400);
     await p.evaluate(() => window.__dbg.shade()); await p.waitForTimeout(700);
     await p.click('#gear'); await p.waitForTimeout(800);

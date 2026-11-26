@@ -6,7 +6,7 @@ const API = 'http://127.0.0.1:8765/api/';
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; p.on('pageerror', e => errors.push(e.message)); p.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  await p.goto('http://127.0.0.1:8765/index.html?auto=0'); await p.waitForTimeout(1500);
+  await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko'); await p.waitForTimeout(1500);
   await p.evaluate(() => window.__dbg.auto(false));
   const quiet = async () => { for (let i = 0; i < 40; i++) { const f = JSON.parse(await p.evaluate(() => window.__dbg.flags())); if (!f.busy && !f.boardBusy && f.phase === 'idle') return; await p.waitForTimeout(200); } };
   await quiet();
