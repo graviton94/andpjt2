@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 
-PACKAGE = "io.github.graviton94.notificationcleaner"
+PACKAGE = "io.github.graviton94.donotdisturb"
 ACTIVITY = "com.graviton94.notificationcleaner.MainActivity"
 OUTPUT = pathlib.Path("build/smoke")
 

@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // store id follows the other apps (io.github.graviton94.<app>); namespace stays the Kotlin package
-        applicationId = "io.github.graviton94.notificationcleaner"
+        applicationId = "io.github.graviton94.donotdisturb"
         minSdk = 26
         targetSdk = 36
         versionCode = 4

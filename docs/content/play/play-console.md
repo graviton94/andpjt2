@@ -1,4 +1,4 @@
-# Play Console 등록 답안 · 알림 청소부
+# Play Console 등록 답안 · Do Not Disturb! (방해 금지!)
 
 콘솔 화면 순서 그대로. 기준 앱 사실: 네이티브 Kotlin/Compose, **계정·로그인 없음(로컬 저장)**, Firebase Analytics + Remote Config, AdMob **보상형만**(미디에이션), Play Billing(소모품·1회·구독 3종), **사용자 입력 텍스트·채팅 없음**, **확률형 상품 없음**.
 
@@ -6,7 +6,7 @@
 
 | 항목 | 값 |
 |---|---|
-| 패키지명 | `io.github.graviton94.notificationcleaner` (다른 앱과 같은 `io.github.graviton94.<앱>` 규칙, 첫 AAB 업로드 뒤 영구 고정) |
+| 패키지명 | `io.github.graviton94.donotdisturb` (다른 앱과 같은 `io.github.graviton94.<앱>` 규칙, 첫 AAB 업로드 뒤 영구 고정) |
 | 기본 언어 | English (United States) en-US, 번역 추가: 한국어 ko-KR · 일본어 ja-JP · 번체 중국어 zh-TW · 스페인어 es-419(+es-ES) — 검토 `docs/content/l10n/launch-languages.md` |
 | 웹 (GitHub Pages) | **작성 완료(graviton94.github.io 저장소 `ccr-9efafd3c-bh5fdz` 브랜치, main에 합쳐야 공개)** — 소개 `/notificationcleaner/` · 개인정보처리방침 `/notificationcleaner/privacy/` · 데이터 삭제 `/notificationcleaner/privacy/#delete` · 이용약관 `/notificationcleaner/terms/` · 루트 `app-ads.txt` |
 | 문의 | 페이지는 사이트의 개발자 소개(`/about/`)로 연결. Play 등록용 공개 이메일은 출시 전 확정 |
@@ -14,7 +14,7 @@
 
 ## 1. 앱 만들기
 
-이름 `Notification Sweeper: Swipe & Pop` (ko: `알림 청소부: 쓸어서 터뜨려라`) · 게임 · 무료 · 정책·수출 법규 동의.
+이름 `Do Not Disturb!: Merge Idle` (ko: `방해 금지!: 머지 방치형`) · 게임 · 무료 · 정책·수출 법규 동의.
 
 ## 2. 앱 콘텐츠
 

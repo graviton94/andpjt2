@@ -71,3 +71,4 @@
 | 11-26 | 판 위 처리량·배수 상자를 시스템 UI형 알약(톤 채움·헤어라인·Pretendard 숫자)으로 교체. 꾸미기 조각·열쇠는 픽토그램 | 사용자 |
 | 11-26 | 앱 고유 효과 문구는 3줄 문법(조건 / 결과 / (부가)), 줄당 20자, 줄바꿈 금지 — `docs/content/app-effects.ko.json`, 빌드가 검사 | 사용자 |
 | 11-26 | 패키지(applicationId)를 다른 앱 규칙에 맞춰 **`io.github.graviton94.notificationcleaner`**로 변경, 디버그 접미사(.playtest) 제거. Kotlin 네임스페이스는 그대로 | 사용자 (todayletters·todaybible과 통일) |
+| 11-26 | **게임 이름 확정**: 영어(기본 언어) **Do Not Disturb!** · 스토어 제목 `Do Not Disturb!: Merge Idle`(27자). 한국어 **방해 금지!** · `방해 금지!: 머지 방치형`. 패키지 `io.github.graviton94.donotdisturb`. "알림 청소부"는 가칭으로 폐기 | 사용자 |

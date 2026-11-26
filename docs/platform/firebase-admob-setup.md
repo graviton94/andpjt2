@@ -4,12 +4,12 @@
 
 ## 패키지 이름
 
-`io.github.graviton94.notificationcleaner` — 다른 앱(`io.github.graviton94.todayletters`, `io.github.graviton94.todaybible`)과 같은 규칙. 테스트(debug)와 출시 빌드가 같은 패키지라 Firebase에는 **앱 1개만** 등록하면 된다.
+`io.github.graviton94.donotdisturb` — 다른 앱(`io.github.graviton94.todayletters`, `io.github.graviton94.todaybible`)과 같은 규칙. 테스트(debug)와 출시 빌드가 같은 패키지라 Firebase에는 **앱 1개만** 등록하면 된다.
 
 ## 1. Firebase 프로젝트
 
-1. Firebase 콘솔 → 프로젝트 추가 → 이름 예: `notification-cleaner` → Google 애널리틱스 **사용**
-2. Android 앱 추가: 패키지 `io.github.graviton94.notificationcleaner`. 앱 닉네임은 자유, SHA-1은 지금 비워도 됨(카카오·구글 로그인 붙일 때 추가)
+1. Firebase 콘솔 → 프로젝트 추가 → 이름 예: `do-not-disturb` → Google 애널리틱스 **사용**
+2. Android 앱 추가: 패키지 `io.github.graviton94.donotdisturb`. 앱 닉네임은 자유, SHA-1은 지금 비워도 됨(카카오·구글 로그인 붙일 때 추가)
 3. `google-services.json` 다운로드
 4. 넣는 방법 중 하나
    - GitHub 저장소 → Settings → Secrets and variables → Actions → **New repository secret**, 이름 `GOOGLE_SERVICES_JSON`, 값 = 파일 내용 전체 (권장: CI APK에 자동 반영)
@@ -18,7 +18,7 @@
 
 ## 2. AdMob
 
-1. AdMob 콘솔 → 앱 → 앱 추가 → Android → "아직 스토어에 없음" → 이름 `알림 청소부`
+1. AdMob 콘솔 → 앱 → 앱 추가 → Android → "아직 스토어에 없음" → 이름 `Do Not Disturb!`
 2. 앱 설정에서 **Firebase에 연결**(위 프로젝트)
 3. 광고 단위 → **보상형** 1개 만들기 (이름 예: `rewarded_main`). 지면 구분은 게임이 이벤트로 기록하므로 단위는 하나로 시작
 4. 받은 값 두 개를 알려 주거나 `gradle.properties`에 추가

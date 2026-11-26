@@ -4,7 +4,7 @@
 
 ## 한국어
 
-**앱 이름 (30자)**: 알림 청소부: 쓸어서 터뜨려라
+**앱 이름 (30자)**: 방해 금지!: 머지 방치형
 
 **간단한 설명 (80자)**: 쌓이는 알림을 밀어서 합치고 연쇄로 터뜨려라! 방치해도 쌓이는 손맛 정리 게임
 
@@ -26,7 +26,7 @@
 
 ## English
 
-**Title (30)**: Notification Sweeper: Swipe & Pop
+**Title (30)**: Do Not Disturb!: Merge Idle
 
 **Short description (80)**: Swipe notifications, merge them, chain the pops! A satisfying idle cleanup game.
 
@@ -50,7 +50,7 @@
 
 | 한국어 | English |
 |---|---|
-| 알림 청소부 | Notification Sweeper |
+| 방해 금지! | Do Not Disturb! |
 | P (포인트) | P (Points) |
 | 데이터 (유료재화) | Data |
 | 백업파일 | Backup Files |
