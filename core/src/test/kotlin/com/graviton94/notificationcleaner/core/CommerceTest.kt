@@ -59,7 +59,8 @@ class CommerceTest {
     @Test fun aYearOfDailyAdsAndMonthlyPurchasesFitsTheSaveBudget() {
         val rules = engine.rules
         val mature = engine.newGame(now, 11).copy(level = 124, runEarned = rules.levelP(124),
-            appLevels = Catalog.apps.associate { it.id to 50 })
+            earnRate = rules.levelP(124) / 1_000_000L.toBigInteger(),
+            lastEarned = rules.levelP(124) / 1_000L.toBigInteger(), appLevels = Catalog.apps.associate { it.id to 50 })
         val w = WebSession(engine, mature, now)
         val purchases = (0..360 step 30).associateWith { day ->
             "GPA.$day-" + "store-purchase-token".repeat(6)
@@ -68,6 +69,7 @@ class CommerceTest {
         for (d in 0..364) {
             val at = now + d * day
             purchases[d]?.let { w.buyData("data_100", it, at) }
+            w.offline(day, at)
             for (slot in AdSlot.entries) repeat(slot.daily) { sequence ->
                 val id = "network-ad-$d-${slot.name}-$sequence-" + "ad-token".repeat(9)
                 val before = w.state.account.processedAdClaims.values.flatten()

@@ -95,6 +95,9 @@ data class RuleSet(
     /** Extra gauge for a burst per tier it sits below the deck's best app: low tiers ignite. */
     val igniterGaugePerTier: Int = 4,
     val waveFactor: Int = 3,
+    val waveIncomePermille: Int = 1_000,
+    /** A charged gauge waits at 100 until this much wall-clock time has passed since the last wave. */
+    val overloadMinIntervalMs: Long = 0,
     // Interruptions (base rules, not cards)
     val spamEverySwipes: Int = 11,
     val spamCopyAfterSwipes: Int = 3,
@@ -103,6 +106,8 @@ data class RuleSet(
     val callEverySwipes: Int = 23,
     val callUnlockLevel: Int = 2,
     val callPauseMs: Long = 5_000,
+    /** Shared arrival cooldown for call, low battery, crash, drill, and lotto. 0 preserves legacy cadence. */
+    val majorEventCooldownMs: Long = 0,
     val otpLifeSwipes: Int = 3,
     // Interruptions added in rules v3.1 and timed cards
     val lowBatteryLevel: Int = 9,
@@ -148,6 +153,8 @@ data class RuleSet(
     // Offline settlement
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
+    /** Number of swipes over which recent P/minute is smoothed. The baseline weight of a new swipe is 1/window. */
+    val recentIncomeWindow: Int = 10,
     val offlineEfficiencyPercent: Int = 3,
     /** Offline multiplier for Ultra alone. Multiplies the payout after the pass reward. */
     val ultraOfflinePermille: Int = 1_500,
@@ -210,9 +217,13 @@ data class RuleSet(
     /** Level for [runEarned]; FastBoot lowers every threshold by 10% per step (multiplicative). */
     fun levelFor(runEarned: BigInteger, fastBoot: Int): Int {
         val boosted = runEarned * big(10).pow(fastBoot) / big(9).pow(fastBoot)
-        var l = 1
-        while (l + 1 < levelTable.size && boosted >= levelTable[l + 1]) l++
-        return l
+        var low = 1
+        var high = levelTable.lastIndex
+        while (low < high) {
+            val mid = (low + high + 1) ushr 1
+            if (boosted >= levelTable[mid]) low = mid else high = mid - 1
+        }
+        return low
     }
 
     /** Run P at which [level] is reached with [fastBoot] (the raw threshold the player must earn). */
@@ -224,17 +235,25 @@ data class RuleSet(
         return base * (100 + 10 * backup.lv(BackupItem.Synergy)) / 100
     }
 
-    /** One notification before deck multipliers: 10^(tier−1) × level × (2 + 0.1k)^milestones × 1.25^value. */
-    fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger> {
-        val m = levelMilestones.count { level >= it }
-        val k = backup.lv(BackupItem.Milestone).toLong()
+    private data class BackupValue(val source: Backup, val numerator: BigInteger, val denominator: BigInteger)
+    private val backupValues = ThreadLocal<BackupValue>()
+    private fun backupValue(backup: Backup): BackupValue {
+        backupValues.get()?.takeIf { it.source === backup }?.let { return it }
         val v = backup.lv(BackupItem.Value)
         val passive = Math.round(Math.pow(1.0 + lifetimeFilePercent / 100.0 * backup.lifetime, lifetimeExponentPermille / 1000.0) * 1e6)
         val sync = backup.cloud.lv(CloudItem.SyncValue)
         val ai = backup.cloud.lv(CloudItem.AiBoost)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive) * big(2).pow(sync) * big(3).pow(ai)
-        val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
-        return num to den
+        return BackupValue(backup, big(5).pow(v) * big(passive) * big(2).pow(sync) * big(3).pow(ai),
+            big(4).pow(v) * big(1_000_000)).also(backupValues::set)
+    }
+
+    /** One notification before deck multipliers, from its app rank and permanent upgrades. */
+    fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger> {
+        val m = levelMilestones.count { level >= it }
+        val k = backup.lv(BackupItem.Milestone).toLong()
+        val value = backupValue(backup)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * value.numerator
+        return num to TEN.pow(m) * value.denominator
     }
 
     /**
@@ -249,10 +268,27 @@ data class RuleSet(
 
     fun upgradeGrowth(app: AppDef): Int = upgradeGrowthPermille + upgradeGrowthPerTierPermille * (app.tier - 1)
 
+    private data class RankQuote(val level: Int, val numerator: BigInteger, val denominator: BigInteger, val price: BigInteger)
+    private val nextQuotes = ThreadLocal.withInitial { mutableMapOf<AppDef, RankQuote>() }
     fun upgradePrice(app: AppDef, level: Int): BigInteger {
-        val base = appPrice(app) * big(upgradeSharePermille.toLong()) / big(1_000)
-        val g = upgradeGrowth(app).toLong()
-        return (base * big(g).pow(level - 1) / big(1_000).pow(level - 1)).max(ONE)
+        val quotes = nextQuotes.get()
+        val last = quotes[app]
+        if (last != null && last.level == level) return last.price
+        val growth = big(upgradeGrowth(app).toLong())
+        val thousand = big(1_000)
+        val numerator: BigInteger
+        val denominator: BigInteger
+        if (last != null && level == last.level + 1) {
+            numerator = last.numerator * growth
+            denominator = last.denominator * thousand
+        } else {
+            val base = appPrice(app) * big(upgradeSharePermille.toLong()) / thousand
+            numerator = base * growth.pow(level - 1)
+            denominator = thousand.pow(level - 1)
+        }
+        val price = (numerator / denominator).max(ONE)
+        quotes[app] = RankQuote(level, numerator, denominator, price)
+        return price
     }
 
 

@@ -3,6 +3,8 @@ import com.graviton94.notificationcleaner.core.Catalog
 import com.graviton94.notificationcleaner.core.Engine
 import com.graviton94.notificationcleaner.core.WebSession
 import com.graviton94.notificationcleaner.core.account
+import com.graviton94.notificationcleaner.core.premiumCost
+import com.graviton94.notificationcleaner.core.premiumPermille
 import java.io.File
 
 private const val DAY_MS = 86_400_000L
@@ -95,5 +97,28 @@ fun balanceCommerce(output: File) {
         listOf("day", "data", "ticket_data_equivalent", "vouchers", "data_to_date", "ticket_data_to_date", "vouchers_to_date"),
         rules.attendanceBoard.asSequence().mapIndexed { i, reward ->
             listOf(i + 1, reward.data, reward.tickets.entries.sumOf { (item, n) -> item.price * n }, reward.starVouchers) + balances[i + 1]
+        })
+
+    val totalDays = 30
+    val dailyClockEquivalent = rules.passOverclockMinutes.toLong() * totalDays * com.graviton94.notificationcleaner.core.CreditItem.Overclock.price / 60
+    val basePassData = rules.passInstantCredits + totalDays * rules.passDailyCredits
+    val products = offers.packs.map { pack ->
+        listOf(pack.id, "consumable", pack.won, pack.data, offers.dataReceived(pack, true), pack.data, offers.dataReceived(pack, true))
+    } + listOf(
+        listOf("starter_pack", "one_time", offers.starterWon, offers.starterData, offers.starterData, offers.starterValue(rules), offers.starterValue(rules)),
+        listOf("rookie_pass", "one_time", offers.rookieWon, offers.rookieNow + offers.rookieDaily * offers.rookieDays,
+            offers.rookieNow + offers.rookieDaily * offers.rookieDays, offers.rookieValue(rules), offers.rookieValue(rules)),
+        listOf("pass_monthly", "subscription", offers.passWon, basePassData, basePassData, basePassData + dailyClockEquivalent, basePassData + dailyClockEquivalent),
+    ) + com.graviton94.notificationcleaner.core.SpeedPass.entries.map { pass ->
+        val data = basePassData + pass.dailyData * totalDays
+        listOf("pass_" + pass.name.lowercase(java.util.Locale.ROOT), "subscription", pass.won, data, data, data + dailyClockEquivalent, data + dailyClockEquivalent)
+    }
+    csv(File(output, "commerce-skus.csv"), listOf("id", "type", "won", "data", "first_data", "data_equivalent", "first_data_equivalent"), products.asSequence())
+
+    csv(File(output, "premium-star-costs.csv"), listOf("tier", "star", "data", "effective_permille"),
+        Catalog.apps.groupBy { it.tier }.values.asSequence().flatMap { apps ->
+            (1..rules.premiumMaxStars).asSequence().map { star ->
+                listOf(apps.first().tier, star, rules.premiumCost(apps.first(), star), rules.premiumPermille(star))
+            }
         })
 }

@@ -4,7 +4,10 @@ package com.graviton94.notificationcleaner.core
  * Reach, in layers: stock apps, three regional markets, then the global giants. Region synergy counts apps of the same
  * region in the deck; stock apps get none. Tiers follow the layers: stock 1-2, regional 3-8, global 9-10.
  */
-enum class Region(val label: String) { Stock("기본 앱"), Asia("아시아권"), SoutheastAsia("동남아권"), West("서양권"), Global("글로벌") }
+enum class Region(val label: String, val id: String) {
+    Stock("기본 앱", "stock"), Asia("아시아권", "asia"), SoutheastAsia("동남아권", "southeast_asia"),
+    West("서양권", "west"), Global("글로벌", "global"),
+}
 
 /** App category. Category synergy counts apps of the same category in the deck. */
 enum class Category(val label: String) { Social("소통"), Work("업무"), Daily("생활"), Media("미디어"), Money("금융") }
@@ -186,14 +189,14 @@ object Catalog {
         app("beat", "스팟티파이", 8, 4, WE, Category.Media, 75), // Spotify 패러디
         app("why", "와이", 8, 5, WE, Category.Social, 77), // X 패러디
         // 9티어
-        app("mega", "아마좀", 9, 0, GL, Category.Money, 86), // Amazon 패러디
+        app("mega", "아마좀", 9, 0, GL, Category.Money, 79), // Amazon 패러디
         app("ott", "넷플러그", 9, 1, GL, Category.Media, 89), // Netflix 패러디
         app("secret", "텔레그림", 9, 2, GL, Category.Money, 92), // Telegram 패러디
         app("mail", "쥐메일", 9, 3, GL, Category.Work, 95), // Gmail 패러디
         app("maps", "큐글맵스", 9, 4, GL, Category.Daily, 98), // Google Maps 패러디
         app("store", "큐글플레이", 9, 5, GL, Category.Money, 101), // Google Play 패러디
         // 10티어
-        app("tube", "너튜브", 10, 0, GL, Category.Media, 104), // YouTube 패러디
+        app("tube", "너튜브", 10, 0, GL, Category.Media, 97), // YouTube 패러디
         app("photo", "인싸그램", 10, 1, GL, Category.Media, 108), // Instagram 패러디
         app("feed", "테이크북", 10, 2, GL, Category.Social, 112), // Facebook 패러디
         app("green", "왔썹", 10, 3, GL, Category.Social, 116), // WhatsApp 패러디
@@ -212,8 +215,8 @@ object Catalog {
         "mall" to 68, "portal" to 70, "michat" to 72, "agoda" to 74, "paypal" to 76, "match" to 78,
         "superapp" to 80, "line" to 82, "jobs" to 84, "lazada" to 86, "ride" to 88, "robin" to 90,
         "dance" to 92, "chat" to 94, "grab" to 96, "shopee" to 98, "beat" to 100, "why" to 102,
-        "mega" to 111, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,
-        "tube" to 129, "photo" to 133, "feed" to 137, "green" to 141, "search" to 145, "ai" to 149,
+        "mega" to 104, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,
+        "tube" to 122, "photo" to 133, "feed" to 137, "green" to 141, "search" to 145, "ai" to 149,
     )
     // Live updates ---------------------------------------------------------------------------
 

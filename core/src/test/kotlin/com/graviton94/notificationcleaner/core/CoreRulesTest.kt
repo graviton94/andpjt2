@@ -692,6 +692,55 @@ class CoreRulesTest {
     }
 
     @Test
+    fun wildAndSpamCannotReplayRemovedRowsOrChainPastTheBoard() {
+        val e = Engine(RuleSet(gaugePerMerge = 0, gaugePerBurst = 1, overloadMinIntervalMs = 360_000))
+        for (seed in 1L..8) {
+            var s = e.newGame(0, seed).copy(level = 25, assists = mapOf(Assist.Wild to 5))
+            repeat(600) { step ->
+                val now = (step + 1) * 3_000L
+                s = e.tick(s, now)
+                val target = e.bestTarget(s, now) ?: return@repeat
+                val move = e.swipe(s, target, now) ?: return@repeat
+                val merges = move.beats.filterIsInstance<Beat.Merged>()
+                val bursts = move.beats.filterIsInstance<Beat.Burst>()
+                assertEquals(merges.size, merges.map { it.fromId }.toSet().size)
+                assertTrue(bursts.size <= (s.rows.size - 1) / 2)
+                assertTrue(bursts.none { it.row.kind == RowKind.Spam })
+                assertTrue(move.state.rows.size <= e.rules.maxRows)
+                s = move.state
+            }
+        }
+    }
+
+    @Test
+    fun chargedGaugeWaitsForWaveCooldownAndThenFires() {
+        val e = Engine(RuleSet(overloadMinIntervalMs = 360_000))
+        val board = e.newGame(0, 1).copy(gauge = 100, nextOverloadAt = 200_000)
+        val early = e.swipe(board, 4, 199_999)!!
+        assertEquals(100, early.state.gauge)
+        assertTrue(!early.overload)
+        val ready = e.swipe(board, 4, 200_000)!!
+        assertTrue(ready.overload)
+        assertEquals(560_000, ready.state.nextOverloadAt)
+    }
+
+    @Test
+    fun majorEventsShareCooldownAndAlternateTypes() {
+        val e = Engine(RuleSet(majorEventCooldownMs = 450_000, callEverySwipes = 1))
+        val board = e.newGame(0, 1).copy(level = 15, equipped = listOf(EventCard.Drill), swipes = 58)
+        val call = e.swipe(board, 4, 10_000)!!.state
+        assertEquals("call", call.previousMajorEvent)
+        val drillReady = board.copy(swipes = 59, previousMajorEvent = call.previousMajorEvent, nextMajorEventAt = call.nextMajorEventAt)
+        val tooSoon = e.swipe(drillReady, 4, 20_000)!!.state
+        assertTrue(tooSoon.rows.none { it.event == EventCard.Drill })
+        assertTrue(tooSoon.rows.none { it.kind == RowKind.Call })
+        val drill = e.swipe(drillReady, 4, 460_000)!!.state
+        assertEquals("Drill", drill.previousMajorEvent)
+        assertTrue(drill.rows.any { it.event == EventCard.Drill })
+        assertTrue(drill.rows.none { it.kind == RowKind.Call })
+    }
+
+    @Test
     fun speedPassesSpeedUpTheGameButNotPastAThumb() {
         val e = Engine(); val shop = Shop(e); val day = 86_400_000L
         var s = e.newGame(0, 1)

@@ -15,6 +15,8 @@ import java.math.BigInteger
  * page behaves the same in a browser as on the phone. Persistence and clocks are the host's job.
  */
 class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: Long = System.currentTimeMillis()) {
+    private data class OfflineAdOffer(val day: Long, val paid: BigInteger)
+    private var offlineAdOffer: OfflineAdOffer? = null
     private val meta = Meta(engine)
     val shop = Shop(engine)
     var state: GameState = installed((state ?: engine.newGame(now, now)).migrateRewardClaims(now).expireRewardClaims(now), now)
@@ -31,7 +33,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     /** A player swipe (or the auto-cleaner's). Null outcome = refused (no battery, row gone). */
     fun swipe(rowId: Long, now: Long, auto: Boolean = false): String {
         val current = tick(now)
-        val o = engine.swipe(current, rowId, now, if (auto) Actor.Auto else Actor.Player)
+        val o = engine.swipe(current, rowId, now, if (auto) Actor.Auto else Actor.Player, visuals = true)
             ?: return buildJsonObject { put("ok", false); put("reason", if (current.energy <= 0) "battery" else "gone"); put("state", snap(current, now)) }.toString()
         state = meta.record(o.state, o, now)
         return outcome(o, now, current.lastEarned).toString()
@@ -52,13 +54,22 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     /** Away time → offline pay (the host measures the time with [AwayClock]). */
     fun offline(awayMs: Long, now: Long): String {
-        val settlement = engine.settleOfflineWithBonus(state, awayMs, now)
+        val away = awayMs.coerceAtLeast(0)
+        val cap = engine.offlineCapMs(state)
+        val settlement = engine.settleOfflineWithBonus(state, away, now)
         state = shop.claimPassDaily(shop.claimAttendance(settlement.state, now), now)
+        if (settlement.paid.signum() > 0) offlineAdOffer = OfflineAdOffer(dayOf(now), settlement.paid)
         val bonusPaid = settlement.paid - settlement.basePaid
         return buildJsonObject {
             put("paid", big(settlement.paid))
             put("paidShort", short(settlement.paid))
             put("basePaid", big(settlement.basePaid))
+            put("basePaidShort", short(settlement.basePaid))
+            put("awayMs", away)
+            put("offlineCapMs", cap)
+            put("baseOfflineCapMs", cap)
+            put("exExtraEligibleMs", 0)
+            put("exExtraPShort", short(BigInteger.ZERO))
             put("bonusPaid", big(bonusPaid))
             put("bonusPaidShort", short(bonusPaid))
             put("offlineBonus", bonusJson(settlement.bonus))
@@ -68,7 +79,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     fun buy(appId: String, now: Long): String = act(now) { engine.buy(it, appId) }
     fun upgrade(appId: String, now: Long): String = act(now) { s -> engine.upgrade(s, appId).let { n -> if (n !== s) meta.upgraded(n, 1, now) else n } }
-    fun reset(now: Long): String = act(now) { meta.reset(it, now) ?: it }
+    fun reset(now: Long): String = act(now) { s -> meta.reset(s, now)?.also { offlineAdOffer = null } ?: s }
 
     /** ×1, ×10 or "max" levels of one app; "all" = cheapest first across the deck (screens-v1 Upgrade). */
     fun upgradeN(appId: String, n: String, now: Long): String = act(now) { s ->
@@ -84,7 +95,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     fun tapDrill(now: Long): String { state = engine.tapDrill(tick(now), now); return buildJsonObject { put("taps", state.drillTaps) }.toString() }
 
     /** 클라우드 동기화 (2nd prestige) and its shop: GB survives everything. */
-    fun sync(now: Long): String = act(now) { meta.sync(it, now) ?: it }
+    fun sync(now: Long): String = act(now) { s -> meta.sync(s, now)?.also { offlineAdOffer = null } ?: s }
 
     fun buyCloud(item: String, now: Long): String = act(now) { s ->
         CloudItem.entries.firstOrNull { it.name == item }?.let { engine.buyCloud(s, it) } ?: s
@@ -152,8 +163,14 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     /** A rewarded placement; [adId] is the ad network's reward id (faked for now). With a month pass no ad is shown. */
     fun watchAd(slot: String, adId: String, now: Long): String = act(now) { s ->
         val a = AdSlot.entries.firstOrNull { it.name == slot } ?: return@act s
-        val offer = if (a == AdSlot.BestDouble) s.lastEarned else BigInteger.ZERO
-        shop.claimAdOnce(s, adId, now) { shop.watchAd(it, a, now, offer) } ?: s
+        val offer = when (a) {
+            AdSlot.BestDouble -> s.lastEarned
+            AdSlot.OfflineDouble -> offlineAdOffer?.takeIf { it.day == dayOf(now) }?.paid ?: return@act s
+            else -> BigInteger.ZERO
+        }
+        val next = shop.claimAdOnce(s, adId, now) { shop.watchAd(it, a, now, offer) } ?: return@act s
+        if (a == AdSlot.OfflineDouble) offlineAdOffer = null
+        next
     }
 
     fun buyPass(kind: String, orderId: String, now: Long): String = act(now) { s ->
@@ -377,7 +394,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     private fun big(n: BigInteger): JsonElement = JsonPrimitive(n.toString())
 
-    fun row(r: Row): JsonObject = buildJsonObject {
+    fun row(r: Row, fallbackRegion: Region? = null): JsonObject = buildJsonObject {
         put("id", r.id)
         put("kind", r.kind.name)
         put("count", r.count)
@@ -387,6 +404,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
             val a = Catalog.app(id)
             put("app", id); put("name", a.name); put("cat", a.category.name); put("tier", a.tier)
         }
+        (r.app?.let { Catalog.app(it).region } ?: fallbackRegion)?.let { put("region", it.id) }
         r.event?.let { put("event", it.name); put("label", it.label) }
         r.alert?.let { put("alert", it.name); put("label", it.label) }
     }
@@ -410,6 +428,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         put("wallet", big(s.wallet))
         put("level", s.level)
         put("gauge", s.gauge)
+        put("overloadReadyInMs", (s.nextOverloadAt - now).coerceAtLeast(0))
         put("energy", s.energy)
         put("energyCap", engine.energyCap(s))
         put("nextChargeAt", s.nextChargeAt)
@@ -447,11 +466,12 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         put("chain", o.chain)
         put("overload", o.overload)
         put("capped", big(o.capped))
-        put("beats", JsonArray(o.beats.map { beat(it, prevLast) }))
+        val tierMax = o.beats.filterIsInstance<Beat.Burst>().maxOfOrNull { Catalog.app(it.valueApp).tier }
+        put("beats", JsonArray(o.beats.map { beat(it, prevLast, tierMax) }))
         put("state", snap(state, now))
     }
 
-    private fun beat(b: Beat, prevLast: BigInteger): JsonObject = when (b) {
+    private fun beat(b: Beat, prevLast: BigInteger, tierMax: Int?): JsonObject = when (b) {
         is Beat.Swiped -> buildJsonObject {
             put("t", "swiped"); put("id", b.row.id); put("earned", big(b.earned)); put("kind", b.row.kind.name)
             b.row.event?.let { put("event", it.name) }; b.row.alert?.let { put("alert", it.name) }
@@ -460,11 +480,18 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         }
         is Beat.Merged -> buildJsonObject { put("t", "merged"); put("into", row(b.into)); put("from", b.fromId) }
         is Beat.Burst -> buildJsonObject {
-            put("t", "burst"); put("row", row(b.row)); put("chain", b.chain); put("earned", big(b.earned))
+            put("t", "burst"); put("row", row(b.row, Catalog.app(b.valueApp).region)); put("chain", b.chain); put("earned", big(b.earned))
+            tierMax?.let { put("tierMax", it) }
+            b.synergy?.let { synergy ->
+                put("synergy", buildJsonObject {
+                    put("kind", synergy.kind); put("key", synergy.key); put("mult", (100 + synergy.percent) / 100.0)
+                })
+            }
+            if (b.effects.isNotEmpty()) putJsonArray("effect") { b.effects.forEach { add(JsonPrimitive(it)) } }
             // chips × mult: the engine pays count × value × (1 + chain); the plate shows the two factors.
             put("chips", big(b.earned / BigInteger.valueOf(1L + b.chain)))
         }
-        is Beat.Wave -> buildJsonObject { put("t", "wave"); put("index", b.index); put("chain", b.chain); put("earned", big(b.earned)) }
+        is Beat.Wave -> buildJsonObject { put("t", "wave"); put("index", b.index); put("waveIndex", b.index); put("chain", b.chain); put("earned", big(b.earned)) }
         is Beat.Spawned -> buildJsonObject { put("t", "spawned"); put("row", row(b.row)) }
         is Beat.FreeUpgrade -> buildJsonObject { put("t", "freeUpgrade"); put("app", b.app); put("name", Catalog.app(b.app).name); put("level", b.level) }
         is Beat.LevelUp -> buildJsonObject { put("t", "levelUp"); put("level", b.level) }

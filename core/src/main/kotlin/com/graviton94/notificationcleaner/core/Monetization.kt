@@ -314,6 +314,7 @@ class Shop(private val engine: Engine) {
      */
     fun watchAd(s: GameState, slot: AdSlot, now: Long, offerP: BigInteger = BigInteger.ZERO): GameState? {
         if (adsLeft(s, slot, now) <= 0) return null
+        if ((slot == AdSlot.BestDouble || slot == AdSlot.OfflineDouble) && offerP.signum() <= 0) return null
         val counted = s.withAccount { a ->
             val uses = if (a.adDay < dayOf(now)) emptyMap() else a.adUses
             val today = dayOf(now)

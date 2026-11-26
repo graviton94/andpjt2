@@ -1,3 +1,4 @@
+import com.graviton94.notificationcleaner.core.Actor
 import com.graviton94.notificationcleaner.core.Assist
 import com.graviton94.notificationcleaner.core.BackupItem
 import com.graviton94.notificationcleaner.core.Beat
@@ -36,6 +37,25 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "offlineEfficiencyPercent" -> r.copy(offlineEfficiencyPercent = v.toInt())
             "boostMinutes" -> r.copy(boostMinutes = v.toInt())
             "upgradeGrowthPerTierPermille" -> r.copy(upgradeGrowthPerTierPermille = v.toInt())
+            "overloadMinIntervalMs" -> r.copy(overloadMinIntervalMs = v.toLong())
+            "majorEventCooldownMs" -> r.copy(majorEventCooldownMs = v.toLong())
+            "resetLevel" -> r.copy(resetLevel = v.toInt())
+            "gaugePerMerge" -> r.copy(gaugePerMerge = v.toInt())
+            "gaugePerBurst" -> r.copy(gaugePerBurst = v.toInt())
+            "igniterGaugePerTier" -> r.copy(igniterGaugePerTier = v.toInt())
+            "sandwichPercent" -> r.copy(sandwichPercent = v.toInt())
+            "sandwichPerAssist" -> r.copy(sandwichPerAssist = v.toInt())
+            "waveFactor" -> r.copy(waveFactor = v.toInt())
+            "waveIncomePermille" -> r.copy(waveIncomePermille = v.toInt())
+            "recentIncomeWindow" -> r.copy(recentIncomeWindow = v.toInt())
+            "offlineAutoPermille" -> r.copy(offlineAutoPermille = v.toInt())
+            "appPriceLevelPermille" -> r.copy(appPriceLevelPermille = v.toInt())
+            "tierBase" -> r.copy(tierBase = v.toLong())
+            "callEverySwipes" -> r.copy(callEverySwipes = v.toInt())
+            "backupExponentPermille" -> r.copy(backupExponentPermille = v.toInt())
+            "cloudExponentPermille" -> r.copy(cloudExponentPermille = v.toInt())
+            "levelLateFrom" -> r.copy(levelLateFrom = v.toInt())
+            "levelRatioStepPermille" -> r.copy(levelRatioStepPermille = v.toInt())
             else -> error("unknown rule $k")
         }
     }
@@ -63,8 +83,13 @@ private const val DAY = 86_400_000L
 
 data class DayPlan(val sessions: Int = 4, val sessionMin: Int = 15)
 
+enum class InputPolicy { Best, Random, Auto }
+
 interface DailyAudit {
     val throughDay: Int
+    fun startSession(day: Int, state: GameState, now: Long) = Unit
+    fun endSession() = Unit
+    fun adAward(slot: AdSlot, credited: java.math.BigInteger) = Unit
     fun activeTime(elapsedMs: Long) = Unit
     fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long)
     fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int)
@@ -127,7 +152,7 @@ fun unlockLevels(): Map<Int, List<String>> {
 }
 
 /** [update]: on this day (0-based) the pack is switched on, as a content update reaching a veteran save. */
-fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet(), stopAtLv124: Boolean = false, audit: DailyAudit? = null): Timeline {
+fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolean = false, update: Pair<Int, com.graviton94.notificationcleaner.core.ContentPack>? = null, payer: Payer = Payer.Free, slots: Set<AdSlot> = AdSlot.entries.toSet(), stopAtLv124: Boolean = false, audit: DailyAudit? = null, input: InputPolicy = InputPolicy.Best): Timeline {
     if (Catalog.packs.isNotEmpty()) Catalog.packs = emptySet()  // shared global: only touch it when needed (parallel runs)
     val tl = Timeline()
     var levels = unlockLevels()
@@ -140,6 +165,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
     var everSyncs = 0
     val gap = (16 * 60 / plan.sessions) * 60_000L
     val ads = AdBudget(payer.adsPerDay)
+    val inputRandom = kotlin.random.Random(seed xor 0x52554c4542L)
     fun dayOf(ms: Long) = (ms - START) / DAY.toDouble()
     fun note(label: String) { tl.unlocks += Triple(tl.activeMin, dayOf(t), label) }
     var seenLevels: Map<String, Int>? = null
@@ -176,24 +202,40 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 t = begin
                 observe()
                 if (reachedTarget(day)) break@play
-                if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let { s = it; tl.offlineP += got; tl.ads++ } ?: ads.refund()
+                if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) {
+                    shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let {
+                        val credited = it.runEarned - s.runEarned
+                        s = it
+                        tl.offlineP += credited
+                        tl.ads++
+                        audit?.adAward(AdSlot.OfflineDouble, credited)
+                    } ?: ads.refund()
+                }
             }
-            s = economy(s, t, session, payer, tl, slots, ads)
+            val beforeEconomy = s.runEarned
+            s = economy(s, t, session, payer, tl, slots, ads, audit)
+            tl.activeP += (s.runEarned - beforeEconomy).max(java.math.BigInteger.ZERO)
             observe()
             if (reachedTarget(day)) break@play
             s = engine.activateDnd(s, t)  // 방해 금지 at the start of a session
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day in 4..5) println("  세션 d$day s$session lv=${s.level} levelFor=${engine.rules.levelFor(s.runEarned, s.backup.lv(BackupItem.FastBoot))} room=${engine.jackpotRoom(s, 3)} run=${s.runEarned} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" } + " deck=${s.active} drill=${s.drillUntil - t} dnd=${s.dndUntil - t} paused=${s.autoPausedUntil - t} crash=${s.crashBoost}")
+            audit?.startSession(day + 1, s, t)
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
-                val step = engine.chargeMs(s, t)
+                val step = if (input == InputPolicy.Auto) engine.autoIntervalMs(s, t) else engine.chargeMs(s, t)
                 audit?.activeTime(minOf(step, end - t))
                 t += step
                 tl.activeMin += step / 60_000.0
                 s = engine.tick(s, t)
                 observe()
-                val target = engine.bestTarget(s, t)
-                val o0 = target?.let { engine.swipe(s, it, t) }
+                val target = when (input) {
+                    InputPolicy.Best -> engine.bestTarget(s, t)
+                    InputPolicy.Random -> s.rows.randomOrNull(inputRandom)?.id
+                    InputPolicy.Auto -> engine.autoTarget(s, t)
+                }
+                val actor = if (input == InputPolicy.Auto) Actor.Auto else Actor.Player
+                val o0 = target?.let { engine.swipe(s, it, t, actor) }
                 if (o0 == null && System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
                 val o = o0 ?: continue
@@ -203,11 +245,21 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 observe()
                 if (reachedTarget(day)) break@play
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
-                if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let { s = it; tl.activeP += o.earned; tl.ads++ }
+                if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) {
+                    shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let {
+                        val credited = it.runEarned - s.runEarned
+                        s = it
+                        tl.activeP += credited
+                        tl.ads++
+                        audit?.adAward(AdSlot.BestDouble, credited)
+                    } ?: ads.refund()
+                }
                 if (s.energy == 0) shop.useTicket(s, CreditItem.Battery, t)?.let { s = it }
-                if (payer.pass && AdSlot.Battery in slots && s.energy == 0) shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++ }
+                if (payer.pass && AdSlot.Battery in slots && s.energy == 0) {
+                    shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++; audit?.adAward(AdSlot.Battery, java.math.BigInteger.ZERO) }
+                }
                 // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
-                if (o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
+                if (input != InputPolicy.Auto && o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
                 tl.activeP += o.earned
                 val (spent, bought) = spend(s, DeckPolicy.Synergy)
                 s = spent
@@ -227,6 +279,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                     tl.resetDays += dayOf(t)
                 }
             }
+            audit?.endSession()
             stallSessions = if (s.level > levelAtStart) 0 else stallSessions + 1
             if (System.getenv("SIM_TRACE") != null && seed == (System.getenv("SIM_SEED")?.toLong() ?: 1L) && resets && day in 4..6) println("  d$day s$session lv ${s.level} P ${s.runEarned.toString().length}자리 지갑 ${s.wallet.toString().length} 덱 ${s.active.size} 백업 ${s.backup.files}/${s.backup.lifetime} 초기화 ${s.backup.resets} 배터리 ${s.energy} 속도 ${s.earnRate} 부스트 ${s.account.boostUntil - t} 레벨P ${s.runEarned}")
             // Reset when it raises the lifetime-file bonus by 60% or more, or when the run has stalled for 3 sessions.
@@ -300,7 +353,7 @@ class AdBudget(private val perDay: Int) {
 }
 
 /** Daily claims, passes, ads, tickets, data spending and premium stars for a [payer] at the start of a session. */
-private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>, ads: AdBudget): GameState {
+private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: Timeline, slots: Set<AdSlot>, ads: AdBudget, audit: DailyAudit?): GameState {
     var s = shop.claimAttendance(state, t)
     s = shop.claimMissions(s, t)
     tl.vouchersEarned += s.account.starVouchers - state.account.starVouchers
@@ -309,7 +362,14 @@ private fun economy(state: GameState, t: Long, session: Int, payer: Payer, tl: T
         s = shop.claimPassDaily(s, t)
     }
     if (payer.monthlyData > 0 && session == 0 && dayOf(t).toLong() % 30 == 0L) s = shop.credit(s, payer.monthlyData * if (dayOf(t) < 1) 2 else 1, bought = true)
-    fun ad(slot: AdSlot) { if (slot in slots && shop.adsLeft(s, slot, t) > 0 && ads.take(t)) shop.watchAd(s, slot, t)?.let { s = it; tl.ads++ } ?: ads.refund() }
+    fun ad(slot: AdSlot) {
+        if (slot !in slots || shop.adsLeft(s, slot, t) <= 0 || !ads.take(t)) return
+        shop.watchAd(s, slot, t)?.let {
+            audit?.adAward(slot, it.runEarned - s.runEarned)
+            s = it
+            tl.ads++
+        } ?: ads.refund()
+    }
     // A steady ad watcher's day: boost in two sessions, one time warp; a pass claims every placement.
     // Steady watcher (5 a day): boost, two overclocks, a warp, plus the offline double on return.
     if (session == 0) { if (!shop.boostActive(s, t)) ad(AdSlot.Boost); ad(AdSlot.Warp) }

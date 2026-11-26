@@ -65,12 +65,12 @@ fun contentDoc(): String = buildString {
     Catalog.apps.forEachIndexed { i, a ->
         val start = a.id in Catalog.starter
         appendLine("| ${i + 1} | `${a.id}` | ${a.name} | ${a.tier} | ${a.region.label} | ${a.category.label} | Lv${a.unlockLevel} | " +
-            "${if (a.minResets > 0) "${a.minResets}회" else "—"} | ${if (start) "시작" else short(rules.appPrice(a)) + " P"} | ${short(BigInteger.TEN.pow(a.tier - 1))} | " +
+            "${if (a.minResets > 0) "${a.minResets}회" else "—"} | ${if (start) "시작" else short(rules.appPrice(a)) + " P"} | ${short(BigInteger.valueOf(rules.tierBase).pow(a.tier - 1))} | " +
             "Lv${Catalog.proLevel.getValue(a.id)} | ${short(rules.proPrice(a.id))} P |")
     }
     appendLine()
     appendLine("- 프로 버전: 그 앱의 알림 가치 ×${rules.proMultiplier}. 가격 = 프로 해금 레벨에 필요한 누적 P × ${rules.proPricePermille / 10.0}%.")
-    appendLine("- 강화 L→L+1: `${rules.upgradeBase} × ${rules.appPriceTierRatio}^(티어−1) × ${rules.upgradeGrowthPermille / 1000.0}^(L−1)`. 마일스톤 ${rules.levelMilestones.joinToString("·")}단계마다 가치 ×2.")
+    appendLine("- 강화 L→L+1: `앱 가격 × ${rules.upgradeSharePermille / 10.0}% × ${rules.upgradeGrowthPermille / 1000.0}^(L−1)`. 마일스톤 ${rules.levelMilestones.joinToString("·")}단계마다 가치 ×2.")
     appendLine()
     appendLine("## 2. 권역 · 카테고리")
     appendLine()
@@ -171,7 +171,7 @@ fun contentDoc(): String = buildString {
     appendLine("**속도 구독** (월간 패스 포함) · 월간 패스: 즉시 ${rules.passInstantCredits} + 매일 ${rules.passDailyCredits} 데이터 + 오버클럭 ${rules.passOverclockMinutes}분")
     appendLine()
     appendLine("| 구독 | 가격 | 속도 | 환생 재화 | 매일 데이터 추가 |"); appendLine("|---|---:|---:|---:|---:|")
-    SpeedPass.entries.forEach { appendLine("| ${it.label} | ₩${"%,d".format(it.won)} | ×${it.speedPermille / 1000} | ×${it.prestigePermille / 1000.0} | ${it.dailyData} |") }
+    SpeedPass.entries.forEach { appendLine("| ${it.label} | ₩${"%,d".format(it.won)} | ×${it.speedPermille / 1000.0} | ×${it.prestigePermille / 1000.0} | ${it.dailyData} |") }
     appendLine()
     appendLine("**30일 연속 출석판** (끊기면 1일차)")
     appendLine()
