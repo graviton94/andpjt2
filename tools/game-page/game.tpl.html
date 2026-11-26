@@ -536,11 +536,11 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 {
 const COLORS = __COLORS__;  // app id → brand colour (ui/AppStyle)
 const LADDER = [
-  { from: 1, to: 1, name: '팡', stop: 28, shake: 1.5, shreds: 12 },
-  { from: 2, to: 3, name: '연쇄', stop: 36, shake: 2.0, shreds: 20 },
-  { from: 4, to: 5, name: '폭주', stop: 48, shake: 2.5, shreds: 32 },
-  { from: 6, to: 8, name: '대폭주', stop: 60, shake: 3.0, shreds: 48 },
-  { from: 9, to: 99, name: '알림 해일', stop: 80, shake: 3.0, shreds: 64 },
+  { from: 1, to: 1, name: '팡', stop: 55, shake: 2.6, shreds: 12 },
+  { from: 2, to: 3, name: '연쇄', stop: 65, shake: 3.4, shreds: 20 },
+  { from: 4, to: 5, name: '폭주', stop: 78, shake: 4.4, shreds: 32 },
+  { from: 6, to: 8, name: '대폭주', stop: 92, shake: 5.4, shreds: 48 },
+  { from: 9, to: 99, name: '알림 해일', stop: 110, shake: 6.5, shreds: 64 },
 ];
 const W = 390, H = Math.max(740, Math.round(390 * (innerHeight || 740) / (innerWidth || 390))), EX = H - 740, SIM = 1 / 120, POOL = 600;
 const FD = '"Black Han Sans","Pretendard","Noto Sans KR",system-ui,sans-serif', FB = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
@@ -678,7 +678,7 @@ const sfx = {
   stamp() { tone('sine', 120, 38, .32, 1); hiss(.16, .55, { type: 'lowpass', f0: 1400, f1: 250 }); hiss(.7, .12, { type: 'highpass', f0: 2500, f1: 7000, a: .1, at: .1 }); },
   wave(w) { hiss(.55, .32, { f0: 260, f1: 5200, q: 2, a: .06 }); tone('sine', 110 - w * 12, 32, .7, .95); const f = 196 * Math.pow(2, w * 5 / 12); tone('sawtooth', f, f * 2, .4, .08, { filt: 2200, q: 6 }); },
 };
-const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+const buzz = p => { if (!vibOn) return; try { if (window.Game) window.Game.buzz(Array.isArray(p) ? Math.min(80, p.reduce((a, b) => a + b, 0)) : p); else if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} };
 
 
 // ---------- phone sound layer (CC0 uisfx + self-made vibration, docs/bible/20-sound.md §7) ----------
@@ -795,7 +795,7 @@ const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Wild' ? '와일드 �
 const ROW0 = 176 + Math.round(EX * .35), ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
 const board = [];  // what is on screen: engine rows + springs
-const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
+const mkRow = (d, y) => ({ id: d.id, d, y: spring(y), sc: spring(1), q: spring(0), vy: 0, a: 1, charge: 0, dx: 0, fly: 0, wob: 0 });
 const byId = id => board.find(r => r.id === id);
 const layout = () => board.forEach((r, i) => { r.y.t = rowY(i); });
 const wallet = { v: -Infinity, shown: -Infinity, from: -Infinity, to: -Infinity, t: 1, dur: .6, s: spring(1), us: spring(1), unit: '', tick: 0, note: null };
@@ -803,7 +803,7 @@ const CHIPX = 118, MULTX = 272, BOXY = 129, REVEAL_Y = 360 + Math.round(EX * .35
 const plate = { chips: -Infinity, chipsShown: -Infinity, chipSum: -Infinity, total: -Infinity, totalShown: -Infinity, earned: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, cs: spring(1), ms: spring(1), xs: spring(1), label: '', labelT: 9, labelSize: 24, k: 0, phase: 'idle', merge: 0, total: 0, ts: spring(1), showT: 0, capMode: false, capT: 9, best: 0, totalShown: 0, count: 0, landed: false, record: false, eq: '', tick: 0 };
 const mult = () => plate.base * plate.syn * plate.wmul;
 const parts = [], shards = [], tokens = [], pops = [], timeline = [];
-let stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
+let camK = spring(0), lastThud = 0, stop = 0, slow = 0, shake = 0, zoom = spring(1), flash = 0, heat = 0, busy = false, pending = [], flashTimes = [], bandT = 9;
 const after = (sec, fn) => timeline.push({ at: sec, fn });
 const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
   if (parts.length >= POOL) parts.shift();
@@ -811,6 +811,45 @@ const spawn = (k, x, y, vx, vy, life, col, size, extra) => {
 };
 
 // ---------- drawing helpers ----------
+
+// ---------- game feel: gravity drop with a thud, slam-merge, trauma shake (VFX handbook: anticipation → impact → follow-through) ----------
+const GRAV = 3600;
+function land(r, imp) {  // a falling card hits the one below: squash, dust, rattle, thud
+  const s = clamp((imp - 300) / 1900, 0, 1);
+  r.q.x = Math.max(r.q.x, .07 + .2 * s); r.q.v = 0;
+  const i = board.indexOf(r), below = board[i + 1]; if (below) below.q.v += 4 + 9 * s;  // the stack underneath rattles
+  const y = r.y.x + CH, n = reduce ? 2 : Math.round(3 + 7 * s);
+  for (let k = 0; k < n; k++) { const side = k % 2 ? 1 : -1; spawn('DUST', 195 + side * (60 + rnd() * 120), y, side * (80 + rnd() * 200), -20 - rnd() * 50, .45 + rnd() * .25, day ? [120, 130, 150] : [230, 215, 200], 7 + rnd() * 7); }
+  if (!reduce) shake = Math.max(shake, .9 + 2.6 * s);
+  const now = performance.now(); if (now - lastThud > 45) { lastThud = now; sfx.thud(s); buzz(Math.round(5 + 12 * s)); }
+}
+function stepRowY(r, dt) {
+  if (r.slam) {  // the upper card is thrown down onto its match
+    const m = r.slam; m.t += dt; const e = Math.min(1, m.t / m.dur), ee = e * e * e;
+    r.y.x = m.y0 + (m.y1 - m.y0) * ee; r.q.x = -.12 * ee;  // stretches as it accelerates
+    if (e >= 1) { r.slam = null; m.hit(); }
+    return;
+  }
+  const d = r.y.t - r.y.x;
+  if (r.vy < 0 || d > .5) {
+    r.vy += GRAV * dt; r.y.x += r.vy * dt;
+    if (r.vy > 0 && r.y.x >= r.y.t) { const imp = r.vy; r.y.x = r.y.t; if (imp > 320) { r.vy = -imp * .13; land(r, imp); } else r.vy = 0; }
+  } else if (d < -.5) { stepSpring(r.y, dt, 260, 20); r.vy = 0; }
+  else { r.y.x = r.y.t; r.y.v = 0; r.vy = 0; }
+}
+function slamMerge(from, into, k, onHit) {  // anticipation: a contracting ring at the contact line, then the hit
+  const y1 = into.y.x - CH * .55;
+  spawn('RINGIN', 195, into.y.x + 4, 0, 0, .1, [255, 236, 190], 150);
+  from.slam = { t: 0, dur: .1, y0: from.y.x, y1, hit: () => {
+    const i = board.indexOf(from); if (i >= 0) board.splice(i, 1);
+    into.q.x = .3 + Math.min(k, 8) * .02; into.q.v = 0; into.charge = 1;
+    const cy = into.y.x + 2;
+    spawn('CORE', 195, cy, 0, 0, .09, [255, 240, 210], 150);
+    for (let j = 0; j < (reduce ? 4 : 14); j++) { const side = j % 2 ? 1 : -1; spawn('DUST', 195 + side * (40 + rnd() * 140), cy, side * (260 + rnd() * 420), (rnd() - .5) * 80, .35 + rnd() * .2, [255, 244, 225], 6 + rnd() * 6); }
+    stop = Math.max(stop, .045); if (!reduce) shake = Math.max(shake, 2.4 + Math.min(k, 8) * .35);
+    sfx.thud(1); buzz(18); onHit && onHit();
+  } };
+}
 function rrc(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
 const rr = (x, y, w, h, r) => rrc(ctx, x, y, w, h, r);
 function gtext(str, x, y, size, o = {}) {
@@ -1029,6 +1068,7 @@ Object.assign(sfx, {
   pad() { [261.63, 392, 523.25, 659.25].forEach((f, i) => tone('sine', f, f, 3.2, .06, { a: .9, at: i * .05 })); },
   soft() { hiss(.32, .07, { type: 'lowpass', f0: 1300, f1: 400, a: .08 }); tone('sine', 1568, 1568, .45, .035); },
   snapback() { tone('sine', 900, 1400, .08, .06); },
+  thud(s = .5) { tone('sine', 150 - 50 * s, 42, .16 + .12 * s, .3 + .35 * s); hiss(.07, .05 + .12 * s, { type: 'lowpass', f0: 1100, f1: 180 }); tone('square', 260 + s * 90, 170, .035, .03 + .03 * s, { filt: 1600, at: .025 }); },
 });
 function startEvent(type) {
   if (busy || ev) return;
@@ -1381,17 +1421,14 @@ function play(o, quiet = false) {
       const tt = t;
       after(tt, () => {
         const into = byId(b.into.id), from = byId(b.from);
-        if (from && into) { from.y.t = into.y.x; from.fade = true; after(.09, () => { const i = board.indexOf(from); if (i >= 0) board.splice(i, 1); layout(); }); }
-        if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
-        if (!quiet) sfx.chip(2); buzz(6);
-        const y = into ? into.y.x : 300;
-        pops.push({ x: 300, y: y + 4, text: `${b.into.count}/${b.into.threshold}`, t: 0, life: .5, rot: .08, size: 20 });
+        if (from && into) slamMerge(from, into, k, () => { into.d = b.into; layout(); if (!quiet) sfx.chip(2); pops.push({ x: 300, y: into.y.x + 4, text: `×${b.into.count}`, t: 0, life: .5, rot: .08, size: 22 }); });
+        else if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
       });
-      t += .13;
+      t += .17;
     } else if (b.t === 'burst') {
       k++; const kk = k, tt = t;
-      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; kick(r.sc, 3); } });
-      after(tt + .05, () => burstRow(b, kk, quiet));
+      after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('RINGIN', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 120 + kk * 6); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 60); } });
+      after(tt + .06, () => burstRow(b, kk, quiet));
       t += Math.max(.1, .19 - (kk - 1) * .011);
     } else if (b.t === 'wave') {
       const w = b.index - 1; after(t + .2, () => waveHit(w)); t += .45;
@@ -1414,7 +1451,12 @@ function burstRow(b, k, quiet) {
   chroma = Math.max(chroma, .003 + Math.min(k, 12) * .0006);
   for (let i = 0; i < (8 + k) * q; i++) { const a = rnd() * 6.28, sp = 300 + rnd() * 420; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .18 + rnd() * .22, pal[3], 2); }
   for (let i = 0; i < (6 + k) * q; i++) { const a = rnd() * 6.28, sp = 120 + rnd() * 260; spawn('GLASS', ix + (rnd() - .5) * 120, iy, Math.cos(a) * sp, Math.sin(a) * sp - 120, .6 + rnd() * .5, pal[2], 3 + rnd() * 4); }
-  spawn('CORE', ix, iy, 0, 0, .12, pal[3], 70 + k * 5);
+  spawn('CORE', ix, iy, 0, 0, .16, pal[3], 110 + k * 8);
+  spawn('RING', ix, iy, 0, 0, .26, [255, 255, 255], 140 + Math.min(k, 10) * 12);
+  after(.03, () => spawn('RING', ix, iy, 0, 0, .34, pal[3], 190 + Math.min(k, 10) * 16));
+  for (let i = 0; i < (10 + k * 2) * q; i++) { const a = rnd() * 6.28, sp = 420 + rnd() * 700; spawn('SPARK', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .16 + rnd() * .2, i % 3 ? pal[3] : [255, 255, 255], 2.6); }
+  for (let i = 0; i < (5 + k) * q; i++) { const a = rnd() * 6.28, sp = 60 + rnd() * 160; spawn('SMOKE', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp - 40, .55 + rnd() * .35, day ? [90, 96, 112] : [40, 30, 26], 14 + rnd() * 12); }
+  for (let i = 0; i < (6 + k) * q; i++) { const a = -Math.PI * (.15 + rnd() * .7), sp = 200 + rnd() * 380; spawn('EMBERF', ix, iy, Math.cos(a) * sp, Math.sin(a) * sp, .6 + rnd() * .5, [255, 170 + rnd() * 60, 80], 2 + rnd() * 2); }
   const val = L(b.chips), valS = shortOf(b.chips, b.chipsShort);
   pops.push({ x: 220 + rnd() * 110, y: y + 2, text: '+' + valS, t: 0, life: .8, rot: (rnd() - .5) * .35, size: 24 + Math.min(k, 10) * 1.2 });
   pops.push({ x: 120 + rnd() * 60, y: y + CH - 4, text: '+1 배율', t: -.06, life: .7, rot: (rnd() - .5) * .3, size: 17, red: 1 });
@@ -1423,7 +1465,7 @@ function burstRow(b, k, quiet) {
   plate.base = 1 + k; plate.k = k; kick(plate.ms, 12); if (!quiet) sfx.mult(k);
   plate.label = k === 1 ? '팡!' : `${k}연쇄 ${T.name}!`; plate.labelT = 0; plate.labelSize = 24 + Math.min(k, 12) * 1.4;
   stop = Math.max(stop, T.stop / 1000);
-  if (!reduce) shake = Math.max(shake, T.shake * 1.3);
+  if (!reduce) shake = Math.max(shake, T.shake + Math.min(k, 12) * .25);
   heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
   if (k >= 9) { slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .25; flashTimes.push(now); } } }
   if (!quiet) { sfx.pop(k); buzz(Math.min(40, 8 + k * 3)); }
@@ -1487,6 +1529,9 @@ function step(dt) {
     else if (p.k === 'GLASS') { p.vy += 900 * dt; p.vx *= Math.pow(.4, dt); p.rot += p.vr * dt; }
     else if (p.k === 'SPARK') { p.vx *= Math.pow(.002, dt); p.vy = p.vy * Math.pow(.002, dt) + 400 * dt; }
     else if (p.k === 'VAPOUR') { p.vx *= Math.pow(.1, dt); p.vy *= Math.pow(.3, dt); }
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { p.vx *= Math.pow(.02, dt); p.vy = p.vy * Math.pow(.05, dt) - (p.k === 'SMOKE' ? 30 : 10) * dt; }
+    else if (p.k === 'EMBERF') { p.vx *= Math.pow(.25, dt); p.vy = p.vy * Math.pow(.4, dt) + 700 * dt; }
+    else if (p.k === 'STREAK') { p.vx *= Math.pow(.05, dt); }
     p.x += p.vx * dt; p.y += p.vy * dt;
   }
   for (let i = shards.length - 1; i >= 0; i--) {
@@ -1511,12 +1556,17 @@ function draw(t) {
   ctx.drawImage(bgS, 0, 0, W, H);
   ctx.fillStyle = day ? 'rgba(255,255,255,.25)' : 'rgba(8,5,3,.3)'; ctx.fillRect(0, 0, W, H);
   drawDecor();
-  const sx = shake ? (rnd() - .5) * 2 * shake : 0, sy = shake ? (rnd() - .5) * 2 * shake : 0;
-  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
+  // trauma shake: amplitude ∝ trauma², smooth high-frequency noise plus a little roll; camK = swipe-direction kick
+  const tr = Math.min(1, shake / 7), amp = 30 * tr * tr, sx = amp * (Math.sin(t * 61.3) + Math.sin(t * 97.1 + 1.7)) * .5 + camK.x, sy = amp * (Math.sin(t * 71.9 + .6) + Math.sin(t * 113.3)) * .5, sr = tr * tr * .045 * Math.sin(t * 83.7);
+  const shaken = () => { ctx.translate(195 + sx, 420 + sy); ctx.rotate(sr); ctx.scale(zoom.x, zoom.x); ctx.translate(-195, -420); };
   ctx.save(); shaken();
   board.forEach(r => {
     const y = r.y.x;
-    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH / 2); ctx.scale(r.sc.x, r.sc.x); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH / 2));
+    if (r.fly && !reduce) for (let g = 3; g >= 1; g--) {  // afterimages behind a flung card
+      ctx.save(); ctx.globalAlpha = r.a * (.32 - g * .08); ctx.translate(195 + r.dx - r.fly * g * 34, y + CH / 2); ctx.scale(1.08, .94); ctx.translate(-195, -(y + CH / 2)); drawCard(ctx, r, y); ctx.restore();
+    }
+    const qx = r.q.x, st = r.fly ? 1.1 : 1 + qx * .45, sv = r.fly ? .92 : 1 - qx;
+    ctx.save(); ctx.globalAlpha = r.a * (r.fade ? .5 : 1); ctx.translate(195 + r.dx, y + CH); ctx.scale(r.sc.x * st, r.sc.x * sv); ctx.rotate(r.dx * .0006); ctx.translate(-195, -(y + CH));
     drawCard(ctx, r, y);
     if (r.charge > 0) { ctx.fillStyle = `rgba(255,255,255,${r.charge * .85})`; rr(CX0, y, CW, CH, 18); ctx.fill(); }
     ctx.restore();
@@ -1539,12 +1589,16 @@ function draw(t) {
     if (p.k === 'GLASS') { const g = .35 + .65 * Math.abs(Math.sin(p.rot * 2)); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.min(1, f * 2.5); ctx.beginPath(); ctx.moveTo(-p.size, -p.size * .4); ctx.lineTo(p.size * .8, -p.size * .7); ctx.lineTo(p.size * .2, p.size * .8); ctx.closePath(); ctx.fillStyle = rgb(mixc(p.col, [255, 255, 255], g), .35 + .5 * g); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
     else if (p.k === 'INK') { ctx.fillStyle = rgb(p.col, Math.min(.85, f)); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 6.28); ctx.fill(); }
     else if (p.k === 'VAPOUR') { ctx.fillStyle = rgb(p.col, .22 * f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.8 - f), 0, 6.28); ctx.fill(); }
+    else if (p.k === 'DUST' || p.k === 'SMOKE') { const e = 1 - f, r = p.size * (1 + e * (p.k === 'SMOKE' ? 1.6 : 1.1)); ctx.fillStyle = rgb(p.col, (p.k === 'SMOKE' ? .5 : .42) * f * f); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.28); ctx.fill(); }
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   for (const p of parts) {
     const f = p.life / p.max;
-    if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
+    if (p.k === 'RING' || p.k === 'RINGIN') { const e = 1 - f, x = p.k === 'RING' ? 1 - Math.pow(2, -10 * e) : 1 - e * e, r = p.k === 'RING' ? 6 + p.size * x : p.size * (1 - x) + 4; ctx.strokeStyle = rgb(p.col, (p.k === 'RING' ? .9 : .7) * f); ctx.lineWidth = (p.k === 'RING' ? 3 + 9 * f : 2 + 4 * e); ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * .62, 0, 0, 6.28); ctx.stroke(); }
+    else if (p.k === 'STREAK') { ctx.strokeStyle = rgb(p.col, .55 * f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .06, p.y); ctx.stroke(); }
+    else if (p.k === 'EMBERF') { ctx.fillStyle = rgb(p.col, f); ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (.6 + f * .6), 0, 6.28); ctx.fill(); }
+    else if (p.k === 'SPARK') { ctx.strokeStyle = rgb(p.col, f); ctx.lineWidth = p.size; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * .03, p.y - p.vy * .03); ctx.stroke(); }
     else if (p.k === 'DROP' || p.k === 'EMBER' || p.k === 'MOTE') { const r = p.size * (p.k === 'DROP' ? 2.6 : 3), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,230,${f})`); g.addColorStop(.35, rgb(p.col, .8 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
     else if (p.k === 'CORE') { const r = p.size * (1.15 - f * .5), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(255,255,255,${f})`); g.addColorStop(.2, rgb(p.col, .55 * f)); g.addColorStop(1, rgb(p.col, 0)); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
   }
@@ -1647,10 +1701,10 @@ function frame(now) {
   const n = Math.ceil(dt / (1 / 240)), sd = dt / Math.max(1, n);
   for (let i = 0; i < n; i++) {
     [plate.cs, plate.ms, plate.xs, plate.ts, wallet.s, wallet.us, zoom].forEach(s => stepSpring(s, sd));
-    board.forEach(r => { stepSpring(r.sc, sd, 300, 16); stepSpring(r.y, sd, 260, 20); });
+    const rsd = gdt / Math.max(1, n); if (rsd > 0) board.forEach(r => { stepSpring(r.sc, rsd, 300, 16); stepSpring(r.q, rsd, 900, 11); stepRowY(r, rsd); }); stepSpring(camK, sd, 220, 13);
   }
-  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 14); if (r.fly) r.dx += r.fly * dt * 2400; else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
-  shake *= Math.pow(.0008, dt); if (shake < .05) shake = 0;
+  board.forEach(r => { r.a = Math.min(1, r.a + dt * 5); r.charge = Math.max(0, r.charge - dt * 11); if (r.fly) { r.dx += r.fly * dt * 3800; if (!r.streaked) { r.streaked = 1; camK.v += r.fly * 260; for (let j = 0; j < (reduce ? 3 : 9); j++) spawn('STREAK', 195 + r.fly * (40 + rnd() * 120), r.y.x + 8 + rnd() * (CH - 16), r.fly * (1400 + rnd() * 900), 0, .18 + rnd() * .1, [255, 255, 255], 1.5 + rnd() * 2); } } else if (r !== drag.r) r.dx *= Math.pow(.0005, dt); });
+  shake = Math.max(0, shake - dt * 9);
   flash = Math.max(0, flash - dt * 3.5); heat = Math.max(0, heat - dt * .6); chroma *= Math.pow(.02, dt);
   plate.labelT += dt / 1.1; plate.showT += dt; if (plate.capT < 9) plate.capT += dt;
   if (plate.phase === 'merge') plate.merge = Math.min(1, plate.merge + dt / .16);
