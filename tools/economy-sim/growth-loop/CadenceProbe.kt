@@ -9,6 +9,7 @@ import com.graviton94.notificationcleaner.core.GrowthOffer
 import com.graviton94.notificationcleaner.core.RuleSet
 import com.graviton94.notificationcleaner.core.Shop
 import com.graviton94.notificationcleaner.core.SpeedPass
+import com.graviton94.notificationcleaner.core.SyncCarry
 import com.graviton94.notificationcleaner.core.withAccount
 import java.io.File
 import java.math.BigInteger
@@ -34,7 +35,10 @@ private enum class Pattern(val sessions: Int, val duration: Long, val clickFloor
 }
 
 private enum class Economy(val fileTail: Int, val gbYield: Int, val gbPrice: Int, val livePayment: Boolean = false, val equip: Boolean = false, val repeatSync: Boolean = false, val inherit: Boolean = false,
-    val priceBudget: Int = 0) {
+    val priceBudget: Int = 0, val carry: SyncCarry? = null, val returnBoost: Int = 0,
+    val fileGrowth: Int = 1_000, val pace: Int = 0, val returnMemory: Boolean = false,
+    val inheritedPace: Boolean = false, val fileRecordFloor: Boolean = false, val speedWelcome: Int = 0,
+    val carryFileBasis: Boolean = false, val rankPower: Int = 1_200) {
     Reference(200, 500, 1_000),
     Moderate(220, 550, 850),
     Reform(240, 600, 800),
@@ -43,6 +47,19 @@ private enum class Economy(val fileTail: Int, val gbYield: Int, val gbPrice: Int
     Replay(240, 600, 800, true, true, true),
     Inherit(240, 600, 800, true, true, true, true),
     SoftReplay(240, 600, 800, true, true, true, priceBudget = 5),
+    Linear35(240, 600, 800, true, true, true, priceBudget = 5, carry = SyncCarry.Linear35),
+    Hold65(240, 600, 800, true, true, true, priceBudget = 5, carry = SyncCarry.Hold65),
+    Hold90(240, 600, 800, true, true, true, priceBudget = 5, carry = SyncCarry.Hold90),
+    Return60(240, 600, 800, true, true, true, priceBudget = 5, returnBoost = 60),
+    Return120(240, 600, 800, true, true, true, priceBudget = 5, returnBoost = 120),
+    ReturnMemory(240, 600, 800, true, true, true, priceBudget = 5, returnBoost = 160, returnMemory = true),
+    ReturnGuard(240, 600, 800, true, true, true, priceBudget = 5, returnBoost = 160, returnMemory = true, speedWelcome = 2_000),
+    Paced(240, 600, 800, true, true, true, priceBudget = 5, fileGrowth = 3_000, pace = 250),
+    FileGrowth(240, 600, 800, true, true, true, priceBudget = 5, fileGrowth = 3_000),
+    PriceFollow(240, 600, 800, true, true, true, priceBudget = 5, pace = 250, inheritedPace = true, fileRecordFloor = true),
+    PowerFollow(240, 600, 800, true, true, true, priceBudget = 5, pace = 250, inheritedPace = true, fileRecordFloor = true,
+        carryFileBasis = true, rankPower = 1_500),
+    FileMemory(240, 600, 800, true, true, true, priceBudget = 5, fileRecordFloor = true, carryFileBasis = true),
 }
 
 private data class Case(val profile: CadenceProfile, val seed: Int, val owns: Int, val indexed: Boolean) {
@@ -58,10 +75,14 @@ private fun BigInteger.logSafe(): Double {
 }
 
 private class Play(val plan: Pattern, val case: Case, val economy: Economy) {
-    private val engine = Engine(RuleSet(appRankValuePermille = 1_200, growthOffer = GrowthOffer.Discount,
+    private val engine = Engine(RuleSet(appRankValuePermille = economy.rankPower, growthOffer = GrowthOffer.Discount,
         frontierPrices = case.indexed, productivePrestige = economy.livePayment, fileTailExponentPermille = economy.fileTail,
         cloudExponentPermille = economy.gbYield, cloudGrowthScalePermille = economy.gbPrice, repeatSync = economy.repeatSync,
-        inheritRecordIncome = economy.inherit, frontierBudgetPerDigit = economy.priceBudget))
+        inheritRecordIncome = economy.inherit, frontierBudgetPerDigit = economy.priceBudget, syncCarry = economy.carry,
+        exReturnPerSkuPermille = economy.returnBoost, filePriceGrowthScalePermille = economy.fileGrowth,
+        appUpgradePacePermille = if (case.indexed) economy.pace else 0, exReturnMemory = economy.returnMemory,
+        appUpgradeInheritedPace = economy.inheritedPace, fileShopRecordFloor = economy.fileRecordFloor,
+        speedWelcomePermille = economy.speedWelcome, fileShopCarryRecord = economy.carryFileBasis))
     private val shop = Shop(engine)
     private var state = engine.newGame(START, case.seed.toLong()).withAccount {
         it.copy(ownedEx = ExOffers.ids.take(case.owns).toSet())
@@ -84,7 +105,7 @@ private class Play(val plan: Pattern, val case: Case, val economy: Economy) {
     val daily = mutableListOf<String>()
     private var day = 0
     private var sessionNo = 0
-    private var waits = LongArray(6)
+    private var waits = LongArray(10)
 
     private fun commit(next: GameState) {
         sumP += (next.runEarned - state.runEarned).max(BigInteger.ZERO)
@@ -147,7 +168,11 @@ private class Play(val plan: Pattern, val case: Case, val economy: Economy) {
             }
             val app = state.active.minByOrNull { engine.upgradePrice(state, it) }
             if (app != null) {
-                commit(engine.upgrade(state, app))
+                val next = engine.upgrade(state, app)
+                if (next !== state) {
+                    samplePurchase(app)
+                    commit(next)
+                }
                 if (moves % 4 == 1 || plan == Pattern.Light3) samplePrice(app)
             }
         }
@@ -165,6 +190,15 @@ private class Play(val plan: Pattern, val case: Case, val economy: Economy) {
             id to (numerator / denominator)
         }.sortedByDescending { it.second }.take(engine.rules.maxSlots(state.level, state.backup)).map { it.first }
         engine.setDeck(state, proposed)?.let(::commit)
+    }
+
+    private fun samplePurchase(app: String) {
+        if (state.earnRate.signum() <= 0) return
+        val opening = activeMs - runStart <= 600_000
+        val i = if (opening) 6 else 8
+        val point = engine.upgradePrice(state, app).logSafe() - state.earnRate.logSafe()
+        waits[i]++
+        if (if (opening) point in log10(.05)..0.0 else point in 0.0..1.0) waits[i + 1]++
     }
 
     private fun samplePrice(app: String) {
@@ -279,7 +313,7 @@ private class Play(val plan: Pattern, val case: Case, val economy: Economy) {
     fun run(days: Int) {
         for (d in 1..days) {
             day = d
-            waits = LongArray(6)
+            waits = LongArray(10)
             for (slot in 0 until plan.sessions) visit(START + (day - 1) * DAY_MS + slot * 14_400_000, slot)
             daily += (listOf(case.key, day, sumP.logSafe(), state.wallet.logSafe(), sumFiles.logSafe(), sumGb.logSafe(),
                 peak, state.level, runId, activeMs, offlineMinutes, exOfflineP.logSafe()) + waits.toList()).joinToString(",")
@@ -330,7 +364,7 @@ object CadenceProbe {
         }
         val base = "profile,seed,sku,indexed,"
         val tables = mapOf(
-            "daily" to "day,log_total_p,log_wallet,log_files,log_gb,peak,level,run,active_ms,extra_offline_min,log_extra_offline_p,open_obs,open_hits,late_obs,late_hits,over10,index_exposed",
+            "daily" to "day,log_total_p,log_wallet,log_files,log_gb,peak,level,run,active_ms,extra_offline_min,log_extra_offline_p,open_obs,open_hits,late_obs,late_hits,over10,index_exposed,open_bought,open_bought_in_band,late_bought,late_bought_in_band",
             "prestige" to "day,session,kind,level,active_ms,gap_ms,gap_sessions,log_paid,affordable_until12,bought",
             "reaches" to "day,run,end_kind,level,elapsed_ms",
         )

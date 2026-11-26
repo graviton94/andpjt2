@@ -1,5 +1,7 @@
 # B안 · 새 강화 구간과 환생 대기 재검증
 
+SoftReplay 기준선 이후의 동기화 계승·EX·가격 검증은 [SYNC-FOLLOWUP-REPORT.md](SYNC-FOLLOWUP-REPORT.md)에 있다.
+
 **날짜별 그래프 원본**은 규칙 후보, 접속 유형, 프로필, 보유 수량별로 누적 P·지갑·파일·GB, 최고·현재 Lv, 회차, 실제로 추가 인정된 오프라인 분을 담는다. 6프로필은 무광고·광고·월간 패스·화면 보상만 쓰는 월간 패스·터보·울트라다. P·파일·GB의 log10에서 0은 0개 또는 1개를 뜻하므로 개별 시드의 지급을 확인할 때는 지급 CSV도 함께 본다. [daily-growth.csv](daily-growth.csv) · [원자료 매니페스트](b-calibration-data/manifest.json)
 
 ## 결론

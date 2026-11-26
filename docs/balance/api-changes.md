@@ -95,3 +95,26 @@
 ```
 
 15시간 부재의 시험 응답이다. 화면 후보는 `EX 정산 상한 +147분`과 `이번 추가 인정 147분 · +1.76M P`를 표시했다. 6시간 부재는 같은 상한과 `이번 추가 인정 0분 · +0 P`였다. 기존 화면과 후보의 복귀 핸들러를 동일 응답으로 Chromium에서 비교했다. [화면 패치](../../tools/economy-sim/growth-loop/offline-display.patch) · [실측 결과](b-calibration-data/screen/rendered.json)
+
+## 동기화 가속 검증 후보
+
+`offline().awayMs`는 호스트가 전달한 실제 부재 시간의 밀리초다. 하한은 0이다. `paid`·`basePaid`·`bonusPaid`와 각 `Short` 짝, `offlineCapMs`, `baseOfflineCapMs`, `exExtraEligibleMs`, `exExtraPShort`, `offlineBonus`의 의미와 단위는 그대로 사용한다. 아래 15시간 복귀에서는 상한 14시간 27분을 빼면 초과 33분이다.
+
+`basePaid`는 광고·패스 등의 추가 배율을 적용하기 전 지급액이며 EX는 그 안에 이미 반영돼 있다. `exExtraPShort`는 기존 시간 창 안의 효과와 시간 연장의 효과를 합친 비교값이다. 카드에서 `basePaid`와 `exExtraPShort`를 합치면 EX가 중복된다. 짧은 부재에서는 `exExtraEligibleMs`가 0이어도 `exExtraPShort`가 양수일 수 있다.
+
+```json
+{
+  "awayMs": 54000000,
+  "baseOfflineCapMs": 43200000,
+  "offlineCapMs": 52020000,
+  "exExtraEligibleMs": 8820000
+}
+```
+
+수입을 이어받는 동안 `snapshot().carry`와 `panel().state.carry`에 같은 객체를 보낸다. `panel().carry`에서도 이 값을 읽을 수 있다. `ratio`는 채택 후보의 최초 계승 비율(0~1), `untilLevel`은 가산이 끝나는 레벨, `pPerSec`와 `pPerSecShort`는 현재 감쇄까지 반영한 초당 기준 수입의 정확값과 표시값이다. 실제 지급은 유효 스와이프, 활동 시간과 남은 P 상한을 같이 적용한다. 가산이 끝났거나 상품화하지 않은 규칙에서 `carry`는 생략한다.
+
+```json
+{
+  "carry": {"ratio": 0.65, "untilLevel": 60, "pPerSec": "1240000", "pPerSecShort": "1.24M"}
+}
+```
