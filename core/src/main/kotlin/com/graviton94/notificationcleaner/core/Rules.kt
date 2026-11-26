@@ -87,6 +87,8 @@ data class RuleSet(
     val energyCap: Int = 12,
     val chargeMs: Long = 3_000,
     val autoIntervalMs: Long = 4_500,
+    /** Active auto-clean settles at this fraction of equivalent player P before the swipe cap. */
+    val autoSwipePermille: Int = 600,
     /** AutoClean backup level at which auto starts looking one move ahead. */
     val smartAutoLevel: Int = 5,
     // Overload and igniters

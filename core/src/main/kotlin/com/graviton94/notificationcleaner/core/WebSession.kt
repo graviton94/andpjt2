@@ -442,6 +442,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         put("now", now)
         put("autoPausedUntil", s.autoPausedUntil)
         put("autoIntervalMs", engine.autoIntervalMs(s, now))
+        put("autoIncomePermille", engine.rules.autoSwipePermille)
         put("swipes", s.swipes)
         put("bestSwipe", big(s.bestSwipe))
         put("deck", s.active.size)

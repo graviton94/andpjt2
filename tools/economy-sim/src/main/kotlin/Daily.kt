@@ -51,6 +51,7 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "waveIncomePermille" -> r.copy(waveIncomePermille = v.toInt())
             "recentIncomeWindow" -> r.copy(recentIncomeWindow = v.toInt())
             "offlineAutoPermille" -> r.copy(offlineAutoPermille = v.toInt())
+            "autoSwipePermille" -> r.copy(autoSwipePermille = v.toInt())
             "appPriceLevelPermille" -> r.copy(appPriceLevelPermille = v.toInt())
             "tierBase" -> r.copy(tierBase = v.toLong())
             "callEverySwipes" -> r.copy(callEverySwipes = v.toInt())

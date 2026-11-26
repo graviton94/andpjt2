@@ -768,6 +768,17 @@ class CoreRulesTest {
     }
 
     @Test
+    fun activeAutoFractionAffectsAutoOnly() {
+        val full = Engine(RuleSet(autoSwipePermille = 1_000))
+        val limited = Engine(RuleSet(autoSwipePermille = 450))
+        val state = full.newGame(now, 11)
+        val autoP = full.swipe(state, 4, now, Actor.Auto)!!.earned
+        val reduced = limited.swipe(state, 4, now, Actor.Auto)!!.earned
+        assertEquals(autoP * valueOf(450) / valueOf(1_000), reduced)
+        assertEquals(full.swipe(state, 4, now)!!.earned, limited.swipe(state, 4, now)!!.earned)
+    }
+
+    @Test
     fun fullyUpgradedAutoAlwaysAdvancesTheClock() {
         val state = e.newGame(now, 11).copy(
             active = listOf("alarm", "memo", "settings", "ai"),

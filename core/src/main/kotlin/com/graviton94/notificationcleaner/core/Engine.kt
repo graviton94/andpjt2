@@ -835,6 +835,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         // 메이버: a new trending category every 10 swipes.
         val trend = if (on(s, "portal") && s.swipes % 10 == 0) Category.entries[Math.floorMod(mix(roll), Category.entries.size.toLong()).toInt()] else s.trend
 
+        if (auto && rules.autoSwipePermille != 1_000)
+            earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
         // Jackpot cap: luck may jump a few levels, never the whole run.
         val room = jackpotRoom(s, rules.swipeLevelCap)
         val capped = (earned - room).max(ZERO)
