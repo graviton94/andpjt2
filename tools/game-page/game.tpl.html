@@ -1972,7 +1972,7 @@ function appDetail(id) {
   el.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', async () => { await sheetAct(x); close(); }));
 }
 let wipeArm = 0, appInfo = null;
-const SITE = 'https://graviton94.github.io/notificationcleaner/';
+const SITE = 'https://graviton94.github.io/donotdisturb/';
 async function renderSettings(b) {
   $('sheet-t').textContent = '설정'; $('sheet-w').textContent = '';
   if (!appInfo) appInfo = await api('info').catch(() => ({}));

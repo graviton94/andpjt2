@@ -3,7 +3,7 @@
   "collects": true,
   "encrypted_in_transit": true,
   "account_methods": ["PSL_ACM_NONE"],
-  "data_deletion_url": "https://graviton94.github.io/notificationcleaner/privacy/#delete",
+  "data_deletion_url": "https://graviton94.github.io/donotdisturb/privacy/#delete",
   "types": {
     "PSL_APPROX_LOCATION":         {"cat": "PSL_DATA_TYPES_LOCATION",        "shared": true,  "optional": false, "collect": ["PSL_ANALYTICS","PSL_ADVERTISING"], "share": ["PSL_ADVERTISING"]},
     "PSL_PURCHASE_HISTORY":        {"cat": "PSL_DATA_TYPES_FINANCIAL",       "shared": false, "optional": false, "collect": ["PSL_APP_FUNCTIONALITY","PSL_ANALYTICS"], "share": []},
