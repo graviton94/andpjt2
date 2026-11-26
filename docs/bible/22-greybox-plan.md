@@ -1,0 +1,80 @@
+# 22 · 그레이박스 작업 계획 (3단계)
+
+> **11-24 결정: 게임 화면 = 승인된 시연판(HTML/WebGL) + 실제 core 엔진.** Compose 그레이박스(M1·M2 1차)는 시안·시연판과 달라 폐기(`app/legacy/greybox`). 페이지 원본 `tools/game-page/game.tpl.html` → `build.py` → `app/src/main/assets/game`. 앱은 WebView(AssetLoader) + `GameBridge`(window.Game) → core `WebSession`. 브라우저에서는 `gradle -p core run --args="serve 8765 ../app/src/main/assets/game"` 후 `node tools/game-page/playtest.js`로 손가락처럼 플레이·캡처해 확인하고 넘긴다. 아래 Compose 기준 내용은 참고용.
+>
+> **진행(11-24)**: M1·M2(판·손맛) → 시연판+엔진, M3 셰이드·시트 5종(상점·강화·덱·초기화/백업·기록), 특수 줄(스팸 전화·행운 알림·알림 훈련·이벤트 카드·시스템 알림), M4 수익화 화면(데이터 충전·더 빠르게·프리미엄 ★·매일 들르기·미션·광고 지면, 결제·광고는 가짜 + claimOnce) 완료. 브라우저 점검: playtest · paneltest · eventtest · bmtest. 남은 것: M5 AGSL→(웹이라 이미 WebGL), M6 실제 SDK(Billing·AdMob)·원격 설정·분석.
+>
+> **11-25**: 조작 부품을 안드로이드 Material 3로(버튼·칩·분할 버튼·배지·대화상자·스위치·바텀시트, 시스템 테마 토큰), 아이템 그림·판촉 딱지는 일러스트 유지. 설정 화면(소리·진동·움직임 줄이기 저장, 게임 데이터 초기화, 약관 링크). 환생 연출(공장 초기화·클라우드 동기화: 판이 깨지고 장식 붕괴, 받은 백업파일·GB 카운트업 → 백업·클라우드 상점으로)과 클라우드 상점. 큰 수: 화면은 금액을 실수로 바꾸지 않음(log10 + BigInt), 밸런스 브랜치의 …Short·can… 계약을 우선 사용. 점검 스크립트: bignumtest · settingstest · prestigetest.
+
+목표: **core 엔진을 그대로 쓰는 실제 안드로이드 앱**으로 "밀고 → 터지고 → 정산 쾅"의 손맛과 하루 루프(출석·오프라인·초기화)를 폰에서 확인한다. 그림은 회색 상자여도 되지만 **타격감과 숫자 연출은 시연판 수준**이어야 한다(이 게임은 손맛 원툴).
+
+빌드 환경: 앱 빌드는 GitHub Actions CI(`.github/workflows/android.yml`)가 한다 — main·`ccr-*` 작업 브랜치 푸시, PR, 수동 실행. core 테스트 → 앱 단위 테스트·lint·디버그 APK → 에뮬레이터 스모크(판 표시, 6번 밀기, 강제 종료 후 저장에서 복원). core는 어디서나 `gradle -p core test`.
+
+**M1 상태(11-23)**: CI 9번 실행 초록 — 빌드·스모크 통과.
+
+**M2 1차(11-24, CI #19 초록)**: `fx/Director.kt` — FxPlan 타임라인 재생. 정산 전까지 이전 판을 붙잡고 폭발 줄마다 부풀며 하얗게 사라짐, 히트스톱(세계 정지)·슬로모·흔들림·카드 파편 600개 풀·섬광·화면 금(시드 고정)·장식 붕괴(머리말·꼬리말이 떨어졌다 출렁이며 복귀). 점수 층(흔들림·금 없음): 연쇄 이름 팝 → 칩(파랑) × 배율(빨강) → 휙 → 합계 카운트업 780ms → 쾅(펀치 스케일). 새 알림은 위에서 튀어 들어옴. 진행 중 새 입력은 즉시 결말로 건너뜀, 자동 정리는 연출이 끝날 때까지 대기. 남은 것: AGSL 왜곡(M5), 카드 스냅숏 유리 깨짐, 디스플레이 글꼴.
+
+## 1. 모듈 연결
+
+- `settings.gradle.kts`: `include(":core")` 추가, `app`이 `implementation(project(":core"))`. core는 이미 순수 Kotlin(JVM 17) + kotlinx.serialization.
+- 시연 앱 코드(`GameEngine.kt`, `GameSession.kt`, `NotificationShade.kt` …)는 `app/legacy/`로 옮기고 빌드에서 뺀다. `ImpactFeedback.kt`(햅틱)만 참고해 `fx/Haptics.kt`로 다시 쓴다.
+
+## 2. core API ↔ 앱 대응표
+
+| 앱 쪽 | core |
+|---|---|
+| `GameViewModel.swipe(rowId)` | `Engine.swipe` → `Meta.record` → `SaveCodec.encode` 저장 → `FxPlan.plan` 재생 |
+| 자동 정리 타이머 | `Engine.autoIntervalMs(s, now)` + `Engine.autoTarget` + `swipe(actor = Auto)` |
+| 배터리 | `Engine.tick`, `chargeMs(s, now)` |
+| 복귀 | `AwayClock.awayMs` → `Engine.settleOffline` → 오프라인 ×2 광고 제안 `Shop.watchAd(OfflineDouble, offerP)` |
+| 상점 · 강화 | `Engine.buy`, `upgrade/upgradeMany/upgradeMax`, `upgradeCost` |
+| 덱 편집 | `Engine` 덱 함수, `rules.maxSlots` |
+| 공장 초기화 · 동기화 | `Meta.reset` / `Meta.sync`, 미리보기 `backupFilesNow`, `cloudGbNow` |
+| 백업 · 클라우드 상점 | `buyBackup`, `buyCloud`, `backupOpen`, `cloudOpen` |
+| 데이터 · 프리미엄 ★ | `Shop.upgradePremium`, `premiumPrice`, `useStarVoucher` |
+| 광고 지면 | `Shop.adsLeft`, `watchAd` (패스면 광고 없이) |
+| 데이터 상점 · 티켓 | `Shop.buyItem`, `useTicket` |
+| 패스 · 속도 구독 | `Shop.buyPass`, `buySpeedPass`, `claimPassDaily`, `passActive` |
+| 결제·광고 지급 | `Shop.claimOnce(claimId)` (21장 지급 대기열) |
+| 출석판 · 미션 · 업적 · 도전 | `Shop.claimAttendance`, `Meta.missionsFor/claimMissions`, `Meta.earned`, `Meta.startChallenge/finishChallenge` |
+| 숫자 표기 | `short(BigInteger)` |
+| 연출 | `FxPlan.plan(outcome, reducedMotion)` → `fx/Director` |
+| 효과음 | `assets-src/sfx/*.ogg` → `app/src/main/res/raw` (SoundPool) |
+
+## 3. 화면 (그레이박스 범위)
+
+| 화면 | 내용 | 비고 |
+|---|---|---|
+| 판 | 상태표시줄(장식) · 지갑(점수 층) · 칩×배율 · 알림 카드 7~12장 · 하단 장식 버튼 | 06 UX, 시연판 배치 그대로 |
+| 끌어내리는 패널 | 상점 · 강화(×1/×10/Max/모두) · 덱 · 카드 · 보조 | 회색 상자 + 텍스트 |
+| 초기화 · 동기화 | 받을 재화 미리보기, 확인 | 16 온보딩 문구 |
+| 백업 · 클라우드 상점 | 목록 | |
+| 데이터 상점 · 프리미엄 | 앱별 ★, 상품 목록(가짜 결제) | `ui-assets` 아이콘 사용 |
+| 출석판 · 미션 · 업적 | 30칸 판, 미션 3개, 칭호 | |
+| 오프라인 정산 팝업 | 번 P + ×2 버튼 | |
+| 설정 | 소리·진동·움직임 줄이기·숫자 표기, **게임 데이터 초기화**, 정보(앱 인스턴스 ID 표시) | 개인정보처리방침 데이터 삭제 절에 약속한 기능 |
+
+## 4. FX 감독 (fx/)
+
+- `Director`: `Cue` 목록을 프레임 시계로 재생. 히트스톱 동안 시뮬 시간 정지, 슬로모, 입력은 계속 받음(연출 빨리감기).
+- 두 층: 세계 층(배경 블롭·카드·파편·빛) → `RuntimeShader`(AGSL, Android 13+) 후처리(충격파·화면 금·아지랑이·물결·RGB 분리·글리치·CRT), 그 위에 **점수 층**(왜곡 없음). 12 이하는 셰이더 없이.
+- 파티클 풀 600(저사양 300), 120Hz 고정 스텝, 시드 난수. 카드 유리 깨짐은 카드 스냅숏 비트맵을 거미줄 다각형으로 잘라 그림.
+- 글자: 디스플레이 글꼴 + 잉크 외곽선·딱딱한 그림자·세로 그라데이션(시연 `gtext`).
+- 소리: SoundPool 동시 24, id별 음량표(무게 사다리), 같은 소리 30ms 합침.
+
+## 5. 마일스톤
+
+| M | 내용 | 완료 기준 |
+|---|---|---|
+| M1 | 모듈 연결 + 판 화면(회색) + 스와이프·합치기·폭발 + 저장/복원 | 앱을 죽였다 켜도 판·지갑 그대로 |
+| M2 | FX 감독 1차: 히트스톱·흔들림·파편·칩×배율·정산 카운트업·효과음 | 시연판과 나란히 놓고 손맛 비교 |
+| M3 | 패널: 상점·강화·덱·초기화·백업 상점·오프라인 정산 | 시뮬 무과금 1주 차 흐름을 손으로 재현 |
+| M4 | 수익화 화면(가짜 결제·가짜 광고) + 출석판·미션·업적 | 지급 → 저장 → 확정 순서, 재실행 복구 |
+| M5 | AGSL 후처리(충격파·화면 금)·장식 붕괴·이벤트 6종 | 13+ 실기기, 2ms 예산 |
+| M6 | 실제 SDK(AdMob·Billing 테스트 트랙)·원격 설정·분석 | 내부 테스트 트랙 배포 |
+
+## 6. 성능 · 품질 예산
+
+- 판 계산(스와이프 1회) ≤ 2ms. **JVM 실측(11-23, `gradle -p core run --args=bench`)**: 스와이프 p50 34µs·p99 166µs, 연출 계획 p50 1µs, 저장 인코딩 p50 23µs·p99 83µs. 폰(대략 5~10배 느림)에서도 예산 안. BigInteger는 표시 직전에만 문자열.
+- 프레임 16ms 중 FX ≤ 2ms(Pixel 6a), 저사양 자동 강등.
+- 저장 ≤ 20KB JSON, 스와이프마다 비동기 원자적 쓰기(DataStore).

@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "NotificationCleaner"
 include(":app")
+includeBuild("core")  // pure Kotlin rules engine, also built on its own (gradle -p core)

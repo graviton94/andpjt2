@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">알림 청소부</string>
+    <!-- default language: English. Store title: "Do Not Disturb!: Merge Idle" -->
+    <string name="app_name">Do Not Disturb!</string>
 </resources>

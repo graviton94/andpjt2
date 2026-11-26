@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>메인 판</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#3867F0}a:hover{color:#2449B8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; color: #16181D; background: linear-gradient(180deg, #E3ECFF 0%, #EEF1F7 46%, #F4EEE8 100%); display: flex; flex-direction: column">
+  <div style="position: absolute; width: 320px; height: 320px; left: -120px; top: 120px; border-radius: 999px; background: #9DB8FF66; filter: blur(60px)" aria-hidden="true"></div>
+  <div style="position: absolute; width: 260px; height: 260px; right: -100px; top: 460px; border-radius: 999px; background: #FFD2AE55; filter: blur(60px)" aria-hidden="true"></div>
+
+  <header style="position: relative; height: 42px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600">
+    <span style="display: flex; align-items: center; gap: 6px"><span style="padding: 2px 8px; border-radius: 999px; background: #3867F0; color: #FFFFFF; font-size: 12px">Lv 42</span><span style="color: #5F6674">×{{multiplier}}</span></span>
+    <span style="font-size: 15px; font-weight: 700; letter-spacing: -0.02em">{{wallet}} P</span>
+    <span style="display: flex; align-items: center; gap: 6px" aria-label="배터리 9칸 중 12칸">
+      <svg width="26" height="13" viewBox="0 0 26 13" aria-hidden="true"><rect x="0.75" y="0.75" width="21.5" height="11.5" rx="3" fill="none" stroke="#16181D" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="5" rx="1" fill="#16181D"/><rect x="2.5" y="2.5" width="13.5" height="8" rx="1.5" fill="#18A957"/></svg>
+      <span>9/12</span>
+    </span>
+  </header>
+
+  <section aria-label="빠른 설정" style="position: relative; padding: 8px 18px 4px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{tiles}}" as="tile" hint-placeholder-count="4">
+      <button type="button" aria-pressed="{{tile.on}}" style="background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; font: inherit; color: inherit; cursor: pointer">
+        <span style="{{tile.style}}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{tile.icon}}"/></svg>
+        </span>
+        <span style="font-size: 12.5px; font-weight: 600">{{tile.label}}</span>
+      </button>
+    </sc-for>
+  </section>
+
+  <section aria-label="과부하 게이지" style="position: relative; margin: 10px 18px 6px; display: flex; align-items: center; gap: 10px">
+    <span style="font-size: 12px; font-weight: 700; color: #B85A00">과부하</span>
+    <span style="flex: 1; height: 8px; border-radius: 999px; background: #1E2A501A; overflow: hidden"><span style="display: block; width: 72%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #FFB15C, #FF8A1F)"></span></span>
+    <span style="font-size: 12px; font-weight: 600; color: #5F6674">72%</span>
+  </section>
+
+  <main aria-label="알림 판" style="position: relative; flex: 1; padding: 6px 12px 0; display: flex; flex-direction: column; gap: 8px">
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="7">
+      <article style="{{c.cardStyle}}">
+        <img src="{{c.icon}}" alt="" width="38" height="38" style="width: 38px; height: 38px; border-radius: 10px; flex: none">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+          <div style="display: flex; align-items: baseline; gap: 6px"><strong style="font-size: 14px; font-weight: 700">{{c.name}}</strong><span style="font-size: 11.5px; color: #5F6674">{{c.time}}</span></div>
+          <span style="font-size: 12.5px; color: #4B5160; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.ment}}</span>
+        </div>
+        <span style="{{c.badgeStyle}}">{{c.badge}}</span>
+      </article>
+    </sc-for>
+  </main>
+
+  <footer style="position: relative; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+    <span style="font-size: 11.5px; color: #5F6674">아래로 끌어 상점 · 강화 · 덱</span>
+    <span style="width: 120px; height: 5px; border-radius: 999px; background: #16181D" aria-hidden="true"></span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3867F0","options":["#3867F0","#EFA03F","#18A957"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#3867F0';
+    const tile = (on) => 'width: 58px; height: 58px; border-radius: 999px; display: flex; align-items: center; justify-content: center; ' +
+      (on ? 'background: ' + accent + '; color: #FFFFFF; box-shadow: 0 6px 16px ' + accent + '40' : 'background: #1E2A5014; color: #3C4250');
+    const tiles = [
+      { label: '자동', on: true, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8', style: tile(true) },
+      { label: '방해 금지', on: false, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z', style: tile(false) },
+      { label: '덱', on: false, icon: 'M4 6h16M4 12h16M4 18h10', style: tile(false) },
+      { label: '배속', on: false, icon: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', style: tile(false) },
+    ];
+    const card = 'height: 62px; box-sizing: border-box; padding: 0 12px; border-radius: 20px; display: flex; align-items: center; gap: 12px; background: #FFFFFFB8; border: 1px solid #FFFFFFCC; box-shadow: 0 6px 18px #1E2A5014; backdrop-filter: blur(18px)';
+    const dots = (n, t) => '●'.repeat(n) + '○'.repeat(Math.max(0, t - n));
+    const badge = 'flex: none; font-size: 13px; letter-spacing: 1px; color: #3867F0; font-weight: 700';
+    const mk = (icon, name, ment, n, t, time) => ({ icon, name, ment, time, badge: dots(n, t), cardStyle: card, badgeStyle: badge });
+    const cards = [
+      mk('/_blob/9e98b4072656432c276d7452786bcb16', '코코아톡', '조용한 단톡방에 메시지가 쌓였어요', 2, 4, '방금'),
+      mk('/_blob/f2585d22e973fb5ee225783b32fb3109', '너튜브', '구독 채널의 새 영상', 1, 4, '1분'),
+      { icon: '/_blob/ef6ccfba357b23ed3f0925101e39423c', name: '스팸 문자', ment: '(광고) 무료 체험이 곧 유료로 바뀝니다', time: '방금', badge: '치우기', cardStyle: card.replace('#FFFFFFB8', '#FFF1F1E6').replace('#FFFFFFCC', '#EF444466'), badgeStyle: 'flex: none; font-size: 12px; font-weight: 700; color: #B91C1C' },
+      mk('/_blob/9e98b4072656432c276d7452786bcb16', '코코아톡', '“ㅋㅋㅋ” 외 999+', 2, 4, '2분'),
+      mk('/_blob/03fb44a7a0f6d460445a981312712dc3', '인싸그램', '친구가 스토리를 올렸어요', 3, 4, '3분'),
+      { icon: '/_blob/4b65659d44c43fb66b08224be0c55b64', name: '@모두 공지', ment: '@모두 내일 회의 10시로 변경됐습니다', time: '카드', badge: '이벤트', cardStyle: card.replace('#FFFFFFB8', '#FFF6E8E6').replace('#FFFFFFCC', '#FF8A1F66'), badgeStyle: 'flex: none; font-size: 12px; font-weight: 700; color: #B85A00' },
+      mk('/_blob/1ee5fa71f033807b159b7d1bdbfdbb22', '넷플러그', '다음 화가 5초 후 재생됩니다', 1, 4, '5분'),
+    ];
+    return { tiles, cards, wallet: '3.2조', multiplier: '1,240' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<resources>
+    <!-- Night: amber-gold dark (screens-v1 MainDark). -->
+    <style name="Theme.NotificationCleaner" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0D0907</item>
+        <item name="android:colorAccent">#EFA03F</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

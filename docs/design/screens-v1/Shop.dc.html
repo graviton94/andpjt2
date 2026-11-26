@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>앱 상점</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#3867F0}a:hover{color:#2449B8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans KR', sans-serif; color: #16181D; background: linear-gradient(180deg, #E3ECFF 0%, #EEF1F7 100%)">
+  <div style="position: absolute; inset: 0; background: #0A0F1E66" aria-hidden="true"></div>
+  <section aria-label="앱 상점" style="position: absolute; left: 0; right: 0; top: 96px; bottom: 0; border-radius: 32px 32px 0 0; background: #F7F9FC; box-shadow: 0 -12px 32px #1E2A5033; padding: 10px 16px 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+    <span style="align-self: center; width: 44px; height: 5px; border-radius: 999px; background: #C7CDD8" aria-hidden="true"></span>
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 17px; font-weight: 700">앱 상점</h1>
+      <span style="font-size: 13px; font-weight: 700">지갑 3.2조 P</span>
+    </div>
+    <div role="group" aria-label="티어" style="display: flex; gap: 6px; overflow: hidden">
+      <sc-for list="{{chips}}" as="ch" hint-placeholder-count="6">
+        <button type="button" aria-pressed="{{ch.on}}" style="{{ch.style}}">{{ch.label}}</button>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+      <sc-for list="{{apps}}" as="a" hint-placeholder-count="7">
+        <article style="{{a.rowStyle}}">
+          <img src="{{a.icon}}" alt="" width="44" height="44" style="width: 44px; height: 44px; border-radius: 12px; flex: none; {{a.iconStyle}}">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+            <div style="display: flex; align-items: center; gap: 6px"><strong style="font-size: 14px">{{a.name}}</strong><span style="padding: 1px 6px; border-radius: 10px; background: #3867F02E; color: #2449B8; font-size: 11px; font-weight: 700">{{a.tier}}티어</span></div>
+            <span style="font-size: 11.5px; color: #5F6674">{{a.meta}}</span>
+          </div>
+          <span style="{{a.btnStyle}}">{{a.btn}}</span>
+        </article>
+      </sc-for>
+    </div>
+    <p style="margin: 0; font-size: 11.5px; color: #5F6674; text-align: center">한 번 연 앱은 초기화 뒤에도 남아요 · 높은 티어일수록 비싸서 순서대로 사게 돼요</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const chip = (on) => 'flex: none; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; font: inherit; font-size: 12.5px; font-weight: 700; ' +
+      (on ? 'background: #3867F0; color: #FFFFFF' : 'background: #1E2A5014; color: #3C4250');
+    const chips = ['전체', '6티어', '7티어', '8티어', '9티어', '10티어'].map((l, i) => ({ label: l, on: i === 0, style: chip(i === 0) }));
+    const row = 'min-height: 66px; padding: 10px 12px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E6EAF2';
+    const buy = 'flex: none; min-width: 84px; height: 40px; padding: 0 12px; box-sizing: border-box; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; background: #3867F0; color: #FFFFFF';
+    const off = buy.replace('background: #3867F0; color: #FFFFFF', 'background: #1E2A5014; color: #5F6674');
+    const owned = buy.replace('background: #3867F0; color: #FFFFFF', 'background: #18A95724; color: #0E7A3E');
+    const a = (icon, name, tier, meta, btn, style, locked) => ({ icon, name, tier, meta, btn, btnStyle: style, rowStyle: locked ? row.replace('#FFFFFF;', '#F1F3F8;') : row, iconStyle: locked ? 'filter: grayscale(1); opacity: .55' : '' });
+    const apps = [
+      a('/_blob/7629f92ed364b5bb5ee70b2156bbaabd', '쿠빵', 8, '아시아권 · 금융 · 알림 가치 ×6', '보유', owned, false),
+      a('/_blob/a8df141fa0fe328ff7531d04fa5440cf', '메이버', 8, '아시아권 · 업무 · 화제 카테고리 ×2', '보유', owned, false),
+      a('/_blob/02499ad24743be3f517c21fbead77a91', '쇼피피', 8, '동남아권 · 금융 · 싼 앱 −10%', '2.1조 P', buy, false),
+      a('/_blob/e9f1a5e09524ead2cdc5257caff8cd51', '와이', 8, '서양권 · 소통 · 소통 앱 누적 +2%', '5.4조 P', off, false),
+      a('/_blob/9e305f8c6cd0662a768ad4cbd0e2bbf7', '아마좀', 9, '글로벌 · 금융 · Lv 86 해금', '잠김', off, true),
+      a('/_blob/03fb44a7a0f6d460445a981312712dc3', '인싸그램', 10, '글로벌 · 미디어 · Lv 108 해금', '잠김', off, true),
+      a('/_blob/13717179b10fe71b24f486b5d8636d0a', '큐글', 10, '글로벌 · 업무 · Lv 120 해금', '잠김', off, true),
+    ];
+    return { chips, apps };
+  }
+}
+</script>
+</body>
+</html>

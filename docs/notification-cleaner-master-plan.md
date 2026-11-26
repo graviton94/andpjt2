@@ -133,7 +133,7 @@
 
 ## 8. andpjt2 안드로이드 설계
 
-빈 andpjt2 저장소에 Kotlin과 Jetpack Compose 단일 앱 모듈로 시작하는 안을 유지한다. 최소 지원은 Android 8.0(API 26)을 후보로 두고 Google Play 신규 제출 타깃은 Android 16(API 36) 이상을 따른다. 기본 게임의 알림, 앱 정보, 전화, 모의 재난문자는 내부 게임 데이터로 만든다. [andpjt2](https://github.com/graviton94/andpjt2) · [Google Play 대상 API 요구사항](https://developer.android.com/google/play/requirements/target-sdk)
+빈 andpjt2 저장소에 Kotlin과 Jetpack Compose 단일 앱 모듈로 시작하는 안을 유지한다. 최소 지원은 Android 8.0(API 26)을 후보로 두고 Google Play 신규 제출 타깃은 Android 16(API 36) 이상을 따른다. 기본 게임의 알림, 앱 정보, 전화, 모의 재난문자는 내부 게임 데이터로 만든다. [andpjt2](https://github.com/graviton94/donotdisturb) · [Google Play 대상 API 요구사항](https://developer.android.com/google/play/requirements/target-sdk)
 
 | 영역 | 사양 |
 |---|---|

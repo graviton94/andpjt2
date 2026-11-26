@@ -1,0 +1,124 @@
+# UI 에셋 발주서 · 상점 · 강화 · 재화 · 부스트
+
+> **발주 관리**: 대기 목록의 정본은 `docs/design/commissions.json`, 복사용 화면은 [에셋 발주 보드](https://claude.ai/artifact/Pd9VzPTkmJ6fEQsSFh5uqk)(`python3 tools/commissions/build_board.py OUT.html`로 생성). **한 프롬프트 = 시트 한 장**: 묶음의 요소를 격자 칸에 정위치로 그려 받고, `python3 tools/commissions/slice_sheet.py <묶음> <시트.png>`로 칸별로 잘라 `ui-assets/<묶음>/`에 저장한다(배경은 투명, 안 되면 #FF00FF). 반입하면 JSON의 `pending`에서 `delivered`로 옮기고 보드를 다시 발행한다. 이 문서는 설계 배경 기록용.
+
+화면 뼈대(카드·패널·버튼·탭·상태표시줄)는 폰 UI를 흉내 낸 **코드**로 그린다(글래스·디자인 토큰). 아래는 게임 퀄리티를 위해 **이미지로 발주**하는 아이템 아이콘과 상품 아트다. 숫자·글자는 모두 코드가 위에 얹는다.
+
+## 0. 공통 사양 (모든 프롬프트 앞에 붙인다)
+
+**스타일 "잉크 스티커"**: 시연판의 점수 글자·칩/배율 상자와 같은 문법.
+
+- 두꺼운 어두운 잉크 외곽선 `#1A0E06` (아이콘 폭의 약 5%), 모서리 둥글게.
+- **딱딱한 그림자**: 같은 잉크색으로 바로 아래 약 4% 내려 찍은 그림자. 흐림 없음.
+- 채우기: 위 밝고 아래 진한 **세로 2색 그라데이션** + 왼쪽 위 **광택 하이라이트 한 조각**(흰색 25~35%).
+- 빛 방향은 모두 왼쪽 위. 살짝 입체(통통한 베벨) 느낌, 사실적 질감·노이즈·글로우 없음.
+- **글자·숫자·이모지·로고 없음.** (×2 같은 숫자는 코드가 얹는다.)
+- 실제 브랜드(배터리 제조사, 통신사, 앱스토어) 모양을 따라 그리지 않는다.
+- 48px로 줄여도 실루엣만으로 구분될 것. 같은 묶음끼리 크기·두께·각도를 맞춘다.
+
+**납품**: 512×512 투명 PNG(아이템 아이콘) 또는 지정 크기, 전경은 가운데 **80% 안전 영역** 안. 가능하면 SVG도. 경로 `docs/design/ui-assets/<묶음>/<id>.png`.
+
+## 1. 재화 5종 (`currency/`)
+
+| id | 재화 | 색 |
+|---|---|---|
+| `p` | P (포인트, 회차 금화) | 금 #FFE27A → #F0A000 |
+| `data` | 데이터 (유료) | 초록 #6BE38A → #12A150 |
+| `backup` | 백업파일 (초기화 환생) | 파랑 #8CC4FF → #2F6FE0 |
+| `gb` | GB (동기화 환생) | 하늘 #BDF1FF → #38B8E8 |
+| `battery` | 배터리 (에너지) | 초록 #9BEA6B → #34A853 |
+
+> **[공통 사양]** Game currency icon set, five icons in one consistent sticker style.
+> 1. `p`: a thick round gold coin seen slightly from the front, raised rim, the face embossed with a simple **bell-shaped notification glyph** (no letters), gold #FFE27A to #F0A000.
+> 2. `data`: a **chunky faceted gem shaped like four rising signal bars** fused into one crystal, green #6BE38A to #12A150, small sparkle on the tallest bar.
+> 3. `backup`: a **plump document file with a folded corner and a circular arrow** wrapped around it (restore), blue #8CC4FF to #2F6FE0.
+> 4. `gb`: a **puffy cloud with a tiny stacked-disk (database) shape** tucked in front, sky blue #BDF1FF to #38B8E8.
+> 5. `battery`: a **rounded battery standing upright, filled three-quarters with a lightning bolt** cut into the fill, green #9BEA6B to #34A853, white terminal cap.
+> Transparent background, 512×512 each, same outline weight and shadow on all five.
+
+## 2. 부스트 · 광고 보상 8종 (`boost/`)
+
+| id | 항목 | 핵심 모양 |
+|---|---|---|
+| `income-boost` | 수입 부스트 30분 | 위로 치솟는 동전 + 속도선 |
+| `time-warp` | 시간 도약 2시간 | 모래시계 + 앞으로 감기 화살표 |
+| `power-bank` | 보조배터리 | 보조배터리 + 케이블 + 번개 |
+| `backup-boost` | 백업 부스트 | 백업파일 + 위 화살표 |
+| `free-upgrade` | 무료 강화 +5 | 렌치 + 위 화살표 |
+| `data-box` | 데이터 상자 | 신호 막대 문양 상자, 뚜껑 살짝 열림 |
+| `best-double` | 최고 기록 ×2 | 트로피 두 개 겹침 |
+| `offline-double` | 오프라인 ×2 | 초승달 + 동전 두 개 |
+
+> **[공통 사양]** Game boost/reward icon set, eight icons, same sticker style as the currency set.
+> 1. `income-boost`: a gold coin rocketing upward with three bold speed lines and a small flame under it. Gold #FFE27A→#F0A000, flame #FF8A1F.
+> 2. `time-warp`: an hourglass tilted 15°, sand mid-flow, with a bold **double fast-forward chevron** overlapping its lower right. Glass pale blue #DDF3FF, frame amber #EFA03F, chevron #3867F0.
+> 3. `power-bank`: a chunky rectangular power bank with four charge dots, a short coiled cable, and a lightning bolt badge. Body graphite #4A4F5C→#2A2D35, bolt #FFD43B.
+> 4. `backup-boost`: the blue backup file from the currency set with a **big upward arrow** bursting from behind it. File #8CC4FF→#2F6FE0, arrow #34C759.
+> 5. `free-upgrade`: a stubby wrench crossing a **thick upward arrow**. Wrench silver #E6EAF0→#9AA3B2, arrow #34C759.
+> 6. `data-box`: a sturdy loot crate, lid slightly open with light spilling out, the front embossed with **signal bars**. Crate #2F6FE0 trim, body #8CC4FF, glow #6BE38A.
+> 7. `best-double`: **two gold trophies**, one slightly behind and offset, sparkles at the rims. Gold #FFE27A→#F0A000.
+> 8. `offline-double`: a sleepy crescent moon with closed eyes, **two gold coins** resting in its curve. Moon #FFF3C4→#F5C842, coins gold.
+> Transparent background, 512×512 each.
+
+## 3. 상점 상품 아트 (`shop/`, 768×512 투명 PNG, 가로형)
+
+| id | 상품 | 그림 |
+|---|---|---|
+| `data-1` ~ `data-6` | 데이터 팩 6단계 | 데이터 보석이 1개 → 한 줌 → 주머니 → 상자 → 금고 → 서버 랙까지 커진다 |
+| `month-pass` | 월간 패스 (광고 제거 포함) | 금테 카드 + 달력 + 막힌 광고 기호 |
+| `starter` | 스타터 팩 | 선물 상자 + 데이터 보석 + 별 하나 |
+| `growth` | 성장 지원 팩 | 로켓 + 백업파일 + 데이터 |
+
+> **[공통 사양]** Shop product illustrations, landscape 768×512, transparent background, same sticker style but richer (more objects, still bold).
+> `data-1`: one data gem (the green signal-bar crystal) with a small sparkle.
+> `data-2`: a small handful of three data gems.
+> `data-3`: a cloth pouch spilling about eight data gems.
+> `data-4`: an open treasure chest full of data gems, green glow.
+> `data-5`: a heavy round vault door ajar, piles of data gems inside.
+> `data-6`: a glowing server rack whose drive bays are filled with data gems, green light streaks; the most impressive of the six.
+> `month-pass`: a premium gold-rimmed membership card, a small calendar page with 30 squares, and a **crossed-out play-button TV badge** (ad-free), confetti.
+> `starter`: a ribbon-tied gift box with a data gem and a single gold star popping out.
+> `growth`: a small rocket lifting off with a blue backup file and green data gems trailing behind.
+> Escalation must read clearly from `data-1` to `data-6` at thumbnail size. No text, no price, no logos.
+
+## 4. 프리미엄 · 등급 배지 (`badge/`)
+
+| id | 용도 |
+|---|---|
+| `star-on`, `star-off` | 프리미엄 ★ 칸 (켜짐 금, 꺼짐 회색) 128×128 |
+| `frame-1` ~ `frame-5` | 앱 아이콘 위에 얹는 등급 테두리(★1 동, ★3 은, ★5 금빛 무지개) 512×512, 가운데 투명 |
+| `pro` | 프로 버전 리본 배지 (글자 없이 리본 + 번개) 256×256 |
+| `upgrade-arrow` | 강화 가능 표시 초록 위 화살표 96×96 |
+
+> **[공통 사양]** Rank badge set for app icons.
+> `star-on`: a chubby five-point star, gold #FFE27A→#F0A000, glossy. `star-off`: the same star in flat grey #5A5550 with a darker outline, no gloss.
+> `frame-1`…`frame-5`: a **rounded-square ring frame** (squircle, transparent centre 78% of the width) that wraps an app icon. ★1 bronze #E0A070, ★2 bronze with small rivets, ★3 silver #E6EAF0 with a gem at the top, ★4 gold #FFD66B with two gems, ★5 **gold with an iridescent rainbow sheen and tiny wings at the top corners**. Same outline/shadow rules.
+> `pro`: a short ribbon banner folded at both ends with a lightning bolt in the middle, purple #7A3CFF→#4B1FB8, bolt #FFD43B.
+> `upgrade-arrow`: a fat rounded up-arrow, green #6BE38A→#12A150.
+> Transparent backgrounds.
+
+## 5. 메타 아이콘 8종 (`meta/`, 256×256)
+
+| id | 용도 |
+|---|---|
+| `attendance` | 출석 (달력 + 도장) |
+| `attendance-day7` | 출석 7일째 큰 보상 (리본 선물 상자, 빛) |
+| `missions` | 일일 미션 (체크리스트 클립보드) |
+| `achievements` | 업적 (메달) |
+| `daily-challenge` | 일일 도전 (스톱워치 + 깃발) |
+| `pass` | 시즌 패스 (왕관 티켓) |
+| `shop` | 상점 탭 (쇼핑백 + 데이터 보석) |
+| `ad` | 광고 보기 버튼 기호 (작은 TV + 재생 삼각형) |
+
+> **[공통 사양]** Meta-system icon set, eight icons, 256×256, same sticker style.
+> `attendance`: a desk calendar page with a round red stamp mark on today. `attendance-day7`: a big ribbon gift box with light rays, the weekly jackpot. `missions`: a clipboard with three check boxes, two ticked green. `achievements`: a round medal on a ribbon, gold. `daily-challenge`: a stopwatch with a small checkered flag. `pass`: a ticket stub topped by a small crown, purple and gold. `shop`: a paper shopping bag with a green data gem peeking out. `ad`: a small retro TV with a play triangle on the screen.
+> Transparent background, no text.
+
+## 6. 우선순위
+
+1. 재화 5종, 부스트 8종 (그레이박스 상점에 바로 필요)
+2. 등급 배지 (프리미엄 화면)
+3. 메타 아이콘
+4. 상점 상품 아트 (소프트런치 전)
+
+납품 전에는 코드 자리표시(점선 원 + 이름)가 쓰인다.
