@@ -30,8 +30,20 @@ android {
         buildConfigField("boolean", "FIREBASE", hasFirebase.toString())
     }
 
+    // Fixed debug key (app/debug.keystore, standard debug passwords) so every CI test APK has the same
+    // SHA-1 registered in Firebase; release builds are signed with the upload key in CI.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         debug {
+            signingConfig = signingConfigs.getByName("debug")
             // debug builds never show live ads
             manifestPlaceholders["admobAppId"] = admobTestApp
             buildConfigField("String", "ADMOB_REWARDED", "\"$admobTestRewarded\"")
