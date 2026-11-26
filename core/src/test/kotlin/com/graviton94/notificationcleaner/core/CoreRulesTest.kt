@@ -54,9 +54,9 @@ class CoreRulesTest {
             val rows = (1L..11).map { id ->
                 when (random.nextInt(8)) {
                     0 -> Row(id, RowKind.Event, event = events.random(random))
-                    1 -> Row(id, RowKind.Wild, count = 2, threshold = 4)
+                    1 -> Row(id, RowKind.Wild, count = 2, threshold = e.rules.threshold)
                     2 -> Row(id, RowKind.Spam)
-                    else -> Row(id, RowKind.App, app = apps.random(random), count = random.nextInt(1, 6), threshold = 4)
+                    else -> Row(id, RowKind.App, app = apps.random(random), count = random.nextInt(1, 6), threshold = e.rules.threshold)
                 }
             }
             val state = e.newGame(now, sample.toLong() + 1).copy(rows = rows, active = apps,
@@ -459,7 +459,11 @@ class CoreRulesTest {
         val s = deckOf("memo", "calc", "contacts", "phone", "sms")
         val n = valueOf(4)
         assertEquals(e.earn(s, "memo", n, 0) * valueOf(2), e.earn(s, "memo", n, 0, EarnCtx(direct = true)), "메모 direct ×2")
-        assertEquals(e.earn(s, "calc", valueOf(3), 0) * valueOf(4) / valueOf(3) * valueOf(3) / valueOf(2), e.earn(s, "calc", n, 0), "계산기 multiple of 4 ×1.5")
+        val calc = Catalog.app("calc")
+        assertEquals(1_000L, e.effectPermille(s, calc, n, 0, EarnCtx()))
+        assertEquals(1_000L, e.effectPermille(s, calc, valueOf(2), 1, EarnCtx()))
+        assertEquals(1_500L, e.effectPermille(s, calc, valueOf(2), 2, EarnCtx()))
+        assertEquals(1_000L, e.effectPermille(s, calc, valueOf(2), 2, EarnCtx(wave = true)))
         // 연락처: two other social apps in the deck -> +30%.
         val alone = deckOf("contacts", "memo", "calc")
         assertEquals(e.earn(alone, "contacts", n, 0).toDouble() * 1.3 * (e.earn(s, "contacts", n, 0).toDouble() / (e.earn(alone, "contacts", n, 0).toDouble() * 1.3)),
@@ -476,13 +480,27 @@ class CoreRulesTest {
     }
 
     @Test
-    fun thresholdEffectsBurstEarly() {
-        assertEquals(3, e.thresholdOf("green"))
-        assertEquals(e.rules.threshold, e.thresholdOf("memo"))
-        // 튄더: two rows of 1 touching burst at once.
-        val s = deckOf("match", "memo", "alarm").copy(rows = rows("memo" to 1, "match" to 1, "alarm" to 1, "match" to 1, "memo" to 2, "alarm" to 1, "memo" to 1))
-        val o = e.swipe(s, 102, now)!!
-        assertTrue(o.beats.any { it is Beat.Burst && it.row.app == "match" })
+    fun touchingPairsIgniteAndCountBonusesUnderRuleB() {
+        val match = deckOf("match", "memo", "alarm")
+            .copy(rows = rows("memo" to 1, "match" to 1, "alarm" to 1, "match" to 1, "memo" to 1))
+        val bursts = e.swipe(match, 102, now)!!.beats.filterIsInstance<Beat.Burst>()
+        assertEquals(listOf(3, 4), bursts.map { it.chain })
+        assertEquals(listOf(2, 2), bursts.map { it.row.count })
+
+        val green = deckOf("green", "memo", "alarm").copy(rows = rows("green" to 1, "memo" to 1, "green" to 1))
+        val result = e.swipe(green, 101, now)!!
+        assertEquals(2, result.beats.filterIsInstance<Beat.Burst>().single().row.threshold)
+        assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst + 10, result.state.gauge)
+    }
+
+    @Test
+    fun olderSavedRowsAdoptRuleBWithoutChangingCountsOrWallet() {
+        val active = e.newGame(now, 11)
+        val old = active.copy(rulesVersion = 3, wallet = valueOf(22), rows = active.rows.map { it.copy(threshold = 4) })
+        val loaded = e.tick(SaveCodec.decode(SaveCodec.encode(old)), now)
+        assertEquals(active.rulesVersion, loaded.rulesVersion)
+        assertEquals(active.rows, loaded.rows)
+        assertEquals(old.wallet, loaded.wallet)
     }
 
     @Test
@@ -700,7 +718,7 @@ class CoreRulesTest {
     fun phaseTwoEffectsWork() {
         val e = Engine(); val day = 86_400_000L
         fun deck(vararg ids: String, rows: List<Row>) = e.newGame(0, 3).copy(level = 90, appLevels = ids.associateWith { 1 }, active = ids.toList(), rows = rows)
-        fun app(id: Long, a: String, n: Int) = Row(id, RowKind.App, a, count = n, threshold = 4)
+        fun app(id: Long, a: String, n: Int) = Row(id, RowKind.App, a, count = n, threshold = e.rules.threshold)
         // 날씨: first swipe of the day adds one to its rows (once).
         val w = deck("weather", "memo", rows = listOf(app(1, "weather", 1), app(2, "memo", 1), app(3, "memo", 1)))
         val w1 = e.swipe(w, 3, day)!!.state
@@ -712,7 +730,8 @@ class CoreRulesTest {
         // 코코아T: a merged taxi row pulls in another taxi row.
         val c = deck("ctaxi", "memo", rows = listOf(app(1, "ctaxi", 2), app(2, "memo", 1), app(3, "ctaxi", 1), app(4, "ctaxi", 1)))
         val c1 = e.swipe(c, 2, day)!!
-        assertTrue(c1.beats.any { it is Beat.Burst }, "2+1 merged (3) bursts only by pulling the third taxi row")
+        assertEquals(4, c1.beats.filterIsInstance<Beat.Burst>().single().row.count)
+        assertEquals(listOf(3L, 4L), c1.beats.filterIsInstance<Beat.Merged>().map { it.fromId })
         // 와이: social apps grow with its bursts; 듀오링구 grows with the login streak.
         val y = deck("why", "chat", rows = listOf(app(1, "why", 2), app(2, "memo", 1), app(3, "why", 2)))
         assertEquals(1, e.swipe(y, 2, day)!!.state.whyStacks)

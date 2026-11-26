@@ -38,8 +38,8 @@ fun beats(o: SwipeOutcome): String = o.beats.filter { it !is Beat.Spawned }.join
 fun rows(vararg spec: Pair<String, Int>): List<Row> = spec.mapIndexed { i, (app, n) ->
     when (app) {
         "spam" -> Row(100L + i, RowKind.Spam)
-        "wild" -> Row(100L + i, RowKind.Wild, count = n, threshold = 4)
-        else -> Row(100L + i, RowKind.App, app, count = n, threshold = 4)
+        "wild" -> Row(100L + i, RowKind.Wild, count = n, threshold = engine.rules.threshold)
+        else -> Row(100L + i, RowKind.App, app, count = n, threshold = engine.rules.threshold)
     }
 }
 
@@ -47,6 +47,10 @@ private fun with(rows: List<Row>, f: (GameState) -> GameState = { it }): GameSta
 
 /** 1: the fixed first board. */
 fun firstSwipe(): Pair<GameState, SwipeOutcome> = engine.newGame(NOW, 7).let { it to engine.swipe(it, 4, NOW)!! }
+
+/** A pair with just one notification on each side still bursts in rule B. */
+fun touchPair(): Pair<GameState, SwipeOutcome> =
+    with(rows("memo" to 1, "weather" to 1, "memo" to 1)).let { it to engine.swipe(it, 101, NOW)!! }
 
 /** 2: a two-step unzip. */
 fun doubleChain(): Pair<GameState, SwipeOutcome> =
@@ -144,7 +148,7 @@ fun main(args: Array<String> = emptyArray()) {
         return
     }
     if (args.firstOrNull() == "serve") return serve(args.getOrNull(1)?.toInt() ?: 8765, java.io.File(args.getOrNull(2) ?: "../app/src/main/assets/game"), args.getOrNull(3)?.let { java.io.File(it) })
-    for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (게이지 80, 깊이 3)" to overload(),
+    for ((title, pair) in listOf("1 첫 스와이프" to firstSwipe(), "규칙 B의 1+1 즉시 폭발" to touchPair(), "2 두 단계 연쇄" to doubleChain(), "3 과부하 (게이지 80, 깊이 3)" to overload(),
         "4 강화 후 같은 스와이프" to upgraded(), "5 점화제" to igniter(), "7 와일드" to wildMerge(), "8 @모두 공지" to allHands())) {
         val (s, o) = pair
         println("### 예시 $title")

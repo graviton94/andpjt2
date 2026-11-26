@@ -11,11 +11,11 @@ private fun big(x: Long): BigInteger = BigInteger.valueOf(x)
  * Economy values are drafts until the economy simulator (economy v0.2) fixes them.
  */
 data class RuleSet(
-    val version: Int = 3,
+    val version: Int = 4,
     // Board
     val baseRows: Int = 7,
     val maxRows: Int = 12,
-    val threshold: Int = 4,
+    val threshold: Int = 2,
     val countWeights: List<Int> = listOf(1, 2, 1),
     val sandwichPercent: Int = 35,
     /** Extra sandwich chance per active app above four: a bigger deck still gets proposals. */

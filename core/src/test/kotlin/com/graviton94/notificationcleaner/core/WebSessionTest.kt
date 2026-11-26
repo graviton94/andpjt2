@@ -18,6 +18,7 @@ class WebSessionTest {
         val s = parse(w.snapshot(t0))
         assertEquals(7, s.getValue("rows").jsonArray.size)
         assertEquals("0", s.getValue("wallet").jsonPrimitive.content)
+        assertTrue(s.getValue("rows").jsonArray.all { it.jsonObject.getValue("threshold").jsonPrimitive.content == "2" })
         assertTrue(s.getValue("deckApps").jsonArray.isNotEmpty())
     }
 
