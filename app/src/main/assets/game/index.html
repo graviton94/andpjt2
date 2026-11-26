@@ -398,11 +398,57 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #sheet,#shade,#cf,#appd,.toast{word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
 .foot{display:flex;flex-direction:column;align-items:center;gap:2px;margin:12px 0 4px;font:400 12px/1.5 var(--font);color:var(--m-on-sv)}.foot span{display:block;max-width:100%}
 .day .caps{justify-content:flex-start}.day .fit1{display:block;max-width:100%}
+/* return-from-away card */
+#ret{position:fixed;inset:0;z-index:66;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.36);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
+#ret.on{opacity:1;pointer-events:auto;transition:opacity .3s var(--ease-std)}
+#ret .card{width:100%;max-width:360px;border-radius:28px;padding:22px 20px 18px;font-family:var(--font);color:var(--m-on-surface);word-break:keep-all;
+ background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9) translateY(12px);transition:transform .15s var(--ease-in)}
+#ret.on .card{transform:none;transition:transform .5s var(--ease-out)}
+#ret .top{display:flex;align-items:center;gap:12px}#ret .hd-ic{width:40px;height:40px;padding:9px;border-radius:14px;background:var(--m-primary-c);color:var(--m-on-primary-c);flex:none}
+#ret .top .l{display:block;font:500 12.5px/1.2 var(--font);color:var(--m-on-sv)}#ret .top b{font:700 18px/1.3 var(--font)}
+#ret .amt{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:18px 0 14px}
+#ret .amt .v{font:800 46px/1 var(--font);letter-spacing:-.03em;font-variant-numeric:tabular-nums}#ret .amt .u{font:800 22px/1 var(--font);color:var(--m-primary)}
+#ret .tl{display:flex;height:10px;border-radius:5px;overflow:hidden;background:color-mix(in srgb,var(--m-on-surface) 8%,transparent)}
+#ret .tl i{display:block;height:100%}#ret .tl .b{background:var(--m-primary)}#ret .tl .e{background:linear-gradient(90deg,#FFB300,#FF7A1F)}
+#ret .tl .o{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--m-on-surface) 18%,transparent) 0 4px,transparent 4px 8px)}
+#ret .tlk{display:flex;justify-content:space-between;font:500 11px/1 var(--font);color:var(--m-on-sv);margin:6px 2px 10px}
+#ret dl{display:grid;grid-template-columns:1fr auto;gap:10px 12px;margin:6px 0 0;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,var(--m-on-surface) 5%,transparent)}
+#ret dt{font:500 14px/1.2 var(--font);display:flex;align-items:center;gap:6px;white-space:nowrap}#ret dt small{font-size:12px;color:var(--m-on-sv);font-weight:400}
+#ret dd{margin:0;text-align:right;font:700 15px/1.2 var(--font);font-variant-numeric:tabular-nums}
+#ret .cap.ex{background:linear-gradient(135deg,#FFE27A,#FFB300);color:#3A2400;font-weight:800;font-style:normal}#ret .cap.bon{background:var(--m-primary-c);color:var(--m-on-primary-c);font-style:normal}
+#ret .warn{margin-top:10px;font:500 12.5px/1.4 var(--font);color:var(--m-on-sv);text-align:center}
+#ret .on{margin-top:10px;font:600 12.5px/1.4 var(--font);color:#1E9E46;text-align:center}#ret .on .ic{width:14px;height:14px}
+#ret .acts{display:flex;flex-direction:column;gap:8px;margin-top:16px}#ret .acts .btn{height:52px;width:100%;font:700 16px var(--font)}
+#ret .adb{background:linear-gradient(135deg,#3D7BFF,#2453D6);color:#fff;border:0;border-radius:26px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 18px rgba(36,83,214,.35)}
+#ret .adb img{width:24px;height:24px}
+#ret .btn.tonal{background:color-mix(in srgb,var(--m-on-surface) 8%,transparent);color:var(--m-on-surface);border:0;border-radius:26px}
+#ret .up{margin-top:12px;text-align:center;font:600 12px/1 var(--font);color:#B8862B}
+/* first-run guide */
+#coach{position:fixed;inset:0;z-index:64;pointer-events:none;opacity:0;transition:opacity .2s var(--ease-std);font-family:var(--font);word-break:keep-all}
+#coach.on{opacity:1}
+#coach .hole{position:absolute;border-radius:22px;box-shadow:0 0 0 9999px rgba(6,8,16,.62),0 0 0 2px rgba(255,255,255,.9),0 0 24px 4px rgba(255,255,255,.35);animation:holeP 1.6s var(--ease-std) infinite}
+@keyframes holeP{50%{box-shadow:0 0 0 9999px rgba(6,8,16,.62),0 0 0 3px #fff,0 0 34px 8px rgba(255,255,255,.5)}}
+#coach .fing{position:absolute;width:54px;height:54px;margin:-6px 0 0 -14px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+#coach .fing.swipe{animation:fSw 1.5s var(--ease-std) infinite}#coach .fing.tap{animation:fTap 1.2s var(--ease-std) infinite}#coach .fing.pull{animation:fPull 1.6s var(--ease-std) infinite}
+@keyframes fSw{0%{transform:translateX(-70px);opacity:0}15%{opacity:1}70%{transform:translateX(90px);opacity:1}100%{transform:translateX(100px);opacity:0}}
+@keyframes fTap{0%,100%{transform:scale(1)}40%{transform:scale(.86) translateY(4px)}}
+@keyframes fPull{0%{transform:translateY(-10px);opacity:0}15%{opacity:1}75%{transform:translateY(90px);opacity:1}100%{transform:translateY(100px);opacity:0}}
+#coach .bub{position:absolute;left:24px;right:24px;pointer-events:auto;padding:16px 18px 12px;border-radius:24px;color:#1A1300;
+ background:linear-gradient(160deg,#FFF6D6,#FFE08A);box-shadow:0 14px 40px rgba(0,0,0,.4),inset 0 1px 0 #fff;animation:bubIn .5s var(--ease-out) both}
+#coach .bub.above{transform:translateY(-100%)}
+#coach .bub::before{content:"";position:absolute;left:50%;width:18px;height:18px;margin-left:-9px;background:#FFF2C4;transform:rotate(45deg);border-radius:3px}
+#coach .bub.below::before{top:-7px}#coach .bub.above::before{bottom:-7px;background:#FFE08A}
+@keyframes bubIn{from{opacity:0;scale:.9}to{opacity:1;scale:1}}
+#coach .bub b{display:block;font:800 21px/1.3 var(--font);letter-spacing:-.02em}
+#coach .bub>span{display:block;font:500 14px/1.45 var(--font);color:#5A4300;margin-top:2px}
+#coach .ft{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+#coach .st{font:700 12px/1 var(--font);color:#8A6A10;letter-spacing:.04em}
+#coach button{background:none;border:0;font:600 13px var(--font);color:#6B5210;padding:6px 4px}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="알림 판"></canvas>
-<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no">취소</button><button id="cf-ok">결제</button></div></div></div><div id="adov"><div><b>광고</b>광고 SDK 연결 전 가짜 광고예요<br><span id="adt">3</span>초 뒤 보상</div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" aria-label="닫기">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 {
 const COLORS = {"alarm": "#F97316", "weather": "#38BDF8", "memo": "#EAB308", "flash": "#FACC15", "calc": "#F59E0B", "recorder": "#EF4444", "phone": "#22C55E", "sms": "#3B82F6", "camera": "#64748B", "gallery": "#EC4899", "contacts": "#0EA5E9", "settings": "#6B7280", "music": "#00CD3C", "papago": "#03C75A", "zalo": "#0068FF", "momo": "#A50064", "airbnb": "#FF5A5F", "duo": "#58CC02", "ctaxi": "#FEE500", "pay": "#0064FF", "glints": "#F9B707", "bigo": "#00D8FF", "pin": "#E60023", "meet": "#2D8CFF", "food": "#2AC1BC", "edit": "#111111", "travel": "#0194F3", "joox": "#00C86F", "reddit": "#FF4500", "career": "#0A66C2", "mall": "#E31837", "portal": "#03C75A", "michat": "#FF6F61", "agoda": "#5392F9", "paypal": "#003087", "match": "#7B2CFF", "superapp": "#07C160", "line": "#06C755", "jobs": "#0D3880", "lazada": "#0F146D", "ride": "#000000", "robin": "#00C805", "dance": "#010101", "chat": "#FEE500", "grab": "#00B14F", "shopee": "#EE4D2D", "beat": "#1DB954", "why": "#000000", "mega": "#FF9900", "ott": "#E50914", "secret": "#27A7E7", "mail": "#EA4335", "maps": "#34A853", "store": "#01875F", "tube": "#FF0000", "photo": "#E1306C", "feed": "#1877F2", "green": "#25D366", "search": "#4285F4", "ai": "#10A37F", "gemini": "#4285F4", "claude": "#D97757", "copilot": "#0078D4", "perplexity": "#20808D", "deepseek": "#4D6BFE", "midjourney": "#111111"};  // app id → brand colour (ui/AppStyle)
@@ -2050,7 +2096,7 @@ document.addEventListener('pointerdown', e => {
   el.appendChild(c); setTimeout(() => c.remove(), 500);
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade() };
+if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
 // ---------- boot ----------
 (async () => {
@@ -2060,9 +2106,51 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
   // daily check-in on the 30-day board: claim and show it once a day
   setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600);
 })();
+
+// ---------- return-from-away card (bible 16 #13, B6) ----------
+// Reads today's offline() reply (paid) and, when the balance core lands, basePaid/bonusPaid/offlineBonus/EX fields.
+const hm = ms => { const m = Math.round(ms / 60000), h = Math.floor(m / 60); if (h >= 48) return `${Math.floor(h / 24)}일`; return h ? `${h}시간${m % 60 ? ' ' + (m % 60) + '분' : ''}` : `${m}분`; };
+function showReturn(o, awayMs) {
+  const el = $('ret'), b = o.offlineBonus || {}, cap = o.offlineCapMs || 43200000, base = o.baseOfflineCapMs || cap, exMs = o.exExtraEligibleMs || 0;
+  const away = awayMs || o.awayMs || cap, over = Math.max(0, away - cap), total = Math.max(cap, away);
+  const pct = v => (v / total * 100).toFixed(2) + '%';
+  const rows = [['기본 정산', `${hm(Math.min(away, base))}`, shortOf(o.basePaid || o.paid, o.basePaidShort || o.paidShort), '']];
+  if (exMs) rows.push(['EX 추가 인정', hm(exMs), o.exExtraPShort || '0', '<i class="cap ex">EX</i>']);
+  if (o.bonusPaid && o.bonusPaid !== '0') rows.push([b.ultraActive ? '울트라 보너스' : b.passActive ? '패스 보너스' : '광고 보너스', `+${((b.multiplierPermille || 1700) - 1000) / 10}%`, o.bonusPaidShort, `<i class="cap bon">${b.ultraActive ? '울트라' : b.passActive ? '패스' : '광고'}</i>`]);
+  const adOffer = !b.rewardActive;
+  el.innerHTML = `<div class="card"><div class="top">${IC.clock.replace('<svg ', '<svg class="hd-ic" ')}<div><span class="l">자리 비운 동안</span><b>${hm(away)}</b></div></div>
+    <div class="amt"><span class="v t-gold" id="ret-v">+0</span><span class="u">P</span></div>
+    <div class="tl"><i class="b" style="width:${pct(Math.min(away, base))}"></i>${exMs ? `<i class="e" style="width:${pct(exMs)}"></i>` : ''}${over ? `<i class="o" style="width:${pct(over)}"></i>` : ''}</div>
+    <div class="tlk"><span>0</span><span>상한 ${hm(cap)}</span></div>
+    <dl>${rows.map(([k, sub, v, tag]) => `<dt>${k}${tag}<small>${sub}</small></dt><dd>+${v}</dd>`).join('')}</dl>
+    ${over ? `<div class="warn fit1">[!] 상한을 넘긴 ${hm(over)}은 정산되지 않아요</div>` : ''}
+    ${b.rewardActive ? `<div class="on fit1">${IC.check.replace('<svg ', '<svg class="ic" ')}${b.passActive ? '패스' : '광고'} 혜택 적용 중 · ${hm(b.passActive ? b.passLeftMs : b.adLeftMs)} 남음</div>` : ''}
+    <div class="acts">${adOffer ? `<button class="btn adb" id="ret-ad"><img src="img/ui/ad.webp" alt="">광고 보고 +70% 받기</button>` : ''}<button class="btn ${adOffer ? 'tonal' : 'skin gold'}" id="ret-ok">받기</button></div>
+    ${!b.ultraActive ? `<div class="up fit1">울트라 패스면 복귀 정산 ×2.55</div>` : ''}</div>`;
+  el.classList.add('on'); fitLines(el);
+  const to = L(o.paid), t0 = performance.now(), v = $('ret-v');
+  (function tick() { const k = Math.min(1, (performance.now() - t0) / 1100), e = 1 - Math.pow(1 - k, 3); v.textContent = '+' + (k < 1 ? fmtL(lerpL(-1, to, e)) : shortOf(o.paid, o.paidShort)); if (k < 1 && el.classList.contains('on')) requestAnimationFrame(tick); })();
+  const close = () => el.classList.remove('on');
+  $('ret-ok').onclick = () => { close(); sfx.snap(); };
+  if ($('ret-ad')) $('ret-ad').onclick = async () => { if (await fakeAd()) { toast('다음 복귀부터 +70% 적용돼요', 'ok'); close(); } };
+}
+
+// ---------- first-run guide (bible 16 §2): one thing at a time, game-native bubble, always skippable ----------
+const COACH_FINGER = '<svg viewBox="0 0 48 48"><path d="M19 6a3.5 3.5 0 0 1 7 0v15l9.5 2a4.5 4.5 0 0 1 3.5 5l-2 11a6 6 0 0 1-6 5H22a6 6 0 0 1-4.6-2.2L8.3 30.6a3.2 3.2 0 0 1 4.6-4.4L19 31z" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/></svg>';
+function coach({ rect, text, sub = '', finger = 'tap', step = '', place = 'below' }) {
+  const el = $('coach'), k = cv.clientWidth / W;
+  const r = rect.canvas ? { x: rect.x * k, y: rect.y * k, w: rect.w * k, h: rect.h * k } : rect;
+  el.innerHTML = `<div class="hole" style="left:${r.x - 6}px;top:${r.y - 6}px;width:${r.w + 12}px;height:${r.h + 12}px"></div>
+    <div class="fing ${finger}" style="left:${r.x + r.w * .5}px;top:${r.y + r.h * .55}px">${COACH_FINGER}</div>
+    <div class="bub ${place}" style="${place === 'below' ? `top:${r.y + r.h + 22}px` : `top:${r.y - 22}px`}"><b class="fit1">${text}</b>${sub ? `<span class="fit1">${sub}</span>` : ''}
+      <div class="ft"><span class="st">${step}</span><button id="coach-skip">건너뛰기</button></div></div>`;
+  el.classList.add('on'); fitLines(el);
+  $('coach-skip').onclick = () => el.classList.remove('on');
+}
+
 // back from away: the app paid the time away (AwayClock) and hands the result here
 window.onOffline = o => {
-  if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); toast(`자리 비운 동안 +${shortOf(o.paid, o.paidShort)} P 정리했어요`, 'ok'); phone('ui.bonus', .4); }
+  if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); showReturn(o); phone('ui.bonus', .4); }
   applyState(o.state); reconcile(o.state);
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) api('snapshot').then(st => { applyState(st); reconcile(st); }); });
