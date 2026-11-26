@@ -1261,9 +1261,9 @@ const EVENTS = {
     world(e) { ctx.fillStyle = 'rgba(8,5,3,.5)'; ctx.fillRect(-20, ROW0 - 8, W + 40, H); },
     finish(e) {  // the payout lands like loot: freeze, flash, fireworks, coins, a huge stamped multiplier
       e.d.done = true; e.d.endT = e.t; e.d.bs.t = 0; e.d.win = { t: 0 };
-      stop = Math.max(stop, .09); if (!reduce) { flash = .45; shake = 7; } pixT = Math.max(pixT, .6); psyT = 1; noiT = 1;
+      stop = Math.max(stop, .09); if (!reduce) { flash = .45; shake = 7; } pixT = Math.max(pixT, .3); psyT = .5; noiT = 1;
       pfx('fireworkBurst', 195, 560, { big: 1 }); pfx('critHit', 195, 420); pfx('coinCollect', 195, 470); pfx('confetti', 195, 520, { big: 1 });
-      sfx.payoff(9); sfx.jackpot(); buzz([60, 40, 60, 40, 200]); ripple(195, 420, .07); crackAt(195, 430, .9);
+      sfx.payoff(9); sfx.jackpot(); buzz([60, 40, 60, 40, 200]); ripple(195, 420, .07);
     },
     tap(e, x, y) {
       const d = e.d; if (d.done) return;
@@ -1384,7 +1384,7 @@ const EVENTS = {
         else { d.fill = Math.max(0, d.fill - dt * .5); d.idle += dt; d.hb -= dt; if (d.hb <= 0) { d.hb = .95; sfx.heart(); buzz([40, 120, 40]); } }
         if (d.idle > 5 && !d.hold) d.hold = true;  // demo/auto: charges itself if nobody holds
         if (d.fill >= 1) this.full(e);
-      } else { d.bt += dt; if (d.bt < .35) d.pts = bolt(356, 24, 195 + (rnd() - .5) * 40, 420, 10); else d.pts = null; if (d.bt > 1.5) endEvent(); }
+      } else { d.bt += dt; if (d.bt > 1.5) endEvent(); }
     },
     tap(e) { const d = e.d; if (d.phase !== 'low') return; d.hold = true; d.idle = 0; if (!d.cu) { d.cu = 1; pfx('chargeUp', 195, 430); } },
     up(e) { e.d.hold = false; },
@@ -1398,6 +1398,7 @@ const EVENTS = {
     ui(e, t) {
       const d = e.d, s = d.bs.x; if (d.phase !== 'low' && d.bt > .5) return;
       const f = d.phase === 'low' ? d.fill : 1;
+      ctx.fillStyle = `rgba(0,0,0,${.5 * Math.min(1, e.t * 4) * (d.phase === 'low' ? 1 : Math.max(0, 1 - d.bt * 3))})`; ctx.fillRect(0, 0, W, H);
       // translucent green rising from the bottom with a stepped pixel surface
       const top = H - (H - 60) * f;
       if (f > 0) { ctx.fillStyle = 'rgba(60,230,120,.22)'; ctx.fillRect(0, top, W, H - top); ctx.fillStyle = 'rgba(150,255,190,.55)'; for (let x = 0; x < W; x += 8) { const w = Math.round(Math.sin(x * .07 + t * 9) * 3 + Math.sin(x * .19 - t * 6) * 2); ctx.fillRect(x, Math.round((top + w) / 4) * 4 - 4, 8, 4); } }
@@ -1425,8 +1426,8 @@ const EVENTS = {
         if (e.t > d.spin) {
           d.phase = 'res'; d.endT = e.t; d.val = d.res;
           if (d.res > 0) {
-            crackAt(195, 400, 1); collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
-            pfx('critHit', 195, 400); pfx('coinCollect', 195, 440); pfx('fireworkBurst', 195, 600, { big: 1 }); pfx('confetti', 195, 520, { big: 1 }); stop = Math.max(stop, .08); pixT = Math.max(pixT, .55); psyT = 1;
+            collapse(1.3); sfx.jackpot(); phone('ui.bonus', .6); buzz([60, 40, 60, 40, 200]); fx.tint = [1, .8, .2, .25]; if (!reduce) { flash = .35; shake = 7; } ripple(195, 400, .06); chroma = .02; kick(d.bs, 22);
+            pfx('critHit', 195, 400); pfx('coinCollect', 195, 440); pfx('fireworkBurst', 195, 600, { big: 1 }); pfx('confetti', 195, 520, { big: 1 }); stop = Math.max(stop, .08); pixT = Math.max(pixT, .3); psyT = .45;
             say(`잭팟 ×${d.res}!`, 490, 46, '#FFFFFF', '#FFC23D', 1.8);
           } else {
             sfx.fail(); d.bs.t = .72; fx.sat = .25;
