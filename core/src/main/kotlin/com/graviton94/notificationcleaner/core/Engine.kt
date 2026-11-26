@@ -275,8 +275,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val sub = if (a.speedPass != null && now < a.speedPassUntil) a.speedPass.speedPermille.toLong() else 1_000L
         return maxOf(oc, sub)
     }
-    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
-        (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
+    fun autoIntervalMs(s: GameState): Long {
+        val reductions = 300L * s.backup.lv(BackupItem.AutoClean) + 500L * s.backup.cloud.lv(CloudItem.CloudAuto) +
+            (if (on(s, "settings")) 300L else 0L) + (if (on(s, "ai")) 500L else 0L)
+        return (rules.autoIntervalMs - reductions).coerceAtLeast(500L)
+    }
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
     fun rowCount(s: GameState) = minOf(
         rules.maxRows,
@@ -284,7 +287,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     ) - if (s.rows.any { it.alert == Alert.Storage }) 1 else 0  // 저장공간 부족 left on the board
 
     /** 방해 금지 doubles auto speed while it runs. */
-    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (s.rideBoost) maxOf(500L, it - 2_000) else it }.let { if (now < s.dndUntil) it / 2 else it }.let { it * 1_000 / speedPermille(s, now) }
+    fun autoIntervalMs(s: GameState, now: Long): Long {
+        val interval = autoIntervalMs(s) - if (s.rideBoost) 2_000L else 0L
+        val dnd = if (now < s.dndUntil) 2 else 1
+        return (interval * 1_000 / (dnd * speedPermille(s, now))).coerceAtLeast(500L)
+    }
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)

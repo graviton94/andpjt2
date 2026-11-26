@@ -10,6 +10,8 @@ import com.graviton94.notificationcleaner.core.SwipeOutcome
 import java.io.File
 import java.math.BigInteger
 import java.math.MathContext
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.Locale
 
 private val zero = BigInteger.ZERO
@@ -114,6 +116,17 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     override fun endDay(day: Int, state: GameState) = Unit
 }
 
+private fun storeCompletedCase(file: File, line: String) {
+    val dir = file.parentFile.toPath()
+    val temporary = Files.createTempFile(dir, file.name, ".tmp")
+    try {
+        Files.writeString(temporary, line)
+        Files.move(temporary, file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    } finally {
+        Files.deleteIfExists(temporary)
+    }
+}
+
 private data class LaunchCase(val payer: Payer, val seed: Int, val input: InputPolicy, val resets: Boolean) {
     val label = if (resets) input.name else "NoReset"
     val key = "${payer.name},$seed,$label"
@@ -164,7 +177,7 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
             fixed(ratio(feel.cappedSwipes, swipes)), pct(feel.clipped, feel.earned + feel.clipped), feel.spamMax,
             fixed(tl.ads.toDouble() / horizon), weeks.joinToString("|")).joinToString(",")
         ad.writeText(AdSlot.entries.joinToString("\n", postfix = "\n") { "${case.key},${it.name},${feel.adCounts[it] ?: 0},${feel.adP[it] ?: zero}" })
-        main.writeText(record + "\n")
+        storeCompletedCase(main, record + "\n")
         println(record)
     }
     for ((file, header, extension) in listOf(Triple("seeds.csv",metrics,"metrics"), Triple("ad-slots.csv",ads,"ads"))) {

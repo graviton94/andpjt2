@@ -768,6 +768,21 @@ class CoreRulesTest {
     }
 
     @Test
+    fun fullyUpgradedAutoAlwaysAdvancesTheClock() {
+        val state = e.newGame(now, 11).copy(
+            active = listOf("alarm", "memo", "settings", "ai"),
+            backup = Backup(items = mapOf(BackupItem.AutoClean to 10), cloud = Cloud(items = mapOf(CloudItem.CloudAuto to 3))),
+            rideBoost = true,
+            dndUntil = now + 60_000,
+        )
+        assertEquals(500L, e.autoIntervalMs(state))
+        val ultra = Shop(e).buySpeedPass(state, now, SpeedPass.Ultra)
+        assertEquals(500L, e.autoIntervalMs(ultra, now))
+        val unboosted = e.newGame(now, 11)
+        assertEquals(4_500L, e.autoIntervalMs(unboosted, now))
+    }
+
+    @Test
     fun speedPassesSpeedUpTheGameButNotPastAThumb() {
         val e = Engine(); val shop = Shop(e); val day = 86_400_000L
         var s = e.newGame(0, 1)

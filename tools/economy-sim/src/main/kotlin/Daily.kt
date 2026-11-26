@@ -46,6 +46,7 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "igniterGaugePerTier" -> r.copy(igniterGaugePerTier = v.toInt())
             "sandwichPercent" -> r.copy(sandwichPercent = v.toInt())
             "sandwichPerAssist" -> r.copy(sandwichPerAssist = v.toInt())
+            "wildPerAssist" -> r.copy(wildPerAssist = v.toInt())
             "waveFactor" -> r.copy(waveFactor = v.toInt())
             "waveIncomePermille" -> r.copy(waveIncomePermille = v.toInt())
             "recentIncomeWindow" -> r.copy(recentIncomeWindow = v.toInt())
@@ -228,6 +229,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             val end = t + plan.sessionMin * 60_000L
             while (t < end) {
                 val step = if (input == InputPolicy.Auto) engine.autoIntervalMs(s, t) else engine.chargeMs(s, t)
+                check(step > 0) { "${input.name} clock must advance at Lv${s.level}" }
                 audit?.activeTime(minOf(step, end - t))
                 t += step
                 tl.activeMin += step / 60_000.0
