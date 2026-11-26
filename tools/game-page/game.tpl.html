@@ -107,6 +107,14 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .passc{border-radius:20px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;border:1px solid #FFFFFF22;color:#F6F1EA}
 .passc .btn{background:#FFD66B;color:#1E1408}
 .passc .big{font:800 34px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;color:#fff;width:74px;text-align:center}.passc img{width:74px}
+.passc{position:relative;flex-direction:column;align-items:stretch}.passc .pc-top{display:flex;gap:12px;align-items:center}
+.passc.hot .pc-top{padding-right:74px}.passc.hot{border:2px solid #FFD23F!important;box-shadow:0 0 0 4px rgba(255,210,63,.18),0 14px 34px rgba(255,170,40,.28)!important}
+.pv-best{position:absolute;left:14px;top:-11px;background:#FFD23F;color:#2A1800;font:900 11.5px/1 "Pretendard";padding:5px 10px;border-radius:99px;box-shadow:0 3px 0 rgba(0,0,0,.25);z-index:2}
+.pv-x{position:absolute;right:12px;top:12px;font:800 11.5px/1 "Pretendard";padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.14);color:#FFE9A8}
+.pv{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);font-size:12.5px}
+.pv-h{font:800 11px/1 "Pretendard";letter-spacing:.06em;color:#FFD66B;margin-bottom:6px;text-transform:uppercase}
+.pv-r{display:flex;justify-content:space-between;gap:10px;padding:3px 0;color:#E9E3DC}.pv-r b{color:#fff;white-space:nowrap}.pv-r b img{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
+.pv-t{display:flex;justify-content:space-between;gap:10px;margin-top:6px;padding-top:7px;border-top:1px dashed rgba(255,255,255,.22);font-weight:800;color:#fff}.pv-t b{color:#FFD23F}
 .passc ul{margin:6px 0 8px;padding-left:16px;font-size:12px;color:#E9E3DC}.passc h3{margin:0;font:800 18px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 .on-tag{background:#5BD68A;color:#0E3B1F;border-radius:999px;font-size:11px;font-weight:900;padding:2px 8px;margin-left:6px}
 .stars img{width:16px;height:16px}
@@ -2453,8 +2461,9 @@ const loadStore = () => { try { if (window.Game && window.Game.store) Object.ass
 loadStore();
 window.onStore = () => { loadStore(); if (sheetKind) renderSheet(); };
 const priceOf = (playId, wonN) => STORE.prices[playId] || won(wonN);
-const PASS_ID = { month: 'pass_month', Turbo: 'pass_turbo', Ultra: 'pass_ultra' };
-const playIdOf = x => { const a = x.dataset.act; return a === 'buyData' ? x.dataset.pack : a === 'buyStarter' ? 'starter_pack' : a === 'buyRookie' ? 'beginner_pass' : a === 'buyPass' ? PASS_ID[x.dataset.kind] : null; };
+const PASS_ID0 = { month: 'pass_monthly', Turbo: 'pass_turbo', Ultra: 'pass_ultra' };
+const passId = k => (P.bm && P.bm.passProductIds && P.bm.passProductIds[k]) || PASS_ID0[k];
+const playIdOf = x => { const a = x.dataset.act; return a === 'buyData' ? x.dataset.pack : a === 'buyStarter' ? (P.bm.starterProductId || 'starter_pack') : a === 'buyRookie' ? (P.bm.rookieProductId || 'rookie_pass') : a === 'buyPass' ? passId(x.dataset.kind) : null; };
 const waits = {}; let waitN = 0;
 const ask = (fn, ...args) => new Promise(res => { const id = 'r' + (++waitN); waits[id] = res; window.Game[fn](id, ...args); });
 window.onPurchase = (id, ok, reason) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason }); else if (id === 'late' && ok) { toast($t('purchase_restored'), 'ok'); api('snapshot').then(st => afterAct({ ok: true, state: st }, null, null)); } };
@@ -2488,7 +2497,7 @@ function renderData(b) {
       <h3>${$t('beginner_pass')}</h3><span class="d">${ic('clock')}${m.rookieBought ? $t('day_7', m.rookieDay) : $t('first_7_days_only_days', m.rookieDaysLeft)}</span>
       <ul><li>${$t('data_300_right_now')}</li><li>${$t('data_7_daily_for_50')}</li><li>${$t('premium_voucher_1_worth_data', m.voucherData)}</li></ul>
       ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? $t('claim_today_s_50') : $t('claimed_today_back_tomorrow')}</button>`
-        : `<button class="btn skin gold" data-act="buyRookie">${priceOf('beginner_pass', m.rookieWon)}</button>`}</div>`;
+        : `<button class="btn skin gold" data-act="buyRookie">${priceOf(P.bm.rookieProductId || 'rookie_pass', m.rookieWon)}</button>`}</div>`;
   }
   if (m.firstData) h += `<div class="note" style="text-align:center;margin:4px 0 0;font-weight:800;color:var(--hot)">${$t('first_data_purchase_1_time', m.firstBonusCap.toLocaleString())}</div>`;
   h += `<div class="packs" style="padding-top:22px">${m.packs.map((p, i) => {
@@ -2511,13 +2520,40 @@ function renderData(b) {
     + foot([$t('n_value_is_based_on'), $t('vouchers_and_boosts_valued_at'), $t('no_random_chance_items'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
   b.innerHTML = h;
 }
+// pass value: the core's bm().passValues when present (balance brief v1.1 §3), else the 17-monetization table
+const PASS_V0 = { month: { wonPrice: 5500, dataNow: 300, dataDaily: 60, days: 30, overclockHoursDaily: 3, adFree: true, speedPermille: 0, prestigePermille: 0 },
+  Turbo: { wonPrice: 33000, dataNow: 300, dataDaily: 60, days: 30, overclockHoursDaily: 3, adFree: true, speedPermille: 3500, prestigePermille: 1750 },
+  Ultra: { wonPrice: 99000, dataNow: 300, dataDaily: 260, days: 30, overclockHoursDaily: 3, adFree: true, speedPermille: 8000, prestigePermille: 4000 } };
+function passValue(k) {
+  const v = Object.assign({}, PASS_V0[k], (P.bm.passValues || {})[k] || {});
+  v.dataTotal = v.dataTotal ?? v.dataNow + v.dataDaily * v.days;
+  v.valueX = v.valueXDataOnly ?? v.valueX ?? gainX(v.dataTotal, v.wonPrice);
+  return v;
+}
+function passTable(k) {
+  const v = passValue(k), n = x => Number(x).toLocaleString(), rows = [];
+  if (k !== 'month') rows.push([$t('everything_in_the_monthly_pass'), '']);
+  if (v.speedPermille) rows.push([$t('pv_speed', v.speedPermille / 1000), '']);
+  if (v.prestigePermille) rows.push([$t('pv_prestige', v.prestigePermille / 1000), '']);
+  rows.push([$t('pv_now'), DIMG + n(v.dataNow)], [$t('pv_daily', n(v.dataDaily), v.days), DIMG + n(v.dataDaily * v.days)]);
+  if (v.overclockHoursDaily) rows.push([$t('pv_oc', v.overclockHoursDaily), $t('pv_hours', v.overclockHoursDaily * v.days)]);
+  if (v.adFree) rows.push([$t('pv_adfree', (P.bm.ads || []).length || 8), '✓']);
+  return `<div class="pv"><div class="pv-h">${$t('pv_title')}</div>${rows.map(([a, b]) => `<div class="pv-r"><span>${a}</span><b>${b}</b></div>`).join('')}
+    <div class="pv-t"><span>${$t('pv_total', n(v.dataTotal))}</span><b>${$t('pv_worth', won(Math.round(v.dataTotal * P.bm.baseWon)))}</b></div></div>`;
+}
 function renderPass(b) {
   const m = P.bm; $('sheet-t').textContent = $t('go_faster'); $('sheet-w').innerHTML = '';
-  const card = (kind, bg, head, lines, price, active) => `<div class="passc" style="background:${bg}">${head}<div style="flex:1"><h3>${kind === 'month' ? $t('monthly_pass') : kind === 'Turbo' ? $t('turbo_pass') : $t('ultra_pass')}${active ? `<span class="on-tag">${$t('active')}</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul><button class="btn skin gold" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>`;
-  b.innerHTML = card('month', 'linear-gradient(135deg,#3A2A1C,#1E150E)', '<img src="img/bm/shop-month-pass.webp">', [$t('ad_rewards_instantly_no_ads'), $t('data_60_daily_300_now'), $t('overclock_3h_daily')], priceOf('pass_month', 5500) + $t('per_30_days'), m.passActive && !m.speedPass)
-    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_3_5_all'), $t('backup_files_gb_1_75')], priceOf('pass_turbo', 33000) + $t('per_30_days'), m.speedPass === 'Turbo')
-    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_8_all_day'), $t('backup_files_gb_4'), $t('data_200_daily')], priceOf('pass_ultra', 99000) + $t('per_30_days'), m.speedPass === 'Ultra')
-    + foot([$t('30_days_auto_renews_cancel'), $t('cancel_anytime_remaining_days_stay'), $t('upgrade_your_pass_and_pay'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
+  const card = (kind, bg, head, lines, price, active) => {
+    const v = passValue(kind), hot = kind === 'month';
+    return `<div class="passc ${hot ? 'hot' : ''}" style="background:${bg}">
+      ${hot ? sticker('burst', [$t('pv_up_to', xStr(v.valueX)), $t('value')], 92, 'right:-4px;top:-10px;transform:rotate(9deg)') + `<div class="pv-best">${$t('best_value_monthly')}</div>` : `<div class="pv-x">${$t('pv_up_to', xStr(v.valueX))} ${$t('value')}</div>`}
+      <div class="pc-top">${head}<div style="flex:1"><h3>${kind === 'month' ? $t('monthly_pass') : kind === 'Turbo' ? $t('turbo_pass') : $t('ultra_pass')}${active ? `<span class="on-tag">${$t('active')}</span>` : ''}</h3><ul>${lines.map(l => `<li>${l}</li>`).join('')}</ul>
+      <button class="btn skin gold" data-act="buyPass" data-kind="${kind}">${price}</button></div></div>${passTable(kind)}</div>`;
+  };
+  b.innerHTML = card('month', 'linear-gradient(135deg,#5A3A12,#2A1808)', '<img src="img/bm/shop-month-pass.webp">', [$t('ad_rewards_instantly_no_ads'), $t('data_60_daily_300_now'), $t('overclock_3h_daily')], priceOf(passId('month'), 5500) + $t('per_30_days'), m.passActive && !m.speedPass)
+    + card('Turbo', 'linear-gradient(135deg,#1C2A4A,#101626)', '<div class="big">×3.5</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_3_5_all'), $t('backup_files_gb_1_75')], priceOf(passId('Turbo'), 33000) + $t('per_30_days'), m.speedPass === 'Turbo')
+    + card('Ultra', 'linear-gradient(135deg,#4A2A12,#24140A)', '<div class="big">×8</div>', [$t('everything_in_the_monthly_pass'), $t('game_speed_8_all_day'), $t('backup_files_gb_4'), $t('data_200_daily')], priceOf(passId('Ultra'), 99000) + $t('per_30_days'), m.speedPass === 'Ultra')
+    + foot([$t('30_days_auto_renews_cancel'), $t('cancel_anytime_remaining_days_stay'), $t('upgrade_your_pass_and_pay'), $t('pv_note'), ...(STORE.ready ? [] : [$t('purchases_are_test_only_for')])]);
 }
 function renderPremium(b) {
   const m = P.bm; $('sheet-t').textContent = $t('premium_version'); $('sheet-w').innerHTML = `${DIMG.replace('<img', '<img style="width:18px;vertical-align:-3px"')} ${fmt(m.data)}`;
@@ -2555,8 +2591,8 @@ function payPrompt(x) {
   const m = P.bm, act = x.dataset.act, D = n => `${DIMG.replace('<img', '<img style="width:22px;vertical-align:-4px"')} ${Number(n).toLocaleString()}`;
   if (act === 'buyData') { const p = m.packs.find(q => q.id === x.dataset.pack); return [$t('top_up_data'), $t('data_amount', p.gets.toLocaleString(), p.gets > p.data ? $t('incl_first_bonus', (p.gets - p.data).toLocaleString()) : ''), priceOf(p.id, p.won) + $t('pay_2')]; }
   if (act === 'buyStarter') return [$t('starter_pack'), $t('data_voucher_1_boost_overclock', m.starterData), priceOf('starter_pack', m.starterWon) + $t('pay_2')];
-  if (act === 'buyRookie') return [$t('beginner_pass'), $t('300_now_7_daily_for'), priceOf('beginner_pass', m.rookieWon) + $t('pay_2')];
-  if (act === 'buyPass') return [{ month: $t('monthly_pass'), Turbo: $t('turbo_pass'), Ultra: $t('ultra_pass') }[x.dataset.kind], $t('30_days_auto_renews_cancel_2'), priceOf(PASS_ID[x.dataset.kind], { month: 5500, Turbo: 33000, Ultra: 99000 }[x.dataset.kind]) + $t('30_days')];
+  if (act === 'buyRookie') return [$t('beginner_pass'), $t('300_now_7_daily_for'), priceOf(P.bm.rookieProductId || 'rookie_pass', m.rookieWon) + $t('pay_2')];
+  if (act === 'buyPass') return [{ month: $t('monthly_pass'), Turbo: $t('turbo_pass'), Ultra: $t('ultra_pass') }[x.dataset.kind], $t('30_days_auto_renews_cancel_2'), priceOf(passId(x.dataset.kind), { month: 5500, Turbo: 33000, Ultra: 99000 }[x.dataset.kind]) + $t('30_days')];
   if (act === 'buyItem') { const it = m.items.find(q => q.id === x.dataset.item); return it.tickets ? null : [it.label, $t('left_today', it.left), D(it.price) + $t('use_2')]; }
   if (act === 'premium' && x.dataset.voucher !== '1') { const a = m.premium.find(q => q.id === x.dataset.id); return [$t('premium_2', a.name, a.stars + 1), $t('value_to', a.permille * 2 / 1000), D(a.price) + $t('use_2')]; }
   return null;

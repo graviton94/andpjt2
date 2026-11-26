@@ -65,7 +65,8 @@ class GameBridge(private val context: Context) {
             "buyRookie" -> if (billing?.ready == true) session.snapshot(t) else session.buyRookie("fake-" + System.nanoTime(), t)
             "claimRookie" -> session.claimRookie(t)
             "buyItem" -> session.buyItem(a.optString("item"), t)
-            "watchAd" -> session.watchAd(a.optString("slot"), "fakead-" + System.nanoTime(), t)
+            // a confirmed AdMob reward pays once under its own id (ad-…); browser/dev builds without the ad host use a test id
+            "watchAd" -> session.watchAd(a.optString("slot"), adRewards.removeFirstOrNull() ?: ("fakead-" + System.nanoTime()), t)
             "buyPass" -> if (billing?.ready == true) session.snapshot(t) else session.buyPass(a.optString("kind"), "fake-" + System.nanoTime(), t)
             "premium" -> session.premium(a.optString("app"), a.optString("voucher") == "1", t)
             "claimMissions" -> session.claimMissions(t)
@@ -89,6 +90,8 @@ class GameBridge(private val context: Context) {
     /** Reload the page after the save was replaced by the cloud copy. */
     var reload: (() -> Unit)? = null
     private var cloudPending: Account.Cloud? = null
+    /** Rewards AdMob confirmed and the page has not cashed in yet (one watchAd each). */
+    private val adRewards = ArrayDeque<String>()
 
     private fun cb(fn: String, vararg args: Any?) {
         val a = args.joinToString(",") { v -> when (v) { null -> "null"; is String -> JSONObject.quote(v); is Boolean, is Number -> v.toString(); is JSONObject -> v.toString(); else -> JSONObject.quote(v.toString()) } }
@@ -201,7 +204,10 @@ class GameBridge(private val context: Context) {
     fun showAd(id: String) {
         val q = JSONObject.quote(id)
         val a = ads ?: return run { js?.invoke("window.onAdResult && window.onAdResult($q, false, 'none')") }
-        a.show { earned, reason -> js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})") }
+        a.show { earned, reason ->
+            if (earned) synchronized(lock) { adRewards.add("ad-" + java.util.UUID.randomUUID()) }
+            js?.invoke("window.onAdResult && window.onAdResult($q, $earned, ${JSONObject.quote(reason)})")
+        }
     }
 
     /** Settings › 광고 개인정보 설정: the UMP privacy options form. */

@@ -22,8 +22,8 @@ claim id: 일회성 = `play:<purchaseToken>`, 구독 = `play:<orderId>`(갱신�
 |---|---|---|---|
 | data_100 · data_540 · data_1200 · data_3700 · data_8600 · data_16800 | 일회성(소비) | 2,200 · 5,900 · 12,000 · 33,000 · 69,000 · 119,000 | buyData |
 | starter_pack | 일회성 | 2,500 | buyStarter (설치 후 48시간) |
-| beginner_pass | 일회성 | 3,300 | buyRookie (7일 매일 지급) |
-| pass_month · pass_turbo · pass_ultra | 구독 P1M, 기본 요금제 `monthly` | 5,500 · 33,000 · 99,000 | buyPass (상위 패스는 차액 결제로 교체) |
+| rookie_pass | 일회성 | 3,300 | buyRookie (7일 매일 지급) |
+| pass_monthly · pass_turbo · pass_ultra | 구독 P1M, 기본 요금제 `monthly` | 5,500 · 33,000 · 99,000 | buyPass (상위 패스는 차액 결제로 교체) |
 
 가격·구성을 바꾸면 밸런스 세션이 코어 수치와 이 표를 함께 갱신 → `Play products` 워크플로 다시 실행.
 

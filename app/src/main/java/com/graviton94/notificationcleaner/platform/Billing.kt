@@ -141,8 +141,8 @@ class Billing(private val context: Context, private val grant: (Product, String)
             Product("data_8600", ProductType.INAPP, "data", "data_8600"),
             Product("data_16800", ProductType.INAPP, "data", "data_16800"),
             Product("starter_pack", ProductType.INAPP, "starter", "starter"),
-            Product("beginner_pass", ProductType.INAPP, "rookie", "rookie"),
-            Product("pass_month", ProductType.SUBS, "pass", "month"),
+            Product("rookie_pass", ProductType.INAPP, "rookie", "rookie"),
+            Product("pass_monthly", ProductType.SUBS, "pass", "month"),
             Product("pass_turbo", ProductType.SUBS, "pass", "Turbo"),
             Product("pass_ultra", ProductType.SUBS, "pass", "Ultra"),
         )
