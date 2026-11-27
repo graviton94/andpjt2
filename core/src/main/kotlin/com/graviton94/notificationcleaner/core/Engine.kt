@@ -688,7 +688,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
                         Row(nextId++, RowKind.Spam, copyAt = s.swipes + 1 + rules.spamCopyAfterSwipes)
                     pattern.isNotEmpty() -> Row(nextId++, RowKind.App, pattern.first(),
                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
-                    below?.kind == RowKind.App && rng.next(1_000) < rules.fallMatchPermille ->
+                    below?.kind == RowKind.App && below.app in s.active &&
+                        rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+                        rng.next(1_000) < rules.fallMatchPermille ->
                         Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
                     else -> spawnApp(s, rows, rng, nextId++)
                 }

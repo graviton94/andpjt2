@@ -798,6 +798,21 @@ class CoreRulesTest {
     }
 
     @Test
+    fun fallingPairsOnlySpawnAppsThatAreActiveAndCanNotify() {
+        val e = Engine(RuleSet(fallMatchPermille = 1_000, fallSpamStepPermille = 0))
+        val state = e.newGame(now, 41)
+        val disabled = state.copy(rows = state.rows.toMutableList().also {
+            it[it.lastIndex] = Row(it.last().id, RowKind.Alert, app = "alarm", alert = Alert.Crash)
+        })
+        val unequipped = state.copy(active = listOf("memo", "weather", "calc"), appLevels = state.appLevels + ("calc" to 1))
+        for (s in listOf(disabled, unequipped)) {
+            val arrivals = e.swipe(s, 4, now)!!.beats.filterIsInstance<Beat.Spawn>()
+            assertTrue(arrivals.isNotEmpty())
+            assertTrue(arrivals.none { it.row.app == "alarm" })
+        }
+    }
+
+    @Test
     fun fallingChainReportsSpamAndWorkBudgetSeparately() {
         val rules = RuleSet(fallMatchPermille = 1_000, gaugePerBurst = 0, igniterGaugePerTier = 0,
             fallSpamFrom = 1, fallSpamStepPermille = 1_000, fallSpamMaxPermille = 1_000)
