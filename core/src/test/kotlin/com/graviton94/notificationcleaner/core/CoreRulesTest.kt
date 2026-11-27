@@ -5,6 +5,7 @@ import java.math.BigInteger.ZERO
 import java.math.BigInteger.valueOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -15,11 +16,70 @@ class CoreRulesTest {
     private val now = 1_000_000L
 
     @Test
+    fun levelThresholdsUseRunPAndMatchThePublishedCurve() {
+        val r = e.rules
+        assertEquals(listOf(30L, 70L, 163L).map(::valueOf), (2..4).map(r::levelP))
+        val withoutLateAdjustment = r.copy(lateGrowthPermille = 1_000)
+        assertEquals(withoutLateAdjustment.levelP(74), r.levelP(74))
+        assertTrue(withoutLateAdjustment.levelP(75) > r.levelP(75))
+        for (level in listOf(2, 24, 25, 26, 74, 75, 124)) {
+            for (fastBoot in listOf(0, 1, 5)) {
+                val threshold = r.levelCeil(level, fastBoot)
+                assertEquals(level - 1, r.levelFor(threshold - BigInteger.ONE, fastBoot))
+                assertEquals(level, r.levelFor(threshold, fastBoot))
+            }
+        }
+    }
+
+    @Test
+    fun sharedDeckValuationMatchesIndividualRoundedPayouts() {
+        val apps = listOf("alarm", "calc", "duo", "contacts", "photo", "career", "portal", "jobs", "papago", "why")
+        val base = e.newGame(now, 11L).copy(
+            appLevels = apps.withIndex().associate { (index, app) -> app to index * 11 + 1 },
+            whyStacks = 3, trend = Category.Social, pro = setOf("photo"),
+        ).withAccount { it.copy(premium = mapOf("duo" to 2), streak = 10) }
+        val count = valueOf(1_000)
+        val rates = e.deckValuation(base, count)
+        val random = kotlin.random.Random(42)
+        repeat(100) {
+            val deck = apps.shuffled(random).take(2 + it % 8)
+            val state = base.copy(active = deck)
+            val expected = deck.fold(ZERO) { sum, id -> sum + e.earn(state, id, count, 0) }
+            assertEquals(expected, rates(deck))
+        }
+    }
+
+    @Test
+    fun targetPreviewMatchesFullSwipes() {
+        val apps = listOf("alarm", "memo", "weather", "ctaxi", "maps", "chat", "reddit", "match", "music")
+        val events = listOf(EventCard.GroupText, EventCard.Update, EventCard.Firmware)
+        val random = kotlin.random.Random(124)
+        repeat(400) { sample ->
+            val rows = (1L..11).map { id ->
+                when (random.nextInt(8)) {
+                    0 -> Row(id, RowKind.Event, event = events.random(random))
+                    1 -> Row(id, RowKind.Wild, count = 2, threshold = e.rules.threshold)
+                    2 -> Row(id, RowKind.Spam)
+                    else -> Row(id, RowKind.App, app = apps.random(random), count = random.nextInt(1, 6), threshold = e.rules.threshold)
+                }
+            }
+            val state = e.newGame(now, sample.toLong() + 1).copy(rows = rows, active = apps,
+                appLevels = apps.associateWith { random.nextInt(1, 10) }, gauge = random.nextInt(101), nextId = 12)
+            val reference = rows.withIndex().mapNotNull { (index, row) ->
+                e.swipe(state, row.id, now)?.let { Triple(index, row, it) }
+            }.maxWithOrNull(compareBy({ it.third.chain }, { it.third.overload },
+                { it.third.beats.count { beat -> beat is Beat.Merged } }, { it.second.kind == RowKind.Event },
+                { it.second.kind == RowKind.Spam }, { it.first }))?.second?.id
+            assertEquals(reference, e.bestTarget(state, now), "board $sample")
+        }
+    }
+
+    @Test
     fun firstSwipeIsOneSmallBurst() {
         val (_, o) = firstSwipe()
         assertEquals(1, o.chain)
         assertEquals(valueOf(11), o.earned)
-        assertEquals(16, o.state.gauge)
+        assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst, o.state.gauge)
         assertEquals(7, o.state.rows.size)
     }
 
@@ -34,6 +94,15 @@ class CoreRulesTest {
         assertTrue(o.overload)
         assertEquals(listOf(24L, 72L, 216L).map(::valueOf), o.beats.filterIsInstance<Beat.Wave>().map { it.cleared })
         assertEquals(valueOf(2_216), o.earned)
+        val emissions = o.beats.mapNotNull {
+            when (it) {
+                is Beat.Swiped -> it.earned
+                is Beat.Burst -> it.earned
+                is Beat.Wave -> it.earned
+                else -> null
+            }
+        }
+        assertEquals(o.earned, emissions.fold(ZERO, BigInteger::add))
     }
 
     @Test
@@ -47,10 +116,10 @@ class CoreRulesTest {
         val bursts = o.beats.filterIsInstance<Beat.Burst>()
         assertEquals(listOf("alarm", "agoda"), bursts.map { it.row.app })
         assertEquals(valueOf(93_312), bursts[1].earned)
-        // 60 + merges 4 + 4 + 톡탁톡 burst 12 + 4×5 + 지금방송중 burst 12 = 112 → overload.
+        val chargingGauge = 2 * (e.rules.gaugePerMerge + e.rules.gaugePerBurst) + 5 * e.rules.igniterGaugePerTier
+        assertEquals(100, s.gauge + chargingGauge)
         assertTrue(o.overload)
         assertEquals(0, o.state.gauge)
-        assertEquals(60, s.gauge)
     }
 
     @Test
@@ -127,12 +196,28 @@ class CoreRulesTest {
     }
 
     @Test
+    fun upgradeQuoteRetainsRoundingAndAllDeckMultipliers() {
+        val base = e.newGame(now, 11)
+        val apps = listOf("ai", "jobs", "contacts", "green", "photo")
+        val count = valueOf(1_000)
+        for (rank in listOf(1, 9, 24, 149, 499, 2_000)) {
+            val state = base.copy(active = apps, appLevels = apps.associateWith { rank }, pro = apps.toSet(),
+                backup = Backup(lifetime = 100_000, items = mapOf(BackupItem.Value to 10)))
+            for (app in apps) {
+                val upgraded = state.copy(appLevels = state.appLevels + (app to rank + 1))
+                val gain = e.earn(upgraded, app, count, 0) - e.earn(state, app, count, 0)
+                assertEquals(gain, e.upgradeEarnGain(state, app, count))
+            }
+        }
+    }
+
+    @Test
     fun offlinePaysTheRecentRateAtLowEfficiency() {
         val s = e.newGame(now, 1).copy(earnRate = valueOf(1_000))
         val (_, p) = e.settleOffline(s, 3 * 3_600_000L, now + 3 * 3_600_000L)
-        assertEquals(valueOf(1_000L * 180 * 3 * 400 / 100_000), p) // 3 h of the auto rate (40%) at 3%
+        assertEquals(valueOf(6_480L), p) // Three hours at 40% auto × 9% settlement
         val withItem = s.copy(backup = Backup(items = mapOf(BackupItem.Offline to 2)))
-        assertEquals(valueOf(1_000L * 180 * 7 * 400 / 100_000), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
+        assertEquals(valueOf(9_360L), e.settleOffline(withItem, 3 * 3_600_000L, now).second)
     }
 
     @Test
@@ -161,10 +246,11 @@ class CoreRulesTest {
 
     @Test
     fun biggerDecksAreHarderAndAssistsHelp() {
-        val three = (1L..3L).sumOf { deckRun(it, 3, false).bursts }
-        val six = (1L..3L).sumOf { deckRun(it, 6, false).bursts }
-        val sixHelped = (1L..3L).sumOf { deckRun(it, 6, true).bursts }
-        // Bigger decks stay clearly harder; stock-app effects (snooze, spam clearing) soften it a little.
+        val lowSupport = RuleSet(sandwichPercent = 35, majorEventCooldownMs = 0)
+        val three = (1L..3L).sumOf { deckRun(it, 3, false, lowSupport).bursts }
+        val six = (1L..3L).sumOf { deckRun(it, 6, false, lowSupport).bursts }
+        val sixHelped = (1L..3L).sumOf { deckRun(it, 6, true, lowSupport).bursts }
+        // Under the low-support reference, additional app kinds break the same sandwiches more often.
         assertTrue(six < three * 4 / 5, "6 apps $six vs 3 apps $three")
         assertTrue(sixHelped > six * 5 / 4, "assists $sixHelped vs $six")
     }
@@ -178,28 +264,28 @@ class CoreRulesTest {
         assertEquals(1, next.backup.resets)
         assertEquals(4, next.backup.files)
         assertEquals(10, next.backup.lifetime)
-        assertNull(e.factoryReset(e.newGame(now, 1).copy(level = 24), now))
+        assertNull(e.factoryReset(e.newGame(now, 1).copy(level = e.rules.resetLevel - 1), now))
         assertEquals(valueOf(10), RuleSet.cubeRoot(valueOf(1_000)))
         assertEquals(valueOf(9), RuleSet.cubeRoot(valueOf(999)))
-        // Total = ⌊10 × (P_max / P(Lv25))^0.4⌋, exponent halves 10⁸ above the anchor.
-        val anchor = e.rules.levelP(25)
+        // 0.45 until the eighth income digit, then 0.225.
+        val anchor = e.rules.levelP(e.rules.resetLevel)
         assertEquals(10L, e.rules.backupTotal(anchor))
-        assertEquals(158L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
-        assertEquals(100_000L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
-        assertEquals(Math.floor(10 * Math.pow(10.0, 6.4)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
+        assertEquals(223L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(3)))
+        assertEquals(316_227L, e.rules.backupTotal(anchor * BigInteger.TEN.pow(12)))
+        assertEquals(Math.floor(10 * Math.pow(10.0, 7.2)).toLong(), e.rules.backupTotal(anchor * BigInteger.TEN.pow(24)))
     }
 
     @Test
     fun onlyBeatingTheBestRunPaysAndCounts() {
         val (_, after) = firstReset()
         // A second run that stops below the first run's P pays nothing and does not count as a reset.
-        val weak = after.copy(level = 25, runEarned = e.rules.levelP(25) / BigInteger.TEN)
+        val weak = after.copy(level = e.rules.resetLevel, runEarned = e.rules.levelP(e.rules.resetLevel) / BigInteger.TEN)
         val again = e.factoryReset(weak, now)!!
         assertEquals(after.backup.lifetime, again.backup.lifetime)
         assertEquals(after.backup.resets, again.backup.resets)
         // Beating it pays only the difference.
-        val strong = after.copy(level = 30, runEarned = e.rules.levelP(25) * BigInteger.TEN.pow(3))
-        assertEquals(158L - 10L, e.backupFilesNow(strong))
+        val strong = after.copy(level = 30, runEarned = e.rules.levelP(e.rules.resetLevel) * BigInteger.TEN.pow(3))
+        assertEquals(223L - 10L, e.backupFilesNow(strong))
     }
 
     @Test
@@ -211,9 +297,14 @@ class CoreRulesTest {
         val price = e.rules.appPrice(Catalog.app("meet"))
         assertTrue(price >= e.rules.levelP(Catalog.app("meet").unlockLevel) / valueOf(10))
         assertTrue("meet" in e.buy(veteran.copy(wallet = price), "meet").appLevels)
-        // Higher tiers always cost more than lower ones.
-        val prices = Catalog.apps.filter { it.id !in Catalog.starter }.map { e.rules.appPrice(it) }
-        assertEquals(prices.sorted(), prices)
+        // Each tier's first app is costlier than previous entry points; adjacent tier ladders may overlap.
+        val byTier = Catalog.apps.filter { it.id !in Catalog.starter }.groupBy { it.tier }
+        val firstPrices = byTier.values.map { e.rules.appPrice(it.first()) }
+        assertTrue(firstPrices.zipWithNext().all { (lower, higher) -> lower < higher })
+        byTier.values.forEach { tier ->
+            val prices = tier.map(e.rules::appPrice)
+            assertEquals(prices.sorted(), prices)
+        }
     }
 
     @Test
@@ -334,9 +425,12 @@ class CoreRulesTest {
     fun cloudSyncRestartsTheBackupLayerButKeepsUnlocksAndGb() {
         val r = e.rules
         assertNull(e.sync(e.newGame(now, 1).copy(level = r.syncLevel - 1), now))
-        val backup = Backup(files = 500, lifetime = r.backupTotal(r.levelP(r.syncLevel)) * 4, resets = 30, bestLevel = 75,
-            bestRunP = r.levelP(r.syncLevel), items = mapOf(BackupItem.Value to 10))
-        val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = r.levelP(r.syncLevel))
+        val anchorP = r.levelP(r.cloudAnchorLevel)
+        assertEquals(10L, r.cloudTotal(r.backupTotal(anchorP)))
+        assertEquals(10L, r.copy(syncLevel = 80).cloudTotal(r.backupTotal(anchorP)))
+        val backup = Backup(files = 500, lifetime = r.backupTotal(anchorP) * 4, resets = 30, bestLevel = 75,
+            bestRunP = anchorP, items = mapOf(BackupItem.Value to 10))
+        val run = e.newGame(now, 1, backup).copy(level = r.syncLevel, runEarned = anchorP)
         // Four times the anchor's files → ⌊10 × 4^0.5⌋ = 20 GB.
         assertEquals(20L, e.cloudGbNow(run))
         val after = e.sync(run, now)!!
@@ -344,13 +438,13 @@ class CoreRulesTest {
         assertEquals(0, after.backup.resets)
         assertEquals(0, after.backup.lv(BackupItem.Value))
         assertEquals(75, after.backup.bestLevel)
-        assertTrue(e.unlocked(after, "agoda"), "app unlocks survive")
+        assertTrue(e.unlocked(after, "portal"), "app unlocks survive")
         assertEquals(20L, after.backup.cloud.gb)
         assertEquals(1, after.backup.cloud.syncs)
         // GB buy cloud items; 압축 백업 multiplies the files the next resets pay.
         val bought = e.buyCloud(after, CloudItem.Compression)
         assertEquals(1, bought.backup.cloud.lv(CloudItem.Compression))
-        val firstReset = bought.copy(level = 25, runEarned = r.levelP(25))
+        val firstReset = bought.copy(level = r.resetLevel, runEarned = r.levelP(r.resetLevel))
         assertEquals(Math.floor(10 * 1.5 * Math.sqrt(3.0)).toLong(), e.backupFilesNow(firstReset)) // ×1.5 compression × √(1 + 10% × 20 GB)
     }
 
@@ -362,8 +456,13 @@ class CoreRulesTest {
         for (t in 1..10) assertEquals((0..5).toList(), apps.filter { it.tier == t }.map { it.order }, "tier $t")
         Region.entries.forEach { r -> assertEquals(12, apps.count { it.region == r }, r.label) }
         Category.entries.forEach { c -> assertEquals(12, apps.count { it.category == c }, c.label) }
-        // A higher tier never opens before a lower one, and every pro version comes after its app.
-        assertEquals(apps.map { it.unlockLevel }.sorted(), apps.map { it.unlockLevel })
+        // The first app of each tier opens in sequence; the tail of a tier may overlap.
+        val firstUnlocks = apps.groupBy { it.tier }.values.map { it.first().unlockLevel }
+        assertTrue(firstUnlocks.zipWithNext().all { (lower, higher) -> lower < higher })
+        apps.groupBy { it.tier }.values.forEach { tier ->
+            val unlocks = tier.map { it.unlockLevel }
+            assertEquals(unlocks.sorted(), unlocks)
+        }
         apps.forEach { assertTrue(Catalog.proLevel.getValue(it.id) > it.unlockLevel, it.id) }
         assertTrue(Catalog.starter.all { Catalog.app(it).tier == 1 })
     }
@@ -394,7 +493,11 @@ class CoreRulesTest {
         val s = deckOf("memo", "calc", "contacts", "phone", "sms")
         val n = valueOf(4)
         assertEquals(e.earn(s, "memo", n, 0) * valueOf(2), e.earn(s, "memo", n, 0, EarnCtx(direct = true)), "메모 direct ×2")
-        assertEquals(e.earn(s, "calc", valueOf(3), 0) * valueOf(4) / valueOf(3) * valueOf(3) / valueOf(2), e.earn(s, "calc", n, 0), "계산기 multiple of 4 ×1.5")
+        val calc = Catalog.app("calc")
+        assertEquals(1_000L, e.effectPermille(s, calc, n, 0, EarnCtx()))
+        assertEquals(1_000L, e.effectPermille(s, calc, valueOf(2), 1, EarnCtx()))
+        assertEquals(1_500L, e.effectPermille(s, calc, valueOf(2), 2, EarnCtx()))
+        assertEquals(1_000L, e.effectPermille(s, calc, valueOf(2), 2, EarnCtx(wave = true)))
         // 연락처: two other social apps in the deck -> +30%.
         val alone = deckOf("contacts", "memo", "calc")
         assertEquals(e.earn(alone, "contacts", n, 0).toDouble() * 1.3 * (e.earn(s, "contacts", n, 0).toDouble() / (e.earn(alone, "contacts", n, 0).toDouble() * 1.3)),
@@ -411,13 +514,47 @@ class CoreRulesTest {
     }
 
     @Test
-    fun thresholdEffectsBurstEarly() {
-        assertEquals(3, e.thresholdOf("green"))
-        assertEquals(e.rules.threshold, e.thresholdOf("memo"))
-        // 튄더: two rows of 1 touching burst at once.
-        val s = deckOf("match", "memo", "alarm").copy(rows = rows("memo" to 1, "match" to 1, "alarm" to 1, "match" to 1, "memo" to 2, "alarm" to 1, "memo" to 1))
-        val o = e.swipe(s, 102, now)!!
-        assertTrue(o.beats.any { it is Beat.Burst && it.row.app == "match" })
+    fun touchingPairsIgniteAndCountBonusesUnderRuleB() {
+        val match = deckOf("match", "memo", "alarm")
+            .copy(rows = rows("memo" to 1, "match" to 1, "alarm" to 1, "match" to 1, "memo" to 1))
+        val bursts = e.swipe(match, 102, now)!!.beats.filterIsInstance<Beat.Burst>()
+        assertEquals(listOf(3, 4), bursts.map { it.chain })
+        assertEquals(listOf(2, 2), bursts.map { it.row.count })
+
+        val green = deckOf("green", "memo", "alarm").copy(rows = rows("green" to 1, "memo" to 1, "green" to 1))
+        val result = e.swipe(green, 101, now)!!
+        assertEquals(2, result.beats.filterIsInstance<Beat.Burst>().single().row.threshold)
+        assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst + 10, result.state.gauge)
+    }
+
+    @Test
+    fun balanceUpdateKeepsPreviouslyUnlockedAppsThroughBothResets() {
+        val e = Engine()
+        val old = e.newGame(now, 21).copy(rulesVersion = 4, level = 60,
+            runEarned = e.rules.levelP(60))
+        val loaded = SaveCodec.decode(SaveCodec.encode(old))
+        assertTrue(e.unlocked(loaded, "mall"))
+        assertTrue(e.unlocked(loaded, "superapp"))
+        assertFalse(e.unlocked(loaded, "dance"))
+        val migrated = e.tick(loaded, now)
+        assertEquals(60, migrated.backup.legacyAppUnlockLevel)
+        val reset = e.factoryReset(migrated, now)!!
+        assertTrue(e.unlocked(reset, "mall"))
+        val syncLevel = e.rules.syncLevel
+        val synced = e.sync(reset.copy(level = syncLevel, runEarned = e.rules.levelP(syncLevel)), now)!!
+        val reloaded = SaveCodec.decode(SaveCodec.encode(synced))
+        assertEquals(60, reloaded.backup.legacyAppUnlockLevel)
+        assertFalse(e.unlocked(e.newGame(now, 21).copy(level = 60), "mall"))
+    }
+
+    @Test
+    fun olderSavedRowsAdoptRuleBWithoutChangingCountsOrWallet() {
+        val active = e.newGame(now, 11)
+        val old = active.copy(rulesVersion = 3, wallet = valueOf(22), rows = active.rows.map { it.copy(threshold = 4) })
+        val loaded = e.tick(SaveCodec.decode(SaveCodec.encode(old)), now)
+        assertEquals(active.rulesVersion, loaded.rulesVersion)
+        assertEquals(active.rows, loaded.rows)
+        assertEquals(old.wallet, loaded.wallet)
     }
 
     @Test
@@ -564,7 +701,7 @@ class CoreRulesTest {
         val after = e.factoryReset(s, 1)!!
         assertEquals(1, after.account.stars("memo"))
         assertEquals(s.account.credits, after.account.credits)
-        val synced = e.sync(after.copy(level = 60), 2)!!
+        val synced = e.sync(after.copy(level = e.rules.syncLevel, runEarned = e.rules.levelP(e.rules.syncLevel)), 2)!!
         assertEquals(1, synced.account.stars("memo"))
     }
 
@@ -609,6 +746,81 @@ class CoreRulesTest {
     }
 
     @Test
+    fun wildAndSpamCannotReplayRemovedRowsOrChainPastTheBoard() {
+        val e = Engine(RuleSet(gaugePerMerge = 0, gaugePerBurst = 1, overloadMinIntervalMs = 360_000))
+        for (seed in 1L..8) {
+            var s = e.newGame(0, seed).copy(level = 25, assists = mapOf(Assist.Wild to 5))
+            repeat(600) { step ->
+                val now = (step + 1) * 3_000L
+                s = e.tick(s, now)
+                val target = e.bestTarget(s, now) ?: return@repeat
+                val move = e.swipe(s, target, now) ?: return@repeat
+                val merges = move.beats.filterIsInstance<Beat.Merged>()
+                val bursts = move.beats.filterIsInstance<Beat.Burst>()
+                assertEquals(merges.size, merges.map { it.fromId }.toSet().size)
+                assertTrue(bursts.size <= (s.rows.size - 1) / 2)
+                assertTrue(bursts.none { it.row.kind == RowKind.Spam })
+                assertTrue(move.state.rows.size <= e.rules.maxRows)
+                s = move.state
+            }
+        }
+    }
+
+    @Test
+    fun chargedGaugeWaitsForWaveCooldownAndThenFires() {
+        val e = Engine(RuleSet(overloadMinIntervalMs = 360_000))
+        val board = e.newGame(0, 1).copy(gauge = 100, nextOverloadAt = 200_000)
+        val early = e.swipe(board, 4, 199_999)!!
+        assertEquals(100, early.state.gauge)
+        assertTrue(!early.overload)
+        val ready = e.swipe(board, 4, 200_000)!!
+        assertTrue(ready.overload)
+        assertEquals(560_000, ready.state.nextOverloadAt)
+    }
+
+    @Test
+    fun majorEventsShareCooldownAndAlternateTypes() {
+        val e = Engine(RuleSet(majorEventCooldownMs = 450_000, callEverySwipes = 1))
+        val board = e.newGame(0, 1).copy(level = 15, equipped = listOf(EventCard.Drill), swipes = 58)
+        val call = e.swipe(board, 4, 10_000)!!.state
+        assertEquals("call", call.previousMajorEvent)
+        val drillReady = board.copy(swipes = 59, previousMajorEvent = call.previousMajorEvent, nextMajorEventAt = call.nextMajorEventAt)
+        val tooSoon = e.swipe(drillReady, 4, 20_000)!!.state
+        assertTrue(tooSoon.rows.none { it.event == EventCard.Drill })
+        assertTrue(tooSoon.rows.none { it.kind == RowKind.Call })
+        val drill = e.swipe(drillReady, 4, 460_000)!!.state
+        assertEquals("Drill", drill.previousMajorEvent)
+        assertTrue(drill.rows.any { it.event == EventCard.Drill })
+        assertTrue(drill.rows.none { it.kind == RowKind.Call })
+    }
+
+    @Test
+    fun activeAutoFractionAffectsAutoOnly() {
+        val full = Engine(RuleSet(autoSwipePermille = 1_000))
+        val limited = Engine(RuleSet(autoSwipePermille = 450))
+        val state = full.newGame(now, 11)
+        val autoP = full.swipe(state, 4, now, Actor.Auto)!!.earned
+        val reduced = limited.swipe(state, 4, now, Actor.Auto)!!.earned
+        assertEquals(autoP * valueOf(450) / valueOf(1_000), reduced)
+        assertEquals(full.swipe(state, 4, now)!!.earned, limited.swipe(state, 4, now)!!.earned)
+    }
+
+    @Test
+    fun fullyUpgradedAutoAlwaysAdvancesTheClock() {
+        val state = e.newGame(now, 11).copy(
+            active = listOf("alarm", "memo", "settings", "ai"),
+            backup = Backup(items = mapOf(BackupItem.AutoClean to 10), cloud = Cloud(items = mapOf(CloudItem.CloudAuto to 3))),
+            rideBoost = true,
+            dndUntil = now + 60_000,
+        )
+        assertEquals(500L, e.autoIntervalMs(state))
+        val ultra = Shop(e).buySpeedPass(state, now, SpeedPass.Ultra)
+        assertEquals(500L, e.autoIntervalMs(ultra, now))
+        val unboosted = e.newGame(now, 11)
+        assertEquals(4_500L, e.autoIntervalMs(unboosted, now))
+    }
+
+    @Test
     fun speedPassesSpeedUpTheGameButNotPastAThumb() {
         val e = Engine(); val shop = Shop(e); val day = 86_400_000L
         var s = e.newGame(0, 1)
@@ -635,7 +847,7 @@ class CoreRulesTest {
     fun phaseTwoEffectsWork() {
         val e = Engine(); val day = 86_400_000L
         fun deck(vararg ids: String, rows: List<Row>) = e.newGame(0, 3).copy(level = 90, appLevels = ids.associateWith { 1 }, active = ids.toList(), rows = rows)
-        fun app(id: Long, a: String, n: Int) = Row(id, RowKind.App, a, count = n, threshold = 4)
+        fun app(id: Long, a: String, n: Int) = Row(id, RowKind.App, a, count = n, threshold = e.rules.threshold)
         // 날씨: first swipe of the day adds one to its rows (once).
         val w = deck("weather", "memo", rows = listOf(app(1, "weather", 1), app(2, "memo", 1), app(3, "memo", 1)))
         val w1 = e.swipe(w, 3, day)!!.state
@@ -647,7 +859,8 @@ class CoreRulesTest {
         // 코코아T: a merged taxi row pulls in another taxi row.
         val c = deck("ctaxi", "memo", rows = listOf(app(1, "ctaxi", 2), app(2, "memo", 1), app(3, "ctaxi", 1), app(4, "ctaxi", 1)))
         val c1 = e.swipe(c, 2, day)!!
-        assertTrue(c1.beats.any { it is Beat.Burst }, "2+1 merged (3) bursts only by pulling the third taxi row")
+        assertEquals(4, c1.beats.filterIsInstance<Beat.Burst>().single().row.count)
+        assertEquals(listOf(3L, 4L), c1.beats.filterIsInstance<Beat.Merged>().map { it.fromId })
         // 와이: social apps grow with its bursts; 듀오링구 grows with the login streak.
         val y = deck("why", "chat", rows = listOf(app(1, "why", 2), app(2, "memo", 1), app(3, "why", 2)))
         assertEquals(1, e.swipe(y, 2, day)!!.state.whyStacks)

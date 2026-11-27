@@ -1,0 +1,20 @@
+appId	field	packaged	source
+agoda	then	그 폭발 ×3	그 스와이프 정산 ×3
+airbnb	then	그 폭발 ×5	그 스와이프 정산 ×5
+bigo	when	이 앱이 터질 때	이 앱이 터져 파동이 나면
+feed	when	이 앱이 새 줄로 올 때	덱에 있으면
+gallery	then	직전 폭발 P의 10% 추가	직전 폭발 스와이프 P +10%
+mail	when	2연쇄 이상에 포함되면	연쇄 번호 2 이상이면
+mail	then	그 폭발 가치 +50%	이 앱 폭발·파동 가치 +50%
+maps	when	권역이 다른 앱끼리 맞닿으면	큐글맵스와 다른 권역이 닿으면
+maps	then	그대로 합쳐짐	함께 폭발
+momo	then	그 폭발 ×3	그 스와이프 정산 ×3
+music	then	이후 연쇄 번호 +1	이후 정산용 연쇄 번호 +1
+pin	when	같은 앱 줄이 3개 이상이면	판에 핀트레스트 줄 3개 이상
+pin	then	그 앱 가치 +20%	이 앱 가치 +20%
+recorder	when	폭발 직후 3스와이프 동안	폭발 뒤 3번, 폭발 없이 밀면
+recorder	then	직전 폭발 P의 10% 추가	직전 폭발 스와이프 P +10%
+shopee	when	가격이 낮은 앱을 살 때	쇼피피보다 싼 앱을 살 때
+travel	then	그 폭발 ×3	그 스와이프 정산 ×3
+tube	then	덱 전체 연쇄 번호 +1	정산용 연쇄 번호 +1
+weather	when	하루 첫 접속 때	하루 첫 스와이프 때

@@ -1,6 +1,7 @@
 package com.graviton94.notificationcleaner
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -9,6 +10,7 @@ import android.webkit.JavascriptInterface
 import com.graviton94.notificationcleaner.core.AwayClock
 import com.graviton94.notificationcleaner.core.SaveCodec
 import com.graviton94.notificationcleaner.core.WebSession
+import com.graviton94.notificationcleaner.core.account
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.graviton94.notificationcleaner.platform.Account
@@ -25,6 +27,7 @@ import java.io.File
  * Calls arrive on the WebView's bridge thread; the lock also covers saves from the UI thread.
  */
 class GameBridge(private val context: Context) {
+    private val debugTransactions = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     private val saveFile = File(context.filesDir, "save.json")
     private val prefs = context.getSharedPreferences("clock", 0)
     private val lock = Any()
@@ -38,10 +41,14 @@ class GameBridge(private val context: Context) {
 
     private fun now() = System.currentTimeMillis()
 
+    // An empty receipt is rejected by the reward ledgers.
+    private fun debugReceipt(kind: String): String = if (debugTransactions) "$kind-${System.nanoTime()}" else ""
+
     @JavascriptInterface
     fun call(method: String, argsJson: String): String = synchronized(lock) {
         val a = runCatching { JSONObject(argsJson) }.getOrDefault(JSONObject())
         val t = now()
+        val previousPassDay = session.state.account.passDay
         val out = when (method) {
             "snapshot" -> session.snapshot(t)
             "sync" -> session.sync(t)
@@ -59,15 +66,18 @@ class GameBridge(private val context: Context) {
             "reset" -> session.reset(t)
             "panel" -> session.panel(t)
             "bm" -> session.bm(t)
-            // Without Play Billing (dev builds, browser) purchases are test grants; with it the page buys through Game.purchase.
-            "buyData" -> if (billing?.ready == true) session.snapshot(t) else session.buyData(a.optString("pack"), "fake-" + System.nanoTime(), t)
-            "buyStarter" -> if (billing?.ready == true) session.snapshot(t) else session.buyStarter("fake-" + System.nanoTime(), t)
-            "buyRookie" -> if (billing?.ready == true) session.snapshot(t) else session.buyRookie("fake-" + System.nanoTime(), t)
+            // Play purchases go through Game.purchase. The fallback is restricted to debug builds.
+            "buyData" -> if (billing?.ready == true) session.snapshot(t) else session.buyData(a.optString("pack"), debugReceipt("fake"), t)
+            "buyStarter" -> if (billing?.ready == true) session.snapshot(t) else session.buyStarter(debugReceipt("fake"), t)
+            "buyRookie" -> if (billing?.ready == true) session.snapshot(t) else session.buyRookie(debugReceipt("fake"), t)
             "claimRookie" -> session.claimRookie(t)
             "buyItem" -> session.buyItem(a.optString("item"), t)
-            // a confirmed AdMob reward pays once under its own id (ad-…); browser/dev builds without the ad host use a test id
-            "watchAd" -> session.watchAd(a.optString("slot"), adRewards.removeFirstOrNull() ?: ("fakead-" + System.nanoTime()), t)
-            "buyPass" -> if (billing?.ready == true) session.snapshot(t) else session.buyPass(a.optString("kind"), "fake-" + System.nanoTime(), t)
+            "watchAd" -> {
+                val receipt = if (session.shop.passActive(session.state, t)) "pass-" + java.util.UUID.randomUUID()
+                    else adRewards.removeFirstOrNull() ?: debugReceipt("fakead")
+                session.watchAd(a.optString("slot"), receipt, t)
+            }
+            "buyPass" -> if (billing?.ready == true) session.snapshot(t) else session.buyPass(a.optString("kind"), debugReceipt("fake"), t)
             "premium" -> session.premium(a.optString("app"), a.optString("voucher") == "1", t)
             "claimMissions" -> session.claimMissions(t)
             "attend" -> session.attend(t)
@@ -77,7 +87,11 @@ class GameBridge(private val context: Context) {
             "buyBackup" -> session.buyBackup(a.optString("item"), t)
             else -> "{}"
         }
-        if (method != "snapshot" && method != "hint" && method != "panel" && method != "drill" && method != "bm") save()
+        val changesState = when (method) {
+            "snapshot", "hint", "panel", "drill", "bm" -> false
+            else -> true
+        }
+        if (changesState || previousPassDay != session.state.account.passDay) save()
         out
     }
 

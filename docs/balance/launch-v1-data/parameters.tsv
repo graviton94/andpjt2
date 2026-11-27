@@ -1,0 +1,18 @@
+version	parent	delta
+v1.0a	규칙 A	b824521의 규칙, 조정 전
+v1.0b	a	gaugePerMerge=0,gaugePerBurst=1
+v1.0c	b	igniterGaugePerTier=0
+v1.0d	b	overloadMinIntervalMs=360000,majorEventCooldownMs=450000
+v1.0e	d	resetLevel=21,offlineEfficiencyPercent=9
+v1.0f	e	resetLevel=19,sandwichPercent=60
+v1.0g	f	Content.kt의 두 앱과 프로 연동
+v1.0h	g	levelRatioStepPermille=1,backupExponentPermille=450
+v1.0i	h	waveIncomePermille=32000
+v1.0j	h	recentIncomeWindow=180
+v1.0k	j	syncLevel=70
+v1.0l	j	Assist.Overload caps: 8:3,19:4,43:7,54:8,83:9; food Lv29 (pro Lv54)
+v1.0m	j	syncLevel=80
+v1.0n	j	wildPerAssist=6,sandwichPerAssist=5
+v1.0o	j	syncLevel=75
+v1.0p	j	syncLevel=75; cloudTotal anchor=levelP(60)
+v1.0q	j	offlineEfficiencyPercent=6

@@ -1,0 +1,71 @@
+{
+  "passValues": {
+    "month": {
+      "wonPrice": 5500,
+      "dataNow": 300,
+      "dataDaily": 60,
+      "days": 30,
+      "overclockHoursDaily": 3,
+      "adFree": true,
+      "speedPermille": 0,
+      "prestigePermille": 0,
+      "dataTotal": 2100,
+      "dataEquivalent": 5700,
+      "valueX": 22.8,
+      "valueXDataOnly": 8.4
+    },
+    "Turbo": {
+      "wonPrice": 33000,
+      "dataNow": 300,
+      "dataDaily": 60,
+      "days": 30,
+      "overclockHoursDaily": 3,
+      "adFree": true,
+      "speedPermille": 3500,
+      "prestigePermille": 1750,
+      "dataTotal": 2100,
+      "dataEquivalent": 5700,
+      "valueX": 3.8,
+      "valueXDataOnly": 1.4
+    },
+    "Ultra": {
+      "wonPrice": 99000,
+      "dataNow": 300,
+      "dataDaily": 260,
+      "days": 30,
+      "overclockHoursDaily": 3,
+      "adFree": true,
+      "speedPermille": 8000,
+      "prestigePermille": 4000,
+      "dataTotal": 8100,
+      "dataEquivalent": 11700,
+      "valueX": 2.6,
+      "valueXDataOnly": 1.8
+    }
+  },
+  "starterValueX": 10.2,
+  "rookieValueX": 7.1,
+  "renderedCaptions": [
+    "최대 ×8.4 가치"
+  ],
+  "renderedMonth": [
+    "2,100 데이터",
+    "₩46,200",
+    "90시간"
+  ],
+  "renderedStarterAndRookie": true,
+  "verifiedPlayIdsAndPrices": {
+    "data_100": 2200,
+    "data_540": 5900,
+    "data_1200": 12000,
+    "data_3700": 33000,
+    "data_8600": 69000,
+    "data_16800": 119000,
+    "starter_pack": 2500,
+    "rookie_pass": 3300,
+    "pass_monthly": 5500,
+    "pass_turbo": 33000,
+    "pass_ultra": 99000
+  },
+  "pageErrors": []
+}

@@ -49,3 +49,8 @@
 | 텔레메트리 | 이벤트: `ftue_*`(16장), `level_up`, `reset(files, level)`, `sync(gb)`, `app_buy(id)`, `deck_set(sets, cap_hit)`, `offline_claim(p, doubled)`, `ad_offer/ad_complete(placement)`, `iap_purchase(sku)`, `session_start/end`. 개인정보 없음, 기기 ID는 앱 범위 ID |
 | 성능 | 판 계산은 `core/` 순수 Kotlin(테스트 45개). BigInteger는 표시 직전에만 문자열로 |
 | 접근성 | 텍스트 확대, 색만으로 구분 금지(스팸=빨강 + 아이콘), 움직임 줄이기에서 셰이크 0(디자인 토큰) |
+
+
+### 규칙 B 검증에서 확인한 지급 경계
+
+저장 외피는 버전 1이다. 광고 지면의 사용 기록은 UTC 날짜에 맞춰 갱신하고 최근 7일의 영수증을 보존한다. 결제 영수증은 계정에 계속 남긴다. 복귀 광고의 제안은 코어 세션이 당일의 양수 정산 한 건에 한해 사용하고 플랫폼은 SDK가 보상을 확인했을 때 지급 ID를 전달한다. [화면 계약](../balance/api-changes.md)

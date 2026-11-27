@@ -1,0 +1,16 @@
+[
+  {
+    "hours": 6,
+    "paidShort": "16.7M",
+    "exExtraPShort": "12.4M",
+    "actual": "자리 비운 동안\n6시간\n+16.7M\nP\n0\n상한 14시간 27분\n기본 정산\n6시간\n+16.7M\n광고 보고 +70% 받기\n받기",
+    "errors": []
+  },
+  {
+    "hours": 15,
+    "paidShort": "35.2M",
+    "exExtraPShort": "26.6M",
+    "actual": "자리 비운 동안\n15시간\n+35.2M\nP\n0\n상한 14시간 27분\n기본 정산\n12시간\n+35.2M\nEX 추가 인정\nEX\n2시간 27분\n+26.6M\n[!] 상한을 넘긴 33분은 정산되지 않아요\n광고 보고 +70% 받기\n받기",
+    "errors": []
+  }
+]

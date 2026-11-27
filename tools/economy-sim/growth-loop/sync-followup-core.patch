@@ -1,0 +1,337 @@
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+index a13c5fb..f04b551 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -52,0 +53 @@ data class Backup(
++    val fileShopRecordBasis: BigInteger = ZERO,
+@@ -68,0 +70,4 @@ data class Cloud(
++    /** Best qualifying run P earned independently of carry. It does not mint a separate reward. */
++    val carryRecordP: BigInteger = ZERO,
++    val exReturnRecordRate: BigInteger = ZERO,
++    val fileShopPreviousCycleBasis: BigInteger = ZERO,
+@@ -115,0 +121,3 @@ data class GameState(
++    val carryPPerSecond: BigInteger = ZERO,
++    val carryPaidP: BigInteger = ZERO,
++    val upgradeRateReference: BigInteger = ZERO,
+@@ -310 +318,25 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-    private fun recordFiles(s: GameState) = rules.backupFiles(s.runEarned, s.level, s.backup)
++    private fun nativeP(s: GameState) = (s.runEarned - s.carryPaidP).max(ZERO)
++
++    private fun recordFiles(s: GameState) = rules.backupFiles(nativeP(s), s.level, s.backup)
++
++    fun carryPPerSecond(s: GameState): BigInteger {
++        val policy = rules.syncCarry ?: return ZERO
++        return stakePortion(s.carryPPerSecond, policy.weight(s.level, rules.syncLevel))
++    }
++
++    private fun carryRecord(s: GameState): BigInteger {
++        val previous = s.backup.cloud.carryRecordP
++        val actual = nativeP(s)
++        return if (rules.syncCarry != null && s.challengeStarsAtStart == null && actual >= rules.levelP(rules.resetLevel))
++            previous.max(actual) else previous
++    }
++
++    private fun carryOpeningRate(record: BigInteger): BigInteger {
++        val policy = rules.syncCarry ?: return ZERO
++        val nativeFiles = rules.backupTotal(record)
++        if (nativeFiles.signum() <= 0) return ZERO
++        val passive = ExactGrowth.passive(rules, nativeFiles)
++        val fileContribution = record * (passive - BigInteger.valueOf(1_000_000)) / passive
++        return stakePortion(fileContribution, policy.sharePermille.toLong()) * BigInteger.valueOf(1_000) /
++            BigInteger.valueOf(policy.fullRateWindowMs)
++    }
+@@ -316 +348,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        quote = quote.copy(backup = quote.backup.copy(resets = quote.backup.resets + 1))
++        quote = quote.copy(backup = quote.backup.copy(resets = quote.backup.resets + 1,
++            fileShopRecordBasis = nextFileShopRecord(s)))
+@@ -517,0 +551 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            fileShopRecordBasis = if (files.signum() > 0) nextFileShopRecord(s) else s.backup.fileShopRecordBasis,
+@@ -521,2 +555,5 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            bestRunP = s.backup.bestRunP.max(s.runEarned),
+-            cloud = s.backup.cloud.let { c -> if (files.signum() > 0 && Catalog.packs.isNotEmpty()) c.copy(packResets = c.packResets + 1) else c }
++            bestRunP = s.backup.bestRunP.max(nativeP(s)),
++            cloud = s.backup.cloud.let { c -> if (files.signum() > 0)
++                c.copy(carryRecordP = carryRecord(s), exReturnRecordRate = returnRecord(s),
++                    packResets = c.packResets + if (Catalog.packs.isNotEmpty()) 1 else 0)
++                else c }
+@@ -534,0 +572,6 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    private fun nextFileShopRecord(s: GameState): BigInteger {
++        if (!rules.fileShopRecordFloor) return ZERO
++        val cycle = s.backup.baseFilesClaimed ?: s.backup.lifetime
++        return if (rules.fileShopCarryRecord) cycle.max(s.backup.cloud.fileShopPreviousCycleBasis) else cycle
++    }
++
+@@ -537 +580,3 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val base = (rules.backupPrice(item, s.backup.lv(item)) * BigInteger.valueOf(10L - s.backup.cloud.lv(CloudItem.Discount)) / BigInteger.TEN).max(BigInteger.ONE)
++        var price = rules.backupPrice(item, s.backup.lv(item))
++        if (item.max == Int.MAX_VALUE && rules.fileShopRecordFloor) price = price.max(s.backup.fileShopRecordBasis / BigInteger.valueOf(5))
++        val base = (price * BigInteger.valueOf(10L - s.backup.cloud.lv(CloudItem.Discount)) / BigInteger.TEN).max(BigInteger.ONE)
+@@ -587,0 +633,4 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            carryRecordP = if (gb.signum() > 0) carryRecord(s) else c.carryRecordP,
++            exReturnRecordRate = if (gb.signum() > 0) returnRecord(s) else c.exReturnRecordRate,
++            fileShopPreviousCycleBasis = if (rules.fileShopCarryRecord && gb.signum() > 0)
++                (s.backup.baseFilesClaimed ?: s.backup.lifetime) + recordFiles(s) else c.fileShopPreviousCycleBasis,
+@@ -593,0 +643 @@ class Engine(val rules: RuleSet = RuleSet()) {
++            .copy(carryPPerSecond = if (gb.signum() > 0) carryOpeningRate(cloud.carryRecordP) else ZERO)
+@@ -868,0 +919,16 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
++        val starter = rules.speedWelcomePermille > 0 && actor == Actor.Player && s.challengeStarsAtStart == null &&
++            s.account.speedPass != null && now < s.account.speedPassUntil && s.account.speedWelcomeSwipes < 3 && earned.signum() > 0
++        if (starter) {
++            earned = stakePortion(earned, rules.speedWelcomePermille.toLong())
++            s = s.withAccount { it.copy(speedWelcomeSwipes = it.speedWelcomeSwipes + 1) }
++        }
++        val offered = exIncome(s, earned)
++        val naturalEarned = offered.min(room)
++        val carry = if (actor == Actor.Player && s.challengeStarsAtStart == null && s.carryPPerSecond.signum() > 0 &&
++            s.level < rules.syncLevel && earned.signum() > 0) {
++            val played = if (s.lastSwipeAt == 0L || now > s.lastSwipeAt) dt.coerceAtMost(12_000L) else 0
++            val claim = carryPPerSecond(s) * BigInteger.valueOf(played) / BigInteger.valueOf(1_000)
++            val toEndpoint = rules.levelCeil(rules.syncLevel, s.backup.lv(BackupItem.FastBoot)) - s.runEarned - naturalEarned
++            claim.min(toEndpoint.max(ZERO)).min(room - naturalEarned)
++        } else ZERO
+@@ -870,3 +936,3 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        earned = exIncome(s, earned)
+-        val capped = (earned - room).max(ZERO)
+-        if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
++        val capped = (offered - room).max(ZERO)
++        if (capped.signum() > 0) beats += Beat.Capped(capped)
++        earned = naturalEarned + carry
+@@ -880 +945,0 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
+@@ -905 +970,4 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            earnRate = updateRate(s.earnRate, earned),
++            earnRate = updateRate(s.earnRate, naturalEarned),
++            carryPaidP = s.carryPaidP + carry,
++            upgradeRateReference = if (rules.appUpgradePacePermille > 0)
++                s.upgradeRateReference.max(updateRate(s.earnRate, naturalEarned)) else s.upgradeRateReference,
+@@ -927 +995 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        return SwipeOutcome(next, beats, earned, chain, cleared, overload, capped, earned - neutralEarned)
++        return SwipeOutcome(next, beats, earned, chain, cleared, overload, capped, naturalEarned - neutralEarned)
+@@ -1031,0 +1100,6 @@ class Engine(val rules: RuleSet = RuleSet()) {
++    private fun returnRecord(s: GameState): BigInteger {
++        val old = s.backup.cloud.exReturnRecordRate
++        return if (rules.exReturnMemory && nativeP(s) >= rules.levelP(rules.resetLevel))
++            old.max(s.exNeutralRate ?: s.earnRate) else old
++    }
++
+@@ -1043 +1117,2 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-        val room = jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt())
++        val steps = (rules.offlineLevelCap * sub / 1_000).toInt()
++        val room = jackpotRoom(s, steps)
+@@ -1058 +1133,13 @@ class Engine(val rules: RuleSet = RuleSet()) {
+-            if (offer != null) return quote(duration, s.earnRate, multiplier)
++            if (offer != null) {
++                val ownedCount = if (offer == GrowthOffer.Discount && rules.exReturnPerSkuPermille > 0 &&
++                    s.challengeStarsAtStart == null) ExOffers.ids.count { it in s.account.ownedEx } else 0
++                val normalPay = quote(duration, s.earnRate, multiplier)
++                if (ownedCount == 0) return normalPay
++                val commonRate = if (rules.exReturnMemory)
++                    s.earnRate.max(s.backup.cloud.exReturnRecordRate) else s.earnRate
++                val commonWindowPay = quote(normalTime, commonRate, multiplier)
++                val bonusPermille = (ownedCount * rules.exReturnPerSkuPermille).toLong()
++                val ceiling = if (rules.exReturnMemory) room + stakePortion(jackpotRoom(s, steps + 1) - room, ownedCount * 90L)
++                    else room
++                return (normalPay + stakePortion(commonWindowPay, bonusPermille)).min(ceiling)
++            }
+@@ -1145,0 +1233,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
++        val paced = if (rules.appUpgradeInheritedPace) s.backup.bestLevel >= rules.resetLevel
++            else rank >= 3 && s.swipes > 4
++        if (rules.appUpgradePacePermille > 0 && paced) {
++            val targetPermille = if (s.prestigePlayMs <= 600_000L) rules.appUpgradePacePermille
++                else rules.appUpgradePacePermille * 8
++            val reference = if (rules.appUpgradeInheritedPace)
++                s.upgradeRateReference.min(stakePortion(s.earnRate, 1_250)) else s.upgradeRateReference
++            p = p.max(stakePortion(reference, targetPermille.toLong()))
++        }
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Monetization.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Monetization.kt
+index cb260a1..da7f2f9 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Monetization.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Monetization.kt
+@@ -120,0 +121 @@ data class Account(
++    val speedWelcomeSwipes: Int = 0,
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+index 4ec9fa9..c92c9ad 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -134,0 +135,9 @@ data class RuleSet(
++    val syncCarry: SyncCarry? = null,
++    val exReturnPerSkuPermille: Int = 0,
++    val exReturnMemory: Boolean = false,
++    val filePriceGrowthScalePermille: Int = 1_000,
++    val appUpgradePacePermille: Int = 0,
++    val appUpgradeInheritedPace: Boolean = false,
++    val fileShopRecordFloor: Boolean = false,
++    val fileShopCarryRecord: Boolean = false,
++    val speedWelcomePermille: Int = 0,
+@@ -264 +273,3 @@ data class RuleSet(
+-        ExactGrowth.price(item.base, item.growthPermille, owned)
++        ExactGrowth.price(item.base, if (item.max == Int.MAX_VALUE)
++            1_000 + (item.growthPermille - 1_000) * filePriceGrowthScalePermille / 1_000
++        else item.growthPermille, owned)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/SyncCarry.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/SyncCarry.kt
+new file mode 100644
+index 0000000..a3fb004
+--- /dev/null
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/SyncCarry.kt
+@@ -0,0 +1,16 @@
++package com.graviton94.notificationcleaner.core
++
++import java.math.BigInteger
++
++/** Repays an earned file layer only during manual play in the opening run after a sync. */
++enum class SyncCarry(val sharePermille: Int, val fullRateWindowMs: Long, val fadeStartsAt: Int) {
++    Linear35(350, 60_000, 1),
++    Hold65(650, 30_000, 35),
++    Hold90(900, 12_000, 50);
++
++    fun weight(level: Int, until: Int): Long =
++        (until - maxOf(level, fadeStartsAt)).coerceAtLeast(0) * 1_000L / (until - fadeStartsAt).coerceAtLeast(1)
++}
++
++internal fun stakePortion(amount: BigInteger, permille: Long) =
++    amount * BigInteger.valueOf(permille) / BigInteger.valueOf(1_000)
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+index cf41eb4..98e8d1c 100644
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/WebSession.kt
+@@ -63,0 +64 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
++            put("awayMs", awayMs.coerceAtLeast(0))
+@@ -270 +271,3 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
+-            put("state", snap(s, now))
++            val current = snap(s, now)
++            put("state", current)
++            current["carry"]?.let { put("carry", it) }
+@@ -390,0 +394,8 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
++        engine.rules.syncCarry?.let { carry ->
++            val rate = engine.carryPPerSecond(s)
++            if (rate.signum() > 0) put("carry", buildJsonObject {
++                put("ratio", carry.sharePermille / 1_000.0)
++                put("untilLevel", engine.rules.syncLevel)
++                money("pPerSec", rate)
++            })
++        }
+diff --git a/core/src/test/kotlin/com/graviton94/notificationcleaner/core/SyncCarryContractTest.kt b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/SyncCarryContractTest.kt
+new file mode 100644
+index 0000000..2d2e6aa
+--- /dev/null
++++ b/core/src/test/kotlin/com/graviton94/notificationcleaner/core/SyncCarryContractTest.kt
+@@ -0,0 +1,118 @@
++package com.graviton94.notificationcleaner.core
++
++import java.math.BigInteger
++import kotlin.test.Test
++import kotlin.test.assertEquals
++import kotlin.test.assertNotNull
++import kotlin.test.assertTrue
++import kotlinx.serialization.json.Json
++import kotlinx.serialization.json.jsonObject
++import kotlinx.serialization.json.jsonPrimitive
++
++class SyncCarryContractTest {
++    private val now = 800_000_000L
++
++    @Test
++    fun paidSyncStartsCarryThatExpiresAtLv60AndSurvivesSave() {
++        val rules = RuleSet(syncCarry = SyncCarry.Hold65, productivePrestige = true, repeatSync = true,
++            growthOffer = GrowthOffer.Discount)
++        val engine = Engine(rules)
++        val active = engine.newGame(now, 12).copy(level = 100, runEarned = rules.levelP(100), prestigePlayMs = 2_000_000L)
++        val fresh = assertNotNull(engine.sync(active, now))
++        assertTrue(fresh.carryPPerSecond.signum() > 0)
++        assertEquals(active.runEarned, fresh.backup.cloud.carryRecordP)
++        val restored = SaveCodec.decode(SaveCodec.encode(fresh))
++        assertEquals(fresh.carryPPerSecond, restored.carryPPerSecond)
++        assertEquals(0, engine.carryPPerSecond(restored.copy(level = 60)).signum())
++        assertTrue(engine.carryPPerSecond(restored.copy(level = 50)) < engine.carryPPerSecond(restored.copy(level = 35)))
++        val session = WebSession(engine, restored, now)
++        val panel = Json.parseToJsonElement(session.panel(now)).jsonObject
++        val carry = panel.getValue("carry").jsonObject
++        assertEquals(carry, panel.getValue("state").jsonObject.getValue("carry"))
++        assertEquals(carry, Json.parseToJsonElement(session.snapshot(now)).jsonObject.getValue("carry"))
++        assertEquals("0.65", carry.getValue("ratio").jsonPrimitive.content)
++        assertEquals("60", carry.getValue("untilLevel").jsonPrimitive.content)
++        assertTrue("pPerSec" in carry && "pPerSecShort" in carry)
++
++        val target = assertNotNull(engine.autoTarget(restored, now))
++        val manual = assertNotNull(engine.swipe(restored, target, now, Actor.Player)).state
++        assertTrue(manual.carryPaidP.signum() > 0)
++        assertEquals(0, assertNotNull(engine.swipe(restored, target, now, Actor.Auto)).state.carryPaidP.signum())
++        val repeatTarget = assertNotNull(engine.autoTarget(manual, now))
++        val repeat = assertNotNull(engine.swipe(manual, repeatTarget, now, Actor.Player)).state
++        assertEquals(manual.carryPaidP, repeat.carryPaidP)
++
++        val organic = rules.levelP(35)
++        val tallied = manual.copy(level = 60, runEarned = organic + manual.carryPaidP, prestigePlayMs = 0)
++        val comparison = tallied.copy(runEarned = organic, carryPaidP = BigInteger.ZERO)
++        assertEquals(engine.factoryResetPaid(comparison, now, true), engine.factoryResetPaid(tallied, now, true))
++        val postReset = assertNotNull(engine.factoryReset(tallied, now))
++        assertEquals(0, postReset.carryPPerSecond.signum())
++        assertEquals(active.runEarned, postReset.backup.cloud.carryRecordP)
++    }
++
++    @Test
++    fun returnImprovesPaymentWithinTheOldWindowAndPreservesTheReceipt() {
++        val rules = RuleSet(growthOffer = GrowthOffer.Discount, exReturnPerSkuPermille = 160, exReturnMemory = true)
++        val engine = Engine(rules)
++        val state = engine.newGame(now, 1).copy(level = 36, runEarned = rules.levelP(36),
++            earnRate = BigInteger.valueOf(1_000_000), backup = Backup(cloud = Cloud(exReturnRecordRate = BigInteger.valueOf(2_000_000)))).withAccount { it.copy(ownedEx = ExOffers.ids.toSet()) }
++        val base = Engine(rules.copy(exReturnPerSkuPermille = 0))
++        val sixHours = 6 * 3_600_000L
++        assertTrue(engine.settleOfflineWithBonus(state, sixHours, now).paid > base.settleOfflineWithBonus(state, sixHours, now).paid)
++        for (hours in listOf(6L, 15L)) {
++            val away = hours * 3_600_000L
++            val response = WebSession(engine, state, now).offline(away, now)
++            val receipt = Json.parseToJsonElement(response).jsonObject
++            assertEquals(away.toString(), receipt.getValue("awayMs").jsonPrimitive.content)
++            assertEquals("8820000", receipt.getValue("exExtraOfflineCapMs").jsonPrimitive.content)
++            assertEquals(if (hours == 6L) "0" else "8820000", receipt.getValue("exExtraEligibleMs").jsonPrimitive.content)
++            assertTrue(listOf("paid", "paidShort", "basePaid", "basePaidShort", "bonusPaid", "bonusPaidShort",
++                "exExtraPShort", "offlineBonus").all { it in receipt })
++            System.getenv("NC_SYNC_UI_OUT")?.let { target ->
++                val dir = java.io.File(target).also { it.mkdirs() }
++                java.io.File(dir, "return-${hours}h.json").writeText(response + "\n")
++            }
++        }
++    }
++
++    @Test
++    fun speedWelcomePaysFirstPositiveManualSwipesOncePerAccount() {
++        val engine = Engine(RuleSet(speedWelcomePermille = 2_000))
++        val state = engine.newGame(now, 1).withAccount { it.copy(speedPass = SpeedPass.Turbo, speedPassUntil = now + 3_600_000) }
++        val target = assertNotNull(engine.autoTarget(state, now))
++        val fresh = assertNotNull(engine.swipe(state, target, now, Actor.Player))
++        val used = state.withAccount { it.copy(speedWelcomeSwipes = 3) }
++        val original = assertNotNull(engine.swipe(used, target, now, Actor.Player))
++        assertEquals(original.earned * BigInteger.TWO, fresh.earned)
++        assertEquals(1, SaveCodec.decode(SaveCodec.encode(fresh.state)).account.speedWelcomeSwipes)
++        assertEquals(0, assertNotNull(engine.swipe(state, target, now, Actor.Auto)).state.account.speedWelcomeSwipes)
++        assertEquals(3, original.state.account.speedWelcomeSwipes)
++    }
++
++    @Test
++    fun pacedPriceUsesTheSameQuoteForAffordabilityAndDebit() {
++        val rules = RuleSet(appUpgradePacePermille = 250, filePriceGrowthScalePermille = 3_000)
++        val engine = Engine(rules)
++        val state = engine.newGame(now, 1).copy(appLevels = Catalog.starter.associateWith { 3 }, swipes = 5,
++            upgradeRateReference = BigInteger.valueOf(1_000_000))
++        val opening = engine.upgradePrice(state, "memo")
++        assertEquals(BigInteger.valueOf(250_000), opening)
++        assertEquals(BigInteger.valueOf(2_000_000), engine.upgradePrice(state.copy(prestigePlayMs = 600_001), "memo"))
++        val wallet = state.copy(wallet = opening)
++        assertEquals(BigInteger.ZERO, engine.upgrade(wallet, "memo").wallet)
++        assertEquals(3, engine.upgrade(wallet.copy(wallet = opening - BigInteger.ONE), "memo").appLevels.getValue("memo"))
++        assertTrue(rules.backupPrice(BackupItem.Value, 9) > RuleSet().backupPrice(BackupItem.Value, 9))
++
++        val trackedRules = RuleSet(fileShopRecordFloor = true, fileShopCarryRecord = true, productivePrestige = true)
++        val tracked = Engine(trackedRules)
++        val old = tracked.newGame(now, 11, Backup(baseFilesClaimed = BigInteger.valueOf(2_000_000)))
++            .copy(level = 61, runEarned = trackedRules.levelP(61), prestigePlayMs = 1_500_000)
++        val cycle = assertNotNull(tracked.sync(old, now))
++        assertTrue(cycle.backup.cloud.fileShopPreviousCycleBasis >= BigInteger.valueOf(2_000_000))
++        val live = cycle.copy(level = 25, runEarned = trackedRules.levelP(25), prestigePlayMs = 720_000)
++        val reset = assertNotNull(tracked.factoryReset(live, now))
++        assertEquals(cycle.backup.cloud.fileShopPreviousCycleBasis, reset.backup.fileShopRecordBasis)
++        assertTrue(tracked.backupPrice(reset, BackupItem.Value) >= reset.backup.fileShopRecordBasis / BigInteger.valueOf(5))
++    }
++}

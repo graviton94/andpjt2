@@ -1,0 +1,14 @@
+{
+  "cached": true,
+  "cases": "none,full",
+  "expansion_after_124": true,
+  "first_seed": 7,
+  "integrated_patch_sha256": "42394eb14f1f10283703de8b3e603bacb63325a4f2fbc90f5f2d293b3a8e0bb8",
+  "profiles": "Ads,PassVisible,Spend100",
+  "protect_level": null,
+  "revision": "6ba9580fa453e61d79cb7aaadde4f659ffc672c8",
+  "runner_sha256": "dc4caecef0e2ac834d920e928d1bd896584bab3c29122e44f86377c342765c8a",
+  "seeds": 1,
+  "source_sha256": "59ea87c69faf64fe1f419795f932bc1ffd58061f39f8fa80c8016764595a0944",
+  "through_day": 0
+}

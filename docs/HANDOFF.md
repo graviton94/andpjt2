@@ -154,10 +154,15 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
 7. 앱 색·티어·권역·콤보 단계별 VFX(밸런스 세션 burst 필드 추가 후 완성) → 스토어 스크린샷(영·한, 라이트·다크 번갈아)
 8. 기타 언어(ja · zh-TW · es)
 
-### 밸런스 세션 과제
-- **지시서 v1.0** `docs/prompts/balance-session-v1.0.md`: 규칙 B 엔진 이식, 출시 기준 전면 재밸런싱(손맛 지표 포함), BM·상품 ID, VFX용 데이터
+### 밸런스 세션 · 규칙 B 이식 및 출시 검증
 
-이전 과제(유지)
+- 화면 세션 변경을 `ccr-balance-port`에 병합 후 작업했다. 기준 지시서는 [balance-session-v1.0.md](prompts/balance-session-v1.0.md), 결과와 출시에 남은 조건은 [LAUNCH-V1-REPORT.md](balance/LAUNCH-V1-REPORT.md)에 있다. 84일 시드 8에서 무과금 마지막 앱 중앙 62.50일, 첫 동기화 15.84일로 출시 구간은 미충족이다.
+- 코어에서 같은 앱의 두 줄이 닿으면 즉시 폭발한다. 저장 JSON 외피는 버전 1이고, 규칙 버전 4에서 열린 이전 보드의 폭발 기준을 2로 이관한다.
+- VFX 계약은 [api-changes.md](balance/api-changes.md), 결제 등록 ID와 보상은 [17-monetization.md](bible/17-monetization.md)를 따른다.
+
+v1.1은 화면 원본 `280ec1b`를 `b299f07`에서 병합했다. [작업 지시서](prompts/balance-session-v1.1.md) · [최신 출시 판정과 재현](balance/LAUNCH-V11-REPORT.md) · [패스 BM과 복귀 계약](balance/api-changes.md). 실제 복귀 카드에서 광고 콜백 후 코어 지급 호출을 잇는 작업은 화면 트랙에 남아 있다.
+
+### 별도 트랙 · 무한 강화와 EX 사전 이식 기준
 1. GB 동기화 직후 가속 복구: Lv60 재도달 비율 ≤0.80이 인접 회차 쌍의 70% 이상
 2. EX: 단조성 역전 0곳, 짧은 부재(45초 ≥22/24, 3스와이프 ≥18/24)
 3. P 대기 목표 구간 70%, 초기화 지급으로 강화 3~8개 ≥60%

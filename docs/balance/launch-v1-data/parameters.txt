@@ -1,0 +1,2 @@
+launch-v1;days=84;seeds=8;profiles=[Free, Ads, Pass, Spend30, Spend100];modes=[Auto, Best, NoReset, Random];rules=
+active auto-settlement permille=600;8 auto cases replaced by verified engine run t;56 same-seed player cases kept

@@ -1,0 +1,12 @@
+{
+  "cached": true,
+  "cases": "none,full",
+  "first_seed": 7,
+  "profiles": "Ads",
+  "protect_level": 118,
+  "revision": "85a0fe1e31049e1b064d834711f29018abf9421a",
+  "runner_sha256": "b28198db04181087b3197cafeb36a6297c43a520d3db9a1fc54be361c19f81c0",
+  "seeds": 1,
+  "source_sha256": "b04578d0007d7d0feb707a90e79b4da2fdd53d2fc67630b20d14ecd59e7a8a99",
+  "through_day": 56
+}

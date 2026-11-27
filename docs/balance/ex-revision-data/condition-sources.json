@@ -1,0 +1,28 @@
+{
+  "revised": {
+    "cached": true,
+    "cases": "revised",
+    "first_seed": 1,
+    "profiles": "all",
+    "protect_level": null,
+    "revision": "54f7599911f3593e62f9fc0e41f334b2a4849ce4",
+    "runner_sha256": "ea43d8436849fd48ad206bb097c827bcfba994dc222aa314a975ea3c3b6449ec",
+    "seeds": 5,
+    "source_sha256": "3c29846972698c865c839469396416722f7b68b44d74064ec81509853d312b9d",
+    "through_day": 56,
+    "verified_source_commit": "d2daa4ea1ce35243eaa94ae52c18b1504775ea13"
+  },
+  "revised_active": {
+    "cached": true,
+    "cases": "revised_active",
+    "first_seed": 1,
+    "profiles": "Free,PassVisible,Spend100",
+    "protect_level": null,
+    "revision": "65308b3813f2b6b72422f8f9de7c195f4da91bad",
+    "runner_sha256": "ea43d8436849fd48ad206bb097c827bcfba994dc222aa314a975ea3c3b6449ec",
+    "seeds": 3,
+    "source_sha256": "710ac7dcb07b85de6231399146e9610a62a0c0e75ed7a901a07b7b022e079229",
+    "through_day": 56,
+    "verified_source_commit": "65308b3813f2b6b72422f8f9de7c195f4da91bad"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "cached": true,
+  "cases": "none",
+  "days": 168,
+  "first_seed": 1,
+  "integrated_patch_sha256": "42394eb14f1f10283703de8b3e603bacb63325a4f2fbc90f5f2d293b3a8e0bb8",
+  "profiles": "Free,Spend30,Spend100",
+  "protect_level": null,
+  "revision": "d074352913e42215e56c96b3275f18e340679125",
+  "runner_sha256": "219dbaf98db0b77a2616a17a7e592634262e5e6941c6b9c6407579b2dd60fb06",
+  "seeds": 2,
+  "source_sha256": "59ea87c69faf64fe1f419795f932bc1ffd58061f39f8fa80c8016764595a0944",
+  "through_day": 56
+}

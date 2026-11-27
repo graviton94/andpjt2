@@ -1,0 +1,395 @@
+{
+  "base": "dbdf26c23c4a6fad230c49e63e4295f338d2a01e",
+  "files": {
+    "BaselinePurchases/Loop/daily.csv.gz": {
+      "csv_sha256": "8d49ddcc3a5820ca2873c34ea530fc844dbd118a207bd25adf0ebde4738c413d",
+      "rows": 8064
+    },
+    "BaselinePurchases/Loop/prestige.csv.gz": {
+      "csv_sha256": "d449d812fc474aa4761b235fa1409a055c379513fc1ff70c300010ba0738e19f",
+      "rows": 16891
+    },
+    "BaselinePurchases/Loop/reaches.csv.gz": {
+      "csv_sha256": "32551d080d090948aa74d9bfb9dcafae1265b515d4b573d51b215d00b46b9f6a",
+      "rows": 41734
+    },
+    "FileGrowth/Loop/daily.csv.gz": {
+      "csv_sha256": "d052a5806d229e3dec3c5a5141de262abc0663c5c5db2d61ad9af73696d854f1",
+      "rows": 8064
+    },
+    "FileGrowth/Loop/prestige.csv.gz": {
+      "csv_sha256": "aa4c342e125d400a298a74184b2f43e863fc9bdc369f222cd2946604a8e3b7c3",
+      "rows": 18673
+    },
+    "FileGrowth/Loop/reaches.csv.gz": {
+      "csv_sha256": "ac3c6abd10aa171fbb2c34836468cdddadff7a754908d93496c858b15c3134c8",
+      "rows": 49994
+    },
+    "FileMemory/Loop/daily.csv.gz": {
+      "csv_sha256": "12eed315a1b9f8360507bf2b50c0a4a2947b4d3d6f73ecc2406bcf14a294e638",
+      "rows": 8064
+    },
+    "FileMemory/Loop/prestige.csv.gz": {
+      "csv_sha256": "c70ade5d3924b503a73158f2146498876e00812290507c74d833af8d103ef914",
+      "rows": 17271
+    },
+    "FileMemory/Loop/reaches.csv.gz": {
+      "csv_sha256": "30245b38e2f96f88002ce7b3fe7dc7fefbf95465460fb9733c930f769ceca21a",
+      "rows": 43450
+    },
+    "Hold65/Loop/daily.csv.gz": {
+      "csv_sha256": "8a218eecae4cc8e4af4056f3d29a00adf61f70604649db71eb30a271ae981175",
+      "rows": 30240
+    },
+    "Hold65/Loop/prestige.csv.gz": {
+      "csv_sha256": "9f8770310b1beb8f0488649e2029cbad4fa00ba4de4013db74d1960926db06e7",
+      "rows": 66593
+    },
+    "Hold65/Loop/reaches.csv.gz": {
+      "csv_sha256": "1f3948c4473a75c5dc87c4f76d23a4224d31ab71266ac25fa528e19d47a435f5",
+      "rows": 187740
+    },
+    "Hold90/Loop/daily.csv.gz": {
+      "csv_sha256": "9d871172a94b84bdb83ac3019bb69b3afd9e9071674a53241cf91fdeae281039",
+      "rows": 30240
+    },
+    "Hold90/Loop/prestige.csv.gz": {
+      "csv_sha256": "4d29310e115d4523ace09561f5187039c39f8dbb8c75186235e448921b1489c9",
+      "rows": 66581
+    },
+    "Hold90/Loop/reaches.csv.gz": {
+      "csv_sha256": "ca7aa7545ac70d3fde1b70cf5b7ee7a322b1bd59ab7818c458d357f73689822d",
+      "rows": 188235
+    },
+    "Linear35/Loop/daily.csv.gz": {
+      "csv_sha256": "3e44c9854696e06c32906762b1a44d9e23f9d044c61def6a328000f4c50df534",
+      "rows": 30240
+    },
+    "Linear35/Loop/prestige.csv.gz": {
+      "csv_sha256": "5d7abd4bbeb6244786fc976933c86bd7c644fdcea20593a9dd041080833f8e91",
+      "rows": 66592
+    },
+    "Linear35/Loop/reaches.csv.gz": {
+      "csv_sha256": "495da6cf001fafb964b9272f774f09810dc248de563fb960b738465b787f1870",
+      "rows": 181672
+    },
+    "Long336/Loop/daily.csv.gz": {
+      "csv_sha256": "9566936e24c0d7c2b93b67405579d353677ccc20bd1187dddd15523fe7561b37",
+      "rows": 12096
+    },
+    "Long336/Loop/prestige.csv.gz": {
+      "csv_sha256": "2914fa354e5669e686528b05f8fc4f3f2a877d3d35fa2e1817c7cf0c7def9fc2",
+      "rows": 30803
+    },
+    "Long336/Loop/reaches.csv.gz": {
+      "csv_sha256": "dc853cdb7fea8ba99af1d6f578c157067350231a88f6b2d5e168ed1a951d64ba",
+      "rows": 98016
+    },
+    "Paced/Loop/daily.csv.gz": {
+      "csv_sha256": "94497ddab10f3bc9200a08f03feaa061906f7fa878b30f65ca39df0b4dccc1de",
+      "rows": 30240
+    },
+    "Paced/Loop/prestige.csv.gz": {
+      "csv_sha256": "35ae3eb87e9f5b184ce5fd3f438b286d42860fc123a762744e5032d6556fccb2",
+      "rows": 62082
+    },
+    "Paced/Loop/reaches.csv.gz": {
+      "csv_sha256": "24b9de4c3583bc12f11bc1334011f2f6dbe0945a51a9909cffb74b5fedbde512",
+      "rows": 161312
+    },
+    "PowerFollow/Loop/daily.csv.gz": {
+      "csv_sha256": "b5215342f21cdfe7c0a1019e62165b78d14d0b9293abf6d5120825bf833c5177",
+      "rows": 30240
+    },
+    "PowerFollow/Loop/prestige.csv.gz": {
+      "csv_sha256": "1a8ceb48e7cbec85a138aefedfef1a8be59b3813197818f7b88e746818cfc138",
+      "rows": 82763
+    },
+    "PowerFollow/Loop/reaches.csv.gz": {
+      "csv_sha256": "1caf745e621db9bf96170971f17b658e1806c64656f874fca86c383ca3152639",
+      "rows": 244585
+    },
+    "PriceFollow/Loop/daily.csv.gz": {
+      "csv_sha256": "37792e565ce5ed49e6f363abf64ab70dcddae9d35340ce36d8482fa336c5eb86",
+      "rows": 30240
+    },
+    "PriceFollow/Loop/prestige.csv.gz": {
+      "csv_sha256": "65aa8045977784a78d075fbded75b2530ff4b16e31c20188024fb8a04538eebd",
+      "rows": 58991
+    },
+    "PriceFollow/Loop/reaches.csv.gz": {
+      "csv_sha256": "e35f77abc8513e6af7a54b40acce88dd3005b1bf0285fe30e32bfcdca94ac3d7",
+      "rows": 146449
+    },
+    "Return120/Light3/daily.csv.gz": {
+      "csv_sha256": "13982c34b0a70a400c604e32a57fc226d4c4953685a6c3d3f6fa5a216a7c8acc",
+      "rows": 30240
+    },
+    "Return120/Light3/prestige.csv.gz": {
+      "csv_sha256": "431d5e790acc607426ab0f7eaa915390528ddae695f19211d0b4143cad32ec3b",
+      "rows": 1723
+    },
+    "Return120/Light3/reaches.csv.gz": {
+      "csv_sha256": "4b7c2d142182bd34bae047863e94dbbcc8cbd7ffddba31075424262ad2381305",
+      "rows": 3998
+    },
+    "Return120/Light45/daily.csv.gz": {
+      "csv_sha256": "91e3f93aa232310a3eec0db0d479d6b0f6af0f2948b3e04f7f263b1196222a2b",
+      "rows": 30240
+    },
+    "Return120/Light45/prestige.csv.gz": {
+      "csv_sha256": "7f47b7d661b463fb8db5d79ab12ac913340ea5b17f4ffeaa8a62f1c243e592f0",
+      "rows": 5160
+    },
+    "Return120/Light45/reaches.csv.gz": {
+      "csv_sha256": "0c5e8b73e982fa783ddfe7801defdb4ba0f1ad17089e19160c91003ce89cee27",
+      "rows": 11037
+    },
+    "Return60/Light3/daily.csv.gz": {
+      "csv_sha256": "0dee5d1e45eede8253124f383683f09066441355f9cb88cd20bd3f826b3c583c",
+      "rows": 30240
+    },
+    "Return60/Light3/prestige.csv.gz": {
+      "csv_sha256": "917177f58a744a6306199c6e950d9c0c3312a53773bbc134bc88a97c15a8d436",
+      "rows": 1696
+    },
+    "Return60/Light3/reaches.csv.gz": {
+      "csv_sha256": "838a4a74b6c0280ed58812bc235a27c758909b46abeac00a36885964fb95110e",
+      "rows": 3945
+    },
+    "Return60/Light45/daily.csv.gz": {
+      "csv_sha256": "8e90539908f1ec0c81b4b880ad2bcede3361ede95feab1adcabfcf7de755d4fb",
+      "rows": 30240
+    },
+    "Return60/Light45/prestige.csv.gz": {
+      "csv_sha256": "0d4aee79ca029b1069645ce27093af33acbe4df9e16dd4bf1fc52785280efa37",
+      "rows": 5113
+    },
+    "Return60/Light45/reaches.csv.gz": {
+      "csv_sha256": "4fb5aadc5a0c901513b9e8483fa4deca01535340767cde01b5c4312fdeab365f",
+      "rows": 10934
+    },
+    "ReturnGuard/Light3/daily.csv.gz": {
+      "csv_sha256": "3d836628520037cbc1255276288a00f2284c56c47c211852000f24cbd7aaf94a",
+      "rows": 30240
+    },
+    "ReturnGuard/Light3/prestige.csv.gz": {
+      "csv_sha256": "8a75ef3fc2e4ab6d0363590d384c14e82cad479d29bff9949a1cefda84a57f4a",
+      "rows": 2554
+    },
+    "ReturnGuard/Light3/reaches.csv.gz": {
+      "csv_sha256": "82304a44bbbdbbc77210a506c0cfabe347778ae823bfdce2ab2c0b2b508e258c",
+      "rows": 5783
+    },
+    "ReturnGuard/Light45/daily.csv.gz": {
+      "csv_sha256": "7b6d0ea0c19ec7592723139da5e483f9e425e4527d0604203583b05b3ac732e9",
+      "rows": 30240
+    },
+    "ReturnGuard/Light45/prestige.csv.gz": {
+      "csv_sha256": "af8e81508c11e11e851ec12b9eaf7e3ffb729abe91234883b5be60aab97197d4",
+      "rows": 8071
+    },
+    "ReturnGuard/Light45/reaches.csv.gz": {
+      "csv_sha256": "5645005c5d3ccc6a20647c4d8b96e1641172ab38a4df38e3d5cfd3b24b85f678",
+      "rows": 16841
+    },
+    "ReturnGuard/Quarter/daily.csv.gz": {
+      "csv_sha256": "c353ede15590c938e3c8ef8a8b817773e01a873490d2d62aff22bae7d79578c8",
+      "rows": 30240
+    },
+    "ReturnGuard/Quarter/prestige.csv.gz": {
+      "csv_sha256": "c03eaf0a63289e733cadc7f36bf2fd5c6915a070759163c97488684f6ced0e68",
+      "rows": 16831
+    },
+    "ReturnGuard/Quarter/reaches.csv.gz": {
+      "csv_sha256": "c1f796509ee9608206d394e91b63fb8b01e6a47480ae1ad3c396f259a6b84e01",
+      "rows": 41596
+    },
+    "ReturnMemory/Light3/daily.csv.gz": {
+      "csv_sha256": "56dafaf0676f12baec49b8d9b3aaed302143e2943e486b5da6cd9106f61ffbd6",
+      "rows": 30240
+    },
+    "ReturnMemory/Light3/prestige.csv.gz": {
+      "csv_sha256": "8a75ef3fc2e4ab6d0363590d384c14e82cad479d29bff9949a1cefda84a57f4a",
+      "rows": 2554
+    },
+    "ReturnMemory/Light3/reaches.csv.gz": {
+      "csv_sha256": "5412207139d8ede0886e5bc7d681cfc4cbd0892b7b50c5b9fece864884cd4b94",
+      "rows": 5783
+    },
+    "ReturnMemory/Light45/daily.csv.gz": {
+      "csv_sha256": "d996cae0104ff28045920847dc49a99cb8841bdcf9218fc5857a42fe4d1d1892",
+      "rows": 30240
+    },
+    "ReturnMemory/Light45/prestige.csv.gz": {
+      "csv_sha256": "dffee592195d7ddc87ccc108239fdba76f2e8479b565f5c0b1b048e7aa60c611",
+      "rows": 8085
+    },
+    "ReturnMemory/Light45/reaches.csv.gz": {
+      "csv_sha256": "17d7416261e61b2a2cb6cfc873d7784b2ae26403baf3b28b755cd201597f57b7",
+      "rows": 16844
+    },
+    "ReturnMemory/Quarter/daily.csv.gz": {
+      "csv_sha256": "872c08be51d7d053423bbe9153dd87b0100aee42f70a23688e161f2a51394614",
+      "rows": 30240
+    },
+    "ReturnMemory/Quarter/prestige.csv.gz": {
+      "csv_sha256": "2d0da5c44bf28fb076a102bf8383f3ed684e6af5ba3020000448c4c334c62c58",
+      "rows": 16831
+    },
+    "ReturnMemory/Quarter/reaches.csv.gz": {
+      "csv_sha256": "dfe21e309887216cf99a22d8324ed975bda5a1a035afd7baab604a9196d98d77",
+      "rows": 41646
+    }
+  },
+  "runs": {
+    "BaselinePurchases/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 48,
+      "profiles": 6,
+      "seeds": 8
+    },
+    "FileGrowth/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 48,
+      "profiles": 6,
+      "seeds": 8
+    },
+    "FileMemory/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 48,
+      "profiles": 6,
+      "seeds": 8
+    },
+    "Hold65/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Hold90/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Linear35/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Long336/Loop": {
+      "arms": 1,
+      "days": 336,
+      "paths": 36,
+      "profiles": 6,
+      "seeds": 6
+    },
+    "Paced/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "PowerFollow/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "PriceFollow/Loop": {
+      "arms": 1,
+      "days": 168,
+      "paths": 180,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Return120/Light3": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Return120/Light45": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Return60/Light3": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "Return60/Light45": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "ReturnGuard/Light3": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "ReturnGuard/Light45": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "ReturnGuard/Quarter": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30,
+      "shared_source": "non-speed profiles use the identical ReturnMemory execution"
+    },
+    "ReturnMemory/Light3": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "ReturnMemory/Light45": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    },
+    "ReturnMemory/Quarter": {
+      "arms": 3,
+      "days": 56,
+      "paths": 540,
+      "profiles": 6,
+      "seeds": 30
+    }
+  },
+  "screen_source": "5a64eeb673e04e4628b9775461245df732bcd19b",
+  "source_sha256": {
+    "tools/economy-sim/growth-loop/CadenceProbe.kt": "44b725d5917bee0dfb10ebf4479425244f4bc8c61adf084da81534aa19354b93",
+    "tools/economy-sim/growth-loop/analyze-sync-followup.py": "c97449446a63d41c346898ed90e28170409f26fe2379ad389636268836ff8028",
+    "tools/economy-sim/growth-loop/sync-followup-core.patch": "d1805d1d478e9cdf7c9d8cc083ebff5457cc5ff1a13d59eca23c23aa294a0328",
+    "tools/economy-sim/growth-loop/sync-return-test.js": "5a1dbb4eb1735c236fbf9621a08a257328de7fbe549d73fb6a3e2e7c7b023e60"
+  }
+}

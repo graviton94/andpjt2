@@ -6,18 +6,20 @@ import java.math.BigInteger.TEN
 
 private fun big(x: Long): BigInteger = BigInteger.valueOf(x)
 
+internal const val APP_UNLOCK_RULES_VERSION = 5
+
 /**
  * Every tunable number of the core rules. The engine reads only this; a rules change is a new [version].
  * Economy values are drafts until the economy simulator (economy v0.2) fixes them.
  */
 data class RuleSet(
-    val version: Int = 3,
+    val version: Int = APP_UNLOCK_RULES_VERSION,
     // Board
     val baseRows: Int = 7,
     val maxRows: Int = 12,
-    val threshold: Int = 4,
+    val threshold: Int = 2,
     val countWeights: List<Int> = listOf(1, 2, 1),
-    val sandwichPercent: Int = 35,
+    val sandwichPercent: Int = 60,
     /** Extra sandwich chance per active app above four: a bigger deck still gets proposals. */
     val sandwichPerExtraApp: Int = 2,
     /** One extra board row per this many active apps above four. */
@@ -38,6 +40,7 @@ data class RuleSet(
     val regionDigitPercent: Int = 10,
     val categoryDigitPercent: Int = 12,
     // Monetization (docs/bible/17-monetization.md)
+    val commerce: CommerceOffers = CommerceOffers(),
     val premiumMaxStars: Int = 5,
     /** Each premium star multiplies the app's value by this. */
     val premiumStepPermille: Int = 2_000,
@@ -47,7 +50,7 @@ data class RuleSet(
     val premiumStarShare: List<Int> = listOf(50, 100, 170, 280, 400),
     /**
      * 30-day consecutive attendance board (missed day → day 1). Currencies alternate; days 10, 20, 30 are big.
-     * About 1,300 data a board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
+     * 1,520 data per board, so 12 steady weeks still pay ≈ [premiumBudget] with the daily missions.
      */
     val attendanceBoard: List<AttendReward> = run {
         val B = CreditItem.Battery; val Bo = CreditItem.Boost; val W = CreditItem.Warp; val O = CreditItem.Overclock; val BB = CreditItem.BackupBoost
@@ -86,14 +89,19 @@ data class RuleSet(
     val energyCap: Int = 12,
     val chargeMs: Long = 3_000,
     val autoIntervalMs: Long = 4_500,
+    /** Active auto-clean settles at this fraction of equivalent player P before the swipe cap. */
+    val autoSwipePermille: Int = 600,
     /** AutoClean backup level at which auto starts looking one move ahead. */
     val smartAutoLevel: Int = 5,
     // Overload and igniters
-    val gaugePerMerge: Int = 4,
-    val gaugePerBurst: Int = 12,
+    val gaugePerMerge: Int = 0,
+    val gaugePerBurst: Int = 1,
     /** Extra gauge for a burst per tier it sits below the deck's best app: low tiers ignite. */
     val igniterGaugePerTier: Int = 4,
     val waveFactor: Int = 3,
+    val waveIncomePermille: Int = 1_000,
+    /** A charged gauge waits at 100 until this much wall-clock time has passed since the last wave. */
+    val overloadMinIntervalMs: Long = 360_000,
     // Interruptions (base rules, not cards)
     val spamEverySwipes: Int = 11,
     val spamCopyAfterSwipes: Int = 3,
@@ -102,6 +110,8 @@ data class RuleSet(
     val callEverySwipes: Int = 23,
     val callUnlockLevel: Int = 2,
     val callPauseMs: Long = 5_000,
+    /** Shared arrival cooldown for call, low battery, crash, drill, and lotto. 0 preserves legacy cadence. */
+    val majorEventCooldownMs: Long = 450_000,
     val otpLifeSwipes: Int = 3,
     // Interruptions added in rules v3.1 and timed cards
     val lowBatteryLevel: Int = 9,
@@ -130,16 +140,19 @@ data class RuleSet(
      */
     val upgradeGrowthPerTierPermille: Int = 0,
     // Progress
-    val resetLevel: Int = 25,
+    val resetLevel: Int = 19,
     /**
      * Level is the run's cumulative P: reaching level L needs levelPBase × ratio^(L−2), the ratio rising by
-     * [levelRatioStepPermille] every level after [levelLateFrom]. Leveling is exponential in P, so backup-file
-     * multipliers speed it up directly.
+     * [levelRatioStepPermille] every level from [levelLateFrom]. The transition from [lateGrowthFrom]
+     * onward scales that ratio by [lateGrowthPermille]. Backup-file multipliers speed up leveling.
      */
     val levelPBase: Long = 30,
     val levelRatioPermille: Int = 2_330,
     val levelLateFrom: Int = 25,
-    val levelRatioStepPermille: Int = 5,
+    val levelRatioStepPermille: Int = 1,
+    /** Multiplier on level-to-level P growth from this level onward. */
+    val lateGrowthFrom: Int = 74,
+    val lateGrowthPermille: Int = 860,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
     /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
@@ -147,7 +160,13 @@ data class RuleSet(
     // Offline settlement
     /** Offline pays the auto-clean rate (≈ this ‰ of the direct-play rate) × efficiency, up to the cap (research E1). */
     val offlineAutoPermille: Int = 400,
-    val offlineEfficiencyPercent: Int = 3,
+    /** Number of swipes over which recent P/minute is smoothed. The baseline weight of a new swipe is 1/window. */
+    val recentIncomeWindow: Int = 180,
+    val offlineEfficiencyPercent: Int = 9,
+    /** Offline multiplier for Ultra alone. Multiplies the payout after the pass reward. */
+    val ultraOfflinePermille: Int = 1_500,
+    /** Offline multiplier for an active pass or through the UTC day following a watched rewarded ad. */
+    val adWatchOfflinePermille: Int = 1_700,
     val offlineCapSteps: List<Pair<Int, Int>> = listOf(1 to 8, 7 to 10, 35 to 12),
     /** Content priced from the level curve: a pro version costs this ‰ of the P its level needs. */
     val proPricePermille: Int = 1_000,
@@ -159,7 +178,7 @@ data class RuleSet(
      * exponent halves. Paid as the delta over files already earned (research A2). The anchor follows the level
      * curve, so reaching the reset level always pays the first 10 files whatever the value tuning.
      */
-    val backupExponentPermille: Int = 400,
+    val backupExponentPermille: Int = 450,
     val backupSoftcapDigits: Int = 8,
     /** Backup files paid by a run that just reaches the reset level. */
     val backupBase: Long = 10,
@@ -173,8 +192,9 @@ data class RuleSet(
     /** Region × category × diversity synergy together multiply a value by at most this ‰: below one tier step (×[tierBase]). */
     val synergyCapPermille: Int = 4_000,
     // 2nd prestige: 클라우드 동기화
-    val syncLevel: Int = 60,
-    /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[syncLevel] run)^exponent⌋, paid as a delta. */
+    val syncLevel: Int = 75,
+    val cloudAnchorLevel: Int = 60,
+    /** GB total = ⌊cloudBase × (backup files of the best cycle ÷ files of a Lv[cloudAnchorLevel] run)^exponent⌋, paid as a delta. */
     val cloudBase: Long = 10,
     val cloudExponentPermille: Int = 500,
     /** Every GB ever synced adds this % to backup files paid by factory resets. */
@@ -186,7 +206,7 @@ data class RuleSet(
     fun minSlots(level: Int) = step(minSlotSteps, level)
     fun eventSlots(level: Int, backup: Backup) = step(eventSlotSteps, level) + if (level >= 6) backup.lv(BackupItem.EventSlot) + backup.cloud.lv(CloudItem.CloudEventSlot) else 0
 
-    /** XP to leave [level], in hundredths of a point. ⌈5 × L^1.4 × 1.09^(L−1)⌉ points. */
+    /** Cumulative run P for each level. BigDecimal division rounds each step half-even at scale zero. */
     private val levelTable: List<BigInteger> by lazy {
         val t = mutableListOf(BigInteger.ZERO, BigInteger.ZERO) // index = level; level 1 is free
         var q = java.math.BigDecimal(levelPBase)
@@ -194,7 +214,8 @@ data class RuleSet(
         for (l in 2..400) {
             t += q.toBigInteger()
             if (l >= levelLateFrom) ratio += levelRatioStepPermille
-            q = q * java.math.BigDecimal(ratio) / java.math.BigDecimal(1_000)
+            val lateMultiplier = if (l >= lateGrowthFrom) lateGrowthPermille else 1_000
+            q = q * java.math.BigDecimal(ratio.toLong() * lateMultiplier) / java.math.BigDecimal(1_000_000)
         }
         t
     }
@@ -205,9 +226,13 @@ data class RuleSet(
     /** Level for [runEarned]; FastBoot lowers every threshold by 10% per step (multiplicative). */
     fun levelFor(runEarned: BigInteger, fastBoot: Int): Int {
         val boosted = runEarned * big(10).pow(fastBoot) / big(9).pow(fastBoot)
-        var l = 1
-        while (l + 1 < levelTable.size && boosted >= levelTable[l + 1]) l++
-        return l
+        var low = 1
+        var high = levelTable.lastIndex
+        while (low < high) {
+            val mid = (low + high + 1) ushr 1
+            if (boosted >= levelTable[mid]) low = mid else high = mid - 1
+        }
+        return low
     }
 
     /** Run P at which [level] is reached with [fastBoot] (the raw threshold the player must earn). */
@@ -219,17 +244,25 @@ data class RuleSet(
         return base * (100 + 10 * backup.lv(BackupItem.Synergy)) / 100
     }
 
-    /** One notification before deck multipliers: 10^(tier−1) × level × (2 + 0.1k)^milestones × 1.25^value. */
-    fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger> {
-        val m = levelMilestones.count { level >= it }
-        val k = backup.lv(BackupItem.Milestone).toLong()
+    private data class BackupValue(val source: Backup, val numerator: BigInteger, val denominator: BigInteger)
+    private val backupValues = ThreadLocal<BackupValue>()
+    private fun backupValue(backup: Backup): BackupValue {
+        backupValues.get()?.takeIf { it.source === backup }?.let { return it }
         val v = backup.lv(BackupItem.Value)
         val passive = Math.round(Math.pow(1.0 + lifetimeFilePercent / 100.0 * backup.lifetime, lifetimeExponentPermille / 1000.0) * 1e6)
         val sync = backup.cloud.lv(CloudItem.SyncValue)
         val ai = backup.cloud.lv(CloudItem.AiBoost)
-        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * big(5).pow(v) * big(passive) * big(2).pow(sync) * big(3).pow(ai)
-        val den = TEN.pow(m) * big(4).pow(v) * big(1_000_000)
-        return num to den
+        return BackupValue(backup, big(5).pow(v) * big(passive) * big(2).pow(sync) * big(3).pow(ai),
+            big(4).pow(v) * big(1_000_000)).also(backupValues::set)
+    }
+
+    /** One notification before deck multipliers, from its app rank and permanent upgrades. */
+    fun baseValue(app: AppDef, level: Int, backup: Backup): Pair<BigInteger, BigInteger> {
+        val m = levelMilestones.count { level >= it }
+        val k = backup.lv(BackupItem.Milestone).toLong()
+        val value = backupValue(backup)
+        val num = big(tierBase).pow(app.tier - 1) * big(level.toLong()) * big(20 + k).pow(m) * value.numerator
+        return num to TEN.pow(m) * value.denominator
     }
 
     /**
@@ -237,17 +270,38 @@ data class RuleSet(
      * Unlocks are permanent (Engine.unlocked), so in a later run the price — not the level — sets the order:
      * high tiers stay out of reach at the start of a run and are bought one after another.
      */
-    fun appPrice(app: AppDef): BigInteger {
+    private val purchasePrices = java.util.concurrent.ConcurrentHashMap<AppDef, BigInteger>()
+    fun appPrice(app: AppDef): BigInteger = purchasePrices.computeIfAbsent(app) {
         val ladder = big(appPriceBase) * big(appPriceTierRatio).pow(app.tier - 1) * big(appPriceOrderPermille[app.order].toLong()) / big(1_000)
-        return ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
+        ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
     }
 
     fun upgradeGrowth(app: AppDef): Int = upgradeGrowthPermille + upgradeGrowthPerTierPermille * (app.tier - 1)
 
+    private data class RankQuote(val level: Int, val numerator: BigInteger, val denominator: BigInteger, val price: BigInteger)
+    private val nextQuotes = ThreadLocal.withInitial { mutableMapOf<AppDef, RankQuote>() }
     fun upgradePrice(app: AppDef, level: Int): BigInteger {
-        val base = appPrice(app) * big(upgradeSharePermille.toLong()) / big(1_000)
-        val g = upgradeGrowth(app).toLong()
-        return (base * big(g).pow(level - 1) / big(1_000).pow(level - 1)).max(ONE)
+        val quotes = nextQuotes.get()
+        val last = quotes[app]
+        if (last != null && last.level == level) return last.price
+        val growth = big(upgradeGrowth(app).toLong())
+        val thousand = big(1_000)
+        val divisor = growth.gcd(thousand)
+        val numeratorStep = growth / divisor
+        val denominatorStep = thousand / divisor
+        val numerator: BigInteger
+        val denominator: BigInteger
+        if (last != null && level == last.level + 1) {
+            numerator = last.numerator * numeratorStep
+            denominator = last.denominator * denominatorStep
+        } else {
+            val base = appPrice(app) * big(upgradeSharePermille.toLong()) / thousand
+            numerator = base * numeratorStep.pow(level - 1)
+            denominator = denominatorStep.pow(level - 1)
+        }
+        val price = (numerator / denominator).max(ONE)
+        quotes[app] = RankQuote(level, numerator, denominator, price)
+        return price
     }
 
 
@@ -284,7 +338,7 @@ data class RuleSet(
 
     /** Total GB ever earnable from a cycle that earned [cycleFiles] backup files. */
     fun cloudTotal(cycleFiles: Long): Long {
-        val anchor = backupTotal(levelP(syncLevel))
+        val anchor = backupTotal(levelP(cloudAnchorLevel))
         if (cycleFiles < anchor || anchor <= 0) return 0
         return Math.floor(cloudBase * Math.pow(cycleFiles.toDouble() / anchor, cloudExponentPermille / 1000.0)).toLong()
     }

@@ -1,6 +1,7 @@
 package com.graviton94.notificationcleaner
 
 import android.annotation.SuppressLint
+import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -36,6 +37,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Telemetry.init(applicationContext)
+        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        WebView.setWebContentsDebuggingEnabled(debuggable)
+        val testQuery = if (debuggable && intent.getBooleanExtra("balance_smoke", false)) "?auto=0" else ""
         bridge = GameBridge(applicationContext)
         val ads = Ads(this)
         bridge.ads = ads
@@ -73,7 +77,7 @@ class MainActivity : ComponentActivity() {
                     return true
                 }
             }
-            loadUrl("https://appassets.androidplatform.net/assets/game/index.html")
+            loadUrl("https://appassets.androidplatform.net/assets/game/index.html" + testQuery)
         }
         setContentView(web)
         bridge.js = { script -> web.post { web.evaluateJavascript(script, null) } }

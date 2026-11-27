@@ -44,8 +44,10 @@ data class Backup(
     val bestLevel: Int = 0,
     /** Best run P ever: backup files pay only for beating it. */
     val bestRunP: BigInteger = BigInteger.ZERO,
-    /** 2nd prestige: survives a sync, which wipes everything else here except [bestLevel]. */
+    /** 2nd prestige: survives a sync together with the app unlock records. */
     val cloud: Cloud = Cloud(),
+    /** Highest level earned before the app unlock gates moved in rules v5. */
+    val legacyAppUnlockLevel: Int = 0,
 ) {
     fun lv(item: BackupItem): Int = items[item] ?: 0
 }
@@ -92,6 +94,9 @@ data class GameState(
     val bestChain: Int = 0,
     val level: Int = 1,
     val swipes: Int = 0,
+    val nextOverloadAt: Long = 0,
+    val nextMajorEventAt: Long = 0,
+    val previousMajorEvent: String? = null,
     val autoPausedUntil: Long = 0,
     val regionCleared: Map<Region, BigInteger> = emptyMap(),
     val categoryCleared: Map<Category, BigInteger> = emptyMap(),
@@ -158,13 +163,19 @@ data class EarnCtx(
     val pile: Int = 0,
     /** 수입 부스트 is running. */
     val boosted: Boolean = false,
+    val effects: MutableSet<String>? = null,
 )
 
 /** What happened, in order. The UI replays these; the state is already final. */
+data class BurstSynergy(val kind: String, val key: String, val percent: Int)
+
 sealed interface Beat {
     data class Swiped(val row: Row, val earned: BigInteger) : Beat
     data class Merged(val into: Row, val fromId: Long) : Beat
-    data class Burst(val row: Row, val chain: Int, val earned: BigInteger) : Beat
+    data class Burst(
+        val row: Row, val chain: Int, val earned: BigInteger,
+        val valueApp: String, val synergy: BurstSynergy? = null, val effects: Set<String> = emptySet(),
+    ) : Beat
     data class Wave(val index: Int, val chain: Int, val cleared: BigInteger, val earned: BigInteger) : Beat
     data class Spawned(val row: Row) : Beat
     data class FreeUpgrade(val app: String, val level: Int) : Beat
@@ -177,7 +188,7 @@ data class SwipeOutcome(
     val state: GameState,
     val beats: List<Beat>,
     val earned: BigInteger,
-    /** Bursts + overload waves. */
+    /** Scoring chain number, including chain-number effects and overload waves. */
     val chain: Int,
     val cleared: BigInteger,
     val overload: Boolean,
@@ -204,6 +215,30 @@ internal class Rng(var seed: Long) {
         return weights.lastIndex
     }
 }
+
+data class OfflineBonusStatus(
+    val rewardBonusPermille: Int,
+    val ultraBonusPermille: Int,
+    val adLeftMs: Long,
+    val passLeftMs: Long,
+    val ultraLeftMs: Long,
+) {
+    val rewardActive get() = adLeftMs > 0 || passLeftMs > 0
+    val ultraWithPassMultiplierPermille get() =
+        ((1_000L + rewardBonusPermille) * (1_000L + ultraBonusPermille) / 1_000L).toInt()
+    val multiplierPermille get() = when {
+        ultraLeftMs > 0 -> ultraWithPassMultiplierPermille
+        rewardActive -> 1_000 + rewardBonusPermille
+        else -> 1_000
+    }
+}
+
+data class OfflineSettlement(
+    val state: GameState,
+    val paid: BigInteger,
+    val basePaid: BigInteger,
+    val bonus: OfflineBonusStatus,
+)
 
 class Engine(val rules: RuleSet = RuleSet()) {
     private val hundred = BigInteger.valueOf(100)
@@ -242,8 +277,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val sub = if (a.speedPass != null && now < a.speedPassUntil) a.speedPass.speedPermille.toLong() else 1_000L
         return maxOf(oc, sub)
     }
-    fun autoIntervalMs(s: GameState) = rules.autoIntervalMs - 300L * s.backup.lv(BackupItem.AutoClean) - 500L * s.backup.cloud.lv(CloudItem.CloudAuto) -
-        (if (on(s, "settings")) 300L else 0L) - (if (on(s, "ai")) 500L else 0L)
+    fun autoIntervalMs(s: GameState): Long {
+        val reductions = 300L * s.backup.lv(BackupItem.AutoClean) + 500L * s.backup.cloud.lv(CloudItem.CloudAuto) +
+            (if (on(s, "settings")) 300L else 0L) + (if (on(s, "ai")) 500L else 0L)
+        return (rules.autoIntervalMs - reductions).coerceAtLeast(500L)
+    }
     fun overloadDepth(s: GameState) = 1 + s.assist(Assist.Overload) + s.backup.lv(BackupItem.DeepOverload)
     fun rowCount(s: GameState) = minOf(
         rules.maxRows,
@@ -251,7 +289,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     ) - if (s.rows.any { it.alert == Alert.Storage }) 1 else 0  // 저장공간 부족 left on the board
 
     /** 방해 금지 doubles auto speed while it runs. */
-    fun autoIntervalMs(s: GameState, now: Long) = autoIntervalMs(s).let { if (s.rideBoost) maxOf(500L, it - 2_000) else it }.let { if (now < s.dndUntil) it / 2 else it }.let { it * 1_000 / speedPermille(s, now) }
+    fun autoIntervalMs(s: GameState, now: Long): Long {
+        val interval = autoIntervalMs(s) - if (s.rideBoost) 2_000L else 0L
+        val dnd = if (now < s.dndUntil) 2 else 1
+        return (interval * 1_000 / (dnd * speedPermille(s, now))).coerceAtLeast(500L)
+    }
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
@@ -273,56 +315,120 @@ class Engine(val rules: RuleSet = RuleSet()) {
     }
 
     /** Regions and categories with 2+ apps in the deck: each multiplies every value by RuleSet.diversityPermille. */
-    fun activeSets(s: GameState): Int {
-        val apps = s.active.map { Catalog.app(it) }
-        return apps.filter { it.region != Region.Stock }.groupingBy { it.region }.eachCount().count { it.value >= 2 } +
-            apps.groupingBy { it.category }.eachCount().count { it.value >= 2 }
+    fun activeSets(s: GameState): Int = DeckGroups(s.active).sets
+
+    private class DeckGroups(active: List<String>) {
+        val regions = IntArray(Region.entries.size)
+        val categories = IntArray(Category.entries.size)
+        init {
+            for (id in active) {
+                val app = Catalog.app(id)
+                regions[app.region.ordinal]++
+                categories[app.category.ordinal]++
+            }
+        }
+        val sets = regions.indices.count { it != Region.Stock.ordinal && regions[it] >= 2 } + categories.count { it >= 2 }
+    }
+
+    private data class DeckMultiplier(val region: Int, val category: Int, val sets: Int)
+
+    private fun deckMultiplier(s: GameState, app: AppDef, groups: DeckGroups): DeckMultiplier {
+        val region = if (app.region == Region.Stock) 0 else groups.regions[app.region.ordinal]
+        val rs = rules.synergyPercent(region, s.backup, rules.regionSynergySteps).let { if (on(s, "papago")) it * 110 / 100 else it }
+        val cs = rules.synergyPercent(groups.categories[app.category.ordinal], s.backup, rules.categorySynergySteps)
+        return DeckMultiplier(rs, cs, maxOf(0, groups.sets - 1))
     }
 
     private fun digits(n: BigInteger?) = if (n == null || n.signum() <= 0) 1 else n.toString().length
 
+    private fun valueBase(s: GameState, app: AppDef, level: Int = s.appLevels[app.id] ?: 1): Pair<BigInteger, BigInteger> {
+        val (num, den) = rules.baseValue(app, level, s.backup)
+        val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
+        val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
+        val pro = if (app.id in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
+        return num * BigInteger.valueOf((100L + rd) * (100L + cd)) * pro to den * hundred.pow(2)
+    }
+
+    private fun valueAfterMultipliers(base: Pair<BigInteger, BigInteger>, count: BigInteger, deck: DeckMultiplier,
+        chainNum: Long, fx: Long, premium: Long): BigInteger {
+        val thousand = BigInteger.valueOf(1_000)
+        var comboNum = BigInteger.valueOf((100L + deck.region) * (100L + deck.category)) *
+            BigInteger.valueOf(rules.diversityPermille.toLong()).pow(deck.sets)
+        var comboDen = hundred.pow(2) * thousand.pow(deck.sets)
+        val cap = BigInteger.valueOf(rules.synergyCapPermille.toLong())
+        if (comboNum * thousand > cap * comboDen) { comboNum = cap; comboDen = thousand }
+        return count * base.first * comboNum * BigInteger.valueOf(chainNum) * BigInteger.valueOf(fx) * BigInteger.valueOf(premium) /
+            (base.second * comboDen * BigInteger.valueOf(10_000_000_000L))
+    }
+
     /** P for [count] notifications of [appId] at chain number [chain]. */
     fun earn(s: GameState, appId: String, count: BigInteger, chain: Int, ctx: EarnCtx = EarnCtx()): BigInteger {
         val app = Catalog.app(appId)
-        val (num, den) = rules.baseValue(app, s.appLevels[appId] ?: 1, s.backup)
-        val (rs, cs) = synergy(s, appId)
-        val rd = rules.regionDigitPercent * (digits(s.regionCleared[app.region]) - 1)
-        val cd = rules.categoryDigitPercent * (digits(s.categoryCleared[app.category]) - 1)
-        val digitPct = BigInteger.valueOf((100L + rd) * (100L + cd))
-        val link = if (chain > 0 && on(s, "tube")) chain + 1 else chain  // 너튜브: deck-wide chain +1
-        val chainNum = BigInteger.valueOf(10L + link * (10L + s.backup.lv(BackupItem.ChainBoost) + 2 * s.backup.cloud.lv(CloudItem.CloudChain)))
-        val pro = if (appId in s.pro) BigInteger.valueOf(rules.proMultiplier) else BigInteger.ONE
-        // Deck synergy (region × category × diversity) is capped below one tier step.
-        val sets = maxOf(0, activeSets(s) - 1)
-        var comboNum = BigInteger.valueOf((100L + rs) * (100L + cs)) * BigInteger.valueOf(rules.diversityPermille.toLong()).pow(sets)
-        var comboDen = hundred.pow(2) * BigInteger.valueOf(1_000).pow(sets)
-        val cap = BigInteger.valueOf(rules.synergyCapPermille.toLong())
-        if (comboNum * BigInteger.valueOf(1_000) > cap * comboDen) { comboNum = cap; comboDen = BigInteger.valueOf(1_000) }
-        val fx = BigInteger.valueOf(effectPermille(s, app, count, chain, ctx))
-        val premium = BigInteger.valueOf(rules.premiumPermille(s.backup.cloud.account.stars(appId)) * (if (ctx.boosted) rules.boostPermille.toLong() else 1_000L))
-        return count * num * comboNum * digitPct * chainNum * pro * fx * premium / (den * comboDen * hundred.pow(2) * BigInteger.TEN * BigInteger.valueOf(1_000_000_000))
+        val link = if (chain > 0 && on(s, "tube")) {
+            ctx.effects?.add("tube")
+            chain + 1
+        } else chain
+        val chainNum = 10L + link * (10L + s.backup.lv(BackupItem.ChainBoost) + 2 * s.backup.cloud.lv(CloudItem.CloudChain))
+        val premium = rules.premiumPermille(s.account.stars(appId)) * (if (ctx.boosted) rules.boostPermille.toLong() else 1_000L)
+        return valueAfterMultipliers(valueBase(s, app), count, deckMultiplier(s, app, DeckGroups(s.active)),
+            chainNum, effectPermille(s, app, count, chain, ctx), premium)
+    }
+
+    /** Difference between the exact rounded values before and after one app rank, holding the deck fixed. */
+    fun upgradeEarnGain(s: GameState, appId: String, count: BigInteger): BigInteger {
+        val app = Catalog.app(appId)
+        val deck = deckMultiplier(s, app, DeckGroups(s.active))
+        val effect = effectPermille(s, app, count, 0, EarnCtx())
+        val premium = rules.premiumPermille(s.account.stars(appId)) * 1_000L
+        val current = s.appLevels.getValue(appId)
+        fun income(level: Int) = valueAfterMultipliers(valueBase(s, app, level), count, deck, 10L, effect, premium)
+        return income(current + 1) - income(current)
+    }
+
+    /** Compare many decks at one unchanged progression state with the same per-app rounding as [earn]. */
+    fun deckValuation(state: GameState, count: BigInteger): (List<String>) -> BigInteger {
+        val bases = mutableMapOf<AppDef, Pair<BigInteger, BigInteger>>()
+        data class Quote(val app: AppDef, val deck: DeckMultiplier, val effect: Long)
+        val quotes = mutableMapOf<Quote, BigInteger>()
+        val context = EarnCtx()
+        return { active ->
+            val s = state.copy(active = active)
+            val groups = DeckGroups(active)
+            active.fold(ZERO) { sum, id ->
+                val app = Catalog.app(id)
+                val quote = Quote(app, deckMultiplier(s, app, groups), effectPermille(s, app, count, 0, context))
+                sum + quotes.getOrPut(quote) {
+                    valueAfterMultipliers(bases.getOrPut(app) { valueBase(state, app) }, count, quote.deck,
+                        10L, quote.effect, rules.premiumPermille(state.account.stars(id)) * 1_000L)
+                }
+            }
+        }
     }
 
     /** Value effects of the deck on one clear of [app], in ‰ (1000 = none). */
     fun effectPermille(s: GameState, app: AppDef, count: BigInteger, chain: Int, ctx: EarnCtx): Long {
         var m = 1_000L
-        fun times(p: Long) { m = m * p / 1_000 }
         val id = app.id
-        val deck = s.active.map { Catalog.app(it) }
+        fun times(p: Long, source: String = id) {
+            if (p != 1_000L) ctx.effects?.add(source)
+            m = m * p / 1_000
+        }
+        fun countCategory(category: Category, excludingSelf: Boolean = false) =
+            s.active.count { (!excludingSelf || it != id) && Catalog.app(it).category == category }
         if (id == "memo" && ctx.direct) times(2_000)
-        if (id == "calc" && count.signum() > 0 && count.mod(BigInteger.valueOf(4)).signum() == 0) times(1_500)
+        if (id == "calc" && on(s, id) && chain > 0 && chain % 2 == 0 && !ctx.wave) times(1_500)
         if (id == "pin" && ctx.pile >= 3) times(1_200)
-        if (id == "contacts") times(1_000L + 150L * deck.count { it.id != id && it.category == Category.Social })
-        if (id == "photo") times(1_000L + 150L * deck.count { it.id != id && it.category == Category.Media })
-        if (id == "career") times(1_000L + 100L * deck.map { it.category }.distinct().size)
-        if (on(s, "jobs") && app.category == Category.Work && deck.count { it.category == Category.Work } >= 3) times(1_200)
+        if (id == "contacts") times(1_000L + 150L * countCategory(Category.Social, excludingSelf = true))
+        if (id == "photo") times(1_000L + 150L * countCategory(Category.Media, excludingSelf = true))
+        if (id == "career") times(1_000L + 100L * s.active.map { Catalog.app(it).category }.distinct().count { it != app.category })
+        if (on(s, "jobs") && app.category == Category.Work && countCategory(Category.Work) >= 3) times(1_200, "jobs")
         if (id == "joox" && ctx.wave) times(1_500)
-        if (id == "beat" && ctx.auto) times(1_300)
+        if (id == "beat" && ctx.auto && chain > 0 && !ctx.wave) times(1_300)
         if (id == "mail" && chain >= 2) times(1_500)
-        if (id == "robin") times(ctx.gamblePermille.toLong())
-        if (on(s, "portal") && s.trend == app.category) times(2_000)
+        if (id == "robin" && chain > 0 && !ctx.wave) times(ctx.gamblePermille.toLong())
+        if (on(s, "portal") && s.trend == app.category) times(2_000, "portal")
         if (id == "duo") times(1_000L + 20L * minOf(30, s.backup.cloud.account.streak))  // 듀오링구: login streak
-        if (on(s, "why") && app.category == Category.Social) times(1_000L + 20L * s.whyStacks)  // 와이
+        if (on(s, "why") && app.category == Category.Social) times(1_000L + 20L * s.whyStacks, "why")  // 와이
         return m
     }
 
@@ -336,7 +442,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     /**
      * First board of a run. Fixed so the first ten seconds teach one thing: the middle row (날씨) sits
-     * between two 메모 rows of 2; removing it makes them touch, reach 4 and burst.
+     * between two 메모 rows; removing it makes them touch and burst. Counts set the size of the award.
      */
     fun newGame(now: Long, seed: Long, backup: Backup = Backup()): GameState {
         val layout = listOf("alarm" to 1, "weather" to 2, "memo" to 2, "weather" to 1, "memo" to 2, "alarm" to 1, "weather" to 2)
@@ -362,9 +468,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
             files = s.backup.files + files, resets = s.backup.resets + if (files > 0) 1 else 0,
             lifetime = s.backup.lifetime + files, bestLevel = maxOf(s.backup.bestLevel, s.level),
             bestRunP = s.backup.bestRunP.max(s.runEarned),
+            legacyAppUnlockLevel = legacyAppUnlockLevel(s),
             cloud = s.backup.cloud.let { c -> if (files > 0 && Catalog.packs.isNotEmpty()) c.copy(packResets = c.packResets + 1) else c }
                 .let { c -> c.copy(account = c.account.copy(backupBoost = false)) },
-        ))
+        )).copy(nextOverloadAt = s.nextOverloadAt, nextMajorEventAt = s.nextMajorEventAt, previousMajorEvent = s.previousMajorEvent)
     }
 
     /** Backup shop price after 클라우드 할인. */
@@ -406,7 +513,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
             gb = c.gb + scalePermille(gb, prestigePermille(s, now)), syncs = c.syncs + if (gb > 0) 1 else 0, lifetime = c.lifetime + gb,
             bestCycleFiles = maxOf(c.bestCycleFiles, s.backup.lifetime + backupFilesNow(s)),
         )
-        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud))
+        return newGame(now, s.rng, Backup(bestLevel = maxOf(s.backup.bestLevel, s.level), cloud = cloud,
+            legacyAppUnlockLevel = legacyAppUnlockLevel(s)))
+            .copy(nextOverloadAt = s.nextOverloadAt, nextMajorEventAt = s.nextMajorEventAt, previousMajorEvent = s.previousMajorEvent)
     }
 
     /** A cloud item can be bought now: below max, enough syncs; pack items open one level per 3 resets after the update. */
@@ -427,9 +536,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
     }
 
     /** Battery recharge up to [now]. */
-    fun tick(s: GameState, now: Long): GameState {
+    fun tick(input: GameState, now: Long): GameState {
+        val s = if (input.rulesVersion < rules.version) input.copy(
+            rulesVersion = rules.version,
+            rows = input.rows.map { if (it.merges) it.copy(threshold = rules.threshold) else it },
+            backup = input.backup.copy(legacyAppUnlockLevel = legacyAppUnlockLevel(input)),
+        ) else input
         val cap = energyCap(s)
-        if (s.energy >= cap) return s.copy(nextChargeAt = 0)
+        if (s.energy >= cap) return if (s.nextChargeAt == 0L) s else s.copy(nextChargeAt = 0)
         if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s, now))
         if (now < s.nextChargeAt) return s
         val ms = chargeMs(s, now)
@@ -440,10 +554,17 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
     // Swipe ----------------------------------------------------------------------------------
 
-    private fun canMerge(a: Row, b: Row) = a.merges && b.merges && (a.app == b.app || a.kind == RowKind.Wild || b.kind == RowKind.Wild ||
-        (a.app == "maps" && b.kind == RowKind.App) || (b.app == "maps" && a.kind == RowKind.App))  // 큐글맵스: merges across apps
+    private fun canMerge(s: GameState, a: Row, b: Row): Boolean {
+        if (!a.merges || !b.merges) return false
+        if (a.app == b.app || a.kind == RowKind.Wild || b.kind == RowKind.Wild) return true
+        return on(s, "maps") && (a.app == "maps" || b.app == "maps") &&
+            Catalog.app(a.app!!).region != Catalog.app(b.app!!).region
+    }
 
-    fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor = Actor.Player): SwipeOutcome? {
+    fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor = Actor.Player, visuals: Boolean = false): SwipeOutcome? =
+        swipe(input, rowId, now, actor, preview = false, visuals = visuals)
+
+    private fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor, preview: Boolean, visuals: Boolean = false): SwipeOutcome? {
         val state = tick(input, now)
         val auto = actor == Actor.Auto
         if (state.energy <= 0) return null
@@ -473,10 +594,12 @@ class Engine(val rules: RuleSet = RuleSet()) {
         // 로빈훗훗: one gamble roll per swipe, ×0.5 to ×3 (mean about ×1.4). Hashed from the state so effects never
         // shift the board's random sequence for decks without the app.
         val roll = mix(state.rng xor state.swipes.toLong())
-        val gamble = 500 + Math.floorMod(roll, 2_501L).toInt().let { if (it > 1_800) (it - 1_800) / 2 + 1_800 else it }
+        val rollStep = Math.floorMod(roll, 2_501L).toInt()
+        val gamble = if (rollStep < 1_500) 500 + rollStep * 800 / 1_500 else 1_300 + (rollStep - 1_500) * 1_700 / 1_000
         fun pileOf(app: String?) = rows.count { it.app == app }
-        fun ctx(wave: Boolean = false, direct: Boolean = false, app: String? = null) =
-            EarnCtx(direct = direct, wave = wave, auto = auto, gamblePermille = gamble, pile = pileOf(app), boosted = now < state.backup.cloud.account.boostUntil)
+        fun ctx(wave: Boolean = false, direct: Boolean = false, app: String? = null, effects: MutableSet<String>? = null) =
+            EarnCtx(direct = direct, wave = wave, auto = auto, gamblePermille = gamble, pile = pileOf(app),
+                boosted = now < state.backup.cloud.account.boostUntil, effects = effects)
 
         fun track(row: Row, n: BigInteger) {
             if (row.kind != RowKind.App) return
@@ -485,7 +608,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             categoryAdd.merge(app.category, n, BigInteger::add)
         }
 
-        when (removed.kind) {
+        if (!preview || removed.event == EventCard.GroupText || removed.event == EventCard.Update ||
+            removed.event == EventCard.Firmware) when (removed.kind) {
             RowKind.App, RowKind.Wild -> {
                 val n = BigInteger.valueOf(removed.count.toLong())
                 val e = earn(state, valueApp(state, removed), n, 0, ctx(direct = !auto, app = removed.app))
@@ -539,9 +663,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
             }
         }
 
-        // Collapse: the rows that now touch merge if they are the same app (or one is wild). A full merge
-        // bursts and the next pair is checked, so one swipe can unzip the board outward.
+        // Each compatible pair pops as soon as it touches in rule B. Removals proceed outward on the same board.
         val bursts = mutableListOf<Row>()
+        val burstEffects = if (visuals) mutableListOf<MutableSet<String>>() else null
+        var pendingChainEffect = false
         var rideBoost = state.rideBoost && !auto  // the boosted auto-clean uses it up
         var whyStacks = state.whyStacks
         val bestTier = bestTier(s)
@@ -551,69 +676,106 @@ class Engine(val rules: RuleSet = RuleSet()) {
         while (pivot in 1 until rows.size) {
             val a = rows[pivot - 1]
             val b = rows[pivot]
-            if (!canMerge(a, b)) break
+            if (!canMerge(s, a, b)) break
             val wild = a.kind == RowKind.Wild && b.kind == RowKind.Wild
-            val merged = a.copy(
+            var merged = a.copy(
                 kind = if (wild) RowKind.Wild else RowKind.App,
                 app = a.app ?: b.app,
                 count = a.count + b.count,
-                threshold = minOf(a.threshold, b.threshold),
+                threshold = rules.threshold,
             )
             rows.removeAt(pivot)
             rows[pivot - 1] = merged
-            // 코코아T: a merged taxi row pulls the nearest other taxi row in once more.
-            if (merged.app == "ctaxi") {
-                val j = rows.indices.filter { it != pivot - 1 && rows[it].app == "ctaxi" && rows[it].kind == RowKind.App }.minByOrNull { Math.abs(it - (pivot - 1)) }
-                if (j != null) {
-                    val pulled = rows.removeAt(j)
-                    if (j < pivot - 1) pivot--
-                    rows[pivot - 1] = rows[pivot - 1].copy(count = rows[pivot - 1].count + pulled.count)
-                }
-            }
             gauge += rules.gaugePerMerge
             beats += Beat.Merged(merged, b.id)
-            val matched = a.app == "match" && b.app == "match"  // 튄더: two rows touching burst at once
-            if (rows[pivot - 1].count < merged.threshold && !matched) break
+            // A taxi shares its explosion with one adjacent taxi, including that row's full count.
+            var taxiPulled = false
+            if (merged.app == "ctaxi" && on(s, "ctaxi")) {
+                val j = listOf(pivot - 2, pivot).firstOrNull { i ->
+                    rows.getOrNull(i)?.let { it.kind == RowKind.App && it.app == "ctaxi" } == true
+                }
+                if (j != null) {
+                    val pulled = rows.removeAt(j)
+                    taxiPulled = true
+                    if (j < pivot - 1) pivot--
+                    merged = merged.copy(count = merged.count + pulled.count)
+                    rows[pivot - 1] = merged
+                    gauge += rules.gaugePerMerge
+                    beats += Beat.Merged(merged, pulled.id)
+                }
+            }
+            if (merged.count < rules.threshold) break
             rows.removeAt(--pivot)
-            chain++
-            val tier = Catalog.app(valueApp(s, merged)).tier
-            gauge += rules.gaugePerBurst + rules.igniterGaugePerTier * (bestTier - tier)
-            val n = BigInteger.valueOf(merged.count.toLong())
+            val matched = a.app == "match" && b.app == "match" && on(s, "match")
+            chain += if (matched) 3 else 1
             val burstApp = valueApp(s, merged)
-            val e = earn(s, burstApp, n, chain + chainBonus, ctx(app = burstApp))
-            earned += e
-            cleared += n
-            track(merged, n)
-            bursts += merged
-            beats += Beat.Burst(merged, chain, e)
-            // Burst effects of the app that burst.
-            when (burstApp) {
-                "music" -> chainBonus++
-                "alarm" -> pattern = pattern + "alarm"
-                "flash" -> rows.indexOfFirst { it.kind == RowKind.Spam }.takeIf { it >= 0 }?.let { rows.removeAt(it); if (it < pivot) pivot-- }
-                "sms" -> rows.getOrNull(pivot - 1)?.takeIf { it.kind == RowKind.App }?.let { rows[pivot - 1] = it.copy(count = it.count + 1) }
-                "chat" -> rows.getOrNull(pivot - 1)?.takeIf { it.app == "chat" }?.let { rows[pivot - 1] = it.copy(count = it.count + 1) }
-                "michat" -> rows.getOrNull(pivot)?.takeIf { it.kind == RowKind.App }?.let { rows[pivot] = it.copy(count = it.count + 1) }
+            val tier = Catalog.app(burstApp).tier
+            gauge += rules.gaugePerBurst + rules.igniterGaugePerTier * (bestTier - tier)
+            val effects = if (visuals) linkedSetOf<String>() else null
+            if (!preview) {
+                val n = BigInteger.valueOf(merged.count.toLong())
+                if (matched) effects?.add("match")
+                if (taxiPulled) effects?.add("ctaxi")
+                if (pendingChainEffect) effects?.add("music")
+                val e = earn(s, burstApp, n, chain + chainBonus, ctx(app = burstApp, effects = effects))
+                earned += e
+                cleared += n
+                track(merged, n)
+                bursts += merged
+                if (effects != null) burstEffects?.add(effects)
+                val burstSynergy = if (visuals) {
+                    val app = Catalog.app(burstApp)
+                    val (region, category) = synergy(s, burstApp)
+                    when {
+                        region > 0 && region >= category -> BurstSynergy("region", app.region.id, region)
+                        category > 0 -> BurstSynergy("cat", app.category.name, category)
+                        else -> null
+                    }
+                } else null
+                beats += Beat.Burst(merged, chain, e, burstApp, burstSynergy, effects ?: emptySet())
+            }
+            // Burst effects of the app that burst. Mark branch effects only when they change the outcome.
+            fun fired() { effects?.add(burstApp) }
+            when (burstApp.takeIf { on(s, it) }) {
+                "green" -> { gauge += 10; fired() }
+                "music" -> { chainBonus++; pendingChainEffect = true }
+                "alarm" -> { pattern = pattern + "alarm"; fired() }
+                "flash" -> rows.indexOfFirst { it.kind == RowKind.Spam }.takeIf { it >= 0 }
+                    ?.let { rows.removeAt(it); if (it < pivot) pivot--; fired() }
+                "sms" -> rows.getOrNull(pivot - 1)?.takeIf { it.kind == RowKind.App }
+                    ?.let { rows[pivot - 1] = it.copy(count = it.count + 1); fired() }
+                "chat" -> rows.getOrNull(pivot - 1)?.takeIf { it.app == "chat" }
+                    ?.let { rows[pivot - 1] = it.copy(count = it.count + 1); fired() }
+                "michat" -> rows.getOrNull(pivot)?.takeIf { it.kind == RowKind.App }
+                    ?.let { rows[pivot] = it.copy(count = it.count + 1); fired() }
                 "reddit" -> for (i in rows.indices) rows[i].app?.takeIf { it != "reddit" && Catalog.app(it).category == Category.Social }
-                    ?.let { rows[i] = rows[i].copy(count = rows[i].count + 1) }
-                "pay" -> energyGain++
-                "food" -> freeSwipes = 3
-                "zalo" -> gauge += 2 * s.active.count { Catalog.app(it).region == Region.SoutheastAsia }
-                "line" -> gauge += 2 * s.active.count { Catalog.app(it).region == Region.Asia }
+                    ?.let { rows[i] = rows[i].copy(count = rows[i].count + 1); fired() }
+                "pay" -> { energyGain++; if (state.energy - (if (usesBattery) 1 else 0) + energyGain <= energyCap(s)) fired() }
+                "food" -> { if (freeSwipes < 3) fired(); freeSwipes = 3 }
+                "zalo" -> { gauge += 2 * s.active.count { Catalog.app(it).region == Region.SoutheastAsia }; fired() }
+                "line" -> { gauge += 2 * s.active.count { Catalog.app(it).region == Region.Asia }; fired() }
                 "bigo" -> waveFactor = 4
-                "superapp" -> Category.entries.forEach { c -> if (c != Catalog.app("superapp").category) categoryAdd.merge(c, n, BigInteger::add) }
-                "mega" -> earned += rules.appPrice(Catalog.app("mega")) * BigInteger.TWO / BigInteger.valueOf(1_000)
+                "superapp" -> if (!preview) {
+                    Category.entries.forEach { c -> if (c != Catalog.app("superapp").category) categoryAdd.merge(c, BigInteger.valueOf(merged.count.toLong()), BigInteger::add) }
+                    fired()
+                }
+                "mega" -> if (!preview) { earned += rules.appPrice(Catalog.app("mega")) * BigInteger.TWO / BigInteger.valueOf(1_000); fired() }
                 // phase 2: 25% copies by hash roll, so the board's random sequence is untouched
-                "lazada", "dance" -> if (Math.floorMod(mix(roll xor (chain * 7919L)), 4L) == 0L) pattern = pattern + burstApp
-                "ride" -> if (merged.count >= 4) rideBoost = true
-                "why" -> whyStacks = minOf(15, whyStacks + 1)
+                "lazada", "dance" -> if (Math.floorMod(mix(roll xor (chain * 7919L)), 4L) == 0L) { pattern = pattern + burstApp; fired() }
+                "ride" -> if (merged.count >= 4 && !rideBoost) { rideBoost = true; fired() }
+                "why" -> if (whyStacks < 15) { whyStacks++; fired() }
             }
         }
 
         // Overload: a full gauge turns the bursts into waves through the hidden backlog.
-        val overload = bursts.isNotEmpty() && gauge >= 100
+        val overload = chain > 0 && gauge >= 100 && now >= s.nextOverloadAt
         val depth = overloadDepth(s)
+        // Target ranking needs the collapse outcome only. Waves add their depth to the winning chain.
+        if (preview) return SwipeOutcome(state, beats, ZERO, chain + if (overload) depth else 0, ZERO, overload, ZERO)
         if (overload) {
+            if (waveFactor != rules.waveFactor) bursts.forEachIndexed { i, row ->
+                if (valueApp(s, row) == "bigo") burstEffects?.get(i)?.add("bigo")
+            }
             val factor = BigInteger.valueOf(waveFactor.toLong())
             var backlog = bursts.map { BigInteger.valueOf(it.count.toLong()) }
             repeat(depth) { wave ->
@@ -623,19 +785,26 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 var waveCleared = ZERO
                 bursts.forEachIndexed { i, row ->
                     waveCleared += backlog[i]
-                    waveEarned += earn(s, valueApp(s, row), backlog[i], chain + chainBonus, ctx(wave = true, app = valueApp(s, row)))
+                    waveEarned += earn(s, valueApp(s, row), backlog[i], chain + chainBonus, ctx(wave = true, app = valueApp(s, row), effects = burstEffects?.get(i)))
                     track(row, backlog[i])
                 }
+                if (rules.waveIncomePermille != 1_000) waveEarned = waveEarned * BigInteger.valueOf(rules.waveIncomePermille.toLong()) / BigInteger.valueOf(1_000)
                 earned += waveEarned
                 cleared += waveCleared
                 beats += Beat.Wave(wave + 1, chain, waveCleared, waveEarned)
-                if (on(s, "edit")) for (i in rows.indices) if (rows[i].app == "edit") rows[i] = rows[i].copy(count = rows[i].count + 1)  // 컵컷
+                if (on(s, "edit")) for (i in rows.indices) if (rows[i].app == "edit") {
+                    rows[i] = rows[i].copy(count = rows[i].count + 1)
+                    burstEffects?.firstOrNull()?.add("edit")
+                }
             }
             gauge = 0
         }
         gauge = gauge.coerceAtMost(100)
         if (chain >= 2 && on(s, "camera")) rows.filter { it.kind == RowKind.App }.takeIf { it.isNotEmpty() }
-            ?.let { apps -> pattern = pattern + apps[Math.floorMod(mix(roll xor 0xCA3E), apps.size.toLong()).toInt()].app!! }  // 카메라
+            ?.let { apps ->
+                pattern = pattern + apps[Math.floorMod(mix(roll xor 0xCA3E), apps.size.toLong()).toInt()].app!!
+                burstEffects?.lastOrNull()?.add("camera")
+            }
 
         // Swipe-level effects: daily, return, after-purchase and binge bonuses.
         var dailyBonusDay = s.dailyBonusDay
@@ -643,18 +812,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var returnBurst = s.returnBurst
         var returnSwipes = s.returnSwipes
         val today = now / 86_400_000L
+        val firstEffects = burstEffects?.firstOrNull()
         if (bursts.isNotEmpty()) {
             for ((app, mult) in listOf("momo" to 3L, "airbnb" to 5L)) {
-                if (on(s, app) && (dailyBonusDay[app] ?: -1L) < today) { earned *= BigInteger.valueOf(mult); dailyBonusDay = dailyBonusDay + (app to today) }
+                if (on(s, app) && (dailyBonusDay[app] ?: -1L) < today) { earned *= BigInteger.valueOf(mult); dailyBonusDay = dailyBonusDay + (app to today); firstEffects?.add(app) }
             }
-            if (boostNext && on(s, "travel")) earned *= BigInteger.valueOf(3)
+            if (boostNext && on(s, "travel")) { earned *= BigInteger.valueOf(3); firstEffects?.add("travel") }
             boostNext = false
-            if (returnBurst && on(s, "agoda")) earned *= BigInteger.valueOf(3)
+            if (returnBurst && on(s, "agoda")) { earned *= BigInteger.valueOf(3); firstEffects?.add("agoda") }
             returnBurst = false
         }
-        if (returnSwipes > 0) { if (on(s, "ott")) earned *= BigInteger.TWO; returnSwipes-- }
+        if (returnSwipes > 0) { if (on(s, "ott")) { earned *= BigInteger.TWO; firstEffects?.add("ott") }; returnSwipes-- }
         var nightSwipes = s.nightSwipes
-        if (nightSwipes > 0) { if (on(s, "mall")) earned *= BigInteger.TWO; nightSwipes-- }  // 쿠빵 새벽 배송
+        if (nightSwipes > 0) { if (on(s, "mall")) { earned *= BigInteger.TWO; firstEffects?.add("mall") }; nightSwipes-- }  // 쿠빵 새벽 배송
         // 날씨: the first swipe of the day adds one to its rows.
         if (on(s, "weather") && (dailyBonusDay["weather"] ?: -1L) < today) {
             for (i in rows.indices) if (rows[i].app == "weather") rows[i] = rows[i].copy(count = rows[i].count + 1)
@@ -672,6 +842,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         // 메이버: a new trending category every 10 swipes.
         val trend = if (on(s, "portal") && s.swipes % 10 == 0) Category.entries[Math.floorMod(mix(roll), Category.entries.size.toLong()).toInt()] else s.trend
 
+        if (auto && rules.autoSwipePermille != 1_000)
+            earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
         // Jackpot cap: luck may jump a few levels, never the whole run.
         val room = jackpotRoom(s, rules.swipeLevelCap)
         val capped = (earned - room).max(ZERO)
@@ -684,9 +856,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
         val cap = energyCap(s)
         val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
+        val rateWindow = rules.recentIncomeWindow.toLong()
         var next = s.copy(
             rows = rows,
             gauge = gauge,
+            nextOverloadAt = if (overload) now + rules.overloadMinIntervalMs else s.nextOverloadAt,
             energy = minOf(energyCap(s), state.energy - (if (usesBattery) 1 else 0) + energyGain),
             // Any swipe below a full battery keeps a charge scheduled, even if the cap grew meanwhile.
             nextChargeAt = if (state.nextChargeAt == 0L) now + chargeMs(s, now) else state.nextChargeAt,
@@ -703,7 +877,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             rng = rng.seed,
             // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
-            earnRate = (s.earnRate * BigInteger.valueOf(9) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.TEN,
+            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
             lastSwipeAt = now,
             lastBurstP = lastBurstP,
             echoSwipes = echoSwipes,
@@ -763,22 +937,43 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 alerts += Row(0, RowKind.Alert, app = state.active[rng.next(state.active.size)], alert = Alert.Crash)
         }
 
+        var nextMajor = state.nextMajorEventAt
+        var previousMajor = state.previousMajorEvent
+        fun majorAllowed(tag: String) = rules.majorEventCooldownMs == 0L || (now >= nextMajor && tag != previousMajor)
+        fun majorSpawned(tag: String) {
+            if (rules.majorEventCooldownMs == 0L) return
+            nextMajor = now + rules.majorEventCooldownMs
+            previousMajor = tag
+        }
         while (rows.size < rowCount(state)) {
+            val alert = alerts.firstOrNull { it.alert == Alert.Storage || majorAllowed(it.alert!!.name) }
+            val card = cards.firstOrNull { (it != EventCard.Drill && it != EventCard.Lotto) || majorAllowed(it.name) }
             val row = when {
-                call -> { call = false; pausedUntil = now + rules.callPauseMs / (if (on(state, "secret")) 2 else 1); Row(id++, RowKind.Call) }
-                spam -> { spam = false; Row(id++, RowKind.Spam, copyAt = n + rules.spamCopyAfterSwipes) }
-                alerts.isNotEmpty() -> alerts.removeAt(0).copy(id = id++)
-                cards.isNotEmpty() -> {
-                    val c = cards.removeAt(0)
-                    Row(id++, RowKind.Event, event = c, expireAt = if (c == EventCard.Otp) n + rules.otpLifeSwipes else 0)
+                call && majorAllowed("call") -> {
+                    call = false
+                    majorSpawned("call")
+                    pausedUntil = now + rules.callPauseMs / (if (on(state, "secret")) 2 else 1)
+                    Row(id++, RowKind.Call)
                 }
-                pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = thresholdOf(a)) }
+                spam -> { spam = false; Row(id++, RowKind.Spam, copyAt = n + rules.spamCopyAfterSwipes) }
+                alert != null -> {
+                    alerts.remove(alert)
+                    if (alert.alert != Alert.Storage) majorSpawned(alert.alert!!.name)
+                    alert.copy(id = id++)
+                }
+                card != null -> {
+                    cards.remove(card)
+                    if (card == EventCard.Drill || card == EventCard.Lotto) majorSpawned(card.name)
+                    Row(id++, RowKind.Event, event = card, expireAt = if (card == EventCard.Otp) n + rules.otpLifeSwipes else 0)
+                }
+                pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold) }
                 else -> spawnApp(state, rows, rng, id++)
             }
             rows.add(0, row)
             beats += Beat.Spawned(row)
         }
-        return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay)
+        return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay,
+            nextMajorEventAt = nextMajor, previousMajorEvent = previousMajor)
     }
 
     private fun spawnApp(s: GameState, rows: List<Row>, rng: Rng, id: Long): Row {
@@ -790,11 +985,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val options = s.active.filter { (top?.kind != RowKind.App || it != top.app) && it !in crashed }.ifEmpty { s.active }
         val sandwich = second?.kind == RowKind.App && second.app != top?.app && second.app in options
         val app = if (sandwich && rng.next(100) < sandwichPercent(s)) second!!.app!! else options[rng.next(options.size)]
-        return Row(id, RowKind.App, app, count = count(), threshold = thresholdOf(app))
+        return Row(id, RowKind.App, app, count = count(), threshold = rules.threshold)
     }
-
-    /** 왔썹 rows burst at 3. */
-    fun thresholdOf(app: String) = if (app == "green") 3 else rules.threshold
 
     // Offline --------------------------------------------------------------------------------
 
@@ -802,27 +994,53 @@ class Engine(val rules: RuleSet = RuleSet()) {
         (rules.step(rules.offlineCapSteps, s.level) + s.backup.lv(BackupItem.Offline) + s.backup.cloud.lv(CloudItem.CloudOffline)) * 3_600_000L
     fun offlinePercent(s: GameState): Int = rules.offlineEfficiencyPercent + 2 * s.backup.lv(BackupItem.Offline)
 
+    /** Eligibility at return time. A watched ad and a pass share one reward; Ultra multiplies that payout. */
+    fun offlineBonus(s: GameState, now: Long): OfflineBonusStatus {
+        val acc = s.account
+        val today = dayOf(now)
+        val adLeftMs = if (acc.lastAdWatchDay >= 0 && acc.lastAdWatchDay in (today - 1)..today)
+            (acc.lastAdWatchDay + 2) * DAY_MS - now else 0
+        val speedLeftMs = if (acc.speedPass != null) (acc.speedPassUntil - now).coerceAtLeast(0) else 0
+        return OfflineBonusStatus(
+            rewardBonusPermille = rules.adWatchOfflinePermille - 1_000,
+            ultraBonusPermille = rules.ultraOfflinePermille - 1_000,
+            adLeftMs = adLeftMs,
+            passLeftMs = maxOf(0, acc.passUntil - now, speedLeftMs),
+            ultraLeftMs = if (acc.speedPass == SpeedPass.Ultra) speedLeftMs else 0,
+        )
+    }
+
+    fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
+        val result = settleOfflineWithBonus(s, awayMs, now)
+        return result.state to result.paid
+    }
+
     /**
      * Returning after [awayMs]: pays the recent income rate for the capped time at the offline efficiency,
      * in P; the level follows. The battery refills through [tick] as usual.
      */
-    fun settleOffline(s: GameState, awayMs: Long, now: Long): Pair<GameState, BigInteger> {
+    fun settleOfflineWithBonus(s: GameState, awayMs: Long, now: Long): OfflineSettlement {
         // 오버클럭 time inside the away window counts that many times over.
         val from = now - awayMs
         val acc = s.backup.cloud.account
-        val sub = if (acc.speedPass != null && acc.speedPassUntil >= now) acc.speedPass.speedPermille.toLong() else 1_000L
+        val sub = if (acc.speedPass != null && now < acc.speedPassUntil) acc.speedPass.speedPermille.toLong() else 1_000L
         val until = acc.overclockUntil
         val boosted = if (until <= 0L || sub >= rules.overclockPermille) 0L else maxOf(0L, minOf(now, until) - from)
         val effective = minOf(awayMs, offlineCapMs(s)) * sub / 1_000 + boosted * (rules.overclockPermille - 1_000) / 1_000
         val minutes = BigInteger.valueOf(effective / 60_000)
         val pct = BigInteger.valueOf(offlinePercent(s).toLong())
-        val p = (s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong()) / BigInteger.valueOf(100_000))
-            .min(jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt()))  // paid speed isn't thrown away by 과열 보호
+        val income = s.earnRate * minutes * pct * BigInteger.valueOf(rules.offlineAutoPermille.toLong())
+        val bonus = offlineBonus(s, now)
+        val cap = jackpotRoom(s, (rules.offlineLevelCap * sub / 1_000).toInt())
+        val basePaid = (income / BigInteger.valueOf(100_000)).min(cap)
+        val multiplier = bonus.multiplierPermille
+        val p = if (multiplier == 1_000) basePaid else
+            (income * BigInteger.valueOf(multiplier.toLong()) / BigInteger.valueOf(100_000_000)).min(cap)
         val runEarned = s.runEarned + p
         val level = maxOf(s.level, rules.levelFor(runEarned, s.backup.lv(BackupItem.FastBoot)))
         val next = fillDeck(tick(s, now).copy(wallet = s.wallet + p, runEarned = runEarned, level = level, lastSwipeAt = 0,
             returnBurst = true, returnSwipes = 3, nightSwipes = if (Math.floorMod(now / 3_600_000L + 9, 24L) !in 7..21) 3 else 0))  // KST 22~7시
-        return next to p
+        return OfflineSettlement(next, p, basePaid, bonus)
     }
 
     // Targeting ------------------------------------------------------------------------------
@@ -831,7 +1049,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun mergeTargets(s: GameState): List<Row> = s.rows.indices.filter { i ->
         val a = s.rows.getOrNull(i - 1)
         val b = s.rows.getOrNull(i + 1)
-        a != null && b != null && canMerge(a, b)
+        a != null && b != null && canMerge(s, a, b)
     }.map { s.rows[it] }
 
     /**
@@ -839,11 +1057,24 @@ class Engine(val rules: RuleSet = RuleSet()) {
      * else the bottom row. From AutoClean backup level 5 it looks one move ahead like [bestTarget].
      */
     fun autoTarget(s: GameState, now: Long): Long? {
-        if (s.backup.lv(BackupItem.AutoClean) >= rules.smartAutoLevel || on(s, "search") || on(s, "ai")) return bestTarget(s, now)
+        if (on(s, "ai")) return bestTwoStepTarget(s, now)
+        if (s.backup.lv(BackupItem.AutoClean) >= rules.smartAutoLevel || on(s, "search")) return bestTarget(s, now)
         return mergeTargets(s).lastOrNull()?.id
             ?: s.rows.lastOrNull { it.kind == RowKind.Event }?.id
             ?: s.rows.lastOrNull { it.kind == RowKind.Spam }?.id
             ?: s.rows.lastOrNull()?.id
+    }
+
+    private fun bestTwoStepTarget(s: GameState, now: Long): Long? {
+        val candidates = mergeTargets(s)
+        if (candidates.size < 2) return bestTarget(s, now)
+        // Only forecast genuine merge targets. Each simulated move works on an independent copy of the RNG and board.
+        return candidates.mapNotNull { row ->
+            val first = swipe(s, row.id, now, Actor.Auto) ?: return@mapNotNull null
+            val nextAt = now + autoIntervalMs(first.state, now)
+            val next = bestTarget(first.state, nextAt)?.let { swipe(first.state, it, nextAt, Actor.Auto, preview = true) }
+            row.id to (first.chain + (next?.chain ?: 0))
+        }.maxByOrNull { it.second }?.first ?: bestTarget(s, now)
     }
 
     /**
@@ -851,16 +1082,22 @@ class Engine(val rules: RuleSet = RuleSet()) {
      * (chain, overload, merges, then event cards and spam). Ties go to the lower row.
      */
     fun bestTarget(s: GameState, now: Long): Long? {
+        val state = tick(s, now)
+        if (state.energy <= 0) return null
         var best: Long? = null
-        var bestKey = listOf(-1L, -1L, -1L, -1L, -1L)
-        s.rows.forEach { row ->
-            val o = swipe(s, row.id, now) ?: return@forEach
-            val key = listOf(
-                o.chain.toLong(), if (o.overload) 1L else 0L, o.beats.count { it is Beat.Merged }.toLong(),
-                if (row.kind == RowKind.Event) 1L else 0L, if (row.kind == RowKind.Spam) 1L else 0L,
-            )
-            val cmp = key.indices.firstNotNullOfOrNull { i -> key[i].compareTo(bestKey[i]).takeIf { it != 0 } } ?: 0
-            if (cmp >= 0) { best = row.id; bestKey = key }
+        var bestKey = -1L
+        val rows = state.rows
+        for ((i, row) in rows.withIndex()) {
+            val before = rows.getOrNull(i - 1)
+            val after = rows.getOrNull(i + 1)
+            val o = if (before != null && after != null && canMerge(state, before, after))
+                swipe(state, row.id, now, Actor.Player, preview = true) else null
+            val chain = o?.chain ?: 0
+            val overload = if (o?.overload == true) 1 else 0
+            val merges = o?.beats?.count { it is Beat.Merged } ?: 0
+            val kind = when (row.kind) { RowKind.Event -> 2; RowKind.Spam -> 1; else -> 0 }
+            val key = ((chain * 2L + overload) * (rows.size + 1) + merges) * 3 + kind
+            if (key >= bestKey) { best = row.id; bestKey = key }
         }
         return best
     }
@@ -882,10 +1119,17 @@ class Engine(val rules: RuleSet = RuleSet()) {
         return p
     }
 
+    private fun legacyAppUnlockLevel(s: GameState): Int =
+        if (s.rulesVersion < APP_UNLOCK_RULES_VERSION) maxOf(s.backup.legacyAppUnlockLevel, s.level, s.backup.bestLevel)
+        else s.backup.legacyAppUnlockLevel
+
     /** Unlocks are permanent: the deepest level any run reached (and the reset count) opens apps for good. */
     fun unlocked(s: GameState, appId: String): Boolean {
         val app = Catalog.app(appId)
-        return maxOf(s.level, s.backup.bestLevel) >= app.unlockLevel && s.backup.resets >= app.minResets
+        if (s.backup.resets < app.minResets) return false
+        if (maxOf(s.level, s.backup.bestLevel) >= app.unlockLevel) return true
+        val previousGate = Catalog.legacyAppUnlockLevels[appId] ?: return false
+        return legacyAppUnlockLevel(s) >= previousGate
     }
 
     fun canBuy(s: GameState, appId: String): Boolean =

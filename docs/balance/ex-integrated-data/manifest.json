@@ -1,0 +1,72 @@
+{
+  "cached": true,
+  "csv_sha256": {
+    "checkpoints": "53eb88bdc36e836f28c2c00a94e3a1732a440c872b7e7df98c03b6d1f91fa9ba",
+    "conditions": "a9e9a2a9f712da26a6b900f513a53066d73de5edf6fae4cb23fb9ab9a13dbe49",
+    "prestige": "a207a37404019fe93460d18254b6bd17317e3e6d0374ee499863386d6c592906",
+    "samples": "dddb56d251e3ca3854b254203590575a223a8e7326c716262240b53fdafa8016",
+    "summary": "d2406ccb8276d5d208ce89b0b6db04925543900945e53177f236e92c28850efa"
+  },
+  "integrated_patch_sha256": "42394eb14f1f10283703de8b3e603bacb63325a4f2fbc90f5f2d293b3a8e0bb8",
+  "profiles": [
+    "Free",
+    "Ads",
+    "Pass",
+    "Spend30",
+    "Spend100",
+    "PassVisible"
+  ],
+  "revision": "d074352913e42215e56c96b3275f18e340679125",
+  "rows": {
+    "checkpoints": 5760,
+    "conditions": 19440,
+    "prestige": 171703,
+    "samples": 2160,
+    "summary": 1440
+  },
+  "runner_sha256": "219dbaf98db0b77a2616a17a7e592634262e5e6941c6b9c6407579b2dd60fb06",
+  "scenarios": [
+    "none",
+    "full",
+    "one",
+    "one_set",
+    "spread_three",
+    "two_sets",
+    "staged",
+    "offline_cap"
+  ],
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "source_sha256": "59ea87c69faf64fe1f419795f932bc1ffd58061f39f8fa80c8016764595a0944",
+  "through_day": 56
+}

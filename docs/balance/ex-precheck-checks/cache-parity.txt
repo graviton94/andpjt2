@@ -1,0 +1,8 @@
+Runner commit 7eef3744253b53920fc1fb95a68ac0fa313ee25f
+Seed 7, profiles Ads and Spend100, cases none and full, through day 56
+Cached and uncached outputs compared byte-for-byte
+94525c8084d87162f9d65ee753446fb07f80a883350e4035e1339f593f8ace36  summary.csv
+5d5d5cced2bf8118eefd739421b9ffc55bb2325e39b97e0a32d5e2667d841583  checkpoints.csv
+d2d892aa9171dca140b289666ae2ceb4bca6c860e03ff62382bee1fd183636e9  prestige.csv
+ea32a51eae88568c6778165a7ae608f6bb98075df9aef5327c9fc72e574ea2d5  conditions.csv
+cde19f61c9db607c44173bc2b84eef34aa5c9d39459300621567401f690030a4  samples.csv

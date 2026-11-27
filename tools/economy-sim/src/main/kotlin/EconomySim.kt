@@ -34,7 +34,9 @@ class RunLog {
 }
 
 private fun digits(n: BigInteger) = if (n.signum() <= 0) 1 else n.toString().length
-private fun perNotification(s: GameState, app: String): BigInteger = e.earn(s, app, BigInteger.valueOf(1_000), 0)
+private val valuationCount = BigInteger.valueOf(1_000)
+private fun perNotification(s: GameState, app: String): BigInteger = e.earn(s, app, valuationCount, 0)
+private val appPrices = java.util.concurrent.ConcurrentHashMap<com.graviton94.notificationcleaner.core.AppDef, BigInteger>()
 
 /** Rebuild the app deck and the event deck by policy. */
 fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
@@ -46,11 +48,9 @@ fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
     val deck: List<String> = when (policy) {
         DeckPolicy.Synergy -> {
             val picked = mutableListOf<String>()
+            val value = e.deckValuation(s, valuationCount)
             repeat(size) {
-                val best = owned.filter { it !in picked }.maxBy { cand ->
-                    val trial = s.copy(active = picked + cand)
-                    (picked + cand).fold(ZERO) { acc, a -> acc + perNotification(trial, a) }
-                }
+                val best = owned.asSequence().filter { it !in picked }.maxBy { cand -> value(picked + cand) }
                 picked += best
             }
             picked
@@ -68,8 +68,9 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
     val bought = mutableListOf<String>()
     while (true) {
         val bestTier = s.appLevels.keys.maxOf { Catalog.app(it).tier }
-        val nextApp = Catalog.apps.filter { it.id !in s.appLevels && e.unlocked(s, it.id) }.minByOrNull { e.rules.appPrice(it) }
-        val appPrice = nextApp?.let { e.rules.appPrice(it) }
+        val nextApp = Catalog.apps.asSequence().filter { it.id !in s.appLevels && e.unlocked(s, it.id) }
+            .minByOrNull { appPrices.computeIfAbsent(it, e.rules::appPrice) }
+        val appPrice = nextApp?.let { appPrices.computeIfAbsent(it, e.rules::appPrice) }
         // 1. A new app: always for a new tier, otherwise only while the deck has room or the policy wants options.
         if (nextApp != null && s.wallet >= e.appPrice(s, nextApp.id) &&
             (nextApp.tier > bestTier || s.active.size < e.maxSlots(s) || policy != DeckPolicy.Min)) {
@@ -85,12 +86,12 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
         val pro = s.active.firstOrNull { it !in s.pro && s.level >= Catalog.proLevel.getValue(it) && e.rules.proPrice(it) <= half }
         if (pro != null) { s = e.buyPro(s, pro); bought += "프로:${Catalog.app(pro).name}"; continue }
         // 3. The upgrade with the best value gain per P, unless saving for an app it would delay a lot.
-        val ups = s.active.map { id ->
-            val lv = s.appLevels.getValue(id)
-            val price = e.upgradePrice(s, id)
-            val gain = perNotification(s.copy(appLevels = s.appLevels + (id to lv + 1)), id) - perNotification(s, id)
-            Triple(id, price, gain.toDouble() / price.toDouble())
-        }.filter { s.wallet >= it.second }
+        val ups = s.active.asSequence().map { id -> id to e.upgradePrice(s, id) }
+            .filter { (_, price) -> s.wallet >= price }
+            .map { (id, price) ->
+                val gain = e.upgradeEarnGain(s, id, valuationCount)
+                Triple(id, price, gain.toDouble() / price.toDouble())
+            }
         val up = ups.maxByOrNull { it.third } ?: break
         if (appPrice != null && up.second * BigInteger.TEN > appPrice && s.wallet < appPrice) break
         s = e.upgrade(s, up.first); bought += "강화"
@@ -181,6 +182,17 @@ fun p50(xs: List<Double>) = pct(xs, .5)
 fun fmtMin(m: Double) = when { m.isNaN() -> "-"; m < 2 -> "%.0f초".format(m * 60); m < 60 -> "%.0f분".format(m); else -> "%.1f시간".format(m / 60) }
 
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "launch-v1") return launchV1(java.io.File(args[1]), args[2].toInt(), args[3].toInt(),
+        profilesFor(args.getOrNull(4)), (args.getOrNull(5) ?: "Best").split(',').toSet())
+    if (args.firstOrNull() == "challenge-star-audit") return challengeStarAudit(java.io.File(args.getOrNull(1) ?: error("Choose a CSV output file")))
+    if (args.firstOrNull() == "challenge-star-proposal") return challengeStarProposal(java.io.File(args.getOrNull(1) ?: error("Choose a CSV output file")))
+    if (args.firstOrNull() == "offline-upgrade-audit") return offlineUpgradeAudit(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
+    if (args.firstOrNull() == "growth-tail-audit") return growthTailAudit(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
+    if (args.firstOrNull() == "balance-commerce") return balanceCommerce(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
+    if (args.firstOrNull() in setOf("balance-report", "balance-audit")) return balanceAudit(
+        java.io.File(args.getOrNull(1) ?: error("Choose an output directory")),
+        args.getOrNull(2), args.getOrNull(3) == "available-rewards")
+    if (args.firstOrNull() == "balance-detail") return balanceDetail(java.io.File(args.getOrNull(1) ?: error("Choose an output directory")))
     if (args.firstOrNull() == "debug") return debugRun()
     if (args.firstOrNull() == "money") return monetization(args.getOrNull(1)?.toInt() ?: 84, args.getOrNull(2)?.toLong() ?: 4L, profilesFor(args.getOrNull(3)))
     if (args.firstOrNull() == "daily") return daily(args.getOrNull(1)?.toInt() ?: 56, args.getOrNull(2)?.toLong() ?: 4L)
