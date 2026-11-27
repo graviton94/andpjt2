@@ -340,7 +340,7 @@ input[type=range]{accent-color:var(--m-primary)}
 @media (prefers-color-scheme: light){:root{--g-bg:color-mix(in srgb,#fff 70%,transparent);--g-card:color-mix(in srgb,#fff 62%,transparent);
  --g-line:color-mix(in srgb,#1A1B21 9%,transparent);--g-hi:rgba(255,255,255,.7);--shadow:0 1px 2px rgba(20,30,60,.08),0 12px 40px rgba(20,30,60,.16)}}
 /* glass surfaces */
-#sheet,#shade,#cf .box,.toast{background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
+#sheet,#shade,#cf .box,.toast{background:var(--g-bg);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);will-change:transform;
  border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi)}
 #sheet{border-bottom:0;transition:transform .2s var(--ease-in)}
 #sheet.open{transition:transform .45s var(--ease-out)}
@@ -494,7 +494,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #appd{position:fixed;inset:0;z-index:65;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
 #appd.on{opacity:1;pointer-events:auto;transition:opacity .25s var(--ease-std)}
 #appd .card{position:relative;width:100%;max-width:360px;max-height:86vh;overflow:auto;border-radius:28px;padding:20px;font-family:var(--font);color:var(--m-on-surface);
- background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);
+ background:var(--g-bg);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);
  transform:scale(.92) translateY(8px);transition:transform .15s var(--ease-in)}
 #appd.on .card{transform:none;transition:transform .4s var(--ease-out)}
 #appd .x{position:absolute;right:10px;top:10px}
@@ -526,7 +526,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #ret{position:fixed;inset:0;z-index:66;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.36);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .15s var(--ease-in)}
 #ret.on{opacity:1;pointer-events:auto;transition:opacity .3s var(--ease-std)}
 #ret .card{width:100%;max-width:360px;border-radius:28px;padding:22px 20px 18px;font-family:var(--font);color:var(--m-on-surface);word-break:keep-all;
- background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9) translateY(12px);transition:transform .15s var(--ease-in)}
+ background:var(--g-bg);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9) translateY(12px);transition:transform .15s var(--ease-in)}
 #ret.on .card{transform:none;transition:transform .5s var(--ease-out)}
 #ret .top{display:flex;align-items:center;gap:12px}#ret .hd-ic{width:40px;height:40px;padding:9px;border-radius:14px;background:var(--m-primary-c);color:var(--m-on-primary-c);flex:none}
 #ret .top .l{display:block;font:500 12.5px/1.2 var(--font);color:var(--m-on-sv)}#ret .top b{font:700 18px/1.3 var(--font)}
@@ -594,7 +594,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 @keyframes giT{0%,100%{transform:scale(1)}40%{transform:scale(.8)}}
 @media (prefers-reduced-motion: reduce){#coach .g *,#coach .gi svg{animation-duration:3.2s!important}}
 #coach .bub{position:absolute;left:20px;right:20px;pointer-events:auto;padding:16px 18px 10px;border-radius:24px;color:var(--m-on-surface);
- background:color-mix(in srgb,var(--m-s-high) 82%,transparent);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
+ background:color-mix(in srgb,var(--m-s-high) 82%,transparent);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
  border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);animation:bubIn .5s var(--ease-out) both}
 #coach .bub.above{transform:translateY(-100%)}
 #coach .bub::before{content:"";position:absolute;left:50%;width:16px;height:16px;margin-left:-8px;background:inherit;border:inherit;transform:rotate(45deg);border-radius:3px;backdrop-filter:none}
@@ -636,7 +636,7 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 #chres{position:fixed;inset:0;z-index:66;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s var(--ease-std)}
 #chres.on{opacity:1;pointer-events:auto}
 #chres .card{width:100%;max-width:340px;border-radius:28px;padding:22px 20px 18px;text-align:center;font-family:var(--font);color:var(--m-on-surface);
- background:var(--g-bg);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9);transition:transform .5s var(--ease-out)}
+ background:var(--g-bg);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--g-line);box-shadow:var(--shadow),inset 0 1px 0 var(--g-hi);transform:scale(.9);transition:transform .5s var(--ease-out)}
 #chres.on .card{transform:none}#chres .l{font:600 13px/1 var(--font);color:var(--m-on-sv)}
 #chres .amt{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:14px 0 10px}#chres .v{font:800 46px/1 var(--font);font-variant-numeric:tabular-nums}#chres .u{font:800 22px var(--font);color:var(--m-primary)}
 #chres .nb{display:inline-flex;height:30px;align-items:center;padding:0 14px;border-radius:15px;font:800 14px var(--font);color:#fff;background:linear-gradient(135deg,#FF5F6D,#E0261C)}
