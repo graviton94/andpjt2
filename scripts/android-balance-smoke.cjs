@@ -103,7 +103,11 @@ async function run() {
       const x = b.x + b.width / 2;
       await drag(x, b.y + b.height * .145, x, b.y + b.height * .36);
     }
-    await page.locator('#shade.open').locator(`[data-k="${kind}"]`).click();
+    // press the tile from inside the page: through the remote WebView a tile low in the shade can read as
+    // off-viewport or unstable while the shade settles, and the pointer click then times out
+    await page.locator('#shade.open').locator(`[data-k="${kind}"]`).waitFor({ state: 'attached' });
+    await page.waitForTimeout(450);
+    await page.evaluate(k => document.querySelector(`#shade.open [data-k="${k}"]`).click(), kind);
     await page.locator('#sheet.open').waitFor();
   };
   const pay = async (button, text, approve = true) => {
