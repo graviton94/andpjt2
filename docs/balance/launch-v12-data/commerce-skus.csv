@@ -1,0 +1,12 @@
+id,type,won,data,first_data,data_equivalent,first_data_equivalent
+data_100,consumable,2200,100,200,100,200
+data_540,consumable,5900,540,1080,540,1080
+data_1200,consumable,12000,1200,2400,1200,2400
+data_3700,consumable,33000,3700,4900,3700,4900
+data_8600,consumable,69000,8600,9800,8600,9800
+data_16800,consumable,119000,16800,18000,16800,18000
+starter_pack,one_time,2500,500,500,1160,1160
+rookie_pass,one_time,3300,650,650,1070,1070
+pass_monthly,subscription,5500,2100,2100,5700,5700
+pass_turbo,subscription,33000,2100,2100,5700,5700
+pass_ultra,subscription,99000,8100,8100,11700,11700

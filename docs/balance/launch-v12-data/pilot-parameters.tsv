@@ -1,0 +1,22 @@
+stage	parent	days	profiles	parameters
+early	v1.1	30	Free	낙하와 유휴 입력 적용, 20% 인접 보충
+a	v1.1	84	all	낙하와 유휴 입력 적용, 20% 인접 보충
+b	a	84	all	lateGrowthPermille=925,lateSwipeCapSteps=3
+c	a	84	Free,Ads	앱·프로 해금 재배치, c-app-unlocks.tsv
+d	a	84	Free,Ads	fallMatchPermille=100
+e	d	84	all	fallMatchPermille=100, 덱·충돌 방지 통합
+f	e	42	Free	fallMatchPermille=100,levelRatioPermille=2360
+g	f	42	Free	fallMatchPermille=100,levelRatioPermille=2360,lateGrowthFrom=71
+g-full	g	84	all	장기 확장, Best·Auto·NoReset 포함
+h	f	42	Free	fallMatchPermille=100,levelRatioPermille=2360,lateGrowthFrom=69
+h-full	h	84	all	장기 확장, Best·Auto·NoReset 포함
+i	h	42	Free	알림 가치 백업 상점의 Lv32 초과 가격 기울기 1.45→1.39
+j	h	84	all	fallMatchPermille=100,levelRatioPermille=2360,lateGrowthFrom=69,lateGrowthPermille=840,lateSwipeCapSteps=2
+k	j	84	Free	offlineEfficiencyPercent=8
+l	k	84	Free	Lv75 요구 P만 ×0.70, 이후 기준 계산 원래 곡선
+m	k	84	Free	Lv73·74·75·76 요구 P만 ×0.83·0.72·0.60·0.89, lateSwipeCapSteps=3
+n	m	84	Free	Lv79→80부터 뒤 단계 비율에 ×1.025
+o	m	84	Free	챗GTP 해금 Lv124→129, 프로 Lv149→154
+p	o	84	Free	회차 Lv80 이상 기본 오프라인 효율 8→6%, 광고·패스 배율과 시간 상한은 기존
+p-paid	p	84	Ads,Pass,Spend30,Spend100	전 프로필 수동 최선조작, 동일 시드 1~8
+p-controls	p	84	Free	Auto 84일·NoReset 30일, 동일 시드 1~8

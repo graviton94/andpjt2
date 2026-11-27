@@ -13,7 +13,7 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.request.get(root+'/api/new?seed=11');
-    await page.goto(root+'/index.html?auto=0&lang=ko&noftue&noattend');
+    await page.goto(root+'/index.html?notitle&auto=0&lang=ko&noftue&noattend');
     await page.waitForFunction(() => window.__dbg);
     const bm = await (await page.request.get(root+'/api/bm')).json();
     const registered = JSON.parse(fs.readFileSync(path.join(__dirname, '../play/products.json')));

@@ -169,6 +169,8 @@ data class EarnCtx(
 /** What happened, in order. The UI replays these; the state is already final. */
 data class BurstSynergy(val kind: String, val key: String, val percent: Int)
 
+enum class ChainEndReason { Natural, Spam, Wave, Cap }
+
 sealed interface Beat {
     data class Swiped(val row: Row, val earned: BigInteger) : Beat
     data class Merged(val into: Row, val fromId: Long) : Beat
@@ -178,6 +180,8 @@ sealed interface Beat {
     ) : Beat
     data class Wave(val index: Int, val chain: Int, val cleared: BigInteger, val earned: BigInteger) : Beat
     data class Spawned(val row: Row) : Beat
+    data class Spawn(val row: Row, val slot: Int, val chain: Int) : Beat
+    data class ChainEnd(val reason: ChainEndReason, val chain: Int, val bursts: Int, val steps: Int) : Beat
     data class FreeUpgrade(val app: String, val level: Int) : Beat
     data class LevelUp(val level: Int) : Beat
     /** 과열 보호: P past the per-swipe level cap was lost. */
@@ -663,7 +667,51 @@ class Engine(val rules: RuleSet = RuleSet()) {
             }
         }
 
-        // Each compatible pair pops as soon as it touches in rule B. Removals proceed outward on the same board.
+        // Resolve the deletion seam first, then untouched contacts made by falling rows.
+        val falling = rules.fallingChains && !preview
+        val fallBoardSize = state.rows.size - 1 // Reserve the original swipe's slot for scheduled cards and alerts.
+        val landings = ArrayDeque<Pair<Long, Long>>()
+        var nextId = maxOf(state.nextId, (state.rows.maxOfOrNull(Row::id) ?: 0L) + 1)
+        var physicalBursts = 0
+        var steps = 0
+        var stop = ChainEndReason.Natural
+        var overload = false
+        fun refillChain(): Boolean {
+            var spawnedSpam = false
+            while (rows.size < fallBoardSize && steps < rules.fallWorkLimit) {
+                val below = rows.firstOrNull()
+                val spamChance = ((physicalBursts - rules.fallSpamFrom + 1).coerceAtLeast(0) *
+                    rules.fallSpamStepPermille).coerceAtMost(rules.fallSpamMaxPermille)
+                val row = when {
+                    now >= s.dndUntil && spamChance > 0 && rows.count { it.kind == RowKind.Spam } < rules.spamMax &&
+                        rng.next(1_000) < spamChance ->
+                        Row(nextId++, RowKind.Spam, copyAt = s.swipes + 1 + rules.spamCopyAfterSwipes)
+                    pattern.isNotEmpty() -> Row(nextId++, RowKind.App, pattern.first(),
+                        count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
+                    below?.kind == RowKind.App && below.app in s.active &&
+                        rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+                        rng.next(1_000) < rules.fallMatchPermille ->
+                        Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
+                    else -> spawnApp(s, rows, rng, nextId++)
+                }
+                rows.add(0, row)
+                if (below != null && canMerge(s, row, below)) landings.addLast(row.id to below.id)
+                beats += Beat.Spawn(row, 0, chain)
+                spawnedSpam = spawnedSpam || row.kind == RowKind.Spam
+                steps++
+            }
+            return spawnedSpam
+        }
+        fun matches(at: Int) = at in 1 until rows.size && canMerge(s, rows[at - 1], rows[at])
+        fun remainingLanding(): Int? {
+            while (landings.isNotEmpty()) {
+                val (above, below) = landings.removeFirst()
+                val at = rows.indexOfFirst { it.id == below }
+                if (at > 0 && rows[at - 1].id == above && matches(at)) return at
+            }
+            return null
+        }
+        // When falling is disabled, keep the old collapse and wave ordering for backtests.
         val bursts = mutableListOf<Row>()
         val burstEffects = if (visuals) mutableListOf<MutableSet<String>>() else null
         var pendingChainEffect = false
@@ -673,10 +721,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
         var pivot = index
         var chainBonus = 0  // 메롱: later bursts in this swipe count one more chain
         var waveFactor = rules.waveFactor
-        while (pivot in 1 until rows.size) {
+        while (true) {
+            if (!matches(pivot)) {
+                val blockedBySpam = rows.getOrNull(pivot - 1)?.kind == RowKind.Spam ||
+                    rows.getOrNull(pivot)?.kind == RowKind.Spam
+                val landing = if (falling) remainingLanding() else null
+                if (landing == null) {
+                    if (blockedBySpam) stop = ChainEndReason.Spam
+                    break
+                }
+                pivot = landing
+            }
             val a = rows[pivot - 1]
             val b = rows[pivot]
-            if (!canMerge(s, a, b)) break
             val wild = a.kind == RowKind.Wild && b.kind == RowKind.Wild
             var merged = a.copy(
                 kind = if (wild) RowKind.Wild else RowKind.App,
@@ -708,6 +765,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             rows.removeAt(--pivot)
             val matched = a.app == "match" && b.app == "match" && on(s, "match")
             chain += if (matched) 3 else 1
+            physicalBursts++
+            steps++
             val burstApp = valueApp(s, merged)
             val tier = Catalog.app(burstApp).tier
             gauge += rules.gaugePerBurst + rules.igniterGaugePerTier * (bestTier - tier)
@@ -765,10 +824,30 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 "ride" -> if (merged.count >= 4 && !rideBoost) { rideBoost = true; fired() }
                 "why" -> if (whyStacks < 15) { whyStacks++; fired() }
             }
+            if (falling || (preview && rules.fallingChains)) {
+                if (gauge >= 100 && now >= s.nextOverloadAt) {
+                    overload = true
+                    stop = ChainEndReason.Wave
+                    break
+                }
+                if (falling) {
+                    if (physicalBursts >= rules.fallBurstLimit || steps >= rules.fallWorkLimit) {
+                        stop = ChainEndReason.Cap
+                        break
+                    }
+                    val addedBefore = rows.size
+                    val spawnedSpam = refillChain()
+                    pivot += rows.size - addedBefore
+                    if (spawnedSpam || steps >= rules.fallWorkLimit) {
+                        stop = if (spawnedSpam) ChainEndReason.Spam else ChainEndReason.Cap
+                        break
+                    }
+                }
+            }
         }
 
         // Overload: a full gauge turns the bursts into waves through the hidden backlog.
-        val overload = chain > 0 && gauge >= 100 && now >= s.nextOverloadAt
+        if (!rules.fallingChains) overload = chain > 0 && gauge >= 100 && now >= s.nextOverloadAt
         val depth = overloadDepth(s)
         // Target ranking needs the collapse outcome only. Waves add their depth to the winning chain.
         if (preview) return SwipeOutcome(state, beats, ZERO, chain + if (overload) depth else 0, ZERO, overload, ZERO)
@@ -799,6 +878,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             }
             gauge = 0
         }
+        if (falling && physicalBursts > 0) beats += Beat.ChainEnd(stop, chain, physicalBursts, steps)
         gauge = gauge.coerceAtMost(100)
         if (chain >= 2 && on(s, "camera")) rows.filter { it.kind == RowKind.App }.takeIf { it.isNotEmpty() }
             ?.let { apps ->
@@ -845,7 +925,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (auto && rules.autoSwipePermille != 1_000)
             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
         // Jackpot cap: luck may jump a few levels, never the whole run.
-        val room = jackpotRoom(s, rules.swipeLevelCap)
+        val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
+        val room = jackpotRoom(s, capSteps)
         val capped = (earned - room).max(ZERO)
         if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
 
@@ -873,6 +954,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             swipes = s.swipes + 1,
             autoPausedUntil = pausedUntil,
             pattern = pattern,
+            nextId = nextId,
             regionCleared = s.regionCleared.toMutableMap().also { m -> regionAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             rng = rng.seed,
@@ -922,7 +1004,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val overdue = if (on(state, "secret") || spamRows >= rules.spamMax) -1 else rows.indexOfFirst { it.kind == RowKind.Spam && it.copyAt in 1..n }  // 텔레그림
         if (overdue >= 0) rows[overdue] = rows[overdue].copy(copyAt = 0)
         val quiet = now < state.dndUntil  // 방해 금지: no interruptions
-        var spam = !quiet && (overdue >= 0 || n % rules.spamEverySwipes == 0)
+        var spam = !quiet && spamRows < rules.spamMax && (overdue >= 0 || n % rules.spamEverySwipes == 0)
         var call = !quiet && state.level >= rules.callUnlockLevel && n % rules.callEverySwipes == 0 && rows.none { it.kind == RowKind.Call }
         val cards = state.equipped.filter { c -> c.everySwipes > 0 && n % c.everySwipes == 0 && rows.none { it.event == c } }.toMutableList()
         val today = now / 86_400_000L

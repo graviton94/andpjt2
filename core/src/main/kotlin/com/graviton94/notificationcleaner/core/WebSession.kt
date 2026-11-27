@@ -521,6 +521,13 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
             put("chips", big(b.earned / BigInteger.valueOf(1L + b.chain)))
         }
         is Beat.Wave -> buildJsonObject { put("t", "wave"); put("index", b.index); put("waveIndex", b.index); put("chain", b.chain); put("earned", big(b.earned)) }
+        is Beat.Spawn -> buildJsonObject {
+            put("t", "spawn"); put("row", row(b.row)); put("slot", b.slot); put("chain", b.chain)
+        }
+        is Beat.ChainEnd -> buildJsonObject {
+            put("t", "chainEnd"); put("reason", b.reason.name.lowercase()); put("chain", b.chain)
+            put("bursts", b.bursts); put("steps", b.steps)
+        }
         is Beat.Spawned -> buildJsonObject { put("t", "spawned"); put("row", row(b.row)) }
         is Beat.FreeUpgrade -> buildJsonObject { put("t", "freeUpgrade"); put("app", b.app); put("name", Catalog.app(b.app).name); put("level", b.level) }
         is Beat.LevelUp -> buildJsonObject { put("t", "levelUp"); put("level", b.level) }

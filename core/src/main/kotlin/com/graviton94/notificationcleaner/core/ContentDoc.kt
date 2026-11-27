@@ -139,7 +139,7 @@ fun contentDoc(): String = buildString {
     appendLine()
     appendLine("클라우드 동기화는 Lv${rules.syncLevel}부터. 회차·백업파일·백업 상점·초기화 횟수·최고 기록을 초기화하고, 앱 해금(역대 최고 레벨)·GB·클라우드 상점은 유지. GB 총량 = `⌊${rules.cloudBase} × (이번 주기 백업파일 ÷ Lv${rules.cloudAnchorLevel} 회차의 백업파일)^${rules.cloudExponentPermille / 1000.0}⌋`, 지난 최고 주기를 넘긴 만큼만 지급. 백업파일 배율 = `1.5^압축 백업 × √(1 + ${rules.cloudFilePercent}% × 평생 GB)`.")
     appendLine()
-    appendLine("**한 방 상한** · Lv${rules.jackpotCapFrom}부터 스와이프 한 번(연쇄·과부하·행운 알림·인증번호 포함)은 레벨을 최대 ${rules.swipeLevelCap}단계, 오프라인 정산 한 번은 ${rules.offlineLevelCap}단계까지만 올린다. 넘친 P는 '과열 보호'로 사라진다. 권역 × 카테고리 × 다양성 시너지 합계는 ×${rules.synergyCapPermille / 1000.0}까지(티어 한 칸 ×${rules.tierBase}보다 낮게).")
+    appendLine("**한 방 상한** · 스와이프 한 번(연쇄·과부하·행운 알림·인증번호 포함)은 Lv${rules.jackpotCapFrom}부터 최대 ${rules.swipeLevelCap}단계, Lv${rules.lateGrowthFrom}부터 최대 ${rules.swipeLevelCap + rules.lateSwipeCapSteps}단계까지 올린다. 오프라인 정산은 기본 최대 ${rules.offlineLevelCap}단계다. 넘친 P는 '과열 보호'로 사라진다. 권역 × 카테고리 × 다양성 시너지 합계는 ×${rules.synergyCapPermille / 1000.0}까지(티어 한 칸 ×${rules.tierBase}보다 낮게).")
     appendLine()
     appendLine("## 9. 레벨 기준 누적 P")
     appendLine()
@@ -148,7 +148,7 @@ fun contentDoc(): String = buildString {
     val ls = listOf(2, 5, 10, 15, 20, 25, 30, 36, 42, 48, 55, 64, 72, 80, 88)
     ls.chunked(3).forEach { row -> appendLine("| " + row.joinToString(" | ") { "Lv$it | ${short(rules.levelP(it))}" } + " |") }
     appendLine()
-    appendLine("`Lv L = ${rules.levelPBase} × ${rules.levelRatioPermille / 1000.0}^(L−2)`, Lv${rules.levelLateFrom}부터 배수가 레벨마다 +${rules.levelRatioStepPermille / 1000.0}. 오프라인: 자동 정리 기준 속도(직접의 ${rules.offlineAutoPermille / 10}%) × 효율 ${rules.offlineEfficiencyPercent}%, 상한 ${steps(rules.offlineCapSteps, "시간")}.")
+    appendLine("Lv2 기준 P는 ${rules.levelPBase}이다. 각 레벨의 다음 기준은 직전 기준에 기본 배수 ${rules.levelRatioPermille / 1000.0}을 곱해 정수로 반올림한다. Lv${rules.levelLateFrom}부터 단계마다 배수가 ${rules.levelRatioStepPermille / 1000.0}씩 오르며, Lv${rules.lateGrowthFrom}에서 다음 레벨로 갈 때부터 그 단계 배수에 ×${rules.lateGrowthPermille / 1000.0}를 적용한다. 오프라인은 자동 정리 기준 속도(직접의 ${rules.offlineAutoPermille / 10}%)에 효율 ${rules.offlineEfficiencyPercent}%를 곱한다. 상한은 ${steps(rules.offlineCapSteps, "시간")}.")
     appendLine()
     appendLine("## 10. 수익화 (17장)")
     appendLine()

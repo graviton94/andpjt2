@@ -31,6 +31,8 @@ fun beats(o: SwipeOutcome): String = o.beats.filter { it !is Beat.Spawned }.join
         is Beat.FreeUpgrade -> "무료 강화 ${Catalog.app(b.app).name} Lv${b.level}"
         is Beat.LevelUp -> "Lv${b.level}"
         is Beat.Capped -> "과열 보호(−${b.lost})"
+        is Beat.Spawn -> "낙하 ${name(b.row)}"
+        is Beat.ChainEnd -> "연쇄 종료 ${b.reason}"
         is Beat.Spawned -> ""
     }
 }

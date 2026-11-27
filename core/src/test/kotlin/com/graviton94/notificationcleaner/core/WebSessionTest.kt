@@ -35,6 +35,24 @@ class WebSessionTest {
         assertEquals(w.state, SaveCodec.decode(w.save()))
     }
 
+    @Test fun fallingBeatsPreserveReplayOrderAndExposeSlotsAndReasons() {
+        val engine = Engine(RuleSet(fallMatchPermille = 1_000, gaugePerBurst = 25, fallSpamStepPermille = 0))
+        val session = WebSession(engine, engine.newGame(t0, 41), t0)
+        val outcome = parse(session.swipe(4, t0))
+        val beats = outcome.getValue("beats").jsonArray.map { it.jsonObject }
+        val kinds = beats.map { it.getValue("t").jsonPrimitive.content }
+        assertEquals(listOf("swiped", "merged", "burst", "spawn", "spawn"), kinds.take(5))
+        val fall = beats[3]
+        assertEquals("0", fall.getValue("slot").jsonPrimitive.content)
+        assertEquals("1", fall.getValue("chain").jsonPrimitive.content)
+        assertTrue(fall.getValue("row").jsonObject.getValue("id").jsonPrimitive.long > 7)
+        val ends = beats.filter { it.getValue("t").jsonPrimitive.content == "chainEnd" }
+        assertEquals(1, ends.size)
+        assertEquals("wave", ends.single().getValue("reason").jsonPrimitive.content)
+        assertTrue(kinds.indexOf("chainEnd") > kinds.lastIndexOf("wave"))
+        assertTrue(kinds.indexOf("spawned") > kinds.indexOf("chainEnd"))
+    }
+
     @Test fun burstAndWaveExposeActualPresentationMetadata() {
         val e = Engine()
         val s = e.newGame(t0, 11).copy(

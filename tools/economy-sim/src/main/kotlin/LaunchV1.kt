@@ -1,3 +1,4 @@
+import com.graviton94.notificationcleaner.core.Actor
 import com.graviton94.notificationcleaner.core.AdSlot
 import com.graviton94.notificationcleaner.core.Alert
 import com.graviton94.notificationcleaner.core.Beat
@@ -25,6 +26,9 @@ private data class ChainPath(
     val matchBonus: Int,
     val waves: Int,
     val scoringChain: Int,
+    val actor: Actor,
+    val end: String,
+    val steps: Int,
 )
 
 /** Collects actual committed swipes. A wave can raise the scoring chain but is not an additional direct explosion. */
@@ -56,6 +60,8 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     val adP = mutableMapOf<AdSlot, BigInteger>()
     private var previousEvent: String? = null
     private var day = 0
+    private var actor = Actor.Player
+    override fun input(actor: Actor) { this.actor = actor }
     private var limit = BigInteger.valueOf(1_000)
     private var newUnit = false
     private var sessionBegan = 0L
@@ -85,12 +91,14 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
         var physicalBursts = 0
         var preWaveChain = 0
         var waveCount = 0
+        var chainEnd: Beat.ChainEnd? = null
         for (beat in outcome.beats) when (beat) {
             is Beat.Burst -> {
                 physicalBursts++
                 preWaveChain = beat.chain
             }
             is Beat.Wave -> waveCount++
+            is Beat.ChainEnd -> chainEnd = beat
             is Beat.Spawned -> {
                 val row = beat.row
                 val event = when (row.kind) {
@@ -109,7 +117,7 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
         }
         val burst = physicalBursts > 0
         val path = ChainPath(if (day <= 14) "days1_14" else "day15_on", physicalBursts, preWaveChain - physicalBursts,
-            waveCount, outcome.chain)
+            waveCount, outcome.chain, actor, chainEnd?.reason?.name?.lowercase() ?: "", chainEnd?.steps ?: 0)
         chainPaths.merge(path, 1, Long::plus)
         if (before.level <= 10) { opening++; if (burst) earlyBlast++ }
         else { late++; if (burst) lateBlast++ }
@@ -156,7 +164,7 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
     require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
     val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
-    val signature = "launch-v1;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots"
+    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots"
     out.mkdirs()
     val manifest = File(out, "parameters.txt")
     if (manifest.isFile) require(manifest.readText().trim() == signature) { "Results directory already has different parameters" }
@@ -203,16 +211,17 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
             fixed(tl.ads.toDouble() / horizon), weeks.joinToString("|")).joinToString(",")
         ad.writeText(AdSlot.entries.joinToString("\n", postfix = "\n") { "${case.key},${it.name},${feel.adCounts[it] ?: 0},${feel.adP[it] ?: zero}" })
         storeCompletedCase(chain, feel.chainPaths.entries
-            .sortedWith(compareBy({ it.key.period }, { it.key.scoringChain }, { it.key.physicalBursts }, { it.key.matchBonus }, { it.key.waves }))
+            .sortedWith(compareBy({ it.key.period }, { it.key.scoringChain }, { it.key.physicalBursts }, { it.key.matchBonus }, { it.key.waves },
+                { it.key.actor.name }, { it.key.end }, { it.key.steps }))
             .joinToString("\n", postfix = "\n") { (path, count) ->
-                "${case.key},${path.period},${path.physicalBursts},${path.matchBonus},${path.waves},${path.scoringChain},$count"
+                "${case.key},${path.period},${path.physicalBursts},${path.matchBonus},${path.waves},${path.scoringChain},$count,${path.actor.name},${path.end},${path.steps}"
             })
         fun quote(label: String) = "\"" + label.replace("\"", "\"\"") + "\""
         storeCompletedCase(span, "${case.key},${fixed(gapFrom.first)},${quote(gapFrom.second)},${fixed(gapTo.first)},${quote(gapTo.second)},${fixed(gap)}\n")
         storeCompletedCase(main, record + "\n")
         println(record)
     }
-    val chains = "profile,seed,input,period,physical_bursts,match_bonus,waves,scoring_chain,swipes"
+    val chains = "profile,seed,input,period,physical_bursts,match_bonus,waves,scoring_chain,swipes,actor,end_reason,processing_steps"
     val gaps = "profile,seed,input,from_day,from_unlock,to_day,to_unlock,gap_days"
     val outputs = listOf(Triple("seeds.csv", metrics, "metrics"), Triple("ad-slots.csv", ads, "ads"),
         Triple("chain-paths.csv", chains, "chains"), Triple("unlock-gaps.csv", gaps, "unlocks"))

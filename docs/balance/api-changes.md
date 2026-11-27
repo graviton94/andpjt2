@@ -152,7 +152,7 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 
 `synergy.key`의 카테고리는 기존 `row.cat`의 `Social`·`Work`·`Daily`·`Media`·`Money` 키를 사용한다. `effect`와 `synergy`가 비어 있으면 그 키를 생략한다. 새 비트 타입은 없다.
 
-`watchAd("OfflineDouble", adId, now)`가 당일의 가장 최근 양수 복귀 정산을 한 번 더 지급한다. 실제 추가분은 광고 레벨 상한을 적용한다. 한 세션의 제안은 한 번만 사용하며 공장 초기화·동기화 때 만료된다. 복귀 후 광고를 보는 동작과 당일·다음날 공통 +70%는 별도 효과다. 반환 카드는 현재 호스트에서 SDK 호출 후 표시하는 토스트까지 연결돼 있으므로, 운영 지급은 플랫폼의 확인된 `ad-` 클레임과 함께 연결한다.
+`watchAd("OfflineDouble", adId, now)`가 당일의 가장 최근 양수 복귀 정산을 한 번 더 지급한다. 실제 추가분은 광고 레벨 상한을 적용한다. 한 세션의 제안은 한 번만 사용하며 공장 초기화·동기화 때 만료된다. 복귀 후 광고를 보는 동작과 당일·다음날 공통 +70%는 별도 효과다. v1.2 화면 병합본은 SDK 보상 확인 후 이 지면을 확인된 `ad-` 클레임으로 호출한다.
 
 `bm()`은 `starterProductId`, `rookieProductId`, `passProductIds`로 Play 상품 ID를 제공한다. `passProductIds`의 키는 기존 청구 요청의 구독 종류다.
 
@@ -199,3 +199,34 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 `packs[].id`, `starterProductId`, `rookieProductId`, `passProductIds`는 그대로 안내한다. 출시 상품 ID와 원화는 [Play 상품 등록 원본](../../tools/play/products.json)에 있다. `panel().syncLevel`의 기존 단위는 레벨이고 기본값은 75다.
 
 저장 외피 버전은 1이며 규칙 버전은 5다. `backup.legacyAppUnlockLevel`은 이전 규칙에서 달성한 최고 레벨을 기록하는 선택 필드다. 값이 없는 새 저장은 0으로 취급한다. 기존에 열었던 앱은 업데이트 후에도 구입할 수 있고, 그 권한은 두 환생을 거쳐 유지된다.
+
+## v1.2 낙하 연쇄
+
+`swipe()`와 `auto()`의 `beats`에 `spawn`과 `chainEnd`가 추가됐다. 현재 판에서 붙은 줄은 이전과 같이 `merged` 뒤 `burst` 순서로 사라진다. `spawn`은 다음 폭발에 참여할 수 있는 중간 보충이다. `spawned`는 연쇄가 끝난 뒤 기존과 같이 남은 칸을 채운다.
+
+| 비트 | 필드 | 재생 규칙 |
+|---|---|---|
+| `spawn` | `row`, `slot`, `chain` | `row.id`와 `row.app`는 기존 행 객체의 값이다. `slot`은 이 시점의 0부터 시작하는 도착 위치이며 현재는 맨 위인 0이다. 즉시 행을 삽입해야 뒤 `merged`나 `burst`가 같은 ID를 찾을 수 있다. `chain`은 떨어지기 직전까지 쌓인 연쇄 번호다. |
+| `chainEnd` | `reason`, `chain`, `bursts`, `steps` | 한 번이라도 폭발한 스와이프에 한 번 나간다. `chain`은 튄더 가산 및 파동을 포함한 최종 표시 번호, `bursts`는 물리 폭발 횟수, `steps`는 폭발·중간 보충 작업 합계다. |
+| `chainEnd.reason` | `natural`, `spam`, `wave`, `cap` | 더 닿는 쌍 없음, 스팸 차단, 과부하 파동 피날레, 안전 상한이다. `wave`는 마지막 `wave` 비트 뒤에 온다. |
+
+다음은 시드 1의 실제 응답에서 연쇄 비트를 추린 예다. 앞서 떨어진 행을 다시 합치고 터뜨리는 ID가 이어진다. [전체 응답](launch-v12-data/falling-swipe.json)
+
+```json
+{
+  "chain": 2,
+  "beats": [
+    {"t":"merged","into":{"id":3,"kind":"App","app":"memo"},"from":5},
+    {"t":"burst","row":{"id":3,"kind":"App","app":"memo"},"chain":1},
+    {"t":"spawn","row":{"id":8,"kind":"App","app":"weather"},"slot":0,"chain":1},
+    {"t":"spawn","row":{"id":9,"kind":"App","app":"weather"},"slot":0,"chain":1},
+    {"t":"merged","into":{"id":9,"kind":"App","app":"weather"},"from":8},
+    {"t":"burst","row":{"id":9,"kind":"App","app":"weather"},"chain":2},
+    {"t":"spawn","row":{"id":10,"kind":"App","app":"memo"},"slot":0,"chain":2},
+    {"t":"spawn","row":{"id":11,"kind":"App","app":"alarm"},"slot":0,"chain":2},
+    {"t":"chainEnd","reason":"natural","chain":2,"bursts":2,"steps":6}
+  ]
+}
+```
+
+정산이 끝난 전체 판은 기존의 `state.rows`다. 화면은 낙하·합치기·폭발·파동의 순서를 유지하며 전체 재생을 6초 안에 압축할 수 있다. `cap`은 처리 안전 상한을 뜻한다. 지급액이 과열 보호로 잘린 경우에는 기존 `capped` 비트가 별도로 나간다. 숫자 필드 이름과 단위, 저장 외피 버전 1, 상품 ID 11개는 계속 사용한다.
