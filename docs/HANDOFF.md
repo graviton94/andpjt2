@@ -160,7 +160,7 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
 - 코어에서 같은 앱의 두 줄이 닿으면 즉시 폭발한다. 저장 JSON 외피는 버전 1이고, 규칙 버전 4에서 열린 이전 보드의 폭발 기준을 2로 이관한다.
 - VFX 계약은 [api-changes.md](balance/api-changes.md), 결제 등록 ID와 보상은 [17-monetization.md](bible/17-monetization.md)를 따른다.
 
-v1.1 작업 지시서는 [balance-session-v1.1.md](prompts/balance-session-v1.1.md)다.
+v1.1은 화면 원본 `280ec1b`를 `b299f07`에서 병합했다. [작업 지시서](prompts/balance-session-v1.1.md) · [최신 출시 판정과 재현](balance/LAUNCH-V11-REPORT.md) · [패스 BM과 복귀 계약](balance/api-changes.md). 실제 복귀 카드에서 광고 콜백 후 코어 지급 호출을 잇는 작업은 화면 트랙에 남아 있다.
 
 ### 별도 트랙 · 무한 강화와 EX 사전 이식 기준
 1. GB 동기화 직후 가속 복구: Lv60 재도달 비율 ≤0.80이 인접 회차 쌍의 70% 이상

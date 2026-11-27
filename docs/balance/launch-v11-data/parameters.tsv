@@ -1,0 +1,15 @@
+stage	parent	description	parameters
+a	v1.0	동기화 진입 Lv75 · GB 환산 Lv60	t5=31; t6=43
+b	a	첫 5티어 Lv28 · 첫 6티어 Lv58	t5=28; t6=58
+c	b	첫 6티어 Lv64	t5=28; t6=64
+d	c	첫 5티어 Lv27 · 첫 6티어 Lv70	t5=27; t6=70
+e	d	최근 수입 창 180→90	t5=27; t6=70; recentIncomeWindow=90
+f	d	최근 수입 창 180→120	t5=27; t6=70; recentIncomeWindow=120
+g	d	첫 5티어 Lv25 · 첫 6티어 Lv72	t5=25; t6=72
+g-84	g	같은 배치의 무과금·광고 장기 검증	t5=25; t6=72
+h	g	최근 수입 창 180→100	t5=25; t6=72; recentIncomeWindow=100
+i	g	Lv80 이후 레벨 간 P 비율 ×0.90	t5=25; t6=72; lateGrowthFrom=80,lateGrowthPermille=900
+j	g	Lv74 이후 레벨 간 P 비율 ×0.86	t5=25; t6=72; lateGrowthFrom=74,lateGrowthPermille=860
+k	g	GB 파일 환산 지수 0.50→0.55	t5=25; t6=72; cloudExponentPermille=550
+l	j	기본 오프라인 효율 9→7%	t5=25; t6=72; lateGrowthFrom=74,lateGrowthPermille=860,offlineEfficiencyPercent=7
+m	j	기본 오프라인 효율 9→8%	t5=25; t6=72; lateGrowthFrom=74,lateGrowthPermille=860,offlineEfficiencyPercent=8

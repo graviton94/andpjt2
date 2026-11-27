@@ -197,3 +197,5 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 `valueXDataOnly`는 30일 모두 청구한 데이터의 기준가 환산이다. 월간 카드의 '최대 ×8.4 가치'는 이 값으로 표시한다. `valueX`는 오버클럭 90시간을 시간당 데이터 40으로 전부 환산한 비교 지표다. 광고 제거와 터보·울트라의 상시 배율은 두 환산에서 제외한다. 스타터와 초심자 패스는 기존의 선택권·소모품 포함 기준을 쓴다.
 
 `packs[].id`, `starterProductId`, `rookieProductId`, `passProductIds`는 그대로 안내한다. 출시 상품 ID와 원화는 [Play 상품 등록 원본](../../tools/play/products.json)에 있다. `panel().syncLevel`의 기존 단위는 레벨이고 기본값은 75다.
+
+저장 외피 버전은 1이며 규칙 버전은 5다. `backup.legacyAppUnlockLevel`은 이전 규칙에서 달성한 최고 레벨을 기록하는 선택 필드다. 값이 없는 새 저장은 0으로 취급한다. 기존에 열었던 앱은 업데이트 후에도 구입할 수 있고, 그 권한은 두 환생을 거쳐 유지된다.
