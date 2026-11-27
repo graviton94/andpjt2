@@ -157,7 +157,7 @@ async function run() {
   if (phase === 'purchase' || desktop) {
     checkpointStage('claim attendance');
     await until(async () => (await bm()).claimedToday, 'The game did not claim attendance');
-    const attendance = page.locator('#sheet.open #sheet-t').getByText('매일 들르기', { exact: true });
+    const attendance = page.locator('#sheet.open #sheet-t').getByText(/^(매일 들르기|Daily visit)$/);
     try {
       // The core can record the claim before the page finishes opening the attendance sheet.
       await attendance.waitFor({ timeout: 2500 });
@@ -241,7 +241,8 @@ async function run() {
     await open('reset');
     const pre = await progress();
     await act('reset').click();
-    await page.getByRole('button', { name: /정말 초기화할까요/ }).waitFor();
+    // the armed label follows the device language (the CI emulator is English)
+    await page.getByRole('button', { name: /정말 초기화할까요|Really reset/ }).waitFor();
     await act('reset').click();
     await until(async () => (await panel()).resets === pre.resets + 1, 'Factory reset did not pay');
     const post = await progress();
