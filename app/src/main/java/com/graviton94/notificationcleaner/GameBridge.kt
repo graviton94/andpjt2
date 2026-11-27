@@ -101,6 +101,9 @@ class GameBridge(private val context: Context) {
     var activity: ComponentActivity? = null
     var billing: Billing? = null
     var account: Account? = null
+    private val signingIn = java.util.concurrent.atomic.AtomicBoolean(false)
+    /** While a sign-in is out to KakaoTalk / the Google sheet, coming back is not "returning to the game". */
+    val isSigningIn get() = signingIn.get()
     /** Reload the page after the save was replaced by the cloud copy. */
     var reload: (() -> Unit)? = null
     private var cloudPending: Account.Cloud? = null
@@ -148,14 +151,20 @@ class GameBridge(private val context: Context) {
     fun signIn(id: String, provider: String) {
         val act = activity ?: return cb("onAccount", id, false, "unavailable", null)
         val acc = account?.takeIf { it.enabled } ?: return cb("onAccount", id, false, "unavailable", null)
+        // one flow at a time: a second Kakao/Google flow on top of a running one cancels it (the "bounce" testers saw)
+        if (!signingIn.compareAndSet(false, true)) return cb("onAccount", id, false, "busy", null)
         act.lifecycleScope.launch {
             try {
+                // the provider sheet itself has no limit (the player may be typing a password); the server part does
                 if (provider == "kakao") acc.signInKakao(act) else acc.signInGoogle(act)
-                afterSignIn(id, acc)
-            } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                kotlinx.coroutines.withTimeout(30_000) { afterSignIn(id, acc) }
+            } catch (e: CancellationException) {
+                if (e is kotlinx.coroutines.TimeoutCancellationException) cb("onAccount", id, false, "error", JSONObject().put("type", "Timeout")) else throw e
+            } catch (e: Exception) {
                 val cancel = e.javaClass.simpleName.contains("Cancel") || (e.message ?: "").contains("cancel", true)
+                android.util.Log.w("Account", "sign-in $provider failed: ${e.javaClass.simpleName} ${e.message}")
                 cb("onAccount", id, false, if (cancel) "cancel" else "error", JSONObject().put("type", e.javaClass.simpleName))
-            }
+            } finally { signingIn.set(false) }
         }
     }
 

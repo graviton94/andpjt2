@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         val ads = Ads(this)
         bridge.ads = ads
         bridge.activity = this
-        bridge.account = Account(applicationContext)
+        bridge.account = Account(applicationContext).also { it.warmUp() }
         val billing = Billing(applicationContext) { p, claim -> bridge.grant(p, claim) }
         bridge.billing = billing
         billing.onReady = { web.post { web.evaluateJavascript("window.onStore && window.onStore()", null) } }
@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         web.onResume()
         bridge.billing?.restore()  // payments that finished while we were away (pending methods, other device)
+        if (bridge.isSigningIn) return  // back from KakaoTalk / the Google sheet: not an offline return
         bridge.resume()?.let { json -> web.evaluateJavascript("window.onOffline && window.onOffline($json)", null) }
     }
 

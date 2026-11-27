@@ -207,7 +207,7 @@
  "go_faster": "Go faster",
  "group_text_every_row_1": "Group text · every row +1!",
  "guest": "Playing as a guest",
- "guest_note": "No sign-in needed · sign in later in Settings to back up your progress",
+ "guest_note": "You can play as a guest and sign in later in Settings",
  "h": "{0}h{1}",
  "handled": "Handled",
  "haptic_kick_on_pops": "Haptic kick on pops",
@@ -287,6 +287,7 @@
  "on_completion": "On completion {0}",
  "one_more": "One more!",
  "opens_at_reset": "Opens at reset {0}",
+ "or_sign_in": "or sign in to back up your progress",
  "out_of_deck": " · Out of deck",
  "out_of_deck_2": "Out of deck",
  "overclock_3h_daily": "Overclock 3h daily",
@@ -493,5 +494,7 @@
  "you_only_get_what_beats": "You only get what beats your previous best",
  "your_coupon_expires_soon": "Your coupon expires soon",
  "your_delivery_is_on_its": "Your delivery is on its way",
- "your_next_run_is_faster": "Your next run is faster · upgrade in the Backup Shop"
+ "your_next_run_is_faster": "Your next run is faster · upgrade in the Backup Shop",
+ "chain_end_spam": "Spam stopped the chain!",
+ "signing_in": "Signing in…"
 }

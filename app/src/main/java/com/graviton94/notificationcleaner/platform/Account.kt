@@ -76,9 +76,16 @@ class Account(private val context: Context) {
         auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
     }
 
+    /** Python functions start cold in several seconds: wake `login` while the title is up, so the tap feels instant. */
+    fun warmUp() {
+        if (!kakaoEnabled || auth.currentUser != null) return
+        functions.getHttpsCallable("login").call(mapOf("provider" to "warm")).addOnFailureListener { }
+    }
+
     suspend fun signInKakao(activity: Activity) {
         val token = kakaoToken(activity)
-        val res = functions.getHttpsCallable("login").call(mapOf("provider" to "kakao", "token" to token.accessToken)).await()
+        val res = functions.getHttpsCallable("login").apply { setTimeout(25, java.util.concurrent.TimeUnit.SECONDS) }
+            .call(mapOf("provider" to "kakao", "token" to token.accessToken)).await()
         val custom = (res.getData() as? Map<*, *>)?.get("token") as? String ?: throw IllegalStateException("no custom token")
         auth.signInWithCustomToken(custom).await()
     }

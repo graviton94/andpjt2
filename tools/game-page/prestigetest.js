@@ -1,5 +1,5 @@
 // Prestige payoff: factory reset then cloud sync from the sheet, frames during the show, state after.
-// Run after: /api/new?seed=5 and /api/cheat?level=62. node tools/game-page/prestigetest.js <outDir>
+// Run after: /api/new?seed=5 and /api/cheat?level=80 (sync opens at Lv75 since balance v1.1). node tools/game-page/prestigetest.js <outDir>
 const { chromium } = require('playwright');
 const out = process.argv[2]; require('fs').mkdirSync(out, { recursive: true });
 const API = 'http://127.0.0.1:8765/api/';

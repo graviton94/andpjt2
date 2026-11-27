@@ -26,14 +26,19 @@
 #boot .bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#FFD23F,#FF8A1F);box-shadow:0 0 12px rgba(255,200,60,.8);transition:width .25s ease}
 #boot .lk{display:flex;justify-content:space-between;margin-top:8px;font:700 12px "Pretendard";color:#FFE0BF}
 #boot .tip{margin-top:18px;min-height:2.6em;font:600 13.5px/1.35 "Pretendard";color:#FFF3E2;opacity:.92}
-#boot .start{position:absolute;left:0;right:0;bottom:16vh;z-index:2;text-align:center;display:none}
+#boot .start{position:absolute;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom));z-index:2;display:none;padding:0 18px}
+#boot .panel{max-width:400px;margin:0 auto;padding:18px 16px 12px;border-radius:26px;background:rgba(20,10,6,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:10px}
+#boot .panel .opt{width:100%;height:54px;border-radius:16px;border:0;display:flex;align-items:center;justify-content:center;gap:10px;font:800 16px/1 "Pretendard";cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .08s}
+#boot .panel .opt:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+#boot .panel .opt svg{width:20px;height:20px;margin:0!important}
+#boot .panel .go{background:linear-gradient(#FFE27A,#F0A000);color:#2A1800;font-size:18px;font-weight:900;animation:bootpulse 1.6s ease-in-out infinite}
+#boot .panel .g{background:#fff;color:#1F1F1F}#boot .panel .k{background:#FEE500;color:rgba(0,0,0,.85)}
+#boot .panel .or{display:flex;align-items:center;gap:10px;font:700 11.5px "Pretendard";color:rgba(255,235,210,.75)}#boot .panel .or::before,#boot .panel .or::after{content:"";flex:1;height:1px;background:rgba(255,235,210,.25)}
+#boot .panel .note{font:600 11.5px/1.45 "Pretendard";color:rgba(255,235,210,.8);text-align:center;margin:0}
+#boot .panel .bfoot{position:static;font:600 11px "Pretendard";color:rgba(255,235,210,.6);text-align:center}
 #boot.title .load{display:none}#boot.title .start{display:block}
-#boot .tap{display:inline-block;font:900 22px/1 "Pretendard";letter-spacing:.04em;padding:16px 34px;border-radius:99px;background:linear-gradient(#FFE27A,#F0A000);color:#2A1800;box-shadow:0 6px 0 #8A4A00,0 0 28px rgba(255,200,60,.55);animation:bootpulse 1.4s ease-in-out infinite}
-#boot .acct{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
-#boot .acct button{width:min(78vw,320px);height:46px;border-radius:12px;border:0;font:800 15px "Pretendard";display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
-#boot .acct .g{background:#fff;color:#1F1F1F}#boot .acct .k{background:#FEE500;color:rgba(0,0,0,.85)}
-#boot .note{font:600 12px/1.4 "Pretendard";color:#FFE0BF;max-width:80vw}
-#boot .bfoot{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2;text-align:center;font:600 11px "Pretendard";color:rgba(255,235,210,.7)}
+
+#boot .bfoot{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2;text-align:center;font:600 11px "Pretendard";color:rgba(255,235,210,.7)}#boot.title>.bfoot{display:none}
 #boot .bfoot a{color:inherit;display:inline;text-decoration:underline}
 #boot.art .rays,#boot.art .pills{display:none}
 #boot.art .logo{position:absolute;top:calc(7vh + env(safe-area-inset-top));left:0;right:0;transform:none;display:flex;flex-direction:column;align-items:center}
@@ -47,6 +52,7 @@
 html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #stage{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
+#stage-ui{position:fixed;inset:0;width:100vw;height:100vh;display:block;pointer-events:none}
 
 /* ---- pull-down shade + sheets (screens-v1 Shade · Shop · Upgrade · Deck · Reset, dark) ---- */
 :root{color-scheme:dark;--bg:#0D0907;--ink:#F6F1EA;--sub:#B3A89B;--line:#FFFFFF1A;--card:#FFFFFF14;--soft:#FFFFFF14;--soft2:#FFFFFF1F;--dash:#FFFFFF33;
@@ -67,6 +73,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
  transform:translateY(-104%);transition:transform .32s cubic-bezier(.2,1,.3,1)}
 #shade.open{transform:none}
 .sh-top{display:flex;align-items:baseline;justify-content:space-between}
+.sh-act{display:flex;align-items:center;gap:8px}.sh-act .chip{height:40px;border-radius:12px}.sh-act #gear{width:40px;height:40px;border-radius:12px;border:1px solid var(--m-outline-v)}.sh-act #gear svg{width:20px;height:20px;stroke-width:1.8}
 .sh-wallet{font:800 30px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;letter-spacing:-.01em}
 .sh-wallet small{font-size:18px;color:var(--acc2)}
 .lv{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:12px;color:var(--sub)}
@@ -227,6 +234,9 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .stk-bolt{--sc:#4A1E9A;color:#fff}.stk-bubble{--sc:#0E6A2E;color:#fff}.stk-stamp{--sc:#8A0A0A;color:#fff}
 #cf{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;font:15px/1.45 "Pretendard","Noto Sans KR",system-ui,sans-serif;color:var(--ink)}
 #cf.on{display:grid}
+#signing{position:fixed;inset:0;z-index:90;display:none;place-items:center;background:rgba(0,0,0,.45)}#signing.on{display:grid}
+#signing .b{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:18px;background:var(--sheet);color:var(--ink);font:700 15px/1.3 "Pretendard",system-ui,sans-serif;box-shadow:0 12px 40px #0008}
+#signing i{width:22px;height:22px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 #cf .box{width:min(320px,86vw);background:var(--sheet);border:1px solid var(--line);border-radius:24px;padding:20px 18px 16px;text-align:center;box-shadow:0 20px 50px #000a}
 #cf h3{margin:0 0 6px;font:800 22px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
 #cf .what{color:var(--sub);font-size:13px;margin-bottom:6px}
@@ -648,10 +658,10 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
  <div class="logo"><img id="boot-logo" alt="" style="display:none"><div class="lt" id="boot-lt"></div><div class="ls" data-i18n="boot_sub"></div></div>
  <img class="mascot" id="boot-mascot" alt="" style="display:none">
  <div class="load"><div class="bar"><i id="boot-bar"></i></div><div class="lk"><span data-i18n="boot_loading"></span><span id="boot-pct">0%</span></div><div class="tip" id="boot-tip"></div></div>
- <div class="start"><div class="tap" data-i18n="tap_to_start"></div><div class="acct" id="boot-acct"></div></div>
+ <div class="start"><div class="panel"><button class="opt go" id="boot-go" data-i18n="tap_to_start"></button><div id="boot-acct" style="display:contents"></div><div class="bfoot" id="boot-foot2"></div></div></div>
  <div class="bfoot" id="boot-foot"></div></div>
-<canvas id="stage" data-i18n-aria="notification_board"></canvas>
-<div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb" data-i18n="daily_challenge"></span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" data-i18n-aria="quit" data-i18n="stop"></button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no" data-i18n="cancel"></button><button id="cf-ok" data-i18n="pay"></button></div></div></div><div id="adov"><div><b data-i18n="ad"></b><span data-i18n="ad_placeholder"></span><br><span id="adt">3</span><span data-i18n="s_to_reward"></span></div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" data-i18n-aria="close">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
+<canvas id="stage" data-i18n-aria="notification_board"></canvas><canvas id="stage-ui" aria-hidden="true"></canvas>
+<div id="signing" role="status"><div class="b"><i></i><span data-i18n="signing_in"></span></div></div><div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb" data-i18n="daily_challenge"></span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" data-i18n-aria="quit" data-i18n="stop"></button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no" data-i18n="cancel"></button><button id="cf-ok" data-i18n="pay"></button></div></div></div><div id="adov"><div><b data-i18n="ad"></b><span data-i18n="ad_placeholder"></span><br><span id="adt">3</span><span data-i18n="s_to_reward"></span></div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" data-i18n-aria="close">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
 // ---------- i18n: every on-screen string is a key in tools/game-page/i18n/<lang>.json ----------
 // Code calls $t(<key>, ...args) with {0}{1}… placeholders; no display text lives in the code (build.py fails on Hangul literals
@@ -704,11 +714,13 @@ const LADDER = [
 const W = 390, H = Math.max(740, Math.round(390 * (innerHeight || 740) / (innerWidth || 390))), EX = H - 740, SIM = 1 / 120, POOL = 600;
 const FD = '"Black Han Sans","Pretendard","Noto Sans KR",system-ui,sans-serif', FB = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
 const cv = document.getElementById('stage');
-const gl = cv.getContext('webgl', { premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
+const gl = cv.getContext('webgl', { premultipliedAlpha: false, antialias: false, alpha: false, preserveDrawingBuffer: false });
 const out2d = gl ? null : cv.getContext('2d');
 // everything is drawn into an offscreen 2D scene, then a shader bends it on the way to the screen
 const scene = document.createElement('canvas'), sctx = scene.getContext('2d');
-const ui = document.createElement('canvas'), uctx = ui.getContext('2d');
+// text/HUD layer: its own screen canvas on top (no per-frame GPU upload); only the board goes through the shader
+const uiEl = document.getElementById('stage-ui'); if (!gl) uiEl.remove();
+const ui = gl ? uiEl : document.createElement('canvas'), uctx = ui.getContext('2d');
 let ctx = sctx;
 const bgS = document.createElement('canvas'); bgS.width = 66; bgS.height = 124; const bctx = bgS.getContext('2d');
 const bgT = document.createElement('canvas'); bgT.width = 18; bgT.height = 34; const tctx = bgT.getContext('2d');
@@ -719,7 +731,8 @@ const BKIMG = Object.assign(new Image(), { src: 'img/bm/currency-backup.webp' })
 const GLOVE = Object.assign(new Image(), { src: 'img/hand-swipe.png' });
 const colOf = d => d.kind === 'Spam' || d.kind === 'Call' ? '#FF3B30' : d.kind === 'Wild' ? '#9B5CFF' : d.kind === 'Event' ? '#EFA03F' : d.kind === 'Alert' ? '#8E8E93' : (COLORS[d.app] || '#EFA03F');
 let dpr = 1;
-const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = scene.width = ui.width = W * dpr; cv.height = scene.height = ui.height = H * dpr; if (gl) gl.viewport(0, 0, cv.width, cv.height); };
+let qScale = 1;  // adaptive: drops when frames run long (see frame())
+const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1) * qScale; cv.width = scene.width = ui.width = Math.round(W * dpr); cv.height = scene.height = ui.height = Math.round(H * dpr); if (gl) gl.viewport(0, 0, cv.width, cv.height); };
 fit(); window.addEventListener('resize', fit);
 if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Pretendard"'); }
 
@@ -867,7 +880,7 @@ if (gl) {
   const vs = 'attribute vec2 p;varying vec2 vq;void main(){vq=vec2((p.x+1.)*.5,(1.-p.y)*.5);gl_Position=vec4(p,0.,1.);}';
   const fs = `precision highp float;
 varying vec2 vq;
-uniform sampler2D T,UI;
+uniform sampler2D T;
 uniform float glitch,crt,sat,bright,alarm;uniform vec4 tint;
 uniform float A,t,seed,heat,chroma,amt,band,bandAmp;uniform float pix,noi,psy;
 uniform vec4 rip[8];
@@ -924,7 +937,6 @@ void main(){
   {float n=fract(sin(dot(floor(v*vec2(390.,390./A)*.5)+floor(t*24.),vec2(12.9898,78.233)))*43758.5453);col+=(n-.5)*noi*.22;col*=1.-noi*.12*step(.5,fract(v.y*211.));}
   float lu=dot(col,vec3(.299,.587,.114));col=mix(vec3(lu),col,sat)*bright;col=mix(col,tint.rgb,tint.a);
   col+=vec3(1.,.12,.06)*alarm*smoothstep(.28,.78,length((v-.5)*vec2(1.25,1.)));
-  vec4 s=texture2D(UI,v);col=mix(col,s.rgb,s.a);
   col=col*on+vec3(.85,.92,1.)*crt*crt*.7*on;
   gl_FragColor=vec4(col,1.);
 }`;
@@ -937,14 +949,14 @@ void main(){
     [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE));
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
   });
-  ['T', 'UI', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
-  gl.uniform1i(U.T, 0); gl.uniform1i(U.UI, 1); gl.uniform1f(U.A, W / H);
+  ['T', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  gl.uniform1i(U.T, 0); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);  // the scene is opaque: lets the browser copy it GPU to GPU gl.uniform1f(U.A, W / H);
 }
 const ripArr = new Float32Array(32);
 function present(t) {
   if (!gl) { out2d.setTransform(1, 0, 0, 1, 0, 0); out2d.drawImage(scene, 0, 0); out2d.drawImage(ui, 0, 0); return; }
   gl.activeTexture(gl.TEXTURE0); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, scene);
-  gl.activeTexture(gl.TEXTURE1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, ui);
+  const uo = fx.crt > 0 ? Math.max(0, 1 - fx.crt * 3).toFixed(2) : '1'; if (uiEl.style.opacity !== uo) uiEl.style.opacity = uo;  // the TV switch-off takes the HUD with it
   ripArr.fill(0); rips.slice(-8).forEach((r, i) => ripArr.set([r.x, r.y, r.age, r.amp], i * 4));
   gl.uniform4fv(U.rip, ripArr);
   gl.uniform4f(U.crk, crack ? crack.x : 0, crack ? crack.y : 0, crack ? crack.age : 0, crack ? crack.amp : 0);
@@ -1771,6 +1783,9 @@ function play(o, quiet = false) {
   Object.assign(plate, { chips: -Infinity, chipsShown: -Infinity, base: 1, syn: 1, wmul: 1, multShown: 1, phase: o.chain > 0 ? 'chain' : 'idle', merge: 0, k: 0, capMode: o.beats.some(b => b.t === 'capped'), capT: 9 });
   plate.earned = L(o.earned); plate.earnedExact = o.earned; plate.chipSum = -Infinity; plate.newBest = !!o.newBestSwipe;
   let t = 0, k = 0; const arrivals = [];
+  // falling cascade (balance v1.2): long chains are compressed so one swipe (chain + tally) stays under 6 s
+  const cnt = x => o.beats.filter(b => b.t === x).length;
+  const est = cnt('merged') * .17 + cnt('burst') * .15 + cnt('spawn') * .05 + cnt('wave') * .45 + .5, sp = Math.min(1, 3.4 / est);  // + ~2 s payoff tally = under 6 s
   for (const b of o.beats) {
     if (b.t === 'swiped') {
       const r = byId(b.id);
@@ -1787,18 +1802,26 @@ function play(o, quiet = false) {
         if (from && into) slamMerge(from, into, k, () => { into.d = b.into; layout(); if (!quiet) sfx.chip(2); pops.push({ x: 300, y: into.y.x + 4, text: `×${b.into.count}`, t: 0, life: .5, rot: .08, size: 22 }); });
         else if (into) { into.d = b.into; kick(into.sc, 5); into.charge = .35; }
       });
-      t += .17;
+      t += .17 * sp;
     } else if (b.t === 'burst') {
       k++; const kk = k, tt = t;
       after(tt, () => { const r = byId(b.row.id); if (r) { r.d = b.row; r.charge = 1; r.q.x = Math.max(r.q.x, .12); spawn('CORE', 195, r.y.x + CH / 2, 0, 0, .06, [255, 255, 255], 50); } });
       after(tt + .06, () => burstRow(b, kk, quiet));
-      t += Math.max(.1, .19 - (kk - 1) * .011);
+      t += Math.max(.1, .19 - (kk - 1) * .011) * sp;
     } else if (b.t === 'wave') {
-      const w = b.index - 1; after(t + .2, () => waveHit(w)); t += .45;
+      const w = b.index - 1; after(t + .2 * sp, () => waveHit(w)); t += Math.max(.3, .45 * sp);
+    } else if (b.t === 'spawn') {
+      // a new notification drops in from the top mid-chain; later merged/burst beats find it by id
+      const d = b.row, slot = b.slot || 0;
+      after(t, () => { if (byId(d.id)) return; const r = mkRow(d, rowY(0) - 70 - rnd() * 20); r.a = 0; r.y.v = 260; board.splice(Math.min(slot, board.length), 0, r); layout(); if (!quiet) sfx.whoosh(); });
+      t += .05 * sp;
+    } else if (b.t === 'chainEnd') {
+      if (b.reason === 'spam') after(t + .05, () => say2($t('chain_end_spam'), 150, 22));
     } else if (b.t === 'spawned') arrivals.push(b.row.id);
     else if (b.t === 'levelUp') { const lv = b.level; after(t + .1, () => { say2($t('level_up', lv), 150, 28); phone('ui.levelup', .4); }); }
     else if (b.t === 'freeUpgrade') { const n = b.name, lv = b.level; after(t, () => say2($t('free_upgrade_to', n, lv), 150, 22)); }
   }
+  window.__lastPlay = { beats: o.beats.map(b => b.t[0]).join(''), t: +t.toFixed(2), sp: +sp.toFixed(2) };  // QA: replay length
   after(t + .12, () => { reconcile(o.state, arrivals); boardBusy = false; });
   if (o.chain > 0) after(t + .38, payoff);
   else after(t + (o.lotto ? 2.2 : .2), () => { if (!ev) busy = false; applyState(o.state); if (L(o.earned) > -Infinity) addWallet(L(o.earned)); });
@@ -2104,7 +2127,23 @@ function frame(now) {
   }
   if (wallet.note) { wallet.note.t += dt; if (wallet.note.t > 1.1) wallet.note = null; }
   tickGame(dt);
-  draw(t); requestAnimationFrame(frame);
+  // a menu over the board (shade or sheet, settled): keep the game running but stop painting the hidden board,
+  // so the blurred glass above it stops being re-blurred every frame
+  const covered = shadeEl && (shadeEl.classList.contains('open') || sheetEl.classList.contains('open')) && !shadeEl.style.transition;
+  if (!covered || frameNo % 20 === 0) draw(t);
+  adaptQuality(now, covered);
+  requestAnimationFrame(frame);
+}
+// adaptive resolution: if the board can't hold ~45 fps for 4 s, render it at a lower scale (text layer included)
+let qT0 = 0, qN = 0, qSlow = 0;
+function adaptQuality(now, covered) {
+  if (covered || document.hidden || !started || navigator.webdriver || qScale <= .75) { qT0 = 0; return; }  // tests and store captures keep full resolution
+  if (!qT0) { qT0 = now; qN = 0; return; }
+  qN++;
+  if (now - qT0 < 2000) return;
+  const fps = qN * 1000 / (now - qT0); qT0 = now; qN = 0;
+  qSlow = fps < 45 ? qSlow + 1 : 0;
+  if (qSlow >= 2) { qScale = .75; fit(); }  // once, to 3/4: text stays sharp enough
 }
 requestAnimationFrame(frame);
 
@@ -2283,7 +2322,7 @@ function renderShade() {
     ['ach', $t('achievements_titles'), P.meta ? $t('titles', P.meta.titles.length, P.meta.achievements.length) : $t('achievements'), false],
     ['attend', $t('daily_visit'), P.bm ? (P.bm.claimedToday ? $t('day', P.bm.streak) : $t('check_in')) : $t('check_in_2'), P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
-  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${shortOf(P.files)}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div style="display:flex;align-items:center;gap:4px"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="${$t('settings')}">${svg('M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4z')}</button></div></div>
+  shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${shortOf(P.files)}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="sh-act"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="${$t('settings')}">${svg('M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z')}</button></div></div>
     <div class="lv"><b>Lv ${st.level}</b>${TITLE() ? `<span class="ttl">「${TITLE()}」</span>` : ''}<span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>${$t('next', shortOf(P.nextLevelP, P.nextLevelPShort))}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot fx-shine' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><span class="tx"><b>${l}</b><em>${sub}</em></span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}</button>`).join('')}</div>
     <div class="row2"><label>${$t('sound_effects')}</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
@@ -2505,9 +2544,12 @@ function accountHTML() {
       ${a.google ? `<button class="btn big" data-signin="google" style="background:#fff;color:#1F1F1F;border:1px solid #747775">${GLOGO}${$t('sign_in_google')}</button>` : ''}
       ${a.kakao ? `<button class="btn big" data-signin="kakao" style="background:#FEE500;color:rgba(0,0,0,.85);margin-top:8px">${KLOGO}${$t('sign_in_kakao')}</button>` : ''}`);
 }
+let signingIn = false;
 async function signIn(provider, b) {
-  const r = await ask('signIn', provider);
-  if (!r.ok) { if (r.reason !== 'cancel') toast($t('sign_in_failed'), 'err'); return; }
+  if (signingIn) return;  // one sign-in at a time: a second tap used to start a second Kakao/Google flow on top of the first
+  signingIn = true; $('signing').classList.add('on');
+  let r; try { r = await ask('signIn', provider); } finally { signingIn = false; $('signing').classList.remove('on'); }
+  if (!r.ok) { if (r.reason !== 'cancel' && r.reason !== 'busy') toast($t('sign_in_failed'), 'err'); return; }
   track('login', { method: provider });
   if (r.reason === 'conflict') {
     const i = r.info, when = i.cloud.savedAt ? new Date(i.cloud.savedAt).toLocaleString(I18N.lang) : '-';
@@ -2885,13 +2927,19 @@ function bootProgress() {
 }
 const preloadImg = src => new Promise(res => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
 async function bootTitle() {
-  const box = $('boot'), acct = $('boot-acct'), a = acctInfo();
+  const box = $('boot'), a = BOOTQ.has('fakeacct') ? { enabled: true, google: true, kakao: true } : acctInfo();  // fakeacct: screenshot the sign-in options in a browser
   box.classList.add('title');
-  if (a.enabled && !a.signedIn) acct.innerHTML = `${a.google ? `<button class="g" data-signin="google">${GLOGO}${$t('sign_in_google')}</button>` : ''}${a.kakao ? `<button class="k" data-signin="kakao">${KLOGO}${$t('sign_in_kakao')}</button>` : ''}<div class="note">${$t('guest_note')}</div>`;
-  else if (a.signedIn) acct.innerHTML = `<div class="note">${a.name ? $t('welcome_back', a.name) : $t('signed_in')}</div>`;
-  acct.querySelectorAll('[data-signin]').forEach(x => x.addEventListener('click', async ev => { ev.stopPropagation(); await signIn(x.dataset.signin); bootTitle(); }));
+  $('boot-foot2').innerHTML = $('boot-foot').innerHTML;
+  bootAcct(a);
   if (BOOTQ.has('notitle')) return;
-  await new Promise(res => box.addEventListener('click', function go(ev) { if (ev.target.closest('a,button')) return; box.removeEventListener('click', go); res(); }));
+  await new Promise(res => box.addEventListener('click', function go(ev) { if (ev.target.closest('a,[data-signin]')) return; box.removeEventListener('click', go); res(); }));
+}
+function bootAcct(a) {
+  const acct = $('boot-acct');
+  if (a.enabled && !a.signedIn && (a.google || a.kakao)) acct.innerHTML = `<div class="or">${$t('or_sign_in')}</div>${a.google ? `<button class="opt g" data-signin="google">${GLOGO}${$t('sign_in_google')}</button>` : ''}${a.kakao ? `<button class="opt k" data-signin="kakao">${KLOGO}${$t('sign_in_kakao')}</button>` : ''}<p class="note">${$t('guest_note')}</p>`;
+  else if (a.signedIn) acct.innerHTML = `<p class="note">${a.name ? $t('welcome_back', a.name) : $t('signed_in')}</p>`;
+  else acct.innerHTML = '';
+  acct.querySelectorAll('[data-signin]').forEach(x => x.addEventListener('click', async ev => { ev.stopPropagation(); await signIn(x.dataset.signin); bootAcct(acctInfo()); }));
 }
 (async () => {
   bootDecor();

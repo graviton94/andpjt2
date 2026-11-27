@@ -59,6 +59,8 @@ def _profile(provider: str, token: str) -> tuple[str, str | None, str | None]:
 def login(req: https_fn.CallableRequest) -> dict:
     data = req.data if isinstance(req.data, dict) else {}
     provider, token = data.get('provider'), data.get('token')
+    if provider == 'warm':  # the app wakes this instance while the title screen is up (cold start ~ several s)
+        return {}
     if provider not in _PROFILE_URLS or not isinstance(token, str) or not token or len(token) > 4096:
         raise https_fn.HttpsError(https_fn.FunctionsErrorCode.INVALID_ARGUMENT, 'provider and token required')
     try:
