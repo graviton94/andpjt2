@@ -602,9 +602,10 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 index++
                 continue
             }
-            // Keep the older notification where possible. Wilds must move out of contact with any meldable row.
-            val first = if (upper.kind == RowKind.Wild || (lower.kind != RowKind.Wild && upper.id > lower.id)) index - 1 else index
-            val second = 2 * index - 1 - first
+            // Try replacing a wild first, or the newer of two ordinary notifications.
+            val replaceUpperFirst = upper.kind == RowKind.Wild || (lower.kind != RowKind.Wild && upper.id > lower.id)
+            val first = if (replaceUpperFirst) index - 1 else index
+            val second = if (replaceUpperFirst) index else index - 1
             fun checked(at: Int) = quietRow(s, rows[at], rows, rows.getOrNull(at - 1), rows.getOrNull(at + 1))
             val preferred = checked(first)
             val alternative = if (preferred == null) checked(second) else null

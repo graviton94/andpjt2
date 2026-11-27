@@ -1,0 +1,26 @@
+{
+  "coreTests": {
+    "tests": 97,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "seeds": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "attempts": 12000,
+  "successfulInputs": 11987,
+  "violations": 0,
+  "coreTestOutput": "manual=5616 auto=2799 appliedSwipes=8402 offline=2373 reload=1212 events=800 alerts=104 fallingWild=656 endings=[Natural, Spam, Wave]"
+}

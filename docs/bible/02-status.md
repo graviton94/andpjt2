@@ -40,7 +40,7 @@
 
 ## 규칙 B 출시 검증
 
-코어에 즉시 폭발과 저장판 이관을 적용했다. 기준선은 [v1.0 출시 밸런스 검증](../balance/LAUNCH-V1-REPORT.md)에 있다. 동기화·티어·패스의 기준은 [v1.1](../balance/LAUNCH-V11-REPORT.md)에 있다. 낙하 연쇄, 자동 유휴 입력, 진행과 과열의 최신 결과는 [v1.2 출시 밸런스 검증](../balance/LAUNCH-V12-REPORT.md)에 있다.
+코어에 즉시 폭발과 저장판 이관을 적용했다. 기준선은 [v1.0 출시 밸런스 검증](../balance/LAUNCH-V1-REPORT.md)에 있다. 동기화·티어·패스의 기준은 [v1.1](../balance/LAUNCH-V11-REPORT.md)에 있다. 낙하 연쇄와 자동 유휴 입력은 [v1.2](../balance/LAUNCH-V12-REPORT.md)에 정리했다. 멈춘 쌍 수정, 기기 스모크, 진행·과열의 최신 판정은 [v1.3 출시 밸런스 검증](../balance/LAUNCH-V13-REPORT.md)에 있다.
 
 ## 진행 중 / 다음
 

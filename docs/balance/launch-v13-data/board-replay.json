@@ -1,0 +1,382 @@
+{
+  "seed": 11,
+  "warmup": 63,
+  "swipes": [
+    {
+      "swipe": 1,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        253,
+        252,
+        251,
+        250,
+        249,
+        248,
+        238
+      ]
+    },
+    {
+      "swipe": 2,
+      "chain": 1,
+      "reason": "natural",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        256,
+        255,
+        254,
+        253,
+        252,
+        248,
+        238
+      ]
+    },
+    {
+      "swipe": 3,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        259,
+        258,
+        257,
+        253,
+        252,
+        248,
+        238
+      ]
+    },
+    {
+      "swipe": 4,
+      "chain": 0,
+      "reason": null,
+      "replaySeconds": 0.07,
+      "rowIds": [
+        260,
+        259,
+        258,
+        257,
+        253,
+        252,
+        248
+      ]
+    },
+    {
+      "swipe": 5,
+      "chain": 0,
+      "reason": null,
+      "replaySeconds": 0.07,
+      "rowIds": [
+        261,
+        260,
+        259,
+        258,
+        257,
+        252,
+        248
+      ]
+    },
+    {
+      "swipe": 6,
+      "chain": 1,
+      "reason": "natural",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        264,
+        263,
+        262,
+        261,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 7,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        267,
+        266,
+        265,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 8,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        270,
+        269,
+        268,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 9,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        273,
+        272,
+        271,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 10,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        276,
+        275,
+        274,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 11,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        279,
+        278,
+        277,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 12,
+      "chain": 2,
+      "reason": "wave",
+      "replaySeconds": 0.88,
+      "rowIds": [
+        282,
+        281,
+        280,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 13,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        285,
+        284,
+        283,
+        264,
+        260,
+        259,
+        258
+      ]
+    },
+    {
+      "swipe": 14,
+      "chain": 0,
+      "reason": null,
+      "replaySeconds": 0.07,
+      "rowIds": [
+        286,
+        285,
+        284,
+        283,
+        264,
+        260,
+        258
+      ]
+    },
+    {
+      "swipe": 15,
+      "chain": 0,
+      "reason": null,
+      "replaySeconds": 0.07,
+      "rowIds": [
+        287,
+        286,
+        285,
+        284,
+        283,
+        264,
+        258
+      ]
+    },
+    {
+      "swipe": 16,
+      "chain": 0,
+      "reason": null,
+      "replaySeconds": 0.07,
+      "rowIds": [
+        288,
+        287,
+        286,
+        285,
+        284,
+        283,
+        258
+      ]
+    },
+    {
+      "swipe": 17,
+      "chain": 1,
+      "reason": "natural",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        291,
+        290,
+        289,
+        288,
+        287,
+        286,
+        285
+      ]
+    },
+    {
+      "swipe": 18,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        294,
+        293,
+        292,
+        291,
+        290,
+        286,
+        285
+      ]
+    },
+    {
+      "swipe": 19,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        297,
+        296,
+        295,
+        294,
+        293,
+        292,
+        291
+      ]
+    },
+    {
+      "swipe": 20,
+      "chain": 2,
+      "reason": "spam",
+      "replaySeconds": 0.98,
+      "rowIds": [
+        302,
+        301,
+        300,
+        299,
+        298,
+        297,
+        291
+      ]
+    },
+    {
+      "swipe": 21,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        305,
+        304,
+        303,
+        302,
+        301,
+        300,
+        291
+      ]
+    },
+    {
+      "swipe": 22,
+      "chain": 1,
+      "reason": "natural",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        308,
+        307,
+        306,
+        305,
+        304,
+        300,
+        291
+      ]
+    },
+    {
+      "swipe": 23,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        311,
+        310,
+        309,
+        308,
+        307,
+        306,
+        291
+      ]
+    },
+    {
+      "swipe": 24,
+      "chain": 1,
+      "reason": "spam",
+      "replaySeconds": 0.53,
+      "rowIds": [
+        314,
+        313,
+        312,
+        311,
+        310,
+        309,
+        291
+      ]
+    },
+    {
+      "swipe": 25,
+      "chain": 2,
+      "reason": "natural",
+      "replaySeconds": 0.98,
+      "rowIds": [
+        319,
+        318,
+        317,
+        316,
+        313,
+        309,
+        291
+      ]
+    }
+  ],
+  "errors": []
+}

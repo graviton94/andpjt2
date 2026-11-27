@@ -1,0 +1,41 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -479,14 +479,21 @@
+     }
+
+     /** Backup shop price after 클라우드 할인. */
+-    fun backupPrice(s: GameState, item: BackupItem): Long =
+-        maxOf(1L, rules.backupPrice(item, s.backup.lv(item)) * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    fun backupPrice(s: GameState, item: BackupItem): Long {
++        val owned = s.backup.lv(item)
++        val price = if (item == BackupItem.EventSlot && owned == 1) 200_000L else rules.backupPrice(item, owned)
++        return maxOf(1L, price * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    }
+
+     /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
+     fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
+
+     /** Max level of a backup item; 알림 가치 한도 raises 알림 가치's. */
+-    fun backupMax(s: GameState, item: BackupItem) = item.max + if (item == BackupItem.Value) 10 * s.backup.cloud.lv(CloudItem.ValueCap) else 0
++    fun backupMax(s: GameState, item: BackupItem) = item.max + when {
++        item == BackupItem.Value -> 10 * s.backup.cloud.lv(CloudItem.ValueCap)
++        item == BackupItem.EventSlot && s.backup.resets >= 21 -> 1
++        else -> 0
++    }
+
+     fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < backupMax(s, item) && shopStage(s) >= item.minResets
+
+--- a/tools/economy-sim/src/main/kotlin/Daily.kt
++++ b/tools/economy-sim/src/main/kotlin/Daily.kt
+@@ -375,7 +375,10 @@
+                 s = reset
+                 tl.resetDays += dayOf(t)
+                 everResets++
+-                if (s.backup.cloud.syncs == 0) BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
++                if (s.backup.cloud.syncs == 0) {
++                    BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
++                    if (s.backup.resets == 21) note("백업 두 번째 이벤트 슬롯 +1")
++                }
+                 s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
+                 stallSessions = 0
+                 sinceReset = 0

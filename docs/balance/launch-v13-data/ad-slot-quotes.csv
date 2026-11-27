@@ -1,0 +1,9 @@
+slot,daily,quote_p,credited_p,data_added,energy_added,ranks_added,boost_minutes,overclock_minutes,remaining,day_after_watch_bonus_permille
+BestDouble,2,2845664477,2845664477,0,0,0,0,0,1,1700
+OfflineDouble,1,1229327046,1229327046,0,0,0,0,0,0,1700
+Boost,2,0,0,0,0,0,60,0,1,1700
+Warp,1,0,4553063136,0,0,0,0,0,0,1700
+Overclock,2,0,0,0,0,0,0,60,1,1700
+Battery,2,0,0,0,16,0,0,0,1,1700
+CreditBox,1,0,0,10,0,0,0,0,0,1700
+FreeUpgrade,1,0,0,0,0,5,0,0,0,1700

@@ -1,0 +1,14 @@
+stage	description	options
+base	판 정리만 적용	70884f4 · 기존 수치
+file180	Lv69~75 구간 파일 기울기 +0.180	모든 주기, backupWallExtraPermille=180
+active1300	파일 +0.120 · Lv35부터 직접 ×1.30 · 인접 14%	모든 주기, backupWallExtraPermille=120,activeLateIncomePermille=1300,fallMatchPermille=140
+near1	첫 주기 파일 +0.060 · Lv85 직접 ×1.20 · Lv35 인접 +3%p · 후반 상한 +6레벨	backupWallExtraPermille=60,activeLateIncomePermille=1200,fallMatchLateExtraPermille=30,lateSwipeCapSteps=3
+layout	쿠빵 Lv71 · 메이버 Lv72 · Lv85 직접 ×1.15	activeLateIncomePermille=1150,fallMatchLateExtraPermille=25,lateSwipeCapSteps=3 · 프로 Lv96·97
+window	Lv70~76 기준 P 완화 · Lv85 직접 ×1.18	activeLateIncomePermille=1180,fallMatchLateExtraPermille=25,lateSwipeCapSteps=3 · P 경계 ×0.88/0.78/0.68/0.62/0.65/0.72/0.88
+notch	near1 + Lv74~76 경계 완화	near1 조건 · Q74·Q75·Q76만 ×0.75/0.70/0.88
+stagger	near1 + 메이버·프로 한 레벨 앞당김	near1 조건 · 메이버 Lv74→73, 프로 Lv99→98
+milestone	near1 + 두 번째 백업 이벤트 슬롯	near1 조건 · 유효 초기화 21회 · 200,000파일 · 슬롯 +1
+milestone-light	milestone의 Lv85 직접 ×1.20→1.10	milestone과 같은 해금, activeLateIncomePermille=1100
+milestone-light-paid	milestone-light 광고·구독 대조	milestone-light와 동일 · Ads·Pass·Spend30·Spend100 ×8
+milestone-light-control	milestone-light 자동·무환생 대조	milestone-light와 동일 · Auto 84일, NoReset 30일
+near1-paid	near1 광고와 월간 대조	near1과 동일, Ads·Pass ×8

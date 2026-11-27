@@ -170,7 +170,9 @@ v1.1은 화면 원본 `280ec1b`를 `b299f07`에서 병합했다. v1.2 화면 병
 - 기기 스모크(CI 에뮬레이터)가 다시 통과한다: 타이틀·가이드 통과, 페이지 안 클릭, 영어 문구 허용, 캡처 버퍼, 꽉 찬 덱 처리.
 - 로그인: 한 번에 하나만 진행하고 "로그인하는 중…"을 표시한다. 서버 단계에 30초 제한을 둔다. 앱 시작 때 `login` 함수를 미리 깨운다(`provider: warm`). 카카오톡에서 돌아오는 것을 복귀 정산으로 보지 않는다. 타이틀에서 로그인한 뒤 시작 대기가 두 번 걸리던 버그를 고쳤다.
 
-v1.2 작업 원본은 화면 세션 `e9469c1`의 [balance-session-v1.2.md](prompts/balance-session-v1.2.md)다. [최신 밸런스 보고서](balance/LAUNCH-V12-REPORT.md) · [낙하 비트 계약](balance/api-changes.md#v12-낙하-연쇄). `spawn`을 도착 위치에 삽입하고 `chainEnd`를 종료 표시로 쓴다. 전체 애니메이션을 6초 이하로 압축하는 작업은 화면 통합에서 검수한다.
+v1.2 작업 원본은 화면 세션 `e9469c1`의 [balance-session-v1.2.md](prompts/balance-session-v1.2.md)다. [v1.2 밸런스 보고서](balance/LAUNCH-V12-REPORT.md) · [낙하 비트 계약](balance/api-changes.md#v12-낙하-연쇄). `spawn`을 도착 위치에 삽입하고 `chainEnd`를 종료 표시로 쓴다. 전체 애니메이션을 6초 이하로 압축하는 작업은 화면 통합에서 검수한다.
+
+v1.3은 화면 원본 `3cd1acb`를 병합하고 멈춘 쌍을 코어에서 방지했다. 화면은 기존 비트를 재생한 뒤 최종 `state.rows`에 맞춘다. 기기 스모크는 가이드 완료 표시 → 새로고침 → 타이틀 시작 버튼 순서다. [지시서](prompts/balance-session-v1.3.md) · [v1.3 결과와 재현](balance/LAUNCH-V13-REPORT.md) · [입력 대기 판 계약](balance/api-changes.md#v13-입력-대기-판)
 
 ### 별도 트랙 · 무한 강화와 EX 사전 이식 기준
 1. GB 동기화 직후 가속 복구: Lv60 재도달 비율 ≤0.80이 인접 회차 쌍의 70% 이상
