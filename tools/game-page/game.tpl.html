@@ -2150,7 +2150,7 @@ requestAnimationFrame(frame);
 // ---------- input: drag a card sideways to clear it ----------
 const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0, x0: 0, tile: -1, dragging: false };
 function tapTile(k) {
-  sfx.snap(); buzz(8);
+  sfx.snap(); buzz(8); armScrim();
   if (k === 'auto') { if (FT.step > 0 && FT.step < 6) { ftNudge(); return; } autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); if (FT.step === 6) ftue('auto'); }
   else if (k === 'dnd') { sound = !sound; if (sound) ac(); toast(sound ? $t('sound_on') : $t('do_not_disturb_sound_off')); }
   else if (k === 'deck') openSheet('deck');
@@ -2162,7 +2162,7 @@ cv.addEventListener('pointerdown', e => {
   phoneLoad(); idleT = 0;
   const [x, y] = toBoard(e);
   if (ev) { if (EVENTS[ev.type].tap) EVENTS[ev.type].tap(ev, x, y); return; }
-  if (y > 684 + EX - 16) { openShop(); return; }
+  if (y > 684 + EX - 16) { armScrim(); openShop(); return; }
   if (y < ROW0 - 30) {  // top area (status bar, buttons): a tap presses a button on release, a drag pulls the shade
     const i = plate.phase === 'idle' && Math.abs(y - TILEY) < 34 ? TILES.findIndex((_, k) => Math.abs(x - tileX(k)) < 32) : -1;
     Object.assign(pull, { on: true, y0: e.clientY, x0: e.clientX, tile: i, dragging: false });
@@ -2290,6 +2290,13 @@ const P$ = (n, short) => shortOf(n, short) + ' P';
 async function loadPanel() { const np = await api('panel'); np.bm = await api('bm'); np.meta = await api('meta'); P = np; applyState(P.state); return P; }  // swap in whole: a sheet may render meanwhile
 function closeAll() {
   armSync = false; ftue('closed'); shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
+// A tap that opens a panel (top tiles open on release, the footer on press) is followed by the phone's own
+// "click" for the same touch, which lands on the scrim that just appeared and closed the panel again.
+let scrimArmedAt = 0;
+const armScrim = () => { scrimArmedAt = performance.now() + 450; };
+// swallow that one stray click wherever it lands (scrim, a shade tile, a sheet button), but only in the moment
+// right after a panel opened from the board
+document.addEventListener('click', e => { if (performance.now() < scrimArmedAt && e.target !== cv) { e.stopPropagation(); e.preventDefault(); scrimArmedAt = 0; } }, true);
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
   if (!canOpenShade()) return;  // the guide owns the screen until it asks for the shade
