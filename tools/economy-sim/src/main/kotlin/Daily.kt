@@ -44,6 +44,13 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
             "gaugePerMerge" -> r.copy(gaugePerMerge = v.toInt())
             "gaugePerBurst" -> r.copy(gaugePerBurst = v.toInt())
             "igniterGaugePerTier" -> r.copy(igniterGaugePerTier = v.toInt())
+            "fallingChains" -> r.copy(fallingChains = v.toBooleanStrict())
+            "fallMatchPermille" -> r.copy(fallMatchPermille = v.toInt())
+            "fallSpamStepPermille" -> r.copy(fallSpamStepPermille = v.toInt())
+            "fallSpamFrom" -> r.copy(fallSpamFrom = v.toInt())
+            "lateSwipeCapSteps" -> r.copy(lateSwipeCapSteps = v.toInt())
+            "swipeLevelCap" -> r.copy(swipeLevelCap = v.toInt())
+            "offlineLevelCap" -> r.copy(offlineLevelCap = v.toInt())
             "sandwichPercent" -> r.copy(sandwichPercent = v.toInt())
             "sandwichPerAssist" -> r.copy(sandwichPerAssist = v.toInt())
             "wildPerAssist" -> r.copy(wildPerAssist = v.toInt())
@@ -93,12 +100,45 @@ data class DayPlan(val sessions: Int = 4, val sessionMin: Int = 15)
 
 enum class InputPolicy { Best, Random, Auto }
 
+private data class SessionInput(val at: Long, val actor: Actor)
+
+/** Manually play 90 s, browse a sheet for 4 s, then leave the board clear for 6 s. */
+private class SessionControls(private val start: Long, private val end: Long, private val autoOnly: Boolean) {
+    private var boardReady = start
+    private var lastAuto: Long? = null
+
+    fun next(t: Long, manualInterval: Long, autoInterval: Long): SessionInput? {
+        val autoCadence = autoInterval.coerceAtLeast(800L)
+        val nextAuto = lastAuto?.plus(autoCadence) ?: (start + 5_500)
+        if (autoOnly) return maxOf(nextAuto, boardReady, t + 1).takeIf { it <= end }
+            ?.let { SessionInput(it, Actor.Auto) }
+        val manuallyAt = maxOf(t + manualInterval, boardReady)
+        val block = start + (t - start) / 100_000 * 100_000
+        if (manuallyAt < block + 90_000) return manuallyAt.takeIf { it <= end }?.let { SessionInput(it, Actor.Player) }
+        // The idle clock restarts on closing the sheet. Hold it for 4 seconds, then resume the auto clock.
+        val idleAt = maxOf(block + 99_500, nextAuto, boardReady, t + 1)
+        if (idleAt < block + 100_000 && idleAt <= end) return SessionInput(idleAt, Actor.Auto)
+        val nextBlock = maxOf(block + 100_000 + manualInterval, boardReady)
+        return nextBlock.takeIf { it <= end }?.let { SessionInput(it, Actor.Player) }
+    }
+
+    fun dispatched(input: SessionInput, outcome: SwipeOutcome?) {
+        if (input.actor == Actor.Auto) lastAuto = input.at
+        if (outcome == null) return
+        // Simulate a bounded board replay. The same board must be free before the next touch or auto swipe.
+        val animations = outcome.beats.count { it is Beat.Merged || it is Beat.Burst || it is Beat.Spawn }
+        val waves = outcome.beats.count { it is Beat.Wave }
+        boardReady = input.at + minOf(6_000L, 250L + animations * 85L + waves * 300L)
+    }
+}
+
 interface DailyAudit {
     val throughDay: Int
     fun startSession(day: Int, state: GameState, now: Long) = Unit
     fun endSession() = Unit
     fun adAward(slot: AdSlot, credited: java.math.BigInteger) = Unit
     fun activeTime(elapsedMs: Long) = Unit
+    fun input(actor: Actor) = Unit
     fun swipe(engine: Engine, before: GameState, outcome: SwipeOutcome, now: Long)
     fun prestige(kind: String, before: GameState, after: GameState, now: Long, gain: Double, stalls: Int, sessions: Int)
     fun endDay(day: Int, state: GameState)
@@ -232,24 +272,34 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
             audit?.startSession(day + 1, s, t)
             val levelAtStart = s.level
             val end = t + plan.sessionMin * 60_000L
+            val controls = SessionControls(t, end, input == InputPolicy.Auto)
             while (t < end) {
-                val step = if (input == InputPolicy.Auto) engine.autoIntervalMs(s, t) else engine.chargeMs(s, t)
+                val move = if (engine.rules.fallingChains) {
+                    controls.next(t, engine.chargeMs(s, t), engine.autoIntervalMs(s, t))
+                } else {
+                    val legacyStep = if (input == InputPolicy.Auto) engine.autoIntervalMs(s, t) else engine.chargeMs(s, t)
+                    SessionInput(t + legacyStep, if (input == InputPolicy.Auto) Actor.Auto else Actor.Player)
+                }
+                val step = (move?.at ?: end) - t
                 check(step > 0) { "${input.name} clock must advance at Lv${s.level}" }
                 audit?.activeTime(minOf(step, end - t))
                 t += step
                 tl.activeMin += step / 60_000.0
+                if (move == null) break
                 s = engine.tick(s, t)
                 observe()
-                val target = when (input) {
-                    InputPolicy.Best -> engine.bestTarget(s, t)
-                    InputPolicy.Random -> s.rows.randomOrNull(inputRandom)?.id
-                    InputPolicy.Auto -> engine.autoTarget(s, t)
+                val actor = move.actor
+                val target = when {
+                    actor == Actor.Auto -> engine.autoTarget(s, t)
+                    input == InputPolicy.Random -> s.rows.randomOrNull(inputRandom)?.id
+                    else -> engine.bestTarget(s, t)
                 }
-                val actor = if (input == InputPolicy.Auto) Actor.Auto else Actor.Player
                 val o0 = target?.let { engine.swipe(s, it, t, actor) }
+                if (engine.rules.fallingChains) controls.dispatched(move, o0)
                 if (o0 == null && traceDays && seed == traceSeed && day == 5 && session == 0 && t < begin + 20_000) println("  막힘 target=$target energy=${s.energy} rows=" + s.rows.joinToString(" ") { "${it.kind}:${it.app}:${it.count}${it.alert ?: ""}" })
                 val best = s.bestSwipe
                 val o = o0 ?: continue
+                audit?.input(actor)
                 audit?.swipe(engine, s, o, t)
                 s = o.state
                 if (stopAtLv124) tl.bestSwipeP = tl.bestSwipeP.max(o.earned)
@@ -270,7 +320,7 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                     shop.watchAd(s, AdSlot.Battery, t)?.let { s = it; tl.ads++; audit?.adAward(AdSlot.Battery, java.math.BigInteger.ZERO) }
                 }
                 // 알림훈련: the reference player taps about half the drill (50 taps -> ×1.5).
-                if (input != InputPolicy.Auto && o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
+                if (actor == Actor.Player && o.beats.any { it is Beat.Swiped && it.row.event == EventCard.Drill }) repeat(50) { s = engine.tapDrill(s, t) }
                 tl.activeP += o.earned
                 val (spent, bought) = spend(s, DeckPolicy.Synergy)
                 s = spent

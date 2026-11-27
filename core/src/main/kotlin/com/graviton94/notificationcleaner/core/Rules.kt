@@ -19,6 +19,16 @@ data class RuleSet(
     val maxRows: Int = 12,
     val threshold: Int = 2,
     val countWeights: List<Int> = listOf(1, 2, 1),
+    val fallingChains: Boolean = true,
+    /** A refill can form a pair with the row it lands on. The usual deck distribution supplies other rows. */
+    val fallMatchPermille: Int = 200,
+    /** Chain spam starts at this many physical bursts and gains one step per further burst. */
+    val fallSpamFrom: Int = 4,
+    val fallSpamStepPermille: Int = 45,
+    val fallSpamMaxPermille: Int = 500,
+    /** Independent limits on physical explosions and total explosion/refill operations. */
+    val fallBurstLimit: Int = 40,
+    val fallWorkLimit: Int = 96,
     val sandwichPercent: Int = 60,
     /** Extra sandwich chance per active app above four: a bigger deck still gets proposals. */
     val sandwichPerExtraApp: Int = 2,
@@ -185,6 +195,8 @@ data class RuleSet(
     // Jackpot limits: luck jumps a few steps, never the whole run.
     /** One swipe (chains, waves, 행운 알림, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
     val swipeLevelCap: Int = 3,
+    /** Additional swipe headroom once the condensed late level curve begins. */
+    val lateSwipeCapSteps: Int = 0,
     /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
     val jackpotCapFrom: Int = 10,
     /** One offline settlement raises the level by at most this many steps. */

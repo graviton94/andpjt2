@@ -50,7 +50,8 @@ class CoreRulesTest {
     }
 
     @Test
-    fun targetPreviewMatchesFullSwipes() {
+    fun targetPreviewMatchesFullSwipesWithNoHiddenArrivals() {
+        val e = Engine(RuleSet(fallingChains = false))
         val apps = listOf("alarm", "memo", "weather", "ctaxi", "maps", "chat", "reddit", "match", "music")
         val events = listOf(EventCard.GroupText, EventCard.Update, EventCard.Firmware)
         val random = kotlin.random.Random(124)
@@ -76,7 +77,8 @@ class CoreRulesTest {
 
     @Test
     fun firstSwipeIsOneSmallBurst() {
-        val (_, o) = firstSwipe()
+        val e = Engine(RuleSet(fallingChains = false))
+        val o = e.swipe(e.newGame(now, 7), 4L, now)!!
         assertEquals(1, o.chain)
         assertEquals(valueOf(11), o.earned)
         assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst, o.state.gauge)
@@ -85,7 +87,9 @@ class CoreRulesTest {
 
     @Test
     fun touchingRowsUnzipOutward() {
-        assertEquals(valueOf(26), doubleChain().second.earned)
+        val state = doubleChain().first
+        val swipe = Engine(RuleSet(fallingChains = false)).swipe(state, state.rows[3].id, now)!!
+        assertEquals(valueOf(26), swipe.earned)
     }
 
     @Test
@@ -130,7 +134,7 @@ class CoreRulesTest {
     @Test
     fun wildMergesWithAnyApp() {
         val o = wildMerge().second
-        val merged = o.beats.filterIsInstance<Beat.Merged>().single().into
+        val merged = o.beats.filterIsInstance<Beat.Merged>().first().into
         assertEquals("memo", merged.app)
         assertEquals(RowKind.App, merged.kind)
         assertEquals(4, merged.count)
@@ -523,8 +527,8 @@ class CoreRulesTest {
 
         val green = deckOf("green", "memo", "alarm").copy(rows = rows("green" to 1, "memo" to 1, "green" to 1))
         val result = e.swipe(green, 101, now)!!
-        assertEquals(2, result.beats.filterIsInstance<Beat.Burst>().single().row.threshold)
-        assertEquals(e.rules.gaugePerMerge + e.rules.gaugePerBurst + 10, result.state.gauge)
+        assertEquals(2, result.beats.filterIsInstance<Beat.Burst>().first().row.threshold)
+        assertTrue(result.state.gauge >= e.rules.gaugePerMerge + e.rules.gaugePerBurst + 10)
     }
 
     @Test
@@ -746,7 +750,7 @@ class CoreRulesTest {
     }
 
     @Test
-    fun wildAndSpamCannotReplayRemovedRowsOrChainPastTheBoard() {
+    fun wildAndSpamCannotReplayRemovedRowsOrExceedTheWorkLimits() {
         val e = Engine(RuleSet(gaugePerMerge = 0, gaugePerBurst = 1, overloadMinIntervalMs = 360_000))
         for (seed in 1L..8) {
             var s = e.newGame(0, seed).copy(level = 25, assists = mapOf(Assist.Wild to 5))
@@ -758,12 +762,55 @@ class CoreRulesTest {
                 val merges = move.beats.filterIsInstance<Beat.Merged>()
                 val bursts = move.beats.filterIsInstance<Beat.Burst>()
                 assertEquals(merges.size, merges.map { it.fromId }.toSet().size)
-                assertTrue(bursts.size <= (s.rows.size - 1) / 2)
+                val end = move.beats.filterIsInstance<Beat.ChainEnd>().singleOrNull()
+                val arrivals = move.beats.filterIsInstance<Beat.Spawn>()
+                assertEquals(arrivals.size, arrivals.map { it.row.id }.toSet().size)
+                assertTrue(arrivals.none { new -> s.rows.any { it.id == new.row.id } })
+                assertEquals(bursts.size, end?.bursts ?: 0)
+                assertTrue(bursts.size <= e.rules.fallBurstLimit)
+                assertTrue((end?.steps ?: 0) <= e.rules.fallWorkLimit)
                 assertTrue(bursts.none { it.row.kind == RowKind.Spam })
                 assertTrue(move.state.rows.size <= e.rules.maxRows)
+                assertTrue(move.state.rows.count { it.kind == RowKind.Spam } <= e.rules.spamMax)
                 s = move.state
             }
         }
+    }
+
+    @Test
+    fun fallingRowsCanContinueOneSwipeAndTheWaveClosesIt() {
+        val e = Engine(RuleSet(fallMatchPermille = 1_000, fallSpamStepPermille = 0,
+            gaugePerBurst = 25, igniterGaugePerTier = 0))
+        val state = e.newGame(now, 41)
+        val move = e.swipe(state, 4, now)!!
+        val bursts = move.beats.filterIsInstance<Beat.Burst>()
+        assertEquals(listOf(1, 2, 3, 4), bursts.map { it.chain })
+        val firstFall = move.beats.indexOfFirst { it is Beat.Spawn }
+        assertTrue(firstFall in (move.beats.indexOf(bursts.first()) + 1) until move.beats.indexOf(bursts[1]))
+        assertTrue(bursts.drop(1).any { burst -> move.beats.filterIsInstance<Beat.Spawn>().any { it.row.id == burst.row.id } })
+        val end = move.beats.filterIsInstance<Beat.ChainEnd>().single()
+        assertEquals(ChainEndReason.Wave, end.reason)
+        assertEquals(4, end.bursts)
+        assertEquals(10, end.steps)
+        assertEquals(4 + e.overloadDepth(state), end.chain)
+        assertTrue(move.beats.indexOf(end) > move.beats.indexOfLast { it is Beat.Wave })
+        assertEquals(move, e.swipe(state, 4, now))
+    }
+
+    @Test
+    fun fallingChainReportsSpamAndWorkBudgetSeparately() {
+        val rules = RuleSet(fallMatchPermille = 1_000, gaugePerBurst = 0, igniterGaugePerTier = 0,
+            fallSpamFrom = 1, fallSpamStepPermille = 1_000, fallSpamMaxPermille = 1_000)
+        val state = Engine(rules).newGame(now, 41)
+        fun outcome(r: RuleSet) = Engine(r).swipe(state, 4, now)!!
+        val spam = outcome(rules)
+        assertEquals(ChainEndReason.Spam, spam.beats.filterIsInstance<Beat.ChainEnd>().single().reason)
+        assertTrue(spam.beats.filterIsInstance<Beat.Spawn>().any { it.row.kind == RowKind.Spam })
+        val capped = outcome(rules.copy(fallSpamStepPermille = 0, fallWorkLimit = 3))
+        val end = capped.beats.filterIsInstance<Beat.ChainEnd>().single()
+        assertEquals(ChainEndReason.Cap, end.reason)
+        assertEquals(3, end.steps)
+        assertEquals(1, end.bursts)
     }
 
     @Test
