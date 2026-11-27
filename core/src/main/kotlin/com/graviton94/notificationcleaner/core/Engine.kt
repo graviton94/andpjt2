@@ -539,13 +539,19 @@ class Engine(val rules: RuleSet = RuleSet()) {
         return s.copy(backup = s.backup.copy(cloud = c.copy(gb = c.gb - price, items = c.items + (item to owned + 1))))
     }
 
-    /** Battery recharge up to [now]. */
-    fun tick(input: GameState, now: Long): GameState {
-        val s = if (input.rulesVersion < rules.version) input.copy(
+    /** The save's board can be returned to the player before the clock ticks. */
+    internal fun restoreBoard(input: GameState): GameState {
+        val migrated = if (input.rulesVersion < rules.version) input.copy(
             rulesVersion = rules.version,
             rows = input.rows.map { if (it.merges) it.copy(threshold = rules.threshold) else it },
             backup = input.backup.copy(legacyAppUnlockLevel = legacyAppUnlockLevel(input)),
         ) else input
+        return stabilizeBoard(migrated)
+    }
+
+    /** Battery recharge up to [now]. */
+    fun tick(input: GameState, now: Long): GameState {
+        val s = restoreBoard(input)
         val cap = energyCap(s)
         if (s.energy >= cap) return if (s.nextChargeAt == 0L) s else s.copy(nextChargeAt = 0)
         if (s.nextChargeAt == 0L) return s.copy(nextChargeAt = now + chargeMs(s, now))
@@ -563,6 +569,61 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (a.app == b.app || a.kind == RowKind.Wild || b.kind == RowKind.Wild) return true
         return on(s, "maps") && (a.app == "maps" || b.app == "maps") &&
             Catalog.app(a.app!!).region != Catalog.app(b.app!!).region
+    }
+
+    /** Keep a row as drawn when possible. A substitute keeps its notification count and identity. */
+    private fun quietRow(s: GameState, row: Row, rows: List<Row>, above: Row?, below: Row?): Row? {
+        fun fits(candidate: Row) = (above == null || !canMerge(s, above, candidate)) &&
+            (below == null || !canMerge(s, candidate, below))
+        if (fits(row)) return row
+        val size = s.active.size
+        if (size == 0) return null
+        val offset = Math.floorMod(row.id, size.toLong()).toInt()
+        for (i in 0 until size) {
+            val app = s.active[(offset + i) % size]
+            if (rows.any { it.alert == Alert.Crash && it.app == app }) continue
+            val candidate = row.copy(kind = RowKind.App, app = app)
+            if (fits(candidate)) return candidate
+        }
+        return null
+    }
+
+    /** Remove unresolved contacts without reopening a chain, changing the RNG, or granting P. */
+    private fun quietRows(s: GameState, original: List<Row>): List<Row> {
+        if (!rules.fallingChains) return original  // Historical simulation mode.
+        var repaired: MutableList<Row>? = null
+        var index = 1
+        while (true) {
+            val rows = repaired ?: original
+            if (index >= rows.size) return rows
+            val upper = rows[index - 1]
+            val lower = rows[index]
+            if (!canMerge(s, upper, lower)) {
+                index++
+                continue
+            }
+            // Keep the older notification where possible. Wilds must move out of contact with any meldable row.
+            val first = if (upper.kind == RowKind.Wild || (lower.kind != RowKind.Wild && upper.id > lower.id)) index - 1 else index
+            val second = 2 * index - 1 - first
+            fun checked(at: Int) = quietRow(s, rows[at], rows, rows.getOrNull(at - 1), rows.getOrNull(at + 1))
+            val preferred = checked(first)
+            val alternative = if (preferred == null) checked(second) else null
+            val writable = repaired ?: original.toMutableList().also { repaired = it }
+            when {
+                preferred != null -> writable[first] = preferred
+                alternative != null -> writable[second] = alternative
+                else -> {
+                    // A deck with no legal alternative may leave space. Removing a row exposes a new seam.
+                    writable.removeAt(first)
+                    index = maxOf(1, first)
+                }
+            }
+        }
+    }
+
+    private fun stabilizeBoard(s: GameState): GameState {
+        val rows = quietRows(s, s.rows)
+        return if (rows === s.rows) s else s.copy(rows = rows)
     }
 
     fun swipe(input: GameState, rowId: Long, now: Long, actor: Actor = Actor.Player, visuals: Boolean = false): SwipeOutcome? =
@@ -986,14 +1047,15 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val need = minSlots(s) - s.active.size
         if (need <= 0) return s
         val extra = s.appLevels.keys.filter { it !in s.active }.sortedByDescending { Catalog.app(it).tier * 10 + Catalog.app(it).order }.take(need)
-        return s.copy(active = s.active + extra)
+        return stabilizeBoard(s.copy(active = s.active + extra))
     }
 
     /** New rows arrive at the top until the board is full again. */
     private fun refill(state: GameState, now: Long, beats: MutableList<Beat>): GameState {
         val rng = Rng(state.rng)
         val n = state.swipes
-        val rows = state.rows.filterNot { it.kind == RowKind.Event && it.expireAt in 1..n }.toMutableList()
+        val surviving = state.rows.filterNot { it.kind == RowKind.Event && it.expireAt in 1..n }
+        val rows = quietRows(state, surviving).toMutableList()
         var id = state.nextId
         var pausedUntil = state.autoPausedUntil
         val pattern = state.pattern.toMutableList()
@@ -1051,8 +1113,9 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold) }
                 else -> spawnApp(state, rows, rng, id++)
             }
-            rows.add(0, row)
-            beats += Beat.Spawned(row)
+            val arrival = if (rules.fallingChains) quietRow(state, row, rows, null, rows.firstOrNull()) ?: break else row
+            rows.add(0, arrival)
+            beats += Beat.Spawned(arrival)
         }
         return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay,
             nextMajorEventAt = nextMajor, previousMajorEvent = previousMajor)
@@ -1222,8 +1285,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
         if (!canBuy(s, appId)) return s
         val active = if (s.active.size < maxSlots(s)) s.active + appId else s.active
         val start = if (on(s, "store")) 2 else 1  // 큐글플레이: new apps arrive upgraded once
-        return s.copy(wallet = s.wallet - appPrice(s, appId), appLevels = s.appLevels + (appId to start), active = active, saleNext = false,
-            boostNext = on(s, "travel") || s.boostNext)
+        return stabilizeBoard(s.copy(wallet = s.wallet - appPrice(s, appId), appLevels = s.appLevels + (appId to start),
+            active = active, saleNext = false, boostNext = on(s, "travel") || s.boostNext))
     }
 
     /** Pro version: ×3 value for an owned app, from its pro level; priced from the level curve. */
@@ -1314,6 +1377,6 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val ok = apps.distinct().size == apps.size && apps.size >= maxOf(2, minSlots(s)) && apps.size <= maxSlots(s) &&
             s.appLevels.keys.containsAll(apps) && cards.distinct().size == cards.size && cards.size <= eventSlots(s) &&
             s.events.containsAll(cards)
-        return if (ok) s.copy(active = apps, equipped = cards) else null
+        return if (ok) stabilizeBoard(s.copy(active = apps, equipped = cards)) else null
     }
 }

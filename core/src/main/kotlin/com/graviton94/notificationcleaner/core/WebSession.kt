@@ -20,7 +20,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
     private var offlineAdOffer: OfflineAdOffer? = null
     private val meta = Meta(engine)
     val shop = Shop(engine)
-    var state: GameState = installed((state ?: engine.newGame(now, now)).migrateRewardClaims(now).expireRewardClaims(now), now)
+    var state: GameState = installed(engine.restoreBoard(state ?: engine.newGame(now, now)).migrateRewardClaims(now).expireRewardClaims(now), now)
         private set
 
     private fun tick(now: Long): GameState {

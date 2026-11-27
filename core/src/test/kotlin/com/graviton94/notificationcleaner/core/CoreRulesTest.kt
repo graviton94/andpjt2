@@ -580,7 +580,7 @@ class CoreRulesTest {
         assertTrue(back.returnBurst)
         assertEquals(3, back.returnSwipes)
         // 모모모: the first burst of a day pays ×3, the second does not.
-        val board = s.copy(rows = rows("memo" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1))
+        val board = s.copy(rows = rows("momo" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1, "memo" to 2, "alarm" to 1))
         val first = e.swipe(board, 102, now)!!
         assertEquals(now / 86_400_000L, first.state.dailyBonusDay["momo"])
         val again = e.swipe(board.copy(dailyBonusDay = first.state.dailyBonusDay), 102, now)!!
@@ -917,18 +917,22 @@ class CoreRulesTest {
         fun deck(vararg ids: String, rows: List<Row>) = e.newGame(0, 3).copy(level = 90, appLevels = ids.associateWith { 1 }, active = ids.toList(), rows = rows)
         fun app(id: Long, a: String, n: Int) = Row(id, RowKind.App, a, count = n, threshold = e.rules.threshold)
         // 날씨: first swipe of the day adds one to its rows (once).
-        val w = deck("weather", "memo", rows = listOf(app(1, "weather", 1), app(2, "memo", 1), app(3, "memo", 1)))
+        val w = deck("weather", "memo", "alarm", rows = listOf(app(1, "weather", 1), app(2, "memo", 1), app(3, "alarm", 1)))
         val w1 = e.swipe(w, 3, day)!!.state
         assertEquals(2, w1.rows.first { it.id == 1L }.count)
         assertEquals(2, e.swipe(w1, 2, day + 1)!!.state.rows.first { it.id == 1L }.count)
         // 큐글맵스: merges with a different app.
-        val m = deck("maps", "memo", rows = listOf(app(1, "maps", 2), app(2, "alarm", 1), app(3, "memo", 2)))
-        assertTrue(e.swipe(m, 2, day)!!.beats.any { it is Beat.Merged })
-        // 코코아T: a merged taxi row pulls in another taxi row.
-        val c = deck("ctaxi", "memo", rows = listOf(app(1, "ctaxi", 2), app(2, "memo", 1), app(3, "ctaxi", 1), app(4, "ctaxi", 1)))
-        val c1 = e.swipe(c, 2, day)!!
-        assertEquals(4, c1.beats.filterIsInstance<Beat.Burst>().single().row.count)
-        assertEquals(listOf(3L, 4L), c1.beats.filterIsInstance<Beat.Merged>().map { it.fromId })
+        val m = deck("maps", "memo", rows = listOf(app(1, "maps", 2), Row(2, RowKind.Event, event = EventCard.Otp), app(3, "memo", 2)))
+        assertTrue(e.swipe(m, 2, day)!!.beats.any { it is Beat.Merged && it.into.app == "maps" })
+        // 코코아T: two arrivals meet the taxi that was already at the top, so the merged row pulls a third taxi.
+        val taxi = Engine(e.rules.copy(fallMatchPermille = 1_000, fallBurstLimit = 2, igniterGaugePerTier = 0))
+        val c = deck("ctaxi", "memo", "alarm", rows = listOf(app(1, "ctaxi", 2), app(2, "memo", 1), app(3, "alarm", 1), app(4, "memo", 1)))
+        val c1 = taxi.swipe(c, 3, day, visuals = true)!!
+        val arrivals = c1.beats.filterIsInstance<Beat.Spawn>().map { it.row }
+        assertEquals(2, arrivals.count { it.app == "ctaxi" })
+        val joined = c1.beats.filterIsInstance<Beat.Merged>().filter { it.into.app == "ctaxi" }
+        assertEquals(2, joined.size)
+        assertEquals(2 + arrivals.sumOf { it.count }, c1.beats.filterIsInstance<Beat.Burst>().single { it.row.app == "ctaxi" }.row.count)
         // 와이: social apps grow with its bursts; 듀오링구 grows with the login streak.
         val y = deck("why", "chat", rows = listOf(app(1, "why", 2), app(2, "memo", 1), app(3, "why", 2)))
         assertEquals(1, e.swipe(y, 2, day)!!.state.whyStacks)
