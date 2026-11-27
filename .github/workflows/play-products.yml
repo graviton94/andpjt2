@@ -1,8 +1,12 @@
 name: Play products
 
 # Creates or updates the in-app products and subscriptions (tools/play/products.json) through the Play Developer API.
-# Run by hand after the first AAB (with the billing permission) is on a track: Play refuses products before that.
+# Runs when tools/play/ changes (idempotent: creates or updates) or by hand. Needs the first AAB (billing permission) uploaded first.
 on:
+  push:
+    paths:
+      - 'tools/play/**'
+      - '.github/workflows/play-products.yml'
   workflow_dispatch:
     inputs:
       dry_run:
