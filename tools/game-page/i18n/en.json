@@ -497,5 +497,6 @@
  "your_next_run_is_faster": "Your next run is faster · upgrade in the Backup Shop",
  "chain_end_spam": "Spam stopped the chain!",
  "signing_in": "Signing in…",
- "press_back_again_to_exit": "Press back again to exit"
+ "press_back_again_to_exit": "Press back again to exit",
+ "cascade_first": "Dropped notifications keep the chain going!"
 }

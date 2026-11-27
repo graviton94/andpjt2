@@ -1813,6 +1813,10 @@ function play(o, quiet = false) {
     } else if (b.t === 'spawn') {
       // a new notification drops in from the top mid-chain; later merged/burst beats find it by id
       const d = b.row, slot = b.slot || 0;
+      // the first time a dropped notification keeps a chain going, say what just happened (once per install)
+      if (!quiet && FT.step >= 9 && !localStorage.getItem('seenCascade') && o.beats.some(x => x.t === 'merged' && (x.from === d.id || (x.into && x.into.id === d.id)))) {
+        localStorage.setItem('seenCascade', '1'); after(t + .3, () => say2($t('cascade_first'), 150, 22));
+      }
       after(t, () => { if (byId(d.id)) return; const r = mkRow(d, rowY(0) - 70 - rnd() * 20); r.a = 0; r.y.v = 260; board.splice(Math.min(slot, board.length), 0, r); layout(); if (!quiet) sfx.whoosh(); });
       t += .05 * sp;
     } else if (b.t === 'chainEnd') {
