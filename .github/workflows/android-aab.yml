@@ -14,6 +14,11 @@ on:
         type: choice
         options: [none, internal, alpha, beta, production]
         default: none
+      status:
+        description: "Play 출시 상태 (completed = 바로 출시(검토 후), draft = 콘솔에서 직접 출시)"
+        type: choice
+        options: [completed, draft]
+        default: completed
 
 permissions:
   contents: write
@@ -82,4 +87,6 @@ jobs:
           packageName: io.github.graviton94.donotdisturb
           releaseFiles: out/*.aab
           track: ${{ inputs.track }}
-          status: draft
+          status: ${{ inputs.status }}
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
