@@ -210,17 +210,20 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 | `chainEnd` | `reason`, `chain`, `bursts`, `steps` | 한 번이라도 폭발한 스와이프에 한 번 나간다. `chain`은 튄더 가산 및 파동을 포함한 최종 표시 번호, `bursts`는 물리 폭발 횟수, `steps`는 폭발·중간 보충 작업 합계다. |
 | `chainEnd.reason` | `natural`, `spam`, `wave`, `cap` | 더 닿는 쌍 없음, 스팸 차단, 과부하 파동 피날레, 안전 상한이다. `wave`는 마지막 `wave` 비트 뒤에 온다. |
 
-다음 예시는 시드 7의 실제 응답을 줄인 것이다. 처음 보충된 행 9가 같은 스와이프의 2연쇄 폭발에 참여한다.
+다음은 시드 1의 실제 응답에서 연쇄 비트를 추린 예다. 앞서 떨어진 행을 다시 합치고 터뜨리는 ID가 이어진다. [전체 응답](launch-v12-data/falling-swipe.json)
 
 ```json
 {
   "chain": 2,
   "beats": [
+    {"t":"merged","into":{"id":3,"kind":"App","app":"memo"},"from":5},
     {"t":"burst","row":{"id":3,"kind":"App","app":"memo"},"chain":1},
     {"t":"spawn","row":{"id":8,"kind":"App","app":"weather"},"slot":0,"chain":1},
     {"t":"spawn","row":{"id":9,"kind":"App","app":"weather"},"slot":0,"chain":1},
     {"t":"merged","into":{"id":9,"kind":"App","app":"weather"},"from":8},
     {"t":"burst","row":{"id":9,"kind":"App","app":"weather"},"chain":2},
+    {"t":"spawn","row":{"id":10,"kind":"App","app":"memo"},"slot":0,"chain":2},
+    {"t":"spawn","row":{"id":11,"kind":"App","app":"alarm"},"slot":0,"chain":2},
     {"t":"chainEnd","reason":"natural","chain":2,"bursts":2,"steps":6}
   ]
 }

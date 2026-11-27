@@ -1,0 +1,323 @@
+{
+  "ok": true,
+  "earned": "20",
+  "chain": 2,
+  "overload": false,
+  "capped": "0",
+  "beats": [
+    {
+      "t": "swiped",
+      "id": 4,
+      "earned": "1",
+      "kind": "App"
+    },
+    {
+      "t": "merged",
+      "into": {
+        "id": 3,
+        "kind": "App",
+        "count": 4,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      "from": 5
+    },
+    {
+      "t": "burst",
+      "row": {
+        "id": 3,
+        "kind": "App",
+        "count": 4,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      "chain": 1,
+      "earned": "10",
+      "tierMax": 1,
+      "synergy": {
+        "kind": "cat",
+        "key": "Work",
+        "mult": 1.25
+      },
+      "chips": "5"
+    },
+    {
+      "t": "spawn",
+      "row": {
+        "id": 8,
+        "kind": "App",
+        "count": 1,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      },
+      "slot": 0,
+      "chain": 1
+    },
+    {
+      "t": "spawn",
+      "row": {
+        "id": 9,
+        "kind": "App",
+        "count": 2,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      },
+      "slot": 0,
+      "chain": 1
+    },
+    {
+      "t": "merged",
+      "into": {
+        "id": 9,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      },
+      "from": 8
+    },
+    {
+      "t": "burst",
+      "row": {
+        "id": 9,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      },
+      "chain": 2,
+      "earned": "9",
+      "tierMax": 1,
+      "chips": "3"
+    },
+    {
+      "t": "spawn",
+      "row": {
+        "id": 10,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      "slot": 0,
+      "chain": 2
+    },
+    {
+      "t": "spawn",
+      "row": {
+        "id": 11,
+        "kind": "App",
+        "count": 2,
+        "threshold": 2,
+        "merges": true,
+        "app": "alarm",
+        "name": "시계",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      "slot": 0,
+      "chain": 2
+    },
+    {
+      "t": "chainEnd",
+      "reason": "natural",
+      "chain": 2,
+      "bursts": 2,
+      "steps": 6
+    },
+    {
+      "t": "spawned",
+      "row": {
+        "id": 12,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      }
+    }
+  ],
+  "state": {
+    "offlineBonus": {
+      "rewardBonusPermille": 700,
+      "ultraBonusPermille": 500,
+      "ultraWithPassMultiplierPermille": 2550,
+      "adActive": false,
+      "adLeftMs": 0,
+      "passActive": false,
+      "passLeftMs": 0,
+      "ultraActive": false,
+      "ultraLeftMs": 0,
+      "rewardActive": false,
+      "multiplierPermille": 1000
+    },
+    "wallet": "20",
+    "level": 1,
+    "gauge": 2,
+    "overloadReadyInMs": 0,
+    "energy": 11,
+    "energyCap": 12,
+    "nextChargeAt": 1795760530848,
+    "now": 1795760527848,
+    "autoPausedUntil": 0,
+    "autoIntervalMs": 4500,
+    "autoIncomePermille": 600,
+    "swipes": 1,
+    "bestSwipe": "20",
+    "deck": 3,
+    "slots": 3,
+    "resetLevel": 19,
+    "backupFilesNow": 0,
+    "files": 0,
+    "rows": [
+      {
+        "id": 12,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 11,
+        "kind": "App",
+        "count": 2,
+        "threshold": 2,
+        "merges": true,
+        "app": "alarm",
+        "name": "시계",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 10,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "memo",
+        "name": "메모",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 1,
+        "kind": "App",
+        "count": 1,
+        "threshold": 2,
+        "merges": true,
+        "app": "alarm",
+        "name": "시계",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 2,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 6,
+        "kind": "App",
+        "count": 1,
+        "threshold": 2,
+        "merges": true,
+        "app": "alarm",
+        "name": "시계",
+        "cat": "Work",
+        "tier": 1,
+        "region": "stock"
+      },
+      {
+        "id": 7,
+        "kind": "App",
+        "count": 3,
+        "threshold": 2,
+        "merges": true,
+        "app": "weather",
+        "name": "날씨",
+        "cat": "Daily",
+        "tier": 1,
+        "region": "stock"
+      }
+    ],
+    "deckApps": [
+      {
+        "id": "alarm",
+        "name": "시계",
+        "tier": 1,
+        "level": 1,
+        "upgradePrice": "25"
+      },
+      {
+        "id": "memo",
+        "name": "메모",
+        "tier": 1,
+        "level": 1,
+        "upgradePrice": "62"
+      },
+      {
+        "id": "weather",
+        "name": "날씨",
+        "tier": 1,
+        "level": 1,
+        "upgradePrice": "40"
+      }
+    ],
+    "shopApps": []
+  }
+}
