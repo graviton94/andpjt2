@@ -2298,6 +2298,24 @@ const armScrim = () => { scrimArmedAt = performance.now() + 450; };
 // right after a panel opened from the board
 document.addEventListener('click', e => { if (performance.now() < scrimArmedAt && e.target !== cv) { e.stopPropagation(); e.preventDefault(); scrimArmedAt = 0; } }, true);
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
+// Android back button (MainActivity asks the page first): close the top layer, like any phone app.
+// On the bare board the first press only warns; a second press within 2 s leaves the app.
+let backArmedAt = 0;
+window.onBack = () => {
+  const on = id => { const e = $(id); return !!e && e.classList.contains('on'); };
+  if (on('signing')) return true;
+  if (on('cf')) { $('cf-no').click(); return true; }
+  if (on('appd')) { $('appd-x').click(); return true; }
+  if (on('chres')) { $('chres-ok').click(); return true; }
+  if (on('ret')) { $('ret-ok').click(); return true; }
+  if (sheetEl.classList.contains('open')) { $('sheet-x').click(); return true; }
+  if (shadeEl.classList.contains('open')) { shadeSettle(false); return true; }
+  if (!started) return false;  // loading / title: just leave
+  const now = performance.now();
+  if (now < backArmedAt) return false;
+  backArmedAt = now + 2000; toast($t('press_back_again_to_exit')); buzz(6);
+  return true;
+};
 async function openShade() {
   if (!canOpenShade()) return;  // the guide owns the screen until it asks for the shade
   await loadPanel(); renderShade();

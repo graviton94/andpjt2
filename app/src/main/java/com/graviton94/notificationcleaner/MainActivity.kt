@@ -12,6 +12,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -81,6 +82,16 @@ class MainActivity : ComponentActivity() {
         }
         setContentView(web)
         bridge.js = { script -> web.post { web.evaluateJavascript(script, null) } }
+        // Back closes the page's top layer (dialog, sheet, shade); on the bare board the page asks for a second press.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                web.evaluateJavascript("window.onBack ? String(window.onBack()) : 'false'") { r ->
+                    if (r?.trim('"') == "true") return@evaluateJavascript
+                    isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true
+                }
+            }
+        })
+
         bridge.reload = { web.post { web.reload() } }
         ads.start()
         billing.start()

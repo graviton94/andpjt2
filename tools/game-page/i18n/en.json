@@ -496,5 +496,6 @@
  "your_delivery_is_on_its": "Your delivery is on its way",
  "your_next_run_is_faster": "Your next run is faster · upgrade in the Backup Shop",
  "chain_end_spam": "Spam stopped the chain!",
- "signing_in": "Signing in…"
+ "signing_in": "Signing in…",
+ "press_back_again_to_exit": "Press back again to exit"
 }
