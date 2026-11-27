@@ -35,6 +35,11 @@
 #boot .note{font:600 12px/1.4 "Pretendard";color:#FFE0BF;max-width:80vw}
 #boot .bfoot{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2;text-align:center;font:600 11px "Pretendard";color:rgba(255,235,210,.7)}
 #boot .bfoot a{color:inherit;display:inline;text-decoration:underline}
+#boot.art .rays,#boot.art .pills{display:none}
+#boot.art .logo{position:absolute;top:calc(7vh + env(safe-area-inset-top));left:0;right:0;transform:none;display:flex;flex-direction:column;align-items:center}
+#boot.art .logo img{width:min(84vw,460px)}#boot.art .logo .ls{display:none}
+#boot .stk{position:absolute;z-index:1;width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35));animation:bootfloat 5s ease-in-out infinite}
+#boot.title .mascot{display:none!important}#boot.art .mascot{position:absolute;bottom:calc(13vh + 70px);width:104px;height:104px}
 @keyframes bootspin{to{transform:rotate(360deg)}}@keyframes bootfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 @keyframes bootbob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}@keyframes bootpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 @media (prefers-reduced-motion: reduce){#boot *{animation:none!important}}
@@ -2856,12 +2861,15 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
 
 // ---------- boot: loading (real work) → title (tap to start) → guide or daily check-in ----------
 const BOOTQ = new URLSearchParams(location.search);
-const TITLE_ART = new Set([]);  // delivered title art (docs/design/title), so missing files are never requested
+const TITLE_ART = new Set(["bg", "bubble-bell", "bubble-chat", "bubble-mail", "bubble-pop", "logo-en", "logo-ko", "mascot", "mascot-cheer"]);  // delivered title art (docs/design/title), so missing files are never requested
 function bootDecor() {
   const L = I18N.lang, art = (id, src, ok) => { const name = src.split('/').pop().replace('.webp', ''); if (!TITLE_ART.has(name)) return; const im = $(id); im.onload = () => { im.style.display = ''; ok && ok(); }; im.src = src; };
   $('boot-lt').textContent = $t('do_not_disturb_2');
   art('boot-logo', `img/title/logo-${L === 'ko' ? 'ko' : 'en'}.webp`, () => { $('boot-lt').style.display = 'none'; });
-  if (TITLE_ART.has('bg')) { const bg = new Image(); bg.onload = () => { $('boot-bg').style.backgroundImage = `url(${bg.src})`; }; bg.src = 'img/title/bg.webp'; }
+  if (TITLE_ART.has('bg')) { $('boot').classList.add('art'); const bg = new Image(); bg.onload = () => { $('boot-bg').style.backgroundImage = `url(${bg.src})`; }; bg.src = 'img/title/bg.webp'; }
+  // delivered stickers float around the logo
+  [['bubble-chat', 4, 26, -8], ['bubble-bell', 76, 24, 10], ['bubble-mail', 6, 40, 6], ['bubble-pop', 78, 39, -6]].forEach(([n, x, y, r], i) => { if (!TITLE_ART.has(n)) return;
+    const im = document.createElement('img'); im.className = 'stk'; im.alt = ''; im.src = `img/title/${n}.webp`; im.style.cssText = `left:${x}%;top:${y}%;transform:rotate(${r}deg);animation-delay:${-i * 1.2}s`; $('boot').appendChild(im); });
   art('boot-mascot', 'img/title/mascot.webp');
   // floating notification pills (the game's own apps) until the key art arrives
   const ids = ['chat', 'mail', 'weather', 'alarm', 'beat', 'mall', 'tube', 'photo'], pos = [[5, 7], [55, 5], [3, 19], [57, 17], [8, 30], [60, 31], [2, 62], [62, 64]];
@@ -2936,7 +2944,8 @@ function showReturn(o, awayMs) {
   (function tick() { const k = Math.min(1, (performance.now() - t0) / 1100), e = 1 - Math.pow(1 - k, 3); v.textContent = '+' + (k < 1 ? fmtL(lerpL(-1, to, e)) : shortOf(o.paid, o.paidShort)); if (k < 1 && el.classList.contains('on')) requestAnimationFrame(tick); })();
   const close = () => el.classList.remove('on');
   $('ret-ok').onclick = () => { close(); sfx.snap(); };
-  if ($('ret-ad')) $('ret-ad').onclick = async () => { if (await fakeAd('offline')) { toast($t('applies_from_your_next_return'), 'ok'); close(); } };
+  // the ad network confirms the reward first (GameBridge keeps its ad- id), then the core pays it once
+  if ($('ret-ad')) $('ret-ad').onclick = async () => { if (!(await fakeAd('OfflineDouble'))) return; const r = await api('watchAd', { slot: 'OfflineDouble' }); if (r.ok) { applyState(r.state); toast($t('applies_from_your_next_return'), 'ok'); } else toast($t('not_right_now'), 'err'); close(); };
 }
 
 // ---------- first-run guide (bible 16 §2): one thing at a time, game-native bubble, always skippable ----------
@@ -3045,7 +3054,7 @@ function ftIntro() {
   return new Promise(res => {
     $('cf-t').textContent = $t('ft_intro_title');
     $('cf-w').innerHTML = `${TITLE_ART.has('mascot') ? '<img src="img/title/mascot.webp" alt="" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 8px">' : ''}${$t('ft_intro_body')}`;
-    $('cf-p').innerHTML = ''; $('cf-ok').textContent = $t('ft_intro_ok'); $('cf-no').style.display = 'none'; $('cf-ico').innerHTML = IC.cart; $('cf').classList.add('on');
+    $('cf-p').innerHTML = ''; $('cf-ok').textContent = $t('ft_intro_ok'); $('cf-no').style.display = 'none'; $('cf-ico').innerHTML = ''; $('cf').classList.add('on');
     $('cf-ok').onclick = () => { $('cf').classList.remove('on'); $('cf-no').style.display = ''; $('cf-ok').onclick = null; res(); };
   });
 }
