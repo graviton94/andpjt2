@@ -140,7 +140,7 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
 
 ### 진행 중 · 다음 (화면 세션)
 1. 첫 AAB(0.1.0, 가짜 결제) → 사용자가 내부 테스트에 직접 업로드 (API 열기용)
-2. **실제 로그인** — 코드 완료(11-26, `docs/platform/login-billing.md`). 남은 것: 서비스 계정 키를 앱 프로젝트(donotdisturb-e66ea)로 교체 → Functions 배포
+2. **실제 로그인** — 코드 완료(11-26, `docs/platform/login-billing.md`). 서비스 계정 키 교체 완료, Functions(login · deleteAccount) · Firestore 규칙 배포 완료(11-27). 함수 실행 계정 1010040706948-compute@developer.gserviceaccount.com 에 토큰 생성자 있음
    - Google + 카카오 → Firebase Auth. 카카오는 Cloud Functions가 커스텀 토큰 발급
    - 게스트 유지, Firestore `users/{uid}`에 세이브 동기화
 3. **실제 결제** — 코드 완료(Billing 8, `tools/play/products.json`). 첫 AAB 업로드 뒤 `Play products` 워크플로로 상품 등록
