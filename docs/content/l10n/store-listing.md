@@ -12,9 +12,9 @@
 
 > 띵동, 띵동, 또 띵동. 폰이 알림으로 터지기 직전이에요.
 >
-> **밀어서, 합치고, 터뜨리세요.** 알림 한 줄을 밀면 같은 앱 알림끼리 맞닿아 합쳐지고, 가득 차면 팡! 연쇄가 이어질수록 화면이 흔들리고 유리가 깨지고 숫자가 폭발해요.
+> **밀어서, 합치고, 터뜨리세요.** 알림 한 줄을 밀면 위 알림이 떨어지고, 같은 앱끼리 닿는 순간 팡! 연쇄가 이어질수록 화면이 흔들리고 빛이 터지고 숫자가 폭발해요.
 >
-> ■ 손맛 끝판왕 연쇄 — 2연쇄, 5연쇄, 9연쇄 알림 해일까지. 칩이 쌓이고 배율이 불붙고, 합계가 쾅 찍혀요.
+> ■ 손맛 끝판왕 연쇄 — 2연쇄, 5연쇄, 9연쇄 알림 해일까지. 연쇄가 길수록 앱 색에서 주황·빨강·금빛으로 화려해지고, 합계가 쾅 찍혀요.
 > ■ 앱 60종 수집 — 시계·메모 같은 기본 앱부터 메신저, 쇼핑, OTT까지 어디서 본 듯한 패러디 앱 60종. 앱마다 고유 효과와 프리미엄 등급.
 > ■ 덱 시너지 — 권역(아시아·동남아·서양·글로벌)과 분야(소통·업무·생활·미디어·금융)를 맞춰 덱을 짜세요.
 > ■ 방치해도 성장 — 자동 정리와 오프라인 수입. 돌아오면 쌓인 포인트가 기다려요.
@@ -36,9 +36,9 @@
 
 > Ding. Ding. Ding. Your phone is about to burst with notifications.
 >
-> **Swipe, merge, pop.** Swipe a notification row away and matching apps slide together and merge. Fill one up and — POP! Keep the chain going and the screen shakes, the glass cracks and the numbers explode.
+> **Swipe, merge, pop.** Swipe a notification away, the rows above drop down, and the moment two matching apps touch — POP! Keep the chain going and the screen shakes, light bursts and the numbers explode.
 >
-> ■ Chain reactions that feel amazing — 2x, 5x, all the way to a 9x Notification Tsunami. Chips stack, the multiplier catches fire, the total slams down.
+> ■ Chain reactions that feel amazing — 2x, 5x, all the way to a 9x Notification Tsunami. Longer chains glow from the app's own colour to orange, red and gold, and the total slams down.
 > ■ Collect 60 apps — from Clock and Memo to chat, shopping and streaming apps that look oddly familiar. Every app has its own perk and premium stars.
 > ■ Deck synergy — build around regions (Asia, Southeast Asia, West, Global) and categories (Social, Work, Daily, Media, Money).
 > ■ Grows while you're away — auto-clean and offline earnings are waiting when you come back.
