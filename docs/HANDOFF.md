@@ -143,7 +143,7 @@ keystore/              sideload.jks.gpg · upload.jks.gpg (GPG 잠금, README.md
 2. **실제 로그인** — 코드 완료(11-26, `docs/platform/login-billing.md`). 서비스 계정 키 교체 완료, Functions(login · deleteAccount) · Firestore 규칙 배포 완료(11-27). 함수 실행 계정 1010040706948-compute@developer.gserviceaccount.com 에 토큰 생성자 있음
    - Google + 카카오 → Firebase Auth. 카카오는 Cloud Functions가 커스텀 토큰 발급
    - 게스트 유지, Firestore `users/{uid}`에 세이브 동기화
-3. **실제 결제** — 코드 완료(Billing 8, `tools/play/products.json`). 첫 AAB 업로드 뒤 `Play products` 워크플로로 상품 등록
+3. **실제 결제** — 코드 완료(Billing 8). **상품 11개 Play 등록·활성 완료(11-27, 새 일회성 상품 API, 174개 지역)**. 첫 AAB 0.5.0 비공개 테스트 검토 중
    - Play Billing: 데이터 6종 · 스타터 · 초심자 · 패스 3종
    - 지급은 코어(claim id = 구매 토큰, 멱등)
 4. 스토어 자료
