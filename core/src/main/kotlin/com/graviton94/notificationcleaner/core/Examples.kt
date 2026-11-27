@@ -93,7 +93,7 @@ fun synergyTable(): List<Pair<String, BigInteger>> {
 
 /** 7: a wild row merges with anything. */
 fun wildMerge(): Pair<GameState, SwipeOutcome> =
-    with(rows("alarm" to 1, "memo" to 2, "spam" to 0, "wild" to 2, "weather" to 1, "memo" to 2, "alarm" to 1)).let { it to engine.swipe(it, 104, NOW)!! }
+    with(rows("alarm" to 1, "memo" to 2, "spam" to 0, "wild" to 2, "spam" to 0, "memo" to 2, "alarm" to 1)).let { it to engine.swipe(it, 104, NOW)!! }
 
 /** 8: @모두 공지 queues a double sandwich A·B·A·B·A. */
 fun allHands(): Pair<GameState, SwipeOutcome> = with(

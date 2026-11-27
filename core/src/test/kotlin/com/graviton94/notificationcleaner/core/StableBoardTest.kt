@@ -47,18 +47,19 @@ class StableBoardTest {
             nextId = 21, nextChargeAt = start + 100_000,
             rows = listOf(app(18, "alarm"), app(19, "alarm"), Row(20, RowKind.Wild, count = 2, threshold = 2),
                 app(17, "weather"), Row(16, RowKind.Alert, alert = Alert.Storage)))
-        val saved = SaveCodec.decode(SaveCodec.encode(stopped))
-        val session = WebSession(engine, saved, start)
-        val loaded = session.state
-        stable(loaded, "loaded 0.6.0 board")
-        assertEquals(stopped.wallet, loaded.wallet)
-        assertEquals(stopped.runEarned, loaded.runEarned)
-        assertEquals(stopped.energy, loaded.energy)
-        assertEquals(stopped.gauge, loaded.gauge)
-        assertEquals(stopped.swipes, loaded.swipes)
-        assertEquals(stopped.rng, loaded.rng)
-        assertEquals(stopped.rows.last(), loaded.rows.last())
-        assertEquals(loaded, engine.tick(loaded, start))
+        for (version in listOf(4, engine.rules.version)) {
+            val saved = SaveCodec.decode(SaveCodec.encode(stopped.copy(rulesVersion = version)))
+            val loaded = WebSession(engine, saved, start).state
+            stable(loaded, "loaded rules v$version board")
+            assertEquals(stopped.wallet, loaded.wallet)
+            assertEquals(stopped.runEarned, loaded.runEarned)
+            assertEquals(stopped.energy, loaded.energy)
+            assertEquals(stopped.gauge, loaded.gauge)
+            assertEquals(stopped.swipes, loaded.swipes)
+            assertEquals(stopped.rng, loaded.rng)
+            assertEquals(stopped.rows.last(), loaded.rows.last())
+            assertEquals(loaded, engine.tick(loaded, start))
+        }
 
         val ownsMaps = base.copy(appLevels = base.appLevels + ("maps" to 1),
             rows = listOf(app(1, "maps"), app(2, "memo"), app(3, "alarm")))
@@ -71,6 +72,7 @@ class StableBoardTest {
     fun mixedActionsNeverReturnAnUnresolvedPair() {
         var manual = 0
         var auto = 0
+        var appliedSwipes = 0
         var offline = 0
         var reload = 0
         var eventRowsSwiped = 0
@@ -99,6 +101,7 @@ class StableBoardTest {
                         if (isAuto) auto++ else manual++
                         val result = id?.let { engine.swipe(s, it, now, actor) }
                         if (result != null) {
+                            appliedSwipes++
                             val swiped = result.beats.filterIsInstance<Beat.Swiped>().single().row
                             if (swiped.kind == RowKind.Event) eventRowsSwiped++
                             if (swiped.kind == RowKind.Alert) alertRowsSwiped++
@@ -122,8 +125,10 @@ class StableBoardTest {
                 assertEquals(s.rows.size, s.rows.distinctBy(Row::id).size)
             }
         }
-        println("stable-board mix: manual=$manual auto=$auto offline=$offline reload=$reload events=$eventRowsSwiped alerts=$alertRowsSwiped fallingWild=$wildSeen endings=$endings")
+        println("stable-board mix: manual=$manual auto=$auto appliedSwipes=$appliedSwipes offline=$offline reload=$reload " +
+            "events=$eventRowsSwiped alerts=$alertRowsSwiped fallingWild=$wildSeen endings=$endings")
         assertEquals(12_000, manual + auto + offline + reload)
+        assertTrue(appliedSwipes + offline + reload >= 10_000)
         assertTrue(listOf(manual, auto, offline, reload, eventRowsSwiped, alertRowsSwiped, wildSeen).all { it > 0 })
         assertTrue(endings.containsAll(listOf(ChainEndReason.Natural, ChainEndReason.Spam, ChainEndReason.Wave)))
     }
