@@ -19,7 +19,10 @@ class CoreRulesTest {
     fun levelThresholdsUseRunPAndMatchThePublishedCurve() {
         val r = e.rules
         assertEquals(listOf(30L, 70L, 163L).map(::valueOf), (2..4).map(r::levelP))
-        for (level in listOf(2, 24, 25, 26, 124)) {
+        val withoutLateAdjustment = r.copy(lateGrowthPermille = 1_000)
+        assertEquals(withoutLateAdjustment.levelP(74), r.levelP(74))
+        assertTrue(withoutLateAdjustment.levelP(75) > r.levelP(75))
+        for (level in listOf(2, 24, 25, 26, 74, 75, 124)) {
             for (fastBoot in listOf(0, 1, 5)) {
                 val threshold = r.levelCeil(level, fastBoot)
                 assertEquals(level - 1, r.levelFor(threshold - BigInteger.ONE, fastBoot))

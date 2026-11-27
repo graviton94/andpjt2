@@ -143,16 +143,16 @@ data class RuleSet(
     val resetLevel: Int = 19,
     /**
      * Level is the run's cumulative P: reaching level L needs levelPBase × ratio^(L−2), the ratio rising by
-     * [levelRatioStepPermille] every level after [levelLateFrom]. Leveling is exponential in P, so backup-file
-     * multipliers speed it up directly.
+     * [levelRatioStepPermille] every level from [levelLateFrom]. The transition from [lateGrowthFrom]
+     * onward scales that ratio by [lateGrowthPermille]. Backup-file multipliers speed up leveling.
      */
     val levelPBase: Long = 30,
     val levelRatioPermille: Int = 2_330,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 1,
     /** Multiplier on level-to-level P growth from this level onward. */
-    val lateGrowthFrom: Int = 80,
-    val lateGrowthPermille: Int = 1_000,
+    val lateGrowthFrom: Int = 74,
+    val lateGrowthPermille: Int = 860,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
     /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
