@@ -53,7 +53,8 @@ async function run() {
       await page.locator('#stage').waitFor();
     }
     const go = page.locator('#boot-go');
-    try { await go.waitFor({ state: 'visible', timeout: 15_000 }); await go.click({ force: true }); } catch (error) { if (error.name !== 'TimeoutError') throw error; }
+    // a page click: the remote WebView reports its buttons as off-viewport
+    try { await go.waitFor({ state: 'visible', timeout: 15_000 }); await page.evaluate(() => document.getElementById('boot-go').click()); } catch (error) { if (error.name !== 'TimeoutError') throw error; }
   }
   if (!desktop) assert.equal(await page.evaluate(() => typeof window.Game.call), 'function');
   const api = (method, args = {}) => page.evaluate(async ({ method, args }) => {
