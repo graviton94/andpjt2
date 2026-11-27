@@ -44,6 +44,17 @@ async function run() {
   });
   if (desktop) await page.goto(localUrl);
   await page.locator('#stage').waitFor();
+  // The app opens on the title screen and runs the first-run guide before attendance: mark the guide done,
+  // reload, and tap through the title so the balance checks start from the board.
+  if (!desktop) {
+    if (await page.evaluate(() => localStorage.getItem('ftue') !== '9')) {
+      await page.evaluate(() => { localStorage.setItem('ftue', '9'); location.reload(); });
+      await page.waitForLoadState('load').catch(() => {});
+      await page.locator('#stage').waitFor();
+    }
+    const go = page.locator('#boot-go');
+    try { await go.waitFor({ state: 'visible', timeout: 15_000 }); await go.click({ force: true }); } catch (error) { if (error.name !== 'TimeoutError') throw error; }
+  }
   if (!desktop) assert.equal(await page.evaluate(() => typeof window.Game.call), 'function');
   const api = (method, args = {}) => page.evaluate(async ({ method, args }) => {
     if (window.Game) return JSON.parse(window.Game.call(method, JSON.stringify(args)));
