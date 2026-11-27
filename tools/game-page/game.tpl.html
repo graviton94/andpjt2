@@ -2104,7 +2104,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // ---------- input: drag a card sideways to clear it ----------
-const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0 };
+const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0, x0: 0, tile: -1, dragging: false };
 function tapTile(k) {
   sfx.snap(); buzz(8);
   if (k === 'auto') { if (FT.step > 0 && FT.step < 6) { ftNudge(); return; } autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); if (FT.step === 6) ftue('auto'); }
@@ -2119,24 +2119,29 @@ cv.addEventListener('pointerdown', e => {
   const [x, y] = toBoard(e);
   if (ev) { if (EVENTS[ev.type].tap) EVENTS[ev.type].tap(ev, x, y); return; }
   if (y > 684 + EX - 16) { openShop(); return; }
-  if (plate.phase === 'idle' && Math.abs(y - TILEY) < 34) {
-    const i = TILES.findIndex((_, k) => Math.abs(x - tileX(k)) < 32);
-    if (i >= 0) { tapTile(TILES[i].key); return; }
+  if (y < ROW0 - 30) {  // top area (status bar, buttons): a tap presses a button on release, a drag pulls the shade
+    const i = plate.phase === 'idle' && Math.abs(y - TILEY) < 34 ? TILES.findIndex((_, k) => Math.abs(x - tileX(k)) < 32) : -1;
+    Object.assign(pull, { on: true, y0: e.clientY, x0: e.clientX, tile: i, dragging: false });
+    cv.setPointerCapture(e.pointerId); return;
   }
-  if (y < ROW0 - 30) { pull.y0 = y; pull.on = true; return; }
   const r = board.find(r => y >= r.y.x && y <= r.y.x + CH && !r.fly);
   if (!r || boardBusy) return;
   Object.assign(drag, { r, x0: x, y0: y, t0: performance.now(), moved: false });
   cv.setPointerCapture(e.pointerId);
 });
 cv.addEventListener('pointermove', e => {
-  if (pull.on) { const [, y] = toBoard(e); if (y - pull.y0 > 50) { pull.on = false; openShop(); } return; }
+  if (pull.on) {
+    const dy = e.clientY - pull.y0;
+    if (!pull.dragging && dy > 8 && Math.abs(dy) > Math.abs(e.clientX - pull.x0)) { pull.dragging = shadeDragStart(pull.y0); if (!pull.dragging) pull.on = false; }
+    if (pull.dragging) shadeDragMove(e.clientY);
+    return;
+  }
   if (!drag.r) return; const [x] = toBoard(e);
   drag.r.dx = x - drag.x0; if (Math.abs(drag.r.dx) > 6) drag.moved = true;
 });
 const release = async e => {
   if (ev && EVENTS[ev.type].up) EVENTS[ev.type].up(ev);
-  pull.on = false;
+  if (pull.on) { const was = pull; pull.on = false; if (was.dragging) shadeDragEnd(); else if (was.tile >= 0) tapTile(TILES[was.tile].key); }
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);
   if (Math.abs(dx) > 70 || (Math.abs(dx) > 24 && Math.abs(v) > .5)) {
@@ -2158,6 +2163,8 @@ async function tickGame(dt) {
     if (byId(id)) { startEvent('call', { rowId: id }); return; }
   }
   if (!S || boardBusy || busy || drag.r || ev || !autoOn) return;
+  // auto-clean is the idle helper: it waits while the player is touching, a panel/dialog is open or a guide is up
+  if (idleT < 4 || pull.on || shadeEl.classList.contains('open') || sheetEl.classList.contains('open') || $('cf').classList.contains('on') || $('ret').classList.contains('on') || $('coach').classList.contains('on')) return;
   autoClock -= dt;
   if (autoClock <= 0) {
     autoClock = Math.max(.8, (S.autoIntervalMs || 5000) / 1000);
@@ -2241,11 +2248,9 @@ function closeAll() {
   armSync = false; ftue('closed'); shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
-  if (!started) return;
-  if (FT.step > 0 && FT.step < 4) { ftNudge(); return; }  // the guide owns the screen until it asks for the shade
-  if (chal) { toast($t('can_t_open_the_panel')); return; }
+  if (!canOpenShade()) return;  // the guide owns the screen until it asks for the shade
   await loadPanel(); renderShade();
-  shadeEl.classList.add('open'); scrimEl.classList.add('open'); phone('phone.wake', .25); setTimeout(() => ftue('shade'), 500);
+  shadeSettle(true);
 }
 const openShop = openShade;  // the board's footer and pull-down both open the shade
 function recBoard(st) {
@@ -2286,10 +2291,78 @@ function renderShade() {
   $('vol').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; savePrefs(); });
   $('vib').addEventListener('click', e => { vibOn = !vibOn; e.currentTarget.classList.toggle('on', vibOn); e.currentTarget.setAttribute('aria-checked', vibOn); if (vibOn) buzz(20); savePrefs(); });
 }
-// pull the shade back up
-let shadeDrag = null;
-shadeEl.addEventListener('pointerdown', e => { shadeDrag = e.clientY; });
-shadeEl.addEventListener('pointerup', e => { if (shadeDrag !== null && shadeDrag - e.clientY > 60) closeAll(); shadeDrag = null; });
+// ---------- panels follow the finger, like a phone's notification shade and bottom sheets ----------
+// Drag tracks 1:1, release decides by distance and speed (a flick wins), past the end rubber-bands, a light tick at the threshold.
+const SPRING = 'transform .42s cubic-bezier(.18,.95,.25,1)';
+const shadeH = () => shadeEl.offsetHeight || innerHeight * .9;
+let SD = null;  // shade drag: { y0, open (0..1 at start), samples, armed }
+function shadePos(p, anim) {  // p = open fraction; >1 stretches with resistance
+  const h = shadeH(), y = p <= 1 ? -(1 - p) * h : Math.min(60, (p - 1) * h * .35);
+  shadeEl.style.transition = anim ? SPRING : 'none'; shadeEl.style.transform = `translateY(${y}px)`;
+  scrimEl.style.transition = anim ? 'opacity .35s' : 'none'; scrimEl.style.opacity = Math.max(0, Math.min(1, p)); scrimEl.style.pointerEvents = p > 0 ? 'auto' : 'none';
+}
+function shadeSettle(open) {
+  shadeEl.classList.toggle('open', open); scrimEl.classList.toggle('open', open || sheetEl.classList.contains('open'));
+  shadePos(open ? 1 : 0, true);
+  const clear = () => { shadeEl.style.transition = shadeEl.style.transform = ''; scrimEl.style.transition = scrimEl.style.opacity = scrimEl.style.pointerEvents = ''; };
+  setTimeout(clear, 440);
+  if (open) { phone('phone.wake', .25); setTimeout(() => ftue('shade'), 450); } else ftue('closed');
+}
+function canOpenShade() {
+  if (!started) return false;
+  if (FT.step > 0 && FT.step < 4) { ftNudge(); return false; }
+  if (chal) { toast($t('can_t_open_the_panel')); return false; }
+  return true;
+}
+function shadeDragStart(y0, fromOpen) {
+  if (!fromOpen && !canOpenShade()) return false;
+  if (!fromOpen) { if (P) renderShade(); loadPanel().then(() => { renderShade(); }); }
+  SD = { y0, open: fromOpen ? 1 : 0, s: [[performance.now(), y0]], armed: fromOpen };
+  return true;
+}
+function shadeDragMove(y) {
+  if (!SD) return;
+  const p = SD.open + (y - SD.y0) / shadeH(); shadePos(p, false);
+  SD.s.push([performance.now(), y]); if (SD.s.length > 6) SD.s.shift();
+  const t = 110 / shadeH(), past = SD.open ? p < 1 - t : p > t;  // ~110 px of travel flips the state, like a phone shade
+  if (past !== SD.armed) { SD.armed = past; buzz(6); }
+}
+function shadeDragEnd() {
+  if (!SD) return;
+  const a = SD.s[0], b = SD.s[SD.s.length - 1], v = (b[1] - a[1]) / Math.max(16, b[0] - a[0]);  // px/ms, + = down
+  const p = SD.open + (b[1] - SD.y0) / shadeH(), t = 110 / shadeH();
+  const open = Math.abs(v) > .3 ? v > 0 : SD.open ? p > 1 - t : p > t;
+  if (window.__dbg) window.__dbg.lastShade = { v, p, open }; SD = null; buzz(open ? 10 : 6); shadeSettle(open);
+}
+// drag the open shade back up from anywhere on it (lists scroll first: closing starts once they are at their end)
+shadeEl.addEventListener('pointerdown', e => { if (shadeEl.classList.contains('open')) shadeEl._g = { y0: e.clientY, x0: e.clientX, id: e.pointerId, on: false }; });
+shadeEl.addEventListener('pointermove', e => {
+  const g = shadeEl._g; if (!g) return; const dy = e.clientY - g.y0;
+  if (!g.on) { const atEnd = shadeEl.scrollTop + shadeEl.clientHeight >= shadeEl.scrollHeight - 2; if (dy < -8 && Math.abs(dy) > Math.abs(e.clientX - g.x0) && (atEnd || e.target.closest('.grab') || g.y0 > shadeEl.getBoundingClientRect().bottom - 110)) { g.on = true; shadeEl.setPointerCapture(g.id); shadeDragStart(g.y0, true); } else return; }
+  shadeDragMove(e.clientY); e.preventDefault();
+});
+const shadeUp = () => { const g = shadeEl._g; shadeEl._g = null; if (g && g.on) shadeDragEnd(); };
+shadeEl.addEventListener('pointerup', shadeUp); shadeEl.addEventListener('pointercancel', shadeUp);
+// bottom sheets: pull down from the header, or from the list once it is scrolled to the top, to dismiss
+(() => {
+  let g = null; const body = () => $('sheet-b');
+  sheetEl.addEventListener('pointerdown', e => { if (sheetEl.classList.contains('open') && (e.target.closest('.sheet-h') || body().scrollTop <= 0)) g = { y0: e.clientY, x0: e.clientX, id: e.pointerId, on: false, s: [[performance.now(), e.clientY]], armed: false }; });
+  sheetEl.addEventListener('pointermove', e => {
+    if (!g) return; const dy = e.clientY - g.y0;
+    if (!g.on) { if (dy > 8 && dy > Math.abs(e.clientX - g.x0)) { g.on = true; sheetEl.setPointerCapture(g.id); } else { if (dy < -8) g = null; return; } }
+    const h = sheetEl.offsetHeight, y = dy < 0 ? dy * .25 : dy; sheetEl.style.transition = 'none'; sheetEl.style.transform = `translateY(${y}px)`;
+    g.s.push([performance.now(), e.clientY]); if (g.s.length > 6) g.s.shift();
+    const past = dy > 130; if (past !== g.armed) { g.armed = past; buzz(6); } e.preventDefault();
+  });
+  const up = () => {
+    if (!g) return; const was = g; g = null; if (!was.on) return;
+    const a = was.s[0], b = was.s[was.s.length - 1], v = (b[1] - a[1]) / Math.max(16, b[0] - a[0]), dy = b[1] - was.y0;
+    const close = v > .3 || (v > -.2 && dy > 130);
+    sheetEl.style.transition = SPRING; sheetEl.style.transform = close ? 'translateY(105%)' : 'translateY(0)'; buzz(close ? 10 : 6);
+    setTimeout(() => { sheetEl.style.transition = sheetEl.style.transform = ''; if (close) closeAll(); }, 420);
+  };
+  sheetEl.addEventListener('pointerup', up); sheetEl.addEventListener('pointercancel', up);
+})();
 
 async function openSheet(kind) {
   sheetKind = kind; if (!P || !P.bm) await loadPanel();
