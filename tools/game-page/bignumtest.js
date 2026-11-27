@@ -8,7 +8,7 @@ const API = 'http://127.0.0.1:8765/api/';
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; p.on('pageerror', e => errors.push(e.message)); p.on('console', m => m.type() === 'error' && errors.push(m.text()));
   await p.request.get(API + 'bigWallet?digits=' + digits);  // run cheat?level=30 first to unlock the shop
-  await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko'); await p.waitForTimeout(3500);
+  await p.goto('http://127.0.0.1:8765/index.html?notitle&auto=0&lang=ko'); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelector('#scrim').click()); await p.waitForTimeout(400);
   await p.screenshot({ path: `${out}/1-board.png` });
   const id = (await (await p.request.get(API + 'hint')).json()).id;

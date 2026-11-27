@@ -6,7 +6,7 @@ const API = 'http://127.0.0.1:8765/api/';
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; p.on('pageerror', e => errors.push(e.message));
-  await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko&noftue'); await p.waitForTimeout(3500);
+  await p.goto('http://127.0.0.1:8765/index.html?notitle&auto=0&lang=ko&noftue'); await p.waitForTimeout(3500);
   await p.evaluate(() => window.__dbg.open('reset')); await p.waitForTimeout(800);
   await p.screenshot({ path: `${out}/0-sheet.png` });
   // cloud sync first (Lv62 qualifies), then later a reset on the new run is not possible (Lv1): sync shows the GB payoff

@@ -21,7 +21,7 @@ const SHOTS = [  // key, theme, game state, how to reach the moment, when to tak
       await get('new?seed=5'); await get(state);
       const p = await b.newPage({ viewport: { width: 390, height: 693 }, deviceScaleFactor: 1080 / 390, colorScheme: theme });
       const errs = []; p.on('pageerror', e => errs.push(e.message));
-      await p.clock.install(); await p.goto(`http://127.0.0.1:8765/index.html?auto=0&noftue&noattend&lang=${lang}`);
+      await p.clock.install(); await p.goto(`http://127.0.0.1:8765/index.html?notitle&auto=0&noftue&noattend&lang=${lang}`);
       for (let i = 0; i < 40; i++) { await p.clock.runFor(100); await p.waitForTimeout(10); }
       const now = await p.evaluate(() => Date.now()); await p.clock.pauseAt(now + 3000);
       await go(p);

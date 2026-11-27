@@ -7,6 +7,37 @@
 <link rel="stylesheet" href="fonts/black-han-sans/index.css">
 <link rel="stylesheet" href="fonts/pretendard/index.css">
 <style>
+/* ---- boot: loading (real progress) → title (tap to start). Art: img/title/* (commission), code fallbacks until delivered ---- */
+#boot{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:#fff;font-family:"Pretendard",system-ui,sans-serif;
+ background:radial-gradient(120% 80% at 50% 10%,#FF8A2A 0%,#C2410C 30%,#3B1406 70%,#140806 100%);transition:opacity .45s ease}
+#boot.gone{opacity:0;pointer-events:none}
+#boot .bg{position:absolute;inset:0;background:center/cover no-repeat}
+#boot .rays{position:absolute;left:50%;top:34%;width:1400px;height:1400px;margin:-700px 0 0 -700px;background:repeating-conic-gradient(from 0deg,rgba(255,240,200,.12) 0 8deg,transparent 8deg 20deg);-webkit-mask:radial-gradient(closest-side,#000 15%,transparent 75%);mask:radial-gradient(closest-side,#000 15%,transparent 75%);animation:bootspin 30s linear infinite}
+#boot .pills{position:absolute;inset:0;pointer-events:none}
+#boot .pill{position:absolute;display:flex;align-items:center;gap:8px;padding:9px 13px 9px 9px;border-radius:16px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);font:700 12px/1.2 "Pretendard";color:#fff;white-space:nowrap;animation:bootfloat 7s ease-in-out infinite}
+#boot .pill i{width:22px;height:22px;border-radius:7px;flex:none}
+#boot .logo{position:relative;z-index:2;text-align:center;transform:translateY(-6vh)}
+#boot .logo img{width:min(86vw,520px);height:auto;display:block;filter:drop-shadow(0 10px 0 rgba(40,12,2,.55))}
+#boot .logo .lt{font:400 clamp(56px,16vw,92px)/.95 "Black Han Sans","Pretendard",sans-serif;color:#FFE34D;-webkit-text-stroke:9px #2A0F04;paint-order:stroke fill;text-shadow:0 10px 0 #2A0F04;letter-spacing:-.01em}
+#boot .logo .ls{margin-top:14px;font:800 15px/1.2 "Pretendard";letter-spacing:.18em;text-transform:uppercase;color:#FFE9C8;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+#boot .mascot{position:relative;z-index:2;width:120px;height:120px;margin-top:-2vh;object-fit:contain;animation:bootbob 1.6s ease-in-out infinite}
+#boot .load{position:absolute;left:12%;right:12%;bottom:13vh;z-index:2;text-align:center}
+#boot .bar{height:10px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+#boot .bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#FFD23F,#FF8A1F);box-shadow:0 0 12px rgba(255,200,60,.8);transition:width .25s ease}
+#boot .lk{display:flex;justify-content:space-between;margin-top:8px;font:700 12px "Pretendard";color:#FFE0BF}
+#boot .tip{margin-top:18px;min-height:2.6em;font:600 13.5px/1.35 "Pretendard";color:#FFF3E2;opacity:.92}
+#boot .start{position:absolute;left:0;right:0;bottom:16vh;z-index:2;text-align:center;display:none}
+#boot.title .load{display:none}#boot.title .start{display:block}
+#boot .tap{display:inline-block;font:900 22px/1 "Pretendard";letter-spacing:.04em;padding:16px 34px;border-radius:99px;background:linear-gradient(#FFE27A,#F0A000);color:#2A1800;box-shadow:0 6px 0 #8A4A00,0 0 28px rgba(255,200,60,.55);animation:bootpulse 1.4s ease-in-out infinite}
+#boot .acct{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
+#boot .acct button{width:min(78vw,320px);height:46px;border-radius:12px;border:0;font:800 15px "Pretendard";display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+#boot .acct .g{background:#fff;color:#1F1F1F}#boot .acct .k{background:#FEE500;color:rgba(0,0,0,.85)}
+#boot .note{font:600 12px/1.4 "Pretendard";color:#FFE0BF;max-width:80vw}
+#boot .bfoot{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2;text-align:center;font:600 11px "Pretendard";color:rgba(255,235,210,.7)}
+#boot .bfoot a{color:inherit;display:inline;text-decoration:underline}
+@keyframes bootspin{to{transform:rotate(360deg)}}@keyframes bootfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes bootbob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}@keyframes bootpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion: reduce){#boot *{animation:none!important}}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -608,6 +639,12 @@ svg.ic{width:16px;height:16px;flex:none;vertical-align:-3px;margin-right:4px}
 </style>
 </head>
 <body>
+<div id="boot"><div class="bg" id="boot-bg"></div><div class="rays"></div><div class="pills" id="boot-pills"></div>
+ <div class="logo"><img id="boot-logo" alt="" style="display:none"><div class="lt" id="boot-lt"></div><div class="ls" data-i18n="boot_sub"></div></div>
+ <img class="mascot" id="boot-mascot" alt="" style="display:none">
+ <div class="load"><div class="bar"><i id="boot-bar"></i></div><div class="lk"><span data-i18n="boot_loading"></span><span id="boot-pct">0%</span></div><div class="tip" id="boot-tip"></div></div>
+ <div class="start"><div class="tap" data-i18n="tap_to_start"></div><div class="acct" id="boot-acct"></div></div>
+ <div class="bfoot" id="boot-foot"></div></div>
 <canvas id="stage" data-i18n-aria="notification_board"></canvas>
 <div id="scrim"></div><div id="toasts"></div><div id="appd"></div><div id="ret"></div><div id="chres"></div><div id="chud"><span class="lb" data-i18n="daily_challenge"></span><b id="chud-t">1:00</b><span id="chud-s">+0 P</span><button id="chud-x" data-i18n-aria="quit" data-i18n="stop"></button></div><div id="coach"></div><div id="cf"><div class="box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="cf-ico"><path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2M9 20a1 1 0 1 0 0-.01M18 20a1 1 0 1 0 0-.01"/></svg><h3 id="cf-t"></h3><div class="what" id="cf-w"></div><div class="price" id="cf-p"></div><div class="row"><button class="no" id="cf-no" data-i18n="cancel"></button><button id="cf-ok" data-i18n="pay"></button></div></div></div><div id="adov"><div><b data-i18n="ad"></b><span data-i18n="ad_placeholder"></span><br><span id="adt">3</span><span data-i18n="s_to_reward"></span></div></div><button id="offer" class="skin blue"></button><div id="shade"></div><div id="sheet"><div class="sheet-h"><h2 id="sheet-t"></h2><span class="w" id="sheet-w"></span><button class="x" id="sheet-x" data-i18n-aria="close">✕</button></div><div class="sheet-b" id="sheet-b"></div></div>
 <script>
@@ -1184,6 +1221,7 @@ const ACC = '#EFA03F';
 const clock = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 // quick tiles (screens-v1 Main): 자동 정리 on/off · 방해 금지 = mute · 덱 · 배속 (shop for now)
 let autoOn = !/[?&]auto=0/.test(location.search);  // tests start with the auto-cleaner off
+let started = false;  // nothing runs (auto-clean, events, input) until the player taps through the title screen
 const TILES = [
   { key: 'auto', label: $t('auto'), on: () => autoOn, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8' },
   { key: 'dnd', label: $t('do_not_disturb'), on: () => !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
@@ -2069,13 +2107,14 @@ requestAnimationFrame(frame);
 const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false, y0: 0 };
 function tapTile(k) {
   sfx.snap(); buzz(8);
-  if (k === 'auto') { autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); }
+  if (k === 'auto') { if (FT.step > 0 && FT.step < 6) { ftNudge(); return; } autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); if (FT.step === 6) ftue('auto'); }
   else if (k === 'dnd') { sound = !sound; if (sound) ac(); toast(sound ? $t('sound_on') : $t('do_not_disturb_sound_off')); }
   else if (k === 'deck') openSheet('deck');
   else openSheet('pass');
 }
 const toBoard = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * H]; };
 cv.addEventListener('pointerdown', e => {
+  if (!started) return;
   phoneLoad(); idleT = 0;
   const [x, y] = toBoard(e);
   if (ev) { if (EVENTS[ev.type].tap) EVENTS[ev.type].tap(ev, x, y); return; }
@@ -2112,8 +2151,9 @@ cv.addEventListener('pointercancel', release);
 
 // ---------- auto-clean, charge and the idle hint ----------
 async function tickGame(dt) {
+  if (!started) return;
   idleT += dt; hintT += dt;
-  if (pendingCall && S && !boardBusy && !busy && !ev && plate.phase === 'idle') {
+  if (pendingCall && FT.step >= 9 && S && !boardBusy && !busy && !ev && plate.phase === 'idle') {
     const id = pendingCall; pendingCall = null;
     if (byId(id)) { startEvent('call', { rowId: id }); return; }
   }
@@ -2201,6 +2241,8 @@ function closeAll() {
   armSync = false; ftue('closed'); shadeEl.classList.remove('open'); sheetEl.classList.remove('open'); scrimEl.classList.remove('open'); sheetKind = null; armReset = false; }
 scrimEl.addEventListener('click', closeAll); $('sheet-x').addEventListener('click', () => { sheetEl.classList.remove('open'); sheetKind = null; openShade(); });
 async function openShade() {
+  if (!started) return;
+  if (FT.step > 0 && FT.step < 4) { ftNudge(); return; }  // the guide owns the screen until it asks for the shade
   if (chal) { toast($t('can_t_open_the_panel')); return; }
   await loadPanel(); renderShade();
   shadeEl.classList.add('open'); scrimEl.classList.add('open'); phone('phone.wake', .25); setTimeout(() => ftue('shade'), 500);
@@ -2739,16 +2781,61 @@ if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { a
     if (k === 'unit') return addWallet(wallet.v + 3.2);
   }, pop: (k, app, t, i = 3) => { const r = board[i]; if (!r) return; Object.assign(r.d, { app, tier: t, kind: 'App' }); burstRow({ row: { id: r.id }, chips: '5', chipsShort: '5' }, k); }, swipeHint: async () => { const h = await api('hint'); const r = byId(h.id); if (!r) return false; r.fly = 1; r.dx = 120; const o = await api('swipe', { id: h.id }); if (o.ok) { swipes++; play(o); } return !!o.ok; }, ret: (o, ms) => showReturn(o, ms), coach: c => coach(c), rows: () => board.map((r, i) => ({ id: r.id, kind: r.d.kind, app: r.d.app, y: r.y.t })), ROWH, CX0, CW, CH };
 
-// ---------- boot ----------
+// ---------- boot: loading (real work) → title (tap to start) → guide or daily check-in ----------
+const BOOTQ = new URLSearchParams(location.search);
+const TITLE_ART = new Set(__TITLE_ART__);  // delivered title art (docs/design/title), so missing files are never requested
+function bootDecor() {
+  const L = I18N.lang, art = (id, src, ok) => { const name = src.split('/').pop().replace('.webp', ''); if (!TITLE_ART.has(name)) return; const im = $(id); im.onload = () => { im.style.display = ''; ok && ok(); }; im.src = src; };
+  $('boot-lt').textContent = $t('do_not_disturb_2');
+  art('boot-logo', `img/title/logo-${L === 'ko' ? 'ko' : 'en'}.webp`, () => { $('boot-lt').style.display = 'none'; });
+  if (TITLE_ART.has('bg')) { const bg = new Image(); bg.onload = () => { $('boot-bg').style.backgroundImage = `url(${bg.src})`; }; bg.src = 'img/title/bg.webp'; }
+  art('boot-mascot', 'img/title/mascot.webp');
+  // floating notification pills (the game's own apps) until the key art arrives
+  const ids = ['chat', 'mail', 'weather', 'alarm', 'beat', 'mall', 'tube', 'photo'], pos = [[5, 7], [55, 5], [3, 19], [57, 17], [8, 30], [60, 31], [2, 62], [62, 64]];
+  $('boot-pills').innerHTML = ids.map((id, i) => `<div class="pill" style="left:${pos[i][0]}%;top:${pos[i][1]}%;animation-delay:${-i * .9}s"><i style="background:${COLORS[id] || '#EFA03F'}"></i>${(TEXTS[id] && TEXTS[id][1][0] || '').slice(0, 18)}…</div>`).join('');
+  const ver = window.Game && window.Game.call ? (JSON.parse(window.Game.call('info', '{}')).version || '') : '';
+  $('boot-foot').innerHTML = `${ver ? 'v' + ver + ' · ' : ''}<a href="${SITE}privacy/">${$t('privacy_policy')}</a> · <a href="${SITE}terms/">${$t('terms_of_service')}</a>`;
+}
+function bootProgress() {
+  let done = 0, total = 0, tipN = 0; const bar = $('boot-bar'), pct = $('boot-pct'), tips = [$t('boot_tip_1'), $t('boot_tip_2'), $t('boot_tip_3'), $t('boot_tip_4'), $t('boot_tip_5')];
+  const show = () => { const k = total ? done / total : 0; bar.style.width = (k * 100).toFixed(0) + '%'; pct.textContent = Math.round(k * 100) + '%'; };
+  $('boot-tip').textContent = tips[0]; const tipT = setInterval(() => { $('boot-tip').textContent = tips[++tipN % tips.length]; }, 2600);
+  return { add(p) { total++; show(); return Promise.resolve(p).catch(() => {}).then(v => { done++; show(); return v; }); }, stop() { clearInterval(tipT); done = total; show(); } };
+}
+const preloadImg = src => new Promise(res => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
+async function bootTitle() {
+  const box = $('boot'), acct = $('boot-acct'), a = acctInfo();
+  box.classList.add('title');
+  if (a.enabled && !a.signedIn) acct.innerHTML = `${a.google ? `<button class="g" data-signin="google">${GLOGO}${$t('sign_in_google')}</button>` : ''}${a.kakao ? `<button class="k" data-signin="kakao">${KLOGO}${$t('sign_in_kakao')}</button>` : ''}<div class="note">${$t('guest_note')}</div>`;
+  else if (a.signedIn) acct.innerHTML = `<div class="note">${a.name ? $t('welcome_back', a.name) : $t('signed_in')}</div>`;
+  acct.querySelectorAll('[data-signin]').forEach(x => x.addEventListener('click', async ev => { ev.stopPropagation(); await signIn(x.dataset.signin); bootTitle(); }));
+  if (BOOTQ.has('notitle')) return;
+  await new Promise(res => box.addEventListener('click', function go(ev) { if (ev.target.closest('a,button')) return; box.removeEventListener('click', go); res(); }));
+}
 (async () => {
-  const st = await api('snapshot');
+  bootDecor();
+  const prog = bootProgress(), t0 = performance.now();
+  prog.add(document.fonts ? document.fonts.ready : null);
+  ['img/bm/currency-p.webp', 'img/bm/currency-data.webp', 'img/bm/currency-backup.webp', 'img/hand-swipe.png'].forEach(src => prog.add(preloadImg(src)));
+  const st = await prog.add(api('snapshot'));
+  (st.deckApps || []).forEach(a => prog.add(preloadImg(icon(a.id || a.app).src)));
   applyState(st); wallet.v = wallet.to = wallet.shown = wallet.from = L(st.wallet); wallet.unit = splitL(wallet.v).unit;
   reconcile(st); board.forEach((r, i) => { r.y.x = rowY(i) - 60 - i * 30; r.a = 0; });
-  // daily check-in on the 30-day board: claim and show it once a day
-  const fresh = st.swipes === 0 && st.level === 1 && !new URLSearchParams(location.search).has('noftue');
-  if (FT.step < 9 && fresh) setTimeout(() => ftue('boot'), 1500);
-  else if (!/[?&]noattend/.test(location.search)) { if (FT.step < 9) ftEnd(); setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 1600); }
+  await prog.add(new Promise(r => setTimeout(r, Math.max(0, 900 - (performance.now() - t0)))));  // never a flash: the logo stays up at least ~1 s
+  prog.stop(); sfx && ac && 0;
+  await bootTitle();
+  ac(); sfx.snap(); $('boot').classList.add('gone'); setTimeout(() => { $('boot').style.display = 'none'; }, 500);
+  started = true; idleT = 0;
+  const fresh = st.swipes === 0 && st.level === 1 && !BOOTQ.has('noftue');
+  if (FT.step < 9 && fresh) { autoOn = false; setTimeout(() => ftue('boot'), 600); }
+  else { if (FT.step < 9) ftSave(9); afterGuide(); }
 })();
+// daily check-in (and a held away-payout card) once the player is in the game and no guide is running
+function afterGuide() {
+  if (heldOffline) { const o = heldOffline; heldOffline = null; window.onOffline(o); }
+  if (BOOTQ.has('noattend')) return;
+  setTimeout(async () => { const m = await api('bm'); if (!m.claimedToday) { const o = await api('attend'); if (o.ok) { applyState(o.state); openSheet('attend'); phone('ui.bonus', .5); } } }, 700);
+}
 
 // ---------- return-from-away card (bible 16 #13, B6) ----------
 // Reads today's offline() reply (paid) and, when the balance core lands, basePaid/bonusPaid/offlineBonus/EX fields.
@@ -2874,33 +2961,50 @@ async function endChallenge() {
 
 // ---------- first-run flow: swipe → burst → pull the shade → app shop → first buy (bible 16 #1, #2, #7) ----------
 const FT = { step: +(localStorage.getItem('ftue') || 0) };  // 0 = not started, 9 = done
+let heldOffline = null;
 const ftSave = n => { FT.step = n; localStorage.setItem('ftue', n); track('ftue_step', { step: n }); };
 const ftOff = () => $('coach').classList.remove('on');
-const ftEnd = () => { ftSave(9); ftOff(); };
+const ftEnd = () => { const was = FT.step; ftSave(9); ftOff(); autoOn = !/[?&]auto=0/.test(location.search); if (was < 9 && started) afterGuide(); };
+// the guide owns the screen: a blocked action re-shows what to do now
+function ftNudge() { sfx.snap(); toast(FT.step <= 2 ? $t('ft_nudge_swipe') : FT.step < 6 ? $t('ft_nudge_shop') : $t('ft_auto_title'), 'info'); }
+// first screen of the guide: what the game is, in one card
+function ftIntro() {
+  return new Promise(res => {
+    $('cf-t').textContent = $t('ft_intro_title');
+    $('cf-w').innerHTML = `${TITLE_ART.has('mascot') ? '<img src="img/title/mascot.webp" alt="" style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto 8px">' : ''}${$t('ft_intro_body')}`;
+    $('cf-p').innerHTML = ''; $('cf-ok').textContent = $t('ft_intro_ok'); $('cf-no').style.display = 'none'; $('cf-ico').innerHTML = IC.cart; $('cf').classList.add('on');
+    $('cf-ok').onclick = () => { $('cf').classList.remove('on'); $('cf-no').style.display = ''; $('cf-ok').onclick = null; res(); };
+  });
+}
 const rowRect = id => { const r = byId(id); return r ? { canvas: 1, x: CX0, y: r.y.t, w: CW, h: CH } : null; };
 async function ftHintRect() { const h = await api('hint'); return rowRect(h.id) || rowRect(board[Math.min(2, board.length - 1)].id); }
 async function ftue(ev, arg) {
   if (FT.step >= 9) return;
-  if (ev === 'boot' && FT.step <= 1) { ftSave(1); coach({ rect: await ftHintRect(), text: $t('swipe_to_clear'), sub: $t('follow_the_finger_swipe_sideways'), finger: 'swipe', step: '1 / 4' }); }
-  else if (ev === 'swipe' && FT.step === 1) { ftOff(); if ((arg.beats || []).some(b => b.t === 'burst')) { ftSave(2); setTimeout(() => ftue('burst'), 1400); } else setTimeout(async () => FT.step === 1 && coach({ rect: await ftHintRect(), text: $t('swipe_this_one_to_merge'), sub: $t('same_apps_stick_together'), finger: 'swipe', step: '1 / 4' }), 900); }
-  else if (ev === 'burst' && FT.step === 2) { coach({ rect: await ftHintRect(), text: $t('4_of_the_same_app'), sub: $t('every_pop_stacks_p'), finger: 'swipe', step: '2 / 4' }); }
+  if (ev === 'boot' && FT.step <= 1) { if (FT.step === 0) await ftIntro(); ftSave(1); coach({ rect: await ftHintRect(), text: $t('swipe_to_clear'), sub: $t('follow_the_finger_swipe_sideways'), finger: 'swipe', step: '1 / 6' }); }
+  else if (ev === 'swipe' && FT.step === 1) { ftOff(); if ((arg.beats || []).some(b => b.t === 'burst')) { ftSave(2); setTimeout(() => ftue('burst'), 1400); } else setTimeout(async () => FT.step === 1 && coach({ rect: await ftHintRect(), text: $t('swipe_this_one_to_merge'), sub: $t('same_apps_stick_together'), finger: 'swipe', step: '1 / 6' }), 900); }
+  else if (ev === 'burst' && FT.step === 2) { coach({ rect: await ftHintRect(), text: $t('4_of_the_same_app'), sub: $t('every_pop_stacks_p'), finger: 'swipe', step: '2 / 6' }); }
   else if (ev === 'swipe' && FT.step === 2) { ftOff(); ftSave(3); }
   else if (ev === 'swipe' && FT.step === 3) {
     const pn = await api('panel'), can = pn.apps.some(a => !a.owned && a.open && (a.canBuy != null ? a.canBuy : geq(pn.state.wallet, a.price)));
-    if (can) { ftSave(4); setTimeout(() => coach({ rect: { x: 4, y: 4, w: innerWidth - 8, h: 64 }, text: $t('pull_down_to_open_the'), sub: $t('buy_new_apps_to_grow'), finger: 'pull', step: '3 / 4' }), 1200); }
+    if (can) { ftSave(4); setTimeout(() => coach({ rect: { x: 4, y: 4, w: innerWidth - 8, h: 64 }, text: $t('pull_down_to_open_the'), sub: $t('buy_new_apps_to_grow'), finger: 'pull', step: '3 / 6' }), 1200); }
   }
-  else if (ev === 'shade' && FT.step === 4) { ftOff(); const t = shadeEl.querySelector('.tile[data-k="shop"]'); if (t) { const r = t.getBoundingClientRect(); coach({ rect: { x: r.x, y: r.y, w: r.width, h: r.height }, text: $t('tap_the_app_store'), finger: 'tap', step: '3 / 4' }); } }
+  else if (ev === 'shade' && FT.step === 4) { ftOff(); const t = shadeEl.querySelector('.tile[data-k="shop"]'); if (t) { const r = t.getBoundingClientRect(); coach({ rect: { x: r.x, y: r.y, w: r.width, h: r.height }, text: $t('tap_the_app_store'), finger: 'tap', step: '3 / 6' }); } }
   else if (ev === 'sheet' && arg === 'shop' && FT.step === 4) {
     ftOff(); ftSave(5);
     setTimeout(() => { const btn = $('sheet-b').querySelector('[data-act="buy"]:not([disabled])'), row = btn && btn.closest('.it'); if (!row) return; row.scrollIntoView({ block: 'center' });
-      setTimeout(() => { const r = row.getBoundingClientRect(), a = P.apps.find(x => x.id === btn.dataset.id); coach({ rect: { x: r.x, y: r.y, w: r.width, h: r.height }, text: $t('buy_your_first_app'), sub: a ? `${a.name} · ${(TEXTS[a.id] || [[]])[0][1] || ''}` : '', finger: 'tap', step: '4 / 4', place: r.y > innerHeight * .55 ? 'above' : 'below' }); }, 350); }, 600);
+      setTimeout(() => { const r = row.getBoundingClientRect(), a = P.apps.find(x => x.id === btn.dataset.id); coach({ rect: { x: r.x, y: r.y, w: r.width, h: r.height }, text: $t('buy_your_first_app'), sub: a ? `${a.name} · ${(TEXTS[a.id] || [[]])[0][1] || ''}` : '', finger: 'tap', step: '5 / 6', place: r.y > innerHeight * .55 ? 'above' : 'below' }); }, 350); }, 600);
   }
-  else if (ev === 'buy' && FT.step === 5) { ftEnd(); toast($t('nice_now_upgrade_to_raise'), 'ok'); }
+  else if (ev === 'buy' && FT.step === 5) {
+    ftSave(6); toast($t('nice_now_upgrade_to_raise'), 'ok');
+    setTimeout(() => { closeAll(); const i = TILES.findIndex(t => t.key === 'auto'); setTimeout(() => coach({ rect: { canvas: 1, x: tileX(i) - 30, y: TILEY - 30, w: 60, h: 60 }, text: $t('ft_auto_title'), sub: $t('ft_auto_sub'), finger: 'tap', step: '6 / 6' }), 450); }, 1400);
+  }
+  else if (ev === 'auto' && FT.step === 6) { ftEnd(); setTimeout(() => toast($t('ft_done'), 'ok'), 300); }
   else if (ev === 'closed' && FT.step === 5) ftOff();
 }
 
 // back from away: the app paid the time away (AwayClock) and hands the result here
 window.onOffline = o => {
+  if (!started || FT.step < 9) { heldOffline = o; return; }  // shown after the title and the guide
   if (L(o.paid) > -Infinity) { addWallet(L(o.paid)); showReturn(o); phone('ui.bonus', .4); }
   applyState(o.state); reconcile(o.state);
 };

@@ -38,6 +38,9 @@ for n, line in enumerate(page.splitlines(), 1):  # display text must come from t
     code_part = re.split(r"(?<![:'\"])//\s|/\*", line)[0] if "<script" not in line else line
     if HAN.search(code_part) and not re.match(r"\s*(\*|<!--)", line): problems.append(f"game.tpl.html:{n}: Korean text in code — move it to i18n/ko.json")
 if problems: raise SystemExit("i18n check failed:\n  " + "\n  ".join(problems[:60]) + (f"\n  … {len(problems) - 60} more" if len(problems) > 60 else ""))
+TITLE_DIR = ROOT / "docs/design/title"  # title/loading art (commission pass-title); only files that exist are requested
+title_art = sorted(f.stem for f in TITLE_DIR.glob("*.webp")) if TITLE_DIR.exists() else []
+page = page.replace("__TITLE_ART__", json.dumps(title_art))
 page = page.replace("__I18N__", json.dumps(locs, ensure_ascii=False)).replace("__I18N_CORE__", json.dumps(core, ensure_ascii=False)).replace("__TEXTS_EN__", json.dumps(texts_en, ensure_ascii=False))
 page = page.replace("__COLORS__", json.dumps(colors)).replace("__TEXTS__", json.dumps(texts, ensure_ascii=False)).replace("__HANDSET__", repr((FX / "handset.b64").read_text().strip())).replace("__PHONE__", (FX / "phone-sfx.json").read_text())
 assert "__" not in re.sub(r"__(proto|dirname)__", "", page.split("<script>")[1])[:0] + "", "placeholder left"
@@ -51,5 +54,6 @@ shutil.copy(ROOT / "tools/game-page/pfx.bundle.js", OUT / "pfx.bundle.js")  # pi
 (OUT / "img").mkdir()
 shutil.copy(ROOT / "docs/design/ui-assets/tutorial/hand-swipe.png", OUT / "img/hand-swipe.png")
 shutil.copytree(ROOT / "docs/design/bm-screens/img", OUT / "img/bm")
-shutil.copytree(ROOT / "tools/game-page/ui", OUT / "img/ui")  # cta + promo commissions, tight-cropped webp
+shutil.copytree(ROOT / "tools/game-page/ui", OUT / "img/ui")
+if title_art: shutil.copytree(TITLE_DIR, OUT / "img/title", ignore=shutil.ignore_patterns("*.png", "*.md"))  # cta + promo commissions, tight-cropped webp
 print("built", OUT, len(page), "bytes,", len(colors), "colours,", len(list((OUT / "icons").glob("*.svg"))), "icons")

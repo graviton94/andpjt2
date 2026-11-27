@@ -1,6 +1,110 @@
 {
  "spec": "Sticker-style game icon. Thick dark ink outline #1A0E06 (about 5% of icon width), rounded corners. Hard drop shadow in the same ink colour offset straight down about 4%, no blur. Fill with a vertical two-colour gradient (light top, rich bottom) plus one glossy highlight shape at the top left (white 25-35%). Light from the top left, slightly chubby bevelled volume. No realistic texture, no noise, no glow. No letters, numbers, emoji or logos. Do not imitate real brands (battery makers, carriers, app stores). Must stay recognisable by silhouette at 48 px. Keep size, outline weight and angle consistent within a set. Subject centred inside an 80% safe area.",
- "pending": [],
+ "pending": [
+  {
+   "id": "title-bg",
+   "title": "타이틀·로딩 배경 일러스트 (세로)",
+   "priority": 1,
+   "cols": 1,
+   "rows": 1,
+   "cell": [
+    1080,
+    1920
+   ],
+   "dest": "docs/design/title/bg.webp",
+   "spec": "Bright, punchy casual mobile game illustration that matches a sticker-style UI: thick dark ink outlines #1A0E06, chunky bevelled shapes, warm saturated colours (orange #FF8A2A, gold #FFD23F, hot pink #FF4FA0, electric blue #3867F0), light from the top left, clean cel shading, no photo realism, no noise. Theme: a smartphone being flooded with notifications in a funny, satisfying way. Do not copy real app logos or brands.",
+   "intro": "Full-bleed portrait background for the title and loading screen (1080x1920, NOT transparent). Composition: a giant cartoon smartphone seen from slightly below, its screen bursting with dozens of colourful notification bubbles and app-icon-like tiles that fly outward and pop into sparkles; warm orange-to-gold sunburst sky behind it. Keep the top 40% calmer and darker in the centre (the game logo sits there) and the bottom 25% simple (a start button sits there); the action happens in the middle band and the edges. No text, letters, numbers or logos anywhere.",
+   "rules": "ONE image only, exactly 1080x1920 portrait, full-bleed, opaque background. No text, no watermark, no border, no UI elements.",
+   "items": [
+    {
+     "id": "bg",
+     "note": "세로 키아트 1080×1920, 위 40%·아래 25%는 비워 둠",
+     "out": 1080,
+     "desc": "the title key art described above"
+    }
+   ]
+  },
+  {
+   "id": "title-logo",
+   "title": "게임 로고 · 영어 / 한국어 (글자 있음)",
+   "priority": 1,
+   "cols": 1,
+   "rows": 2,
+   "cell": [
+    1600,
+    700
+   ],
+   "dest": "docs/design/title/logo-en.webp, logo-ko.webp",
+   "spec": "Game logo wordmark in the same sticker style as the game UI: very bold rounded display lettering, golden yellow fill #FFE34D to #FFB020, thick dark brown outline #2A0F04, a hard drop shadow in the same brown straight below, small glossy highlight on the top left of each letter, slight playful tilt and bounce between letters. A small notification bell with a red badge dot sits on the exclamation mark. Lettering IS required here and must be spelled exactly as given.",
+   "intro": "Two logo versions on one sheet, each centred in its cell, transparent background.",
+   "rules": "ONE image only: 1 column x 2 rows, each cell 1600x700, whole sheet 1600x1400. Each logo centred in its cell with at least 8% empty margin, nothing crossing cell borders. Transparent background; if impossible, flat solid #FF00FF outside the letters. Spell the words exactly; no other text, no tagline, no watermark.",
+   "items": [
+    {
+     "id": "logo-en",
+     "note": "영어: Do Not Disturb!",
+     "out": 1600,
+     "desc": "the English logo reading exactly \"Do Not Disturb!\" on two lines (\"Do Not\" small above, \"Disturb!\" big below)"
+    },
+    {
+     "id": "logo-ko",
+     "note": "한국어: 방해 금지!",
+     "out": 1600,
+     "desc": "the Korean logo reading exactly \"방해 금지!\" (Hangul, one line, heavy rounded Korean display lettering, same colours and outline as the English one)"
+    }
+   ]
+  },
+  {
+   "id": "title-stickers",
+   "title": "로딩·온보딩 마스코트와 꾸밈 스티커 6종",
+   "priority": 1,
+   "cols": 3,
+   "rows": 2,
+   "cell": [
+    512,
+    512
+   ],
+   "dest": "docs/design/title/<id>.webp",
+   "intro": "Mascot and decoration stickers for the loading screen, title screen and the first-run guide.",
+   "items": [
+    {
+     "id": "mascot",
+     "note": "마스코트: 알림에 시달리는 폰 (로딩·가이드 첫 카드)",
+     "out": 512,
+     "desc": "MASCOT: a cute chubby smartphone character with big round eyes and tiny arms, sweating comically while three notification bubbles stack on its head; friendly, slightly panicked smile. Body graphite #2A2D35 with a glowing screen #8CC4FF"
+    },
+    {
+     "id": "mascot-cheer",
+     "note": "마스코트 환호 (가이드 완료)",
+     "out": 512,
+     "desc": "MASCOT CHEER: the same phone character jumping with both arms up, eyes closed happily, confetti and a gold star around it"
+    },
+    {
+     "id": "bubble-chat",
+     "note": "꾸밈: 말풍선 알림",
+     "out": 512,
+     "desc": "a chunky yellow chat-bubble notification with a small red badge dot, tilted 10 degrees, no text"
+    },
+    {
+     "id": "bubble-bell",
+     "note": "꾸밈: 종 알림",
+     "out": 512,
+     "desc": "a ringing gold notification bell with motion arcs and a red badge dot"
+    },
+    {
+     "id": "bubble-mail",
+     "note": "꾸밈: 메일 알림",
+     "out": 512,
+     "desc": "a puffy blue envelope with a red badge dot and a tiny sparkle"
+    },
+    {
+     "id": "bubble-pop",
+     "note": "꾸밈: 팡 터짐",
+     "out": 512,
+     "desc": "a pink-orange comic burst star (explosion shape) with small flying sparks, no text"
+    }
+   ]
+  }
+ ],
  "delivered": [
   {
    "title": "상점 상품 아트 (시트 1장 → 9개, ui-assets/shop/)",

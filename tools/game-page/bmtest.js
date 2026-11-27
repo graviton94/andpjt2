@@ -5,7 +5,7 @@ const out = process.argv[2]; require('fs').mkdirSync(out, { recursive: true });
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errors = []; p.on('pageerror', e => errors.push(e.message)); p.on('console', m => m.type() === 'error' && errors.push(m.text()));
-  await p.goto('http://127.0.0.1:8765/index.html?auto=0&lang=ko&noftue');
+  await p.goto('http://127.0.0.1:8765/index.html?notitle&auto=0&lang=ko&noftue');
   await p.waitForTimeout(2800); await p.screenshot({ path: `${out}/1-attend.png` });
   // every payment asks first: press 결제 when the confirm pops up
   const pay = async sel => { await p.click(sel); await p.waitForTimeout(250); if (await p.$('#cf.on')) await p.click('#cf-ok'); };

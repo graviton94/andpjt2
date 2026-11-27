@@ -11,12 +11,12 @@ PRI = {1: "1순위 · 그레이박스 상점", 2: "2순위 · 프리미엄 화�
 
 def prompt(g):
     cw, ch = g["cell"]
-    lines = [d["spec"], "", g["intro"], "",
+    lines = [g.get("spec", d["spec"]), "", g["intro"], "",
              f'Sprite sheet: {g["cols"]} columns x {g["rows"]} rows of equal cells, each cell {cw}x{ch} px, whole sheet {cw * g["cols"]}x{ch * g["rows"]} px.']
     for i, it in enumerate(g["items"]):
         r, c = divmod(i, g["cols"])
         lines.append(f"Row {r + 1}, column {c + 1}: " + ("leave this cell EMPTY." if it is None else it["desc"] + "."))
-    lines += ["", d["sheetRules"]]
+    lines += ["", g.get("rules", d["sheetRules"])]
     return "\n".join(lines)
 
 def grid(g):
@@ -31,7 +31,7 @@ def card(g):
     return f'''<article class="card">
   <header><div><p class="pri">{PRI[g["priority"]]}</p><h2>{html.escape(g["title"])}</h2></div>
   <button type="button" class="copy" data-copy="{html.escape(full, quote=True)}">프롬프트 복사</button></header>
-  <p class="meta">시트 1장 · {g["cols"]}×{g["rows"]}칸 · 요소 {n}개 · 받으면 칸별로 잘라 <code>docs/design/ui-assets/{html.escape(g["id"])}/</code>에 저장</p>
+  <p class="meta">시트 1장 · {g["cols"]}×{g["rows"]}칸 · 요소 {n}개 · 받으면 칸별로 잘라 <code>{html.escape(g.get("dest", "docs/design/ui-assets/" + g["id"] + "/"))}</code>에 저장</p>
   {grid(g)}
   <details><summary>프롬프트 보기</summary><pre>{html.escape(full)}</pre></details>
 </article>'''
