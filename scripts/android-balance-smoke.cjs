@@ -97,7 +97,10 @@ async function run() {
   };
   const open = async kind => {
     checkpointStage(`open ${kind}`);
-    if (await page.locator('#sheet.open').count()) await page.locator('#sheet-x').click();
+    if (await page.locator('#sheet.open').count()) {  // same in-page press for the sheet's close button
+      await page.evaluate(() => document.getElementById('sheet-x').click());
+      await page.locator('#shade.open').waitFor();
+    }
     else if (!(await page.locator('#shade.open').count())) {
       const b = await page.locator('#stage').boundingBox();
       const x = b.x + b.width / 2;
