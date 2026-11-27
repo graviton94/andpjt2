@@ -88,7 +88,8 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .gain.base0{background:var(--soft);color:var(--sub);box-shadow:none}
 .rookie{position:relative;border-radius:20px;padding:14px 14px 12px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,#0E7A5A,#0B4A64);border:2px solid #5BD6A8;overflow:hidden}
 .rookie h3{margin:0;font:800 22px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
-.rookie ul{margin:6px 0 10px;padding-left:16px;font-size:12.5px}
+.rookie ul{margin:6px 0 10px;padding-left:16px;padding-right:96px;font-size:12.5px}
+.rookie .rk-art{position:absolute;right:6px;bottom:50px;width:100px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));pointer-events:none}
 .rookie .d{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;background:#00000033;border-radius:999px;padding:2px 9px}
 .rookie .d img{width:16px;height:16px}
 .bst{position:absolute;right:8px;top:8px;width:84px;height:84px;background:url(img/ui/burst.webp) center/contain no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#B31A00;font:900 18px/1 "Pretendard","Noto Sans KR",system-ui,sans-serif;transform:rotate(10deg);letter-spacing:-.5px}
@@ -2540,7 +2541,7 @@ function renderData(b) {
   if (m.rookieOpen || (m.rookieBought && m.rookieDay <= 7)) {
     const x = gainX(m.rookieValue, m.rookieWon);
     h += `<div class="rookie">${m.rookieBought ? '' : sticker('burst', [xStr(x) + $t('times_suffix'), $t('value')], 84, 'right:6px;top:6px;transform:rotate(10deg)')}
-      <h3>${$t('beginner_pass')}</h3><span class="d">${ic('clock')}${m.rookieBought ? $t('day_7', m.rookieDay) : $t('first_7_days_only_days', m.rookieDaysLeft)}</span>
+      <img class="rk-art" src="img/bm/shop-growth.webp" alt=""><h3>${$t('beginner_pass')}</h3><span class="d">${ic('clock')}${m.rookieBought ? $t('day_7', m.rookieDay) : $t('first_7_days_only_days', m.rookieDaysLeft)}</span>
       <ul><li>${$t('data_300_right_now')}</li><li>${$t('data_7_daily_for_50')}</li><li>${$t('premium_voucher_1_worth_data', m.voucherData)}</li></ul>
       ${m.rookieBought ? `<button class="btn skin claim" data-act="claimRookie" ${m.rookieCanClaim ? '' : 'disabled'}>${m.rookieCanClaim ? $t('claim_today_s_50') : $t('claimed_today_back_tomorrow')}</button>`
         : `<button class="btn skin gold" data-act="buyRookie">${priceOf(P.bm.rookieProductId || 'rookie_pass', m.rookieWon)}</button>`}</div>`;

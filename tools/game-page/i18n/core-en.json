@@ -118,6 +118,7 @@
   "item.Warp": "Time warp"
  },
  "text": {
+  "#연쇄 한 번": "One #-chain",
   "과부하 파동 #번": "# overload waves",
   "글로벌": "Global",
   "금융": "Finance",
@@ -137,9 +138,11 @@
   "시간 도약": "Time warp",
   "아시아권": "Asian",
   "알림 #번 밀기": "Swipe # notifications",
+  "알림 #번 터뜨리기": "Pop # notifications",
   "알림 개근왕": "Perfect Attendance",
   "알림 없는 사람": "Inbox Zero",
   "알림 해일": "Notification Tsunami",
+  "앱 강화 #번": "Upgrade apps # times",
   "업무": "Work",
   "연쇄 반응": "Chain Reaction",
   "오버클럭 #시간": "Overclock #h",
