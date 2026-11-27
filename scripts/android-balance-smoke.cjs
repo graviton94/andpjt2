@@ -7,7 +7,7 @@ const { chromium } = require(process.env.SMOKE_PLAYWRIGHT || 'playwright-core');
 const [endpoint, phase, output, appPackage] = process.argv.slice(2);
 const appUrl = 'https://appassets.androidplatform.net/assets/game/index.html?auto=0';
 const localUrl = 'http://127.0.0.1:8765/index.html?auto=0';
-const adb = (...args) => execFileSync('adb', args, { timeout: 15_000 });
+const adb = (...args) => execFileSync('adb', args, { timeout: 15_000, maxBuffer: 64 * 1024 * 1024 });  // full-screen PNGs pass 1 MB
 let stage = 'CDP connection';
 const checkpointStage = name => {
   stage = name;
