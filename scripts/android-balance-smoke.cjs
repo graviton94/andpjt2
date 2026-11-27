@@ -205,7 +205,12 @@ async function run() {
     await shot('05-premium');
 
     await open('deck');
-    await attr('data-in', 'recorder').click();
+    // the deck can already be full here (purchases above can fill a slot): free one first, then add the recorder
+    if (await attr('data-in', 'recorder').isDisabled()) {
+      await page.evaluate(() => { const o = [...document.querySelectorAll('#sheet-b [data-out]')].find(x => x.dataset.out !== 'recorder' && !x.disabled); if (o) o.click(); });
+      await page.waitForTimeout(600);
+    }
+    await page.evaluate(() => document.querySelector('#sheet-b [data-in="recorder"]').click());
     await attr('data-out', 'recorder').waitFor();
     await shot('06-deck');
 
