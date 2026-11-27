@@ -14,12 +14,14 @@ PKG, DRY = CFG['package'], '--dry-run' in sys.argv
 api = build('androidpublisher', 'v3', cache_discovery=False)
 mon = api.monetization()
 LANGS = {'en': 'en-US', 'ko': 'ko-KR'}
-RV = '2022/02'
+RV = '2022/02'  # replaced by the version convertRegionPrices answers with (currencies change, e.g. BG → EUR)
 failed = []
 
 
 def regions(krw):
+    global RV
     conv = mon.convertRegionPrices(packageName=PKG, body={'price': {'currencyCode': 'KRW', 'units': str(krw)}}).execute()
+    RV = (conv.get('regionVersion') or {}).get('version') or RV
     return conv.get('convertedRegionPrices', {}), conv.get('convertedOtherRegionsPrice', {})
 
 
@@ -34,7 +36,7 @@ def onetime(p):
     mon.onetimeproducts().patch(packageName=PKG, productId=p['id'], body=body, allowMissing=True, updateMask='listings,purchaseOptions', regionsVersion_version=RV).execute()
     mon.onetimeproducts().purchaseOptions().batchUpdateStates(packageName=PKG, productId=p['id'], body={'requests': [
         {'activatePurchaseOptionRequest': {'packageName': PKG, 'productId': p['id'], 'purchaseOptionId': 'buy'}}]}).execute()
-    print('ok', p['id'], len(reg), 'regions, active')
+    print('ok', p['id'], len(reg), 'regions, active, regions version', RV)
 
 
 def sub(p):
