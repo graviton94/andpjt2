@@ -18,10 +18,10 @@ class CoreRulesTest {
     @Test
     fun levelThresholdsUseRunPAndMatchThePublishedCurve() {
         val r = e.rules
-        assertEquals(listOf(30L, 70L, 163L).map(::valueOf), (2..4).map(r::levelP))
+        assertEquals(listOf(30L, 71L, 168L).map(::valueOf), (2..4).map(r::levelP))
         val withoutLateAdjustment = r.copy(lateGrowthPermille = 1_000)
-        assertEquals(withoutLateAdjustment.levelP(74), r.levelP(74))
-        assertTrue(withoutLateAdjustment.levelP(75) > r.levelP(75))
+        assertEquals(withoutLateAdjustment.levelP(r.lateGrowthFrom), r.levelP(r.lateGrowthFrom))
+        assertTrue(withoutLateAdjustment.levelP(r.lateGrowthFrom + 1) > r.levelP(r.lateGrowthFrom + 1))
         for (level in listOf(2, 24, 25, 26, 74, 75, 124)) {
             for (fastBoot in listOf(0, 1, 5)) {
                 val threshold = r.levelCeil(level, fastBoot)
@@ -793,6 +793,7 @@ class CoreRulesTest {
         assertEquals(4, end.bursts)
         assertEquals(10, end.steps)
         assertEquals(4 + e.overloadDepth(state), end.chain)
+        assertEquals(state.energy - 1, move.state.energy)
         assertTrue(move.beats.indexOf(end) > move.beats.indexOfLast { it is Beat.Wave })
         assertEquals(move, e.swipe(state, 4, now))
     }
@@ -826,6 +827,11 @@ class CoreRulesTest {
         assertEquals(ChainEndReason.Cap, end.reason)
         assertEquals(3, end.steps)
         assertEquals(1, end.bursts)
+        val burstCap = outcome(rules.copy(fallSpamStepPermille = 0, fallBurstLimit = 2))
+            .beats.filterIsInstance<Beat.ChainEnd>().single()
+        assertEquals(ChainEndReason.Cap, burstCap.reason)
+        assertEquals(2, burstCap.bursts)
+        assertEquals(4, burstCap.steps)
     }
 
     @Test

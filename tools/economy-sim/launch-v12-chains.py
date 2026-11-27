@@ -38,6 +38,8 @@ def table(directory, profile, policy):
             c["wave9"] += swipes * (displayed >= 9 > physical + bonus)
             c["steps_total"] += swipes * steps
             c["steps_max"] = max(c["steps_max"], steps)
+            c["steps_with_wave_total"] += swipes * (steps + waves)
+            c["steps_with_wave_max"] = max(c["steps_with_wave_max"], steps + waves)
             if reason:
                 c["chains"] += swipes
                 c[reason] += swipes
@@ -71,6 +73,8 @@ def table(directory, profile, policy):
     ))
     print(f"처리 단계 평균 {total['steps_total']/total['swipes']:.2f} (연쇄 시작 스와이프 {total['steps_total']/total['chains']:.2f}), "
           f"최대 {max(c['steps_max'] for c in counts.values())}. "
+          f"파동 포함 평균 {total['steps_with_wave_total']/total['swipes']:.2f}, "
+          f"최대 {max(c['steps_with_wave_max'] for c in counts.values())}. "
           f"자동 {total['automatic']:,}/{total['swipes']:,}회 ({100 * total['automatic']/total['swipes']:.2f}%).")
 
 

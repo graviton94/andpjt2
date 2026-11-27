@@ -16,15 +16,27 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
     page.on('pageerror', error => errors.push(error.message));
     const request = async (method, query = {}) =>
       (await page.request.get(root + '/api/' + method + '?' + new URLSearchParams(query))).json();
-    await request('new', { seed: 7 });
+    const continuesAfterFall = result => {
+      const arrivals = new Set(result.beats.filter(beat => beat.t === 'spawn').map(beat => beat.row.id));
+      return result.beats.some(beat => beat.t === 'burst' && arrivals.has(beat.row.id));
+    };
+    let fixtureSeed;
+    for (const seed of [7, ...Array.from({ length: 32 }, (_, index) => index + 1).filter(seed => seed !== 7)]) {
+      await request('new', { seed });
+      if (continuesAfterFall(await request('swipe', { id: 4 }))) {
+        fixtureSeed = seed;
+        break;
+      }
+    }
+    assert(fixtureSeed, 'Expected one fixed seed with a falling continuation');
+    await request('new', { seed: fixtureSeed });
     await page.goto(root + '/index.html?notitle&auto=0&lang=ko&noftue&noattend');
     await page.waitForFunction(() => window.__dbg && JSON.parse(window.__dbg.flags()).S);
     const swipe = await request('swipe', { id: 4 });
     assert(swipe.ok);
     const falling = swipe.beats.filter(beat => beat.t === 'spawn');
     assert(falling.length >= 2);
-    const arrivalIds = new Set(falling.map(beat => beat.row.id));
-    assert(swipe.beats.some(beat => beat.t === 'burst' && arrivalIds.has(beat.row.id)));
+    assert(continuesAfterFall(swipe));
     assert.equal(swipe.beats.filter(beat => beat.t === 'chainEnd').length, 1);
     await page.evaluate(result => play(result), swipe);
     await page.waitForFunction(() => !JSON.parse(window.__dbg.flags()).boardBusy);
@@ -53,7 +65,7 @@ const root = 'http://127.0.0.1:' + (process.argv[3] || '8765');
     assert.deepEqual(errors, []);
     fs.writeFileSync(path.join(output, 'falling-swipe.json'), JSON.stringify(swipe, null, 2)+'\n');
     fs.writeFileSync(path.join(output, 'browser-verification.json'), JSON.stringify({
-      finalBoardMatches: true, pageErrors: errors, autoRequestsDuringOpenSheet: 0,
+      seed: fixtureSeed, finalBoardMatches: true, pageErrors: errors, autoRequestsDuringOpenSheet: 0,
       measuredIdleBeforeAutoMs: elapsed, spawnCount: falling.length,
     }, null, 2)+'\n');
   } finally {

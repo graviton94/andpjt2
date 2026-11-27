@@ -21,7 +21,7 @@ data class RuleSet(
     val countWeights: List<Int> = listOf(1, 2, 1),
     val fallingChains: Boolean = true,
     /** A refill can form a pair with the row it lands on. The usual deck distribution supplies other rows. */
-    val fallMatchPermille: Int = 200,
+    val fallMatchPermille: Int = 100,
     /** Chain spam starts at this many physical bursts and gains one step per further burst. */
     val fallSpamFrom: Int = 4,
     val fallSpamStepPermille: Int = 45,
@@ -157,12 +157,12 @@ data class RuleSet(
      * onward scales that ratio by [lateGrowthPermille]. Backup-file multipliers speed up leveling.
      */
     val levelPBase: Long = 30,
-    val levelRatioPermille: Int = 2_330,
+    val levelRatioPermille: Int = 2_360,
     val levelLateFrom: Int = 25,
     val levelRatioStepPermille: Int = 1,
     /** Multiplier on level-to-level P growth from this level onward. */
-    val lateGrowthFrom: Int = 74,
-    val lateGrowthPermille: Int = 860,
+    val lateGrowthFrom: Int = 69,
+    val lateGrowthPermille: Int = 840,
     /** Every backup file ever earned adds this % to all notification values. Compounds across resets. */
     val lifetimeFilePercent: Int = 5,
     /** Passive bonus = (1 + 5% × lifetime files)^0.85: compounding, but tapering (research A3). */
@@ -193,10 +193,10 @@ data class RuleSet(
     /** Backup files paid by a run that just reaches the reset level. */
     val backupBase: Long = 10,
     // Jackpot limits: luck jumps a few steps, never the whole run.
-    /** One swipe (chains, waves, 행운 알림, 인증번호 included) raises the level by at most this many steps; the rest is lost. */
+    /** Base level headroom for one swipe, including chains, waves and event payouts. */
     val swipeLevelCap: Int = 3,
     /** Additional swipe headroom once the condensed late level curve begins. */
-    val lateSwipeCapSteps: Int = 0,
+    val lateSwipeCapSteps: Int = 2,
     /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
     val jackpotCapFrom: Int = 10,
     /** One offline settlement raises the level by at most this many steps. */
