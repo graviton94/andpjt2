@@ -973,8 +973,12 @@ const crackAt = (x, y, amp) => { crack = { x: x / W, y: y / H, age: 0, amp, seed
 // ---------- state ----------
 const MSG = { Social: [$t('new_message'), $t('a_friend_mentioned_you'), $t('99_new_posts_in_the')], Work: [$t('meeting_starts_in_10_min'), $t('an_approval_request_arrived'), $t('3_new_emails')],
   Daily: [$t('check_today_s_schedule'), $t('your_delivery_is_on_its'), $t('alarm_ringing')], Media: [$t('new_video_uploaded'), $t('recommended_for_you'), $t('a_live_stream_started')], Money: [$t('payment_complete'), $t('your_coupon_expires_soon'), $t('deposit_received')] };
-const msgOf = d => d.kind === 'App' && TEXTS[d.app] ? TEXTS[d.app][1][d.id % TEXTS[d.app][1].length] : d.kind === 'Spam' ? $t('ad_congratulations_you_ve_won') : d.kind === 'Call' ? $t('suspected_spam_call_swipe_to') : d.kind === 'Event' ? $t('event_card_swipe_to_claim') : d.kind === 'Alert' ? $t('system_alert_swipe_to_handle') : d.kind === 'Wild' ? $t('merges_with_any_app') : (MSG[d.cat] || MSG.Daily)[d.id % 3];
-const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Wild' ? $t('wild_notification') : d.kind === 'Spam' ? $t('spam_text') : d.kind === 'Call' ? $t('spam_call') : d.label || $t('notifications');
+const msgOf = d => d.kind === 'App' && TEXTS[d.app] ? TEXTS[d.app][1][d.id % TEXTS[d.app][1].length] : d.kind === 'Spam' ? $t('ad_congratulations_you_ve_won') : d.kind === 'Call' ? $t('suspected_spam_call_swipe_to') : d.kind === 'Event' ? (CARD_T[d.event] ? CARD_T[d.event][1] : $t('event_card_swipe_to_claim')) : d.kind === 'Alert' ? $t('system_alert_swipe_to_handle') : d.kind === 'Wild' ? $t('merges_with_any_app') : (MSG[d.cat] || MSG.Daily)[d.id % 3];
+const ALERT_T = { LowBattery: $t('alert_LowBattery'), Storage: $t('alert_Storage'), Crash: $t('alert_Crash') };
+const CARD_PATH = {};
+// one line that never runs under the badge on the right: trim with an ellipsis
+const fitText = (c, t, w) => { if (c.measureText(t).width <= w) return t; while (t.length > 1 && c.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; };
+const nameOf = d => d.kind === 'App' ? d.name : d.kind === 'Event' && CARD_T[d.event] ? CARD_T[d.event][0] : d.kind === 'Alert' && ALERT_T[d.alert] ? ALERT_T[d.alert] : d.kind === 'Wild' ? $t('wild_notification') : d.kind === 'Spam' ? $t('spam_text') : d.kind === 'Call' ? $t('spam_call') : d.label || $t('notifications');
 const ROW0 = 176 + Math.round(EX * .35), ROWH = 72, CH = 60, CX0 = 14, CW = 362;
 const rowY = i => ROW0 + i * ROWH;
 const board = [];  // what is on screen: engine rows + springs
@@ -1185,11 +1189,15 @@ function drawCard(c, r, y) {
   else {
     c.fillStyle = col; rrc(c, 26, y + 11, 38, 38, 10); c.fill();
     if (d.kind === 'Call' && HANDSET.complete) c.drawImage(HANDSET, 31, y + 16, 28, 28);
+    else if (d.kind === 'Event' && CARD_ICON[d.event]) {  // each card its own line icon (the deck sheet's)
+      c.save(); c.translate(31, y + 16); c.scale(28 / 24, 28 / 24); c.strokeStyle = '#fff'; c.lineWidth = 2; c.lineCap = c.lineJoin = 'round';
+      c.stroke(CARD_PATH[d.event] || (CARD_PATH[d.event] = new Path2D(CARD_ICON[d.event]))); c.restore();
+    }
     else { c.fillStyle = '#fff'; c.font = `22px ${FD}`; c.textAlign = 'center'; c.fillText(d.kind === 'Wild' ? '★' : d.kind === 'Event' ? '🎁' : d.kind === 'App' ? (d.name || '?')[0] : '!', 45, y + 38); }
   }
   c.fillStyle = ink; c.textAlign = 'left'; c.font = `700 14px ${FB}`; c.fillText(nameOf(d), 76, y + 26);
   const nw = c.measureText(nameOf(d)).width; c.fillStyle = sub; c.font = `400 11.5px ${FB}`; c.fillText(d.id % 4 === 0 ? $t('1m') : $t('now'), 82 + nw, y + 26);
-  c.fillStyle = sub; c.font = `400 12px ${FB}`; c.fillText(msgOf(d), 76, y + 45);
+  c.fillStyle = sub; c.font = `400 12px ${FB}`; c.fillText(fitText(c, msgOf(d), 268), 76, y + 45);
   if (d.merges) {
     // count toward the burst: filled pips + "2/4"
     const n = d.threshold || 4;
@@ -2010,8 +2018,8 @@ function draw(t) {
     for (let j = 5; j >= 0; j--) { const tt = Math.max(0, o.t * o.t - j * .035), [x, y] = tokPos(o, tt), r = o.r * (1 - j * .13); const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4); g.addColorStop(0, `rgba(255,255,255,${.9 - j * .13})`); g.addColorStop(.35, rgb(o.col, .7 - j * .1)); g.addColorStop(1, rgb(o.col, 0)); ctx.fillStyle = g; ctx.fillRect(x - r * 2.4, y - r * 2.4, r * 4.8, r * 4.8); }
   }
   if (S) {
-    const gy = ROW0 - 22, gx = 64, gw = 274;
-    ctx.fillStyle = day ? '#B25F00' : '#FFD66B'; ctx.font = `700 12px ${FB}`; ctx.textAlign = 'left'; ctx.fillText($t('overload'), 18, gy + 8);
+    ctx.font = `700 12px ${FB}`; const gy = ROW0 - 22, gx = Math.max(64, 18 + ctx.measureText($t('overload')).width + 10), gw = 338 - gx;  // the label sets where the bar starts (Overload is wider than 과부하)
+    ctx.fillStyle = day ? '#B25F00' : '#FFD66B'; ctx.textAlign = 'left'; ctx.fillText($t('overload'), 18, gy + 8);
     ctx.fillStyle = day ? 'rgba(30,42,80,.1)' : 'rgba(255,255,255,.08)'; rr(gx, gy, gw, 8, 4); ctx.fill();
     const gg = ctx.createLinearGradient(gx, 0, gx + gw, 0); gg.addColorStop(0, '#F6C453'); gg.addColorStop(1, S.gauge >= 80 ? '#FF6B3D' : '#FFD66B');
     ctx.fillStyle = gg; rr(gx, gy, Math.max(8, gw * Math.min(1, S.gauge / 100)), 8, 4); ctx.fill();

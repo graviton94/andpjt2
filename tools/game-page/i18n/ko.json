@@ -538,5 +538,8 @@
  "assist_Board": "넓은 알림창",
  "assist_Board_d": "판에 알림 줄이 하나 더 생겨요",
  "assist_Wild": "와일드 알림",
- "assist_Wild_d": "아무 앱과도 합쳐지는 와일드 알림이 더 자주 와요"
+ "assist_Wild_d": "아무 앱과도 합쳐지는 와일드 알림이 더 자주 와요",
+ "alert_LowBattery": "배터리 부족",
+ "alert_Storage": "저장공간 부족",
+ "alert_Crash": "앱 충돌"
 }

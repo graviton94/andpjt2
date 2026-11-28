@@ -538,5 +538,8 @@
  "assist_Board": "Wide board",
  "assist_Board_d": "One more notification row on the board",
  "assist_Wild": "Wild alerts",
- "assist_Wild_d": "Wild notifications that join any app come more often"
+ "assist_Wild_d": "Wild notifications that join any app come more often",
+ "alert_LowBattery": "Low battery",
+ "alert_Storage": "Storage full",
+ "alert_Crash": "App crashed"
 }
