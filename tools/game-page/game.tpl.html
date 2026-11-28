@@ -1264,6 +1264,33 @@ let started = false;  // nothing runs (auto-clean, events, input) until the play
 // 방해 금지 card running: its tile lights up and counts down
 let dndEnd = 0, dndTotal = 20;  // the core's length (panel dnd.activeMs) replaces the 20 s default
 const dndLeft = () => Math.max(0, (dndEnd - performance.now()) / 1000);
+// ---- next goal chip (top right): the next app to buy with a progress ring, or the level that opens the next one ----
+let GOAL = null, goalAt = 0, goalLv = 0;
+function computeGoal(p) {
+  const st = p.state, open = p.apps.filter(a => !a.owned && a.open && a.price);
+  if (open.length) { const a = open.sort((x, y) => L(x.price) - L(y.price))[0]; return { kind: 'app', id: a.id, price: a.price, priceShort: a.priceShort }; }
+  const next = p.apps.filter(a => !a.owned && !a.open && a.minResets <= (p.resets || 0) && a.unlockLevel > st.level).sort((x, y) => x.unlockLevel - y.unlockLevel)[0];
+  return next ? { kind: 'level', id: next.id, lv: next.unlockLevel } : null;
+}
+function refreshGoal(force) {
+  const t = performance.now(); if (!force && t - goalAt < 2500) return; goalAt = t;
+  api('panel').then(p => { GOAL = computeGoal(p); goalLv = p.state.level; }).catch(() => {});
+}
+const goalFrac = () => !GOAL || GOAL.kind !== 'app' || !S ? 0 : Math.min(1, Math.pow(10, L(S.wallet) - L(GOAL.price)));
+function drawGoal(c) {
+  if (!S || !GOAL || !started) return;
+  const f = goalFrac(), ready = GOAL.kind === 'app' && f >= 1, t = performance.now() / 1000;
+  if (ready && GOAL.rang !== GOAL.id) { GOAL.rang = GOAL.id; if (goalAt > 0 && plate.phase === 'idle') { sfx.badge(); buzz(10); } }  // the moment the next app becomes affordable
+  const im = icon(GOAL.id), label = GOAL.kind === 'level' ? 'Lv ' + GOAL.lv : ready ? $t('goal_buy') : Math.floor(f * 100) + '%';
+  c.font = `800 11px ${FB}`; const tw = c.measureText(label).width, w = 30 + tw + 12, x0 = 22 - w;
+  c.fillStyle = ready ? (day ? '#3867F0' : ACC) : (day ? 'rgba(30,42,80,.08)' : 'rgba(255,255,255,.1)'); rrc(c, x0, -13, w, 26, 13); c.fill();
+  if (ready) { c.globalAlpha = .35 + .35 * Math.sin(t * 5); c.strokeStyle = day ? '#3867F0' : '#FFD66B'; c.lineWidth = 2; rrc(c, x0 - 2, -15, w + 4, 30, 15); c.stroke(); c.globalAlpha = 1; }
+  const cx = x0 + 14;
+  if (im.complete && im.naturalWidth) { c.save(); if (GOAL.kind === 'level') c.globalAlpha = .45; c.drawImage(im, cx - 9, -9, 18, 18); c.restore(); }
+  if (GOAL.kind === 'app') { c.strokeStyle = day ? 'rgba(30,42,80,.15)' : 'rgba(255,255,255,.18)'; c.lineWidth = 2.5; c.beginPath(); c.arc(cx, 0, 11.5, 0, 6.283); c.stroke();
+    c.strokeStyle = ready ? '#FFFFFF' : (day ? '#3867F0' : '#FFD66B'); c.beginPath(); c.arc(cx, 0, 11.5, -1.5708, -1.5708 + 6.283 * f); c.stroke(); }
+  c.fillStyle = ready ? (day ? '#FFFFFF' : '#1E1408') : ink0(); c.textAlign = 'left'; c.fillText(label, cx + 16, 4);
+}
 const TILES = [
   { key: 'auto', label: $t('auto'), on: () => autoOn, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8' },
   { key: 'dnd', label: $t('do_not_disturb'), on: () => dndLeft() > 0 || !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
@@ -1284,7 +1311,7 @@ const decor = [
     c.fillStyle = ink0(); c.font = `700 12px ${FB}`; c.textAlign = 'left'; c.fillText(S ? `${S.energy}/${S.energyCap}` : '', 17, 4);
   } },
   { x: 40, y: 56, draw: c => { c.fillStyle = day ? '#3867F0' : ACC; rrc(c, -24, -11, 48, 22, 11); c.fill(); c.fillStyle = day ? '#FFFFFF' : '#1E1408'; c.font = `800 12px ${FB}`; c.textAlign = 'center'; c.fillText('Lv ' + (S ? S.level : 1), 0, 4); } },
-  { x: 350, y: 56, draw: c => { c.fillStyle = day ? 'rgba(22,24,29,.6)' : 'rgba(246,241,234,.6)'; c.font = `700 11px ${FB}`; c.textAlign = 'right'; c.fillText(S ? $t('deck_2', S.deck, S.slots) : '', 22, 4); } },
+  { x: 350, y: 56, draw: c => drawGoal(c) },
   ...TILES.map((tl, i) => ({ x: tileX(i), y: TILEY, tile: true, draw: c => {
     const on = tl.on(), a = plate.phase === 'idle' ? 1 : 0;
     if (a <= 0) return;
@@ -1789,6 +1816,7 @@ function reconcile(st, arrivals = []) {
 }
 function applyState(st) {
   S = st; const w = L(st.wallet);
+  if (started && st.level != null) refreshGoal(st.level !== goalLv || !GOAL);  // keeps the next-goal chip current (throttled)
   if (w !== wallet.v && plate.phase === 'idle') { wallet.v = wallet.to = w; if (wallet.t >= 1) wallet.shown = w; }
 }
 
@@ -2215,7 +2243,8 @@ cv.addEventListener('pointerdown', e => {
   if (y > 684 + EX - 16) { armScrim(); openShop(); return; }
   if (y < ROW0 - 30) {  // top area (status bar, buttons): a tap presses a button on release, a drag pulls the shade
     const i = plate.phase === 'idle' && Math.abs(y - TILEY) < 34 ? TILES.findIndex((_, k) => Math.abs(x - tileX(k)) < 32) : -1;
-    Object.assign(pull, { on: true, y0: e.clientY, x0: e.clientX, tile: i, dragging: false });
+    const goal = !!GOAL && Math.abs(y - 56) < 18 && x > 290;  // the next-goal chip
+    Object.assign(pull, { on: true, y0: e.clientY, x0: e.clientX, tile: i, goal, dragging: false });
     cv.setPointerCapture(e.pointerId); return;
   }
   const r = board.find(r => y >= r.y.x && y <= r.y.x + CH && !r.fly);
@@ -2235,7 +2264,7 @@ cv.addEventListener('pointermove', e => {
 });
 const release = async e => {
   if (ev && EVENTS[ev.type].up) EVENTS[ev.type].up(ev);
-  if (pull.on) { const was = pull; pull.on = false; if (was.dragging) shadeDragEnd(); else if (was.tile >= 0) tapTile(TILES[was.tile].key); }
+  if (pull.on) { const was = pull; pull.on = false; if (was.dragging) shadeDragEnd(); else if (was.tile >= 0) tapTile(TILES[was.tile].key); else if (was.goal) { sfx.snap(); buzz(8); armScrim(); openSheet('shop'); } }
   const r = drag.r; if (!r) return; drag.r = null;
   const [x] = toBoard(e), dx = x - drag.x0, v = dx / Math.max(16, performance.now() - drag.t0);
   if (Math.abs(dx) > 70 || (Math.abs(dx) > 24 && Math.abs(v) > .5)) {
@@ -3077,7 +3106,7 @@ function bootAcct(a) {
   prog.stop(); sfx && ac && 0;
   await bootTitle();
   ac(); sfx.snap(); $('boot').classList.add('gone'); setTimeout(() => { $('boot').style.display = 'none'; }, 500);
-  started = true; idleT = 0;
+  started = true; idleT = 0; refreshGoal(true);
   const fresh = st.swipes === 0 && st.level === 1 && !BOOTQ.has('noftue');
   if (FT.step < 9 && fresh) { autoOn = false; setTimeout(() => ftue('boot'), 600); }
   else { if (FT.step < 9) ftSave(9); afterGuide(); }

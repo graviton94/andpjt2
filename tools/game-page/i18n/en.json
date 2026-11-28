@@ -546,5 +546,6 @@
  "boost_ready": "Board boost ready",
  "new_card_ready": "New event card",
  "card_slot_free": "A card slot is free",
- "title_q": "“{0}”"
+ "title_q": "“{0}”",
+ "goal_buy": "Buy!"
 }

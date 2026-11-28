@@ -546,5 +546,6 @@
  "boost_ready": "알림창 강화 가능",
  "new_card_ready": "새 이벤트 카드",
  "card_slot_free": "카드 칸이 비었어요",
- "title_q": "「{0}」"
+ "title_q": "「{0}」",
+ "goal_buy": "구매!"
 }
