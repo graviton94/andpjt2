@@ -22,6 +22,24 @@ class WebSessionTest {
         assertTrue(s.getValue("deckApps").jsonArray.isNotEmpty())
     }
 
+    @Test fun existingLevel73DeckKeepsItsEquippedTenthSlot() {
+        val engine = Engine()
+        val apps = Catalog.apps.take(10).map { it.id }
+        val saved = engine.newGame(t0, 11).copy(
+            level = 73,
+            appLevels = apps.associateWith { 1 },
+            active = apps,
+        )
+        val session = WebSession(engine, SaveCodec.decode(SaveCodec.encode(saved)), t0)
+
+        assertEquals(10L, parse(session.snapshot(t0)).getValue("slots").jsonPrimitive.long)
+        assertEquals(10L, parse(session.panel(t0)).getValue("maxSlots").jsonPrimitive.long)
+        assertEquals(apps, session.state.active)
+        val newDeck = saved.copy(active = apps.dropLast(1))
+        assertEquals(9, engine.maxSlots(newDeck))
+        assertEquals(10, engine.maxSlots(newDeck.copy(level = 74)))
+    }
+
     @Test fun hintedSwipeReplaysAsBeatsAndRefillsTheBoard() {
         val w = WebSession(state = Engine().newGame(t0, 11), now = t0)
         val id = parse(w.hint(t0)).getValue("id").jsonPrimitive.long

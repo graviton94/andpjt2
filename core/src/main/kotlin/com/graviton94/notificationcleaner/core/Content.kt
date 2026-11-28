@@ -70,7 +70,7 @@ enum class Assist(val label: String, val unlockLevel: Int, val caps: List<Pair<I
     Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 83 to 9), 2_000, 400),
     Sandwich("샌드위치", 10, listOf(10 to 5, 24 to 6, 47 to 8), 20_000, 15),
     Board("넓은 알림창", 12, listOf(12 to 2, 39 to 3), 500_000, 200),
-    Wild("와일드 알림", 20, listOf(20 to 5, 69 to 8), 1_000_000, 30),
+    Wild("와일드 알림", 20, listOf(20 to 5, 69 to 6, 70 to 7, 71 to 8), 1_000_000, 30),
     ;
 
     fun max(level: Int): Int = caps.lastOrNull { level >= it.first }?.second ?: 0
@@ -169,7 +169,7 @@ object Catalog {
         app("career", "링크드아웃", 5, 5, WE, Category.Work, 41), // LinkedIn 패러디
         // 6티어
         app("mall", "쿠빵", 6, 0, AS, Category.Money, 72), // 쿠팡 패러디
-        app("portal", "메이버", 6, 1, AS, Category.Work, 74), // Naver 패러디
+        app("portal", "메이버", 6, 1, AS, Category.Work, 73), // Naver 패러디
         app("michat", "미챗챗", 6, 2, SE, Category.Social, 76), // MiChat 패러디
         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 78), // Agoda 패러디
         app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 80), // PayPal 패러디
@@ -219,7 +219,7 @@ object Catalog {
         "music" to 37, "papago" to 38, "zalo" to 39, "momo" to 41, "airbnb" to 42, "duo" to 44,
         "ctaxi" to 45, "pay" to 47, "glints" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
         "food" to 50, "edit" to 58, "travel" to 60, "joox" to 62, "reddit" to 64, "career" to 66,
-        "mall" to 97, "portal" to 99, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
+        "mall" to 97, "portal" to 98, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
         "superapp" to 98, "line" to 99, "jobs" to 100, "lazada" to 101, "ride" to 102, "robin" to 103,
         "dance" to 99, "chat" to 100, "grab" to 101, "shopee" to 102, "beat" to 103, "why" to 104,
         "mega" to 104, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,

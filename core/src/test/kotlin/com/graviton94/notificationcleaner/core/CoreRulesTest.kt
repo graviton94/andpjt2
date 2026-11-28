@@ -93,6 +93,33 @@ class CoreRulesTest {
     }
 
     @Test
+    fun wavePayoutRoomExpandsOnlyAfterTheLaunchMilestone() {
+        val engine = Engine()
+        val original = Engine(engine.rules.copy(post124WaveCapSteps = 0))
+        val state = engine.newGame(0L, 17L).copy(
+            rows = listOf(
+                Row(1, RowKind.App, "alarm", count = 2),
+                Row(2, RowKind.App, "memo"),
+                Row(3, RowKind.App, "alarm", count = 2),
+            ),
+            level = 120,
+            runEarned = engine.rules.levelP(120),
+            gauge = 99,
+            backup = Backup(bestLevel = 124, items = mapOf(BackupItem.Value to 1_000)),
+        )
+        val prior = original.swipe(state, 2, 1_000L)!!
+        val next = engine.swipe(state, 2, 1_000L)!!
+        assertTrue(prior.overload)
+        assertTrue(prior.capped.signum() > 0)
+        assertTrue(next.earned > prior.earned)
+        assertEquals(prior.earned + prior.capped, next.earned + next.capped)
+        for (protected in listOf(state.copy(backup = state.backup.copy(bestLevel = 123)),
+                state.copy(nextOverloadAt = 2_000L))) {
+            assertEquals(original.swipe(protected, 2, 1_000L)!!, engine.swipe(protected, 2, 1_000L)!!)
+        }
+    }
+
+    @Test
     fun overloadWavesTripleTheBacklog() {
         val o = overload().second
         assertTrue(o.overload)
@@ -375,7 +402,9 @@ class CoreRulesTest {
         assertEquals(6, Assist.Overload.max(8))
         assertEquals(8, Assist.Overload.max(82))
         assertEquals(9, Assist.Overload.max(83))
-        assertEquals(10, e.rules.maxSlots(73, Backup()))
+        assertEquals(listOf(6, 7, 8), (69..71).map(Assist.Wild::max))
+        assertEquals(9, e.rules.maxSlots(73, Backup()))
+        assertEquals(10, e.rules.maxSlots(74, Backup()))
         assertEquals(4, e.rules.eventSlots(63, Backup()))
     }
 

@@ -1,6 +1,7 @@
 """Build a launch verdict from completed per-seed engine outputs."""
 import argparse
 import csv
+from collections import Counter
 from pathlib import Path
 from statistics import median
 
@@ -129,10 +130,104 @@ def render(rows, expected):
             print(f"{policy}의 같은 주·같은 시드 최고 레벨이 최선 스와이프보다 높은 경우 {ahead}/{samples}쌍.")
 
 
+def checked_screen_cohorts(rows, expected):
+    cohorts = {key: [r for r in rows if (r["profile"], r["input"]) == (key, "Best")]
+               for key, _, _, _ in PROFILES}
+    for key, cohort in cohorts.items():
+        if len(cohort) != expected or {int(r["seed"]) for r in cohort} != set(range(1, expected + 1)):
+            raise ValueError(f"Expected seeds 1–{expected} for {key}")
+        if any(r["days"] != "84" for r in cohort):
+            raise ValueError(f"Expected an 84-day horizon for {key}")
+    return cohorts
+
+
+def screen_physical_rates(path, expected):
+    total, direct = Counter(), Counter()
+    with path.open(encoding="utf-8") as file:
+        for row in csv.DictReader(file):
+            if (row["profile"], row["input"]) != ("Free", "Best"):
+                continue
+            key = (row["period"], int(row["seed"]))
+            swipes = int(row["swipes"])
+            total[key] += swipes
+            if int(row["physical_bursts"]) >= 3:
+                direct[key] += swipes
+    return [median(direct[period, seed] / total[period, seed] for seed in range(1, expected + 1))
+            for period in ("days1_14", "day15_on")]
+
+
+def render_release(directory, rows, expected):
+    manifest = (directory / "parameters.txt").read_text(encoding="utf-8")
+    if "screenOnly=true;screenActions=v1.5" not in manifest or not (directory / "screen-actions.csv").is_file():
+        raise ValueError("Release requires SIM_SCREEN_ONLY=1 and the v1.5 screen action audit")
+    if not manifest.startswith("launch-v1;") or ";rules=;" not in manifest:
+        raise ValueError("Release requires the operating engine without probe overrides")
+    if "adsPlan=scheduled" in manifest:
+        raise ValueError("Use the baseline ad policy for the release verdict")
+    cohorts = checked_screen_cohorts(rows, expected)
+    free = cohorts["Free"]
+    print("| 지표 | 목표 | 결과 | 판정 |")
+    print("|---|---:|---:|---|")
+    decisions = []
+
+    def emit(label, goal, result, ok):
+        decisions.append(ok)
+        print(f"| {label} | {goal} | {result} | {'충족' if ok else '미달'} |")
+
+    for profile, label, lo, hi in PROFILES:
+        mid, _, value, reached = stats(cohorts[profile], "last_app_day", unit="일")
+        emit(f"{label} 마지막 앱", f"{lo}~{hi}일", f"{mid} · {reached}/{expected} 도달",
+             reached == expected and lo <= value <= hi)
+
+    for key, label, lo, hi, scale, unit in (
+        ("reset_day", "무과금 첫 초기화", 1, 2, 1, "일"),
+        ("tier5_day", "무과금 첫 5티어", 6, 8, 1, "일"),
+        ("tier6_day", "무과금 첫 6티어", 21, 28, 1, "일"),
+        ("sync_day", "무과금 첫 동기화", 28, 42, 1, "일"),
+        ("offline_share", "무과금 오프라인 P 몫", 30, 50, 100, "%"),
+    ):
+        mid, _, value, reached = stats(free, key, scale, unit)
+        within_target = reached == expected and lo <= value <= hi
+        if value is not None and not within_target and lo <= round(value, 2) <= hi:
+            mid = f"{value:.5f}{unit}"
+        emit(label, f"{lo}~{hi}{unit}", f"{mid} · {reached}/{expected}", within_target)
+
+    gaps = [float(row["unlock_gap_days"]) for row in free]
+    emit("무과금 최대 해금 공백", "중앙 ≤7일 · 최악 ≤9일",
+         f"{median(gaps):.2f}일 / {max(gaps):.2f}일", median(gaps) <= 7 and max(gaps) <= 9)
+    clipped = [float(row["clipped_p_share"]) for row in free]
+    emit("무과금 과열로 잘린 P", "중앙 ≤5% · 최악 ≤15%",
+         f"{median(clipped):.2%} / {max(clipped):.2%}", median(clipped) <= .05 and max(clipped) <= .15)
+
+    purchase = {profile: {row["seed"]: float(row["last_app_day"]) if row["last_app_day"] else None
+                          for row in cohort} for profile, cohort in cohorts.items()}
+    free_days, ad_days = (list(purchase[profile].values()) for profile in ("Free", "Ads"))
+    speed = median(free_days) / median(ad_days) if all(x is not None for x in free_days + ad_days) else None
+    emit("광고 가속", "≥1.25배", f"{speed:.3f}배" if speed is not None else "미판정", speed is not None and speed >= 1.25)
+    pairs = [(slow[seed], fast[seed]) for slow, fast in zip(purchase.values(), list(purchase.values())[1:]) for seed in slow]
+    unknown = sum(slow is None and fast is None for slow, fast in pairs)
+    wrong = sum(slow is not None and (fast is None or slow <= fast) for slow, fast in pairs)
+    emit("인접 과금 단계 역전·동률", f"0/{len(pairs)}", f"{wrong}/{len(pairs) - unknown} · 미판정 {unknown}",
+         wrong == unknown == 0)
+
+    early, late = screen_physical_rates(directory / "chain-paths.csv", expected)
+    emit("무과금 초반 물리 3+", "≥25%", f"{early:.2%}", early >= .25)
+    emit("무과금 후반 물리 3+", "≥45%", f"{late:.2%}", late >= .45)
+    print()
+    print("출시 통과" if all(decisions) else "출시 보류")
+    return all(decisions)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("csv", type=Path)
     parser.add_argument("--seeds", type=int, default=8)
+    parser.add_argument("--release", action="store_true", help="Evaluate the v1.5 screen-only launch criteria")
     args = parser.parse_args()
     with args.csv.open(encoding="utf-8") as file:
-        render(list(csv.DictReader(file)), args.seeds)
+        rows = list(csv.DictReader(file))
+    if args.release:
+        if args.seeds != 8:
+            parser.error("--release requires eight seeds")
+        raise SystemExit(0 if render_release(args.csv.parent, rows, args.seeds) else 1)
+    render(rows, args.seeds)

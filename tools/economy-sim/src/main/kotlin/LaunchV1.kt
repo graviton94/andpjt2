@@ -58,6 +58,10 @@ private class LaunchFeel(override val throughDay: Int) : DailyAudit {
     val chainPaths = mutableMapOf<ChainPath, Long>()
     val adCounts = mutableMapOf<AdSlot, Long>()
     val adP = mutableMapOf<AdSlot, BigInteger>()
+    val screenActions = sortedMapOf<Pair<String, String>, Long>(compareBy({ it.first }, { it.second }))
+    override fun screenAction(action: String, item: String) {
+        screenActions.merge(action to item, 1, Long::plus)
+    }
     private var previousEvent: String? = null
     private var day = 0
     private var actor = Actor.Player
@@ -164,8 +168,9 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
     require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
     val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots" +
-        if (screenOnly) ";screenOnly=true" else ""
+    val actionPlan = if (screenOnly) ";screenOnly=true;screenActions=v1.5" else ""
+    val adPlan = if (scheduledAds) ";adsPlan=scheduled" else ""
+    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
     out.mkdirs()
     val manifest = File(out, "parameters.txt")
     if (manifest.isFile) require(manifest.readText().trim() == signature) { "Results directory already has different parameters" }
@@ -188,7 +193,8 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
         val ad = File(path, "$filename.ads")
         val chain = File(path, "$filename.chains")
         val span = File(path, "$filename.unlocks")
-        if (main.isFile && ad.isFile && chain.isFile && span.isFile) return@forEach
+        val actions = File(path, "$filename.screen-actions")
+        if (main.isFile && ad.isFile && chain.isFile && span.isFile && (!screenOnly || actions.isFile)) return@forEach
         val horizon = if (case.resets) days else minOf(30, days)
         val feel = LaunchFeel(horizon)
         val tl = playDays(case.seed.toLong(), horizon, DayPlan(), case.resets, payer = case.payer,
@@ -219,13 +225,19 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
             })
         fun quote(label: String) = "\"" + label.replace("\"", "\"\"") + "\""
         storeCompletedCase(span, "${case.key},${fixed(gapFrom.first)},${quote(gapFrom.second)},${fixed(gapTo.first)},${quote(gapTo.second)},${fixed(gap)}\n")
+        if (screenOnly) {
+            storeCompletedCase(actions, feel.screenActions.entries.joinToString("\n", postfix = "\n") { (action, count) ->
+                "${case.key},${action.first},${quote(action.second)},$count"
+            }.takeIf { feel.screenActions.isNotEmpty() }.orEmpty())
+        }
         storeCompletedCase(main, record + "\n")
         println(record)
     }
     val chains = "profile,seed,input,period,physical_bursts,match_bonus,waves,scoring_chain,swipes,actor,end_reason,processing_steps"
     val gaps = "profile,seed,input,from_day,from_unlock,to_day,to_unlock,gap_days"
-    val outputs = listOf(Triple("seeds.csv", metrics, "metrics"), Triple("ad-slots.csv", ads, "ads"),
+    val outputs = mutableListOf(Triple("seeds.csv", metrics, "metrics"), Triple("ad-slots.csv", ads, "ads"),
         Triple("chain-paths.csv", chains, "chains"), Triple("unlock-gaps.csv", gaps, "unlocks"))
+    if (screenOnly) outputs += Triple("screen-actions.csv", "profile,seed,input,action,item,count", "screen-actions")
     for ((file, header, extension) in outputs) {
         File(out,file).bufferedWriter().use { writer ->
             writer.appendLine(header)

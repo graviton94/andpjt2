@@ -1,0 +1,20 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -296,5 +296,6 @@
+     fun appPrice(app: AppDef): BigInteger = purchasePrices.computeIfAbsent(app) {
+         val ladder = big(appPriceBase) * big(appPriceTierRatio).pow(app.tier - 1) * big(appPriceOrderPermille[app.order].toLong()) / big(1_000)
+-        ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
++        val price = ladder.max(levelP(app.unlockLevel) * big(appPriceLevelPermille.toLong()) / big(1_000))
++        if (app.id == "mall") price * big(System.getenv("SIM_MALL_PRICE_PERMILLE").toLong()) / big(1_000) else price
+     }
+
+--- a/tools/economy-sim/src/main/kotlin/LaunchV1.kt
++++ b/tools/economy-sim/src/main/kotlin/LaunchV1.kt
+@@ -171,5 +171,6 @@
+     val actionPlan = if (screenOnly) ";screenOnly=true;screenActions=v1.5" else ""
+     val adPlan = if (scheduledAds) ";adsPlan=scheduled" else ""
+-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
++    val mallPrice = System.getenv("SIM_MALL_PRICE_PERMILLE")
++    val signature = "probe=mall-price-$mallPrice;launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
+     out.mkdirs()
+     val manifest = File(out, "parameters.txt")
