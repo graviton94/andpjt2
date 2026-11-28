@@ -144,7 +144,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .pack .basep{display:block;height:18px;font-size:11px;color:var(--sub);margin:-2px 0 4px;white-space:nowrap}
 .rib{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#FF3B30;color:#fff;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:0 0 9px 9px;white-space:nowrap}
 .starter{display:flex;gap:10px;align-items:center;border-radius:18px;padding:12px;background:linear-gradient(90deg,#5A1E2E,#3A1A12);border:1px solid #FF8A6B55;margin-bottom:6px;color:#FFF4EC;font:inherit;text-align:left;width:100%}
-.starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:800 20px/1.15 "Pretendard",sans-serif;letter-spacing:-.02em}
+.starter img{width:64px;height:64px}.starter .note{color:#FFD9CC}.starter b{font:800 clamp(16px,5vw,20px)/1.15 "Pretendard",sans-serif;letter-spacing:-.02em;white-space:normal;display:block}
 .dbtn{flex:none;min-width:70px;height:38px;border-radius:12px;border:0;font:inherit;font-weight:900;background:linear-gradient(180deg,#9BE37A,#4FB43A);color:#123006;display:flex;align-items:center;justify-content:center;gap:4px}
 .dbtn img{width:18px;height:18px}
 .adbtn{background:linear-gradient(180deg,#7CC4FF,#2F7BF5);color:#fff}
@@ -393,11 +393,11 @@ input[type=range]{accent-color:var(--m-primary)}
 .toast.ok svg{color:var(--m-ter)}.toast.err svg{color:var(--m-error)}
 /* Android 14 quick-settings tiles */
 #shade .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0 12px}
-#shade .tile{flex-direction:row;justify-content:flex-start;gap:12px;height:64px;padding:0 14px;border-radius:22px;text-align:left;
+#shade .tile{flex-direction:row;justify-content:flex-start;gap:clamp(8px,2.6vw,12px);height:64px;padding:0 clamp(10px,3.4vw,14px);border-radius:22px;text-align:left;
  background:var(--g-card);border:1px solid var(--g-line);color:var(--m-on-surface);box-shadow:inset 0 1px 0 var(--g-hi);transition:background .2s var(--ease-std)}
 #shade .tile span.c{width:auto;height:auto;background:none!important;box-shadow:none!important;color:inherit}
 #shade .tile .tx{display:flex;flex-direction:column;min-width:0}
-#shade .tile b{font:500 14px/20px var(--font)}#shade .tile em{font:400 12px/16px var(--font);color:var(--m-on-sv);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shade .tile b{font:500 clamp(12.5px,3.75vw,14px)/20px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#shade .tile em{font:400 clamp(11px,3.3vw,12px)/16px var(--font);color:var(--m-on-sv);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #shade .tile.hot{background:var(--m-primary-c);color:var(--m-on-primary-c);border-color:transparent}
 #shade .tile.hot em{color:inherit;opacity:.8}
 #shade .tile .m3b{position:static;margin-left:auto}
@@ -434,7 +434,7 @@ input[type=range]{accent-color:var(--m-primary)}
 .pack.rec{border:1.5px solid #FFC23D!important;box-shadow:0 0 0 4px color-mix(in srgb,#FFC23D 18%,transparent),inset 0 1px 0 var(--g-hi)!important}
 .pack .n{font:700 16px/1.2 var(--font)}
 .starter,.rookie{border-radius:24px!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 12px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.25)!important;color:#fff!important;overflow:hidden;position:relative}
-.starter{background:linear-gradient(135deg,#7A1F3D,#3B0F2A 60%,#1E0B1F)!important;padding:16px!important}
+.starter{background:linear-gradient(135deg,#7A1F3D,#3B0F2A 60%,#1E0B1F)!important;padding-top:16px!important;padding-bottom:16px!important;padding-left:16px!important}
 .rookie{background:linear-gradient(135deg,#0E7A5A,#0B4A64 60%,#0A2B44)!important}
 .starter .note,.rookie .note{color:rgba(255,255,255,.78)!important}
 .starter::after,.rookie::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.14) 50%,transparent 60%);background-size:250% 100%;animation:sheen 4s ease-in-out infinite;pointer-events:none}
@@ -2810,7 +2810,7 @@ function renderData(b) {
   if (m.starterLeftMs > 0) {
     const x = gainX(m.starterValue, m.starterWon);
     h += `<button class="starter" data-act="buyStarter" style="position:relative;padding-right:96px">${sticker('burst', [xStr(x) + $t('times_suffix'), $t('value')], 84, 'right:4px;top:50%;transform:translateY(-50%) rotate(8deg)')}
-      <img src="img/bm/shop-starter.webp"><div style="flex:1"><b>${$t('starter_pack_2', priceOf('starter_pack', m.starterWon))}</b>
+      <img src="img/bm/shop-starter.webp"><div style="flex:1;min-width:0"><b>${$t('starter_pack_2', priceOf('starter_pack', m.starterWon))}</b>
       <div style="margin:6px 0 6px">${sticker('bolt', '<span class="cd">' + hms(m.starterLeftMs) + '</span>', 84, 'left:0;top:0')}</div>
       <div class="note">${$t('data_voucher_1_worth_data', m.starterData, m.voucherData)}<br>${$t('income_boost_3_overclock_3')}</div></div></button>`;
   }
