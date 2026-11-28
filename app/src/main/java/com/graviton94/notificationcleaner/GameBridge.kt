@@ -85,6 +85,11 @@ class GameBridge(private val context: Context) {
             "upgradeN" -> session.upgradeN(a.optString("app"), a.optString("n", "1"), t)
             "setDeck" -> session.setDeck(a.optString("apps").split(",").filter { it.isNotBlank() }, t)
             "buyBackup" -> session.buyBackup(a.optString("item"), t)
+            "buyPro" -> session.buyPro(a.optString("app"), t)
+            "buyEvent" -> session.buyEvent(a.optString("card"), t)
+            "buyAssist" -> session.buyAssist(a.optString("item"), t)
+            "dnd" -> session.dnd(t)
+            "setCards" -> session.setCards(a.optString("cards").split(",").filter { it.isNotBlank() }, t)
             else -> "{}"
         }
         val changesState = when (method) {

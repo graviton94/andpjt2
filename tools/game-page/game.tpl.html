@@ -234,6 +234,8 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .stk-bolt{--sc:#4A1E9A;color:#fff}.stk-bubble{--sc:#0E6A2E;color:#fff}.stk-stamp{--sc:#8A0A0A;color:#fff}
 #cf{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:60;font:15px/1.45 "Pretendard","Noto Sans KR",system-ui,sans-serif;color:var(--ink)}
 #cf.on{display:grid}
+#sheet .pro{display:inline-block;font:900 10px/1 var(--font);padding:3px 5px;border-radius:5px;background:var(--soft2);color:var(--m-on-sv);letter-spacing:.04em;vertical-align:1px}#sheet .pro.on{background:linear-gradient(135deg,#FFE27A,#F0A000);color:#2A1800}
+#sheet .pro-b{height:30px;padding:0 10px;margin-top:6px;font-size:12px}#sheet .cardi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--soft2);flex:none}#sheet .it.eq .cardi{background:linear-gradient(135deg,#FFE27A,#F0A000);color:#2A1800}
 #signing{position:fixed;inset:0;z-index:90;display:none;place-items:center;background:rgba(0,0,0,.45)}#signing.on{display:grid}
 #signing .b{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:18px;background:var(--sheet);color:var(--ink);font:700 15px/1.3 "Pretendard",system-ui,sans-serif;box-shadow:0 12px 40px #0008}
 #signing i{width:22px;height:22px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
@@ -2156,6 +2158,10 @@ const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false,
 function tapTile(k) {
   sfx.snap(); buzz(8); armScrim();
   if (k === 'auto') { if (FT.step > 0 && FT.step < 6) { ftNudge(); return; } autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); if (FT.step === 6) ftue('auto'); }
+  else if (k === 'dnd' && P && P.dnd && P.dnd.equipped) {  // the 방해 금지 card: a quiet, faster stretch a few times a day
+    if (P.dnd.activeMs > 0) toast($t('dnd_running')); else if (P.dnd.left <= 0) toast($t('dnd_used_up'), 'err');
+    else api('dnd').then(o => { if (o.ok) { toast($t('dnd_on'), 'ok'); fx.tint = [0.2, 0.25, 0.6, .25]; } loadPanel(); });
+  }
   else if (k === 'dnd') { sound = !sound; if (sound) ac(); toast(sound ? $t('sound_on') : $t('do_not_disturb_sound_off')); }
   else if (k === 'deck') openSheet('deck');
   else openSheet('pass');
@@ -2442,6 +2448,40 @@ async function openSheet(kind) {
   shadeEl.classList.remove('open'); scrimEl.classList.add('open');
   renderSheet(); sheetEl.classList.add('open'); sfx.snap(); ftue('sheet', kind);
 }
+// ---- in-run progression (balance v1.4): pro versions, board assists, event cards ----
+const CARD_ICON = { Update: 'M12 19V5M5 12l7-7 7 7', AllHands: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  Otp: 'M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z', Sale: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01',
+  GroupText: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2zM8 9h8M8 13h5', Firmware: 'M5 5h14v14H5zM9 9h6v6H9zM9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4',
+  Lotto: 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z', Birthday: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z',
+  Drill: 'M13 2L3 14h9l-1 8 10-12h-9z', Dnd: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z' };
+const CARD_T = { Update: [$t('card_Update'), $t('card_Update_d')], AllHands: [$t('card_AllHands'), $t('card_AllHands_d')], Otp: [$t('card_Otp'), $t('card_Otp_d')], Sale: [$t('card_Sale'), $t('card_Sale_d')], GroupText: [$t('card_GroupText'), $t('card_GroupText_d')], Firmware: [$t('card_Firmware'), $t('card_Firmware_d')], Lotto: [$t('card_Lotto'), $t('card_Lotto_d')], Birthday: [$t('card_Birthday'), $t('card_Birthday_d')], Drill: [$t('card_Drill'), $t('card_Drill_d')], Dnd: [$t('card_Dnd'), $t('card_Dnd_d')] };
+const ASSIST_T = { Overload: [$t('assist_Overload'), $t('assist_Overload_d')], Sandwich: [$t('assist_Sandwich'), $t('assist_Sandwich_d')], Board: [$t('assist_Board'), $t('assist_Board_d')], Wild: [$t('assist_Wild'), $t('assist_Wild_d')] };
+const cardName = id => CARD_T[id][0], cardLine = id => CARD_T[id][1];
+function proLine(a, st) {
+  if (!a.proLevel) return '';
+  if (a.pro) return `<div class="note"><span class="pro on">PRO</span> ${$t('pro_owned', P.proMultiplier || 2)}</div>`;
+  if (st.level < a.proLevel) return `<div class="note"><span class="pro">PRO</span> ${$t('pro_opens_at', a.proLevel)}</div>`;
+  return `<div class="note"><button class="btn skin gold pro-b" data-act="buyPro" data-id="${a.id}" ${geq(st.wallet, a.proPrice) ? '' : 'disabled'}><span class="pro on">PRO</span> ×${P.proMultiplier || 2} · ${P$(a.proPrice)}</button></div>`;
+}
+function assistHTML(st) {
+  const list = P.assists || []; if (!list.length) return '';
+  return `<div class="h3">${$t('board_boosts')}</div>` + list.map(x => {
+    const done = x.max > 0 && x.lv >= x.max, bar = `<div class="prog"><i style="width:${x.max ? Math.round(x.lv / x.max * 100) : 0}%"></i></div>`;
+    return `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${ASSIST_T[x.id] ? ASSIST_T[x.id][0] : x.id}</b> <span class="note">${x.open ? `${x.lv}/${x.max}` : `Lv ${x.unlockLevel}`}</span><div class="m">${ASSIST_T[x.id] ? ASSIST_T[x.id][1] : ''}</div>${x.open ? bar : ''}</div>
+      <button class="btn skin gold" data-act="buyAssist" data-item="${x.id}" ${x.open && !done && geq(st.wallet, x.price) ? '' : 'disabled'}>${!x.open ? $t('locked', ic('lock')) : done ? $t('done') : P$(x.price)}</button></div>`;
+  }).join('');
+}
+function cardsHTML(st) {
+  const list = (P.cards || []).filter(c => CARD_T[c.id]); if (!list.length) return '';
+  const used = list.filter(c => c.equipped).length, slots = P.eventSlots || 0;
+  return `<div class="h3">${$t('event_cards_slots', used, slots)}</div>` + list.map(c => {
+    const btn = !c.open ? `<button class="btn skin off" disabled>Lv ${c.unlockLevel}</button>`
+      : !c.owned ? `<button class="btn skin gold" data-act="buyEvent" data-item="${c.id}" ${geq(st.wallet, c.price) ? '' : 'disabled'}>${P$(c.price)}</button>`
+      : c.equipped ? `<button class="btn tonal" data-unequip="${c.id}">${$t('unequip')}</button>`
+      : `<button class="btn skin gold" data-equip="${c.id}" ${used < slots ? '' : 'disabled'}>${$t('equip')}</button>`;
+    return `<div class="it ${c.open ? '' : 'lock'} ${c.equipped ? 'eq' : ''}"><span class="cardi">${svg(CARD_ICON[c.id])}</span><div class="t"><b>${cardName(c.id)}</b>${c.equipped ? ` <span class="cap">${$t('equipped')}</span>` : ''}<div class="m">${cardLine(c.id)}</div></div>${btn}</div>`;
+  }).join('');
+}
 function renderSheet() {
   const st = P.state, apps = P.apps;
   $('sheet-w').textContent = P$(st.wallet);
@@ -2470,9 +2510,10 @@ function renderSheet() {
         const label = upMode === 'max' ? (a.maxN ? $t('steps', a.maxN) : $t('short')) : P$(price, upMode === '10' ? a.price10Short : a.price1Short);
         const tv = a.level >= 500 ? 4 : a.level >= 300 ? 3 : a.level >= 100 ? 2 : 1, tc = tv > 1 ? 'lv' + tv : '';
         return `<div class="it ${tc} ${tv === 4 ? 'fx-ring' : ''}"><button class="appi" data-info="${a.id}" aria-label="${$t('info', a.name)}">${ico(a.id)}</button><div class="t"><b class="${tv === 4 ? 't-holo' : tv === 3 ? 't-gold' : ''}">${a.name}</b><span class="lvb ${tc}">Lv ${a.level}</span> <span class="note">→ ${a.level + Math.max(1, n)}${a.active ? '' : $t('out_of_deck')}</span>
-          <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? $t('more_to_lv_value_2', next, left) : $t('next_milestone_lv', next)}</div></div>
+          <div class="prog"><i class="${hot ? 'hot' : ''}" style="width:${pct}%"></i></div><div class="note ${hot ? 'hot' : ''}">${hot ? $t('more_to_lv_value_2', next, left) : $t('next_milestone_lv', next)}</div>${proLine(a, st)}</div>
           <button class="btn skin gold ${can && hot ? 'fx-shine' : ''}" data-act="upgradeN" data-id="${a.id}" data-n="${upMode}" ${can ? '' : 'disabled'}>${label}</button></div>`;
       }).join('');
+    b.insertAdjacentHTML('beforeend', assistHTML(st));
     b.querySelectorAll('[data-mode]').forEach(x => x.addEventListener('click', () => { upMode = x.dataset.mode; renderSheet(); }));
   } else if (sheetKind === 'deck') {
     $('sheet-t').textContent = $t('deck');
@@ -2485,11 +2526,16 @@ function renderSheet() {
       <div class="h3">${$t('synergy_preview')}</div>
       ${syn.length ? syn.map(([l, v]) => `<div class="syn"><span>${l}</span><span class="bar"><i style="width:${Math.min(100, v / 2)}%"></i></span><span class="v">+${v}%</span></div>`).join('') : `<div class="note">${$t('put_2_or_more_apps')}</div>`}
       <div class="syn"><span>${$t('set_of', P.sets)}</span><span class="bar"><i style="width:${Math.min(100, P.sets * 14)}%;background:#FF8A1F"></i></span><span class="v">×${P.sets > 1 ? '1.22^' + (P.sets - 1) : '1'}</span></div>
+      ${cardsHTML(st)}
       <div class="h3">${$t('owned_apps')}</div>
       ${rest.length ? rest.map(a => `<div class="it">${ico(a.id)}<div class="t"><b>${a.name}</b><span class="tier">${$t('tier_2', a.tier)}</span><div class="m">${a.region} · ${a.cat} · Lv ${a.level}</div></div><button class="btn skin gold" data-in="${a.id}" ${act.length < P.maxSlots ? '' : 'disabled'}>${$t('deck_add')}</button></div>`).join('') : `<div class="note">${$t('apps_you_buy_in_the')}</div>`}`;
     const setDeck = async ids => { const o = await api('setDeck', { apps: ids.join(',') }); afterAct(o, $t('deck_needs_at_least') + Math.max(2, P.minSlots) + $t('slots_2'), 'setDeck'); };
     b.querySelectorAll('[data-out]').forEach(x => x.addEventListener('click', () => setDeck(act.map(a => a.id).filter(id => id !== x.dataset.out))));
     b.querySelectorAll('[data-in]').forEach(x => x.addEventListener('click', () => setDeck([...act.map(a => a.id), x.dataset.in])));
+    const eq = (P.cards || []).filter(c => c.equipped).map(c => c.id);
+    const setCards = async ids => { const o = await api('setCards', { cards: ids.join(',') }); afterAct(o, $t('card_slots_full'), 'setCards'); };
+    b.querySelectorAll('[data-equip]').forEach(x => x.addEventListener('click', () => setCards([...eq, x.dataset.equip])));
+    b.querySelectorAll('[data-unequip]').forEach(x => x.addEventListener('click', () => setCards(eq.filter(id => id !== x.dataset.unequip))));
   } else if (sheetKind === 'reset' || sheetKind === 'backup') {
     $('sheet-t').textContent = sheetKind === 'reset' ? $t('reset_sync') : $t('backup_shop');
     const files = st.backupFilesNow;
@@ -2876,7 +2922,7 @@ async function sheetAct(x) {
   if (act === 'reset' && !armReset) { armReset = true; renderSheet(); sfx.snap(); return; }
   if (act === 'sync' && !armSync) { armSync = true; renderSheet(); sfx.snap(); return; }
   if (act === 'watchAd' && !P.bm.passActive) { if (!(await fakeAd(x.dataset.slot))) return; }
-  const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : {};
+  const args = act === 'buyCloud' ? { item: x.dataset.item } : act === 'buyData' ? { pack: x.dataset.pack } : act === 'buyItem' ? { item: x.dataset.item } : act === 'watchAd' ? { slot: x.dataset.slot } : act === 'buyPass' ? { kind: x.dataset.kind } : act === 'premium' ? { app: x.dataset.id, voucher: x.dataset.voucher || '0' } : act === 'buy' ? { app: x.dataset.id } : act === 'upgradeN' ? { app: x.dataset.id, n: x.dataset.n } : act === 'buyBackup' ? { item: x.dataset.item } : act === 'buyPro' ? { app: x.dataset.id } : act === 'buyEvent' ? { card: x.dataset.item } : act === 'buyAssist' ? { item: x.dataset.item } : {};
   const o = await api(act, args);
   if (act === 'buyBackup' && o.ok) { bkPop = x.dataset.item; sfx.unit(); buzz([20, 30, 40]); setTimeout(() => { bkPop = null; }, 700); }
   if ((act === 'reset' || act === 'sync') && o.ok) { const got = act === 'reset' ? P.state.backupFilesNow : P.gbNow; closeAll(); armSync = false; prestigeShow(act, got, o.state); }
@@ -2904,7 +2950,7 @@ function fakeAd(slot = '') {
 }
 const DONE = { buy: $t('app_bought_add_it_to'), upgradeN: $t('upgraded'), buyData: $t('data_added'), buyStarter: $t('starter_pack_claimed'), buyRookie: $t('beginner_pass_started'),
   claimRookie: $t('today_s_data_50_claimed'), buyItem: $t('used'), watchAd: $t('reward_claimed'), buyPass: $t('pass_started'), premium: $t('premium_raised'),
-  buyBackup: $t('backup_shop_upgraded'), buyCloud: $t('cloud_shop_upgraded'), attend: $t('checked_in'), claimMissions: $t('mission_reward_claimed'), setDeck: $t('deck_updated') };
+  buyBackup: $t('backup_shop_upgraded'), buyCloud: $t('cloud_shop_upgraded'), attend: $t('checked_in'), claimMissions: $t('mission_reward_claimed'), setDeck: $t('deck_updated'), buyPro: $t('pro_bought'), buyEvent: $t('card_bought'), buyAssist: $t('assist_bought'), setCards: $t('cards_updated') };
 async function afterAct(o, failMsg, act) {
   if (o.ok) { sfx.badge(); phone('ui.bonus', .3); buzz(12); if (act && DONE[act]) toast(DONE[act], 'ok'); if (act === 'buy') ftue('buy'); } else { sfx.snap(); toast(failMsg || $t('not_right_now'), 'err'); }
   applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);

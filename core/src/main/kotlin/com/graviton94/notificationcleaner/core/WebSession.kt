@@ -104,6 +104,30 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
 
     fun setDeck(apps: List<String>, now: Long): String = act(now) { engine.setDeck(it, apps) ?: it }
 
+    // ---- in-run progression the screen opens from v1.4 on (pro versions, event cards, board assists) ----
+
+    /** Pro version of an owned app (×value from its pro level). */
+    fun buyPro(appId: String, now: Long): String = act(now) { engine.buyPro(it, appId) }
+
+    /** Buy an event card; it is equipped at once when a card slot is free. */
+    fun buyEvent(card: String, now: Long): String = act(now) { s ->
+        EventCard.entries.firstOrNull { it.name == card }?.let { engine.buyEvent(s, it) } ?: s
+    }
+
+    /** One more step of a board assist (overload depth, sandwich, wide board, wild). */
+    fun buyAssist(id: String, now: Long): String = act(now) { s ->
+        Assist.entries.firstOrNull { it.name == id }?.let { engine.buyAssist(s, it) } ?: s
+    }
+
+    /** 방해 금지 card: 20 s without interruptions and faster auto, a few times a day (needs the card equipped). */
+    fun dnd(now: Long): String = act(now) { engine.activateDnd(it, now) }
+
+    /** Equipped event cards (owned, distinct, at most the card slots); the app deck stays as it is. */
+    fun setCards(cards: List<String>, now: Long): String = act(now) { s ->
+        val cs = cards.mapNotNull { c -> EventCard.entries.firstOrNull { it.name == c } }
+        if (cs.size != cards.size) s else engine.setDeck(s, s.active, cs) ?: s
+    }
+
     fun buyBackup(item: String, now: Long): String = act(now) { s ->
         BackupItem.entries.firstOrNull { it.name == item }?.let { engine.buyBackup(s, it) } ?: s
     }
@@ -320,7 +344,35 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
                             put("nextMilestone", r.levelMilestones.firstOrNull { it > lv } ?: 0)
                             val (rs, cs) = engine.synergy(s, a.id)
                             put("synRegion", rs); put("synCat", cs)
+                            put("pro", a.id in s.pro)
+                            put("proLevel", Catalog.proLevel[a.id] ?: 0)
+                            if (a.id !in s.pro && Catalog.proLevel.containsKey(a.id)) put("proPrice", big(r.proPrice(a.id)))
                         } else if (open) put("price", big(engine.appPrice(s, a.id)))
+                    })
+                }
+            }
+            put("proMultiplier", r.proMultiplier)
+            put("eventSlots", engine.eventSlots(s))
+            val today = now / 86_400_000L
+            put("dnd", buildJsonObject {
+                put("equipped", EventCard.Dnd in s.equipped)
+                put("left", engine.rules.dndPerDay - if (s.dndDay == today) s.dndUses else 0)
+                put("activeMs", (s.dndUntil - now).coerceAtLeast(0))
+            })
+            putJsonArray("cards") {
+                EventCard.entries.forEach { c ->
+                    add(buildJsonObject {
+                        put("id", c.name); put("unlockLevel", c.unlockLevel); put("open", s.level >= c.unlockLevel)
+                        put("owned", c in s.events); put("equipped", c in s.equipped); put("price", big(r.cardPrice(c)))
+                    })
+                }
+            }
+            putJsonArray("assists") {
+                Assist.entries.forEach { x ->
+                    val owned = s.assist(x)
+                    add(buildJsonObject {
+                        put("id", x.name); put("unlockLevel", x.unlockLevel); put("open", s.level >= x.unlockLevel)
+                        put("lv", owned); put("max", x.max(s.level)); put("price", big(r.assistPrice(x, owned)))
                     })
                 }
             }

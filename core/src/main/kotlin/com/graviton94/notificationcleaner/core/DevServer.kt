@@ -46,6 +46,11 @@ fun serve(port: Int, root: File, initialSave: File? = null) {
             "upgradeN" -> session.upgradeN(q["app"] ?: "", q["n"] ?: "1", now)
             "setDeck" -> session.setDeck((q["apps"] ?: "").split(",").filter { it.isNotBlank() }, now)
             "buyBackup" -> session.buyBackup(q.getValue("item"), now)
+            "buyPro" -> session.buyPro(q.getValue("app"), now)
+            "buyEvent" -> session.buyEvent(q.getValue("card"), now)
+            "buyAssist" -> session.buyAssist(q.getValue("item"), now)
+            "dnd" -> session.dnd(now)
+            "setCards" -> session.setCards((q["cards"] ?: "").split(",").filter { it.isNotBlank() }, now)
             // dev only: put a special row on top (Call, Spam, Lotto or any EventCard / Alert name)
             "row" -> { val k = q["kind"] ?: "Call"; val st = session.state; val id = st.nextId
                 val row = when {

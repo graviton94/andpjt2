@@ -236,3 +236,27 @@ Firestore 동기화에서 쓰는 저장 데이터는 `SaveCodec` JSON 버전 1�
 `swipe()`·`auto()`는 기존 연출 비트를 재생한 뒤 마지막 `state.rows`에 맞춘다. 파동·스팸·상한에서 끝난 뒤에도 최종 보충과 OTP 만료로 드러난 줄을 한 번 검사하므로 입력을 기다리는 판에 합칠 수 있는 이웃은 없다. 최종 정리는 `merged`·`burst`·`wave`를 내보내지 않는다. 남은 알림 ID는 그대로일 수 있으며 `app`·`kind`는 `state.rows`가 최종값이다.
 
 `offline()`·`snapshot()`·덱 변경 응답도 같은 판 조건을 보장한다. 이전 저장을 처음 열 때 코어가 판을 정리한다. 저장 외피는 버전 1이고 판 복구에 필요한 새 필드는 없다. [v1.3 검증](LAUNCH-V13-REPORT.md)
+
+## v1.4 화면에서 여는 회차 내 성장 (화면 세션, 추가만)
+
+출시 화면에 없던 엔진 경로를 연결했다. 새 메서드는 모두 `act()`를 거쳐 `{ok, state}`를 돌려준다. Android에서는 `Game.call(method, args)`, dev 서버에서는 `/api/<method>`로 호출한다.
+
+| 메서드 | 인자 | 엔진 |
+|---|---|---|
+| `buyPro` | `app` | `Engine.buyPro` — 보유 앱, `proLevel` 이상, P 충분 |
+| `buyEvent` | `card` (EventCard 이름) | `Engine.buyEvent` — 빈 카드 칸이 있으면 바로 장착 |
+| `buyAssist` | `item` (Assist 이름) | `Engine.buyAssist` |
+| `setCards` | `cards` (쉼표 목록) | `Engine.setDeck(s, s.active, cards)` — 앱 덱은 그대로 |
+| `dnd` | 없음 | `Engine.activateDnd` — 방해 금지 카드 장착 시 위쪽 방해 금지 버튼 |
+
+`panel()` 추가 필드:
+- 보유 앱마다 `pro`(bool), `proLevel`, `proPrice`(미보유일 때)
+- `proMultiplier`, `eventSlots`
+- `cards`: `{id, unlockLevel, open, owned, equipped, price}` × EventCard 10종
+- `assists`: `{id, unlockLevel, open, lv, max, price}` × Assist 4종
+- `dnd`: `{equipped, left, activeMs}`
+
+화면 위치:
+- 강화 시트: 앱 줄마다 PRO 구매, 아래에 '알림창 강화'(어시스트)
+- 덱 시트: '이벤트 카드 · 장착 n/m'(구매·장착·해제)
+- 위쪽 방해 금지 버튼: 카드 장착 시 발동. 미장착이면 기존처럼 효과음 토글.
