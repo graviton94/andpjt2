@@ -1,0 +1,12 @@
+stage	days	profiles	seed_range	input	source	env	collected_cases
+ablation-final	84	Free,Pass	1–8	Best	probe-base.patch	DND14_FINAL_GUARD=0	16
+ablation-seam	84	Free,Pass	1–8	Best	probe-base.patch	DND14_SEAM_GUARD=0	16
+slot21	42	Free	1–8	Best	probe-base.patch	DND14_SLOT=21	8
+layout21	42	Free	1–8	Best	probe-base.patch	DND14_SLOT=21 DND14_WILD_SPLIT=1	8
+sync-board	84	Free,Ads,Pass	1–8	Best	probe-base.patch + probe-after-sync.patch	DND14_FALL_AFTER_SYNC=1 DND14_FALL_BONUS=120 DND14_SLOT=21 DND14_WILD_SPLIT=1	24
+uniform108	84	Free,Ads,Pass	1–8	Best	probe-base.patch	DND14_MANUAL=1080 DND14_SLOT=21 DND14_WILD_SPLIT=1	24
+board-swap	84	Free,Pass	1–8	Best	probe-base.patch + probe-after-sync.patch + probe-board-swap.patch	DND14_QUIET_SANDWICH=1 DND14_SLOT=21 DND14_SWAP=1 DND14_WILD_SPLIT=1	16
+wild-carry	84	Free,Pass	1–8	Best	probe-base.patch + probe-after-sync.patch + probe-wild-carry.patch	DND14_DEFER_WILD=1 DND14_SLOT=21 DND14_WILD_SPLIT=1	16
+screen-base	84	all	1–8	Best	e306521	SIM_SCREEN_ONLY=1	40
+screen-layout42	42	Free,Pass	1–8	Best	e306521 + probe-screen-layout.patch	SIM_SCREEN_ONLY=1 DND14_APP_SLOT=21	16
+screen-curve42	42	Free,Pass	1–8	Best	e306521	SIM_SCREEN_ONLY=1 SIM_RULES=lateGrowthFrom=20,lateGrowthPermille=815,lateSwipeCapSteps=0	16

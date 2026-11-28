@@ -1,0 +1,51 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -248,6 +248,7 @@
+
+     private val finalGuard = System.getenv("DND14_FINAL_GUARD") != "0"
+     private val seamGuard = System.getenv("DND14_SEAM_GUARD") != "0"
++    private val preferRowSwap = System.getenv("DND14_SWAP") == "1"
+     private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
+     private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
+     private val lateMatchBonus = System.getenv("DND14_FALL_BONUS")?.toInt() ?: 0
+@@ -606,6 +607,21 @@
+         return null
+     }
+
++    /** Check only contacts that change when we swap two notification rows. */
++    private fun quietSwap(s: GameState, rows: List<Row>, from: Int): Int? {
++        fun fits(to: Int): Boolean {
++            fun at(i: Int) = when (i) {
++                from -> rows[to]
++                to -> rows[from]
++                else -> rows.getOrNull(i)
++            }
++            fun clear(a: Row, b: Row?) = b == null || !canMerge(s, a, b)
++            return clear(rows[to], at(from - 1)) && clear(rows[to], at(from + 1)) &&
++                clear(rows[from], at(to - 1)) && clear(rows[from], at(to + 1))
++        }
++        return rows.indices.firstOrNull { it != from && rows[it].merges && fits(it) }
++    }
++
+     /** Remove unresolved contacts without reopening a chain, changing the RNG, or granting P. */
+     private fun quietRows(s: GameState, original: List<Row>): List<Row> {
+         if (!rules.fallingChains || !seamGuard) return original  // Historical simulation mode.
+@@ -624,6 +640,18 @@
+             val replaceUpperFirst = upper.kind == RowKind.Wild || (lower.kind != RowKind.Wild && upper.id > lower.id)
+             val first = if (replaceUpperFirst) index - 1 else index
+             val second = if (replaceUpperFirst) index else index - 1
++            if (preferRowSwap) {
++                val firstSwap = quietSwap(s, rows, first)
++                val from = if (firstSwap != null) first else second
++                val to = firstSwap ?: quietSwap(s, rows, second)
++                if (to != null) {
++                    val writable = repaired ?: original.toMutableList().also { repaired = it }
++                    val moved = writable[from]
++                    writable[from] = writable[to]
++                    writable[to] = moved
++                    continue
++                }
++            }
+             fun checked(at: Int) = quietRow(s, rows[at], rows, rows.getOrNull(at - 1), rows.getOrNull(at + 1))
+             val preferred = checked(first)
+             val alternative = if (preferred == null) checked(second) else null

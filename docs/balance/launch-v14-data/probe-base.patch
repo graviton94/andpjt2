@@ -1,0 +1,142 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -245,6 +245,16 @@
+ )
+
+ class Engine(val rules: RuleSet = RuleSet()) {
++
++    private val finalGuard = System.getenv("DND14_FINAL_GUARD") != "0"
++    private val seamGuard = System.getenv("DND14_SEAM_GUARD") != "0"
++    private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
++    private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
++    private val lateMatchBonus = System.getenv("DND14_FALL_BONUS")?.toInt() ?: 0
++    private val lateMatchFrom = System.getenv("DND14_FALL_FROM")?.toInt() ?: 35
++    private val manualPermille = System.getenv("DND14_MANUAL")?.toInt() ?: 1000
++    private val manualFrom = System.getenv("DND14_MANUAL_FROM")?.toInt() ?: 1
++
+     private val hundred = BigInteger.valueOf(100)
+
+     // Derived values -------------------------------------------------------------------------
+@@ -479,14 +489,21 @@
+     }
+
+     /** Backup shop price after 클라우드 할인. */
+-    fun backupPrice(s: GameState, item: BackupItem): Long =
+-        maxOf(1L, rules.backupPrice(item, s.backup.lv(item)) * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    fun backupPrice(s: GameState, item: BackupItem): Long {
++        val owned = s.backup.lv(item)
++        val price = if (item == BackupItem.EventSlot && owned == 1) 200_000L else rules.backupPrice(item, owned)
++        return maxOf(1L, price * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    }
+
+     /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
+     fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
+
+     /** Max level of a backup item; 알림 가치 한도 raises 알림 가치's. */
+-    fun backupMax(s: GameState, item: BackupItem) = item.max + if (item == BackupItem.Value) 10 * s.backup.cloud.lv(CloudItem.ValueCap) else 0
++    fun backupMax(s: GameState, item: BackupItem) = item.max + when {
++        item == BackupItem.Value -> 10 * s.backup.cloud.lv(CloudItem.ValueCap)
++        item == BackupItem.EventSlot && s.backup.resets >= extraSlotReset -> 1
++        else -> 0
++    }
+
+     fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < backupMax(s, item) && shopStage(s) >= item.minResets
+
+@@ -590,7 +607,7 @@
+
+     /** Remove unresolved contacts without reopening a chain, changing the RNG, or granting P. */
+     private fun quietRows(s: GameState, original: List<Row>): List<Row> {
+-        if (!rules.fallingChains) return original  // Historical simulation mode.
++        if (!rules.fallingChains || !seamGuard) return original  // Historical simulation mode.
+         var repaired: MutableList<Row>? = null
+         var index = 1
+         while (true) {
+@@ -752,7 +769,7 @@
+                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
+                     below?.kind == RowKind.App && below.app in s.active &&
+                         rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+-                        rng.next(1_000) < rules.fallMatchPermille ->
++                        rng.next(1_000) < rules.fallMatchPermille + if (s.level >= lateMatchFrom) lateMatchBonus else 0 ->
+                         Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
+                     else -> spawnApp(s, rows, rng, nextId++)
+                 }
+@@ -986,6 +1003,9 @@
+
+         if (auto && rules.autoSwipePermille != 1_000)
+             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
++        val baselineIncome = earned
++        if (!auto && s.level >= manualFrom && manualPermille != 1_000)
++            earned = earned * BigInteger.valueOf(manualPermille.toLong()) / BigInteger.valueOf(1_000)
+         // Jackpot cap: luck may jump a few levels, never the whole run.
+         val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
+         val room = jackpotRoom(s, capSteps)
+@@ -1000,6 +1020,7 @@
+         val cap = energyCap(s)
+         val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
+         val rateWindow = rules.recentIncomeWindow.toLong()
++        val rateIncome = baselineIncome.min(room)
+         var next = s.copy(
+             rows = rows,
+             gauge = gauge,
+@@ -1021,7 +1042,7 @@
+             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
+             rng = rng.seed,
+             // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
+-            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
++            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) rateIncome * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else rateIncome) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
+             lastSwipeAt = now,
+             lastBurstP = lastBurstP,
+             echoSwipes = echoSwipes,
+@@ -1114,7 +1135,14 @@
+                 pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold) }
+                 else -> spawnApp(state, rows, rng, id++)
+             }
+-            val arrival = if (rules.fallingChains) quietRow(state, row, rows, null, rows.firstOrNull()) ?: break else row
++            val replacement = if (quietSandwich && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
++                val second = rows[1]
++                if (second.kind == RowKind.App && second.app in state.active &&
++                    rows.none { it.alert == Alert.Crash && it.app == second.app } && !canMerge(state, rows[0], second))
++                    row.copy(kind = RowKind.App, app = second.app)
++                else row
++            } else row
++            val arrival = if (rules.fallingChains && finalGuard) quietRow(state, replacement, rows, null, rows.firstOrNull()) ?: break else replacement
+             rows.add(0, arrival)
+             beats += Beat.Spawned(arrival)
+         }
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
+@@ -70,7 +70,7 @@
+     Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 83 to 9), 2_000, 400),
+     Sandwich("샌드위치", 10, listOf(10 to 5, 24 to 6, 47 to 8), 20_000, 15),
+     Board("넓은 알림창", 12, listOf(12 to 2, 39 to 3), 500_000, 200),
+-    Wild("와일드 알림", 20, listOf(20 to 5, 69 to 8), 1_000_000, 30),
++    Wild("와일드 알림", 20, if (System.getenv("DND14_WILD_SPLIT") == "1") listOf(20 to 5, 69 to 6, 70 to 7, 71 to 8) else listOf(20 to 5, 69 to 8), 1_000_000, 30),
+     ;
+
+     fun max(level: Int): Int = caps.lastOrNull { level >= it.first }?.second ?: 0
+--- a/tools/economy-sim/src/main/kotlin/Daily.kt
++++ b/tools/economy-sim/src/main/kotlin/Daily.kt
+@@ -371,7 +371,10 @@
+                 s = reset
+                 tl.resetDays += dayOf(t)
+                 everResets++
+-                if (s.backup.cloud.syncs == 0) BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
++                if (s.backup.cloud.syncs == 0) {
++                    BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
++                    if (s.backup.resets == (System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE)) note("백업 두 번째 이벤트 슬롯 +1")
++                }
+                 s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
+                 stallSessions = 0
+                 sinceReset = 0
+--- a/tools/economy-sim/src/main/kotlin/LaunchV1.kt
++++ b/tools/economy-sim/src/main/kotlin/LaunchV1.kt
+@@ -164,7 +164,8 @@
+     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
+     require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
+     val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
+-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots"
++    val probe = System.getenv().filterKeys { it.startsWith("DND14_") }.toSortedMap()
++    val signature = "probe=$probe;launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots"
+     out.mkdirs()
+     val manifest = File(out, "parameters.txt")
+     if (manifest.isFile) require(manifest.readText().trim() == signature) { "Results directory already has different parameters" }

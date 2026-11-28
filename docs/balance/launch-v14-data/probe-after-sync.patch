@@ -1,0 +1,28 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -251,6 +251,7 @@
+     private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
+     private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
+     private val lateMatchBonus = System.getenv("DND14_FALL_BONUS")?.toInt() ?: 0
++    private val afterSync = System.getenv("DND14_FALL_AFTER_SYNC") == "1"
+     private val lateMatchFrom = System.getenv("DND14_FALL_FROM")?.toInt() ?: 35
+     private val manualPermille = System.getenv("DND14_MANUAL")?.toInt() ?: 1000
+     private val manualFrom = System.getenv("DND14_MANUAL_FROM")?.toInt() ?: 1
+@@ -748,6 +749,8 @@
+
+         // Resolve the deletion seam first, then untouched contacts made by falling rows.
+         val falling = rules.fallingChains && !preview
++        val bonusDraw = if (afterSync) s.backup.cloud.syncs > 0 else s.level >= lateMatchFrom
++        val fallOdds = rules.fallMatchPermille + if (bonusDraw) lateMatchBonus else 0
+         val fallBoardSize = state.rows.size - 1 // Reserve the original swipe's slot for scheduled cards and alerts.
+         val landings = ArrayDeque<Pair<Long, Long>>()
+         var nextId = maxOf(state.nextId, (state.rows.maxOfOrNull(Row::id) ?: 0L) + 1)
+@@ -769,7 +772,7 @@
+                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
+                     below?.kind == RowKind.App && below.app in s.active &&
+                         rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+-                        rng.next(1_000) < rules.fallMatchPermille + if (s.level >= lateMatchFrom) lateMatchBonus else 0 ->
++                        rng.next(1_000) < fallOdds ->
+                         Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
+                     else -> spawnApp(s, rows, rng, nextId++)
+                 }

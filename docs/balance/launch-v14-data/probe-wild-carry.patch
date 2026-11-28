@@ -1,0 +1,53 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -149,4 +149,5 @@
+     /** 와이: stacks this run (+2% to social apps each, max 15). */
+     val whyStacks: Int = 0,
++    val queuedWild: Int = 0,
+ ) {
+     fun assist(a: Assist): Int = assists[a] ?: 0
+@@ -249,4 +250,5 @@
+     private val finalGuard = System.getenv("DND14_FINAL_GUARD") != "0"
+     private val seamGuard = System.getenv("DND14_SEAM_GUARD") != "0"
++    private val deferWild = System.getenv("DND14_DEFER_WILD") == "1"
+     private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
+     private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
+@@ -748,4 +750,5 @@
+         }
+
++        var queuedWild = s.queuedWild
+         // Resolve the deletion seam first, then untouched contacts made by falling rows.
+         val falling = rules.fallingChains && !preview
+@@ -771,4 +774,6 @@
+                     pattern.isNotEmpty() -> Row(nextId++, RowKind.App, pattern.first(),
+                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
++                    deferWild && queuedWild > 0 && below?.kind == RowKind.App ->
++                        Row(nextId++, RowKind.Wild, count = queuedWild, threshold = rules.threshold).also { queuedWild = 0 }
+                     below?.kind == RowKind.App && below.app in s.active &&
+                         rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+@@ -1053,4 +1058,5 @@
+             rideBoost = rideBoost,
+             whyStacks = whyStacks,
++            queuedWild = queuedWild,
+             freeSwipes = freeSwipes,
+             boostNext = boostNext,
+@@ -1085,4 +1091,5 @@
+         var pausedUntil = state.autoPausedUntil
+         val pattern = state.pattern.toMutableList()
++        var queuedWild = state.queuedWild
+
+         // Spam copies itself only while the board holds fewer than spamMax: otherwise young copies keep every refill spam
+@@ -1139,4 +1146,6 @@
+                 else -> spawnApp(state, rows, rng, id++)
+             }
++            if (deferWild && queuedWild == 0 && row.kind == RowKind.Wild && rows.firstOrNull()?.merges == true)
++                queuedWild = row.count
+             val replacement = if (quietSandwich && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
+                 val second = rows[1]
+@@ -1150,5 +1159,5 @@
+             beats += Beat.Spawned(arrival)
+         }
+-        return state.copy(rows = rows, rng = rng.seed, nextId = id, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay,
++        return state.copy(rows = rows, rng = rng.seed, nextId = id, queuedWild = queuedWild, autoPausedUntil = pausedUntil, pattern = pattern, birthdayDay = birthdayDay,
+             nextMajorEventAt = nextMajor, previousMajorEvent = previousMajor)
+     }

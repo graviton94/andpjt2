@@ -1,0 +1,191 @@
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
+@@ -70,7 +70,7 @@
+     Overload("과부하 깊이", 8, listOf(8 to 6, 19 to 7, 54 to 8, 83 to 9), 2_000, 400),
+     Sandwich("샌드위치", 10, listOf(10 to 5, 24 to 6, 47 to 8), 20_000, 15),
+     Board("넓은 알림창", 12, listOf(12 to 2, 39 to 3), 500_000, 200),
+-    Wild("와일드 알림", 20, listOf(20 to 5, 69 to 8), 1_000_000, 30),
++    Wild("와일드 알림", 20, if (System.getenv("DND14_WILD_SPLIT") == "1") listOf(20 to 5, 69 to 6, 70 to 7, 71 to 8) else listOf(20 to 5, 69 to 8), 1_000_000, 30),
+     ;
+
+     fun max(level: Int): Int = caps.lastOrNull { level >= it.first }?.second ?: 0
+@@ -168,8 +168,8 @@
+         app("reddit", "래딧", 5, 4, WE, Category.Social, 39), // Reddit 패러디
+         app("career", "링크드아웃", 5, 5, WE, Category.Work, 41), // LinkedIn 패러디
+         // 6티어
+-        app("mall", "쿠빵", 6, 0, AS, Category.Money, 72), // 쿠팡 패러디
+-        app("portal", "메이버", 6, 1, AS, Category.Work, 74), // Naver 패러디
++        app("mall", "쿠빵", 6, 0, AS, Category.Money, 70), // 쿠팡 패러디
++        app("portal", "메이버", 6, 1, AS, Category.Work, 72), // Naver 패러디
+         app("michat", "미챗챗", 6, 2, SE, Category.Social, 76), // MiChat 패러디
+         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 78), // Agoda 패러디
+         app("paypal", "페이팔팔", 6, 4, WE, Category.Money, 80), // PayPal 패러디
+@@ -219,7 +219,7 @@
+         "music" to 37, "papago" to 38, "zalo" to 39, "momo" to 41, "airbnb" to 42, "duo" to 44,
+         "ctaxi" to 45, "pay" to 47, "glints" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
+         "food" to 50, "edit" to 58, "travel" to 60, "joox" to 62, "reddit" to 64, "career" to 66,
+-        "mall" to 97, "portal" to 99, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
++        "mall" to 95, "portal" to 97, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
+         "superapp" to 98, "line" to 99, "jobs" to 100, "lazada" to 101, "ride" to 102, "robin" to 103,
+         "dance" to 99, "chat" to 100, "grab" to 101, "shopee" to 102, "beat" to 103, "why" to 104,
+         "mega" to 104, "ott" to 114, "secret" to 117, "mail" to 120, "maps" to 123, "store" to 126,
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -245,6 +245,18 @@
+ )
+
+ class Engine(val rules: RuleSet = RuleSet()) {
++
++    private val finalGuard = System.getenv("DND14_FINAL_GUARD") != "0"
++    private val seamGuard = System.getenv("DND14_SEAM_GUARD") != "0"
++    private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
++    private val extraAppSlotReset = System.getenv("DND14_APP_SLOT")?.toInt() ?: Int.MAX_VALUE
++    private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
++    private val lateMatchBonus = System.getenv("DND14_FALL_BONUS")?.toInt() ?: 0
++    private val afterSync = System.getenv("DND14_FALL_AFTER_SYNC") == "1"
++    private val lateMatchFrom = System.getenv("DND14_FALL_FROM")?.toInt() ?: 35
++    private val manualPermille = System.getenv("DND14_MANUAL")?.toInt() ?: 1000
++    private val manualFrom = System.getenv("DND14_MANUAL_FROM")?.toInt() ?: 1
++
+     private val hundred = BigInteger.valueOf(100)
+
+     // Derived values -------------------------------------------------------------------------
+@@ -479,14 +491,26 @@
+     }
+
+     /** Backup shop price after 클라우드 할인. */
+-    fun backupPrice(s: GameState, item: BackupItem): Long =
+-        maxOf(1L, rules.backupPrice(item, s.backup.lv(item)) * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    fun backupPrice(s: GameState, item: BackupItem): Long {
++        val owned = s.backup.lv(item)
++        val price = when {
++            item == BackupItem.EventSlot && owned == 1 -> 200_000L
++            item == BackupItem.ExtraSlot && owned == 2 -> 200_000L
++            else -> rules.backupPrice(item, owned)
++        }
++        return maxOf(1L, price * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
++    }
+
+     /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
+     fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
+
+     /** Max level of a backup item; 알림 가치 한도 raises 알림 가치's. */
+-    fun backupMax(s: GameState, item: BackupItem) = item.max + if (item == BackupItem.Value) 10 * s.backup.cloud.lv(CloudItem.ValueCap) else 0
++    fun backupMax(s: GameState, item: BackupItem) = item.max + when {
++        item == BackupItem.Value -> 10 * s.backup.cloud.lv(CloudItem.ValueCap)
++        item == BackupItem.EventSlot && s.backup.resets >= extraSlotReset -> 1
++        item == BackupItem.ExtraSlot && s.backup.resets >= extraAppSlotReset -> 1
++        else -> 0
++    }
+
+     fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < backupMax(s, item) && shopStage(s) >= item.minResets
+
+@@ -590,7 +614,7 @@
+
+     /** Remove unresolved contacts without reopening a chain, changing the RNG, or granting P. */
+     private fun quietRows(s: GameState, original: List<Row>): List<Row> {
+-        if (!rules.fallingChains) return original  // Historical simulation mode.
++        if (!rules.fallingChains || !seamGuard) return original  // Historical simulation mode.
+         var repaired: MutableList<Row>? = null
+         var index = 1
+         while (true) {
+@@ -731,6 +755,8 @@
+
+         // Resolve the deletion seam first, then untouched contacts made by falling rows.
+         val falling = rules.fallingChains && !preview
++        val bonusDraw = if (afterSync) s.backup.cloud.syncs > 0 else s.level >= lateMatchFrom
++        val fallOdds = rules.fallMatchPermille + if (bonusDraw) lateMatchBonus else 0
+         val fallBoardSize = state.rows.size - 1 // Reserve the original swipe's slot for scheduled cards and alerts.
+         val landings = ArrayDeque<Pair<Long, Long>>()
+         var nextId = maxOf(state.nextId, (state.rows.maxOfOrNull(Row::id) ?: 0L) + 1)
+@@ -752,7 +778,7 @@
+                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
+                     below?.kind == RowKind.App && below.app in s.active &&
+                         rows.none { it.alert == Alert.Crash && it.app == below.app } &&
+-                        rng.next(1_000) < rules.fallMatchPermille ->
++                        rng.next(1_000) < fallOdds ->
+                         Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
+                     else -> spawnApp(s, rows, rng, nextId++)
+                 }
+@@ -986,6 +1012,9 @@
+
+         if (auto && rules.autoSwipePermille != 1_000)
+             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
++        val baselineIncome = earned
++        if (!auto && s.level >= manualFrom && manualPermille != 1_000)
++            earned = earned * BigInteger.valueOf(manualPermille.toLong()) / BigInteger.valueOf(1_000)
+         // Jackpot cap: luck may jump a few levels, never the whole run.
+         val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
+         val room = jackpotRoom(s, capSteps)
+@@ -1000,6 +1029,7 @@
+         val cap = energyCap(s)
+         val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
+         val rateWindow = rules.recentIncomeWindow.toLong()
++        val rateIncome = baselineIncome.min(room)
+         var next = s.copy(
+             rows = rows,
+             gauge = gauge,
+@@ -1021,7 +1051,7 @@
+             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
+             rng = rng.seed,
+             // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
+-            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
++            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) rateIncome * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else rateIncome) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
+             lastSwipeAt = now,
+             lastBurstP = lastBurstP,
+             echoSwipes = echoSwipes,
+@@ -1114,7 +1144,14 @@
+                 pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold) }
+                 else -> spawnApp(state, rows, rng, id++)
+             }
+-            val arrival = if (rules.fallingChains) quietRow(state, row, rows, null, rows.firstOrNull()) ?: break else row
++            val replacement = if (quietSandwich && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
++                val second = rows[1]
++                if (second.kind == RowKind.App && second.app in state.active &&
++                    rows.none { it.alert == Alert.Crash && it.app == second.app } && !canMerge(state, rows[0], second))
++                    row.copy(kind = RowKind.App, app = second.app)
++                else row
++            } else row
++            val arrival = if (rules.fallingChains && finalGuard) quietRow(state, replacement, rows, null, rows.firstOrNull()) ?: break else replacement
+             rows.add(0, arrival)
+             beats += Beat.Spawned(arrival)
+         }
+diff --git a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -37,7 +37,7 @@
+     val sandwichPerAssist: Int = 3,
+     val wildPerAssist: Int = 2,
+     // Deck: level → slots. A deck must hold at least min(minSlots, owned) apps.
+-    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 73 to 10),
++    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 71 to 10),
+     val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7, 62 to 8),
+     val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2, 38 to 3, 63 to 4),
+     // Synergy: same category / region in the deck → bonus % for those apps
+diff --git a/tools/economy-sim/src/main/kotlin/Daily.kt b/tools/economy-sim/src/main/kotlin/Daily.kt
+--- a/tools/economy-sim/src/main/kotlin/Daily.kt
++++ b/tools/economy-sim/src/main/kotlin/Daily.kt
+@@ -378,6 +378,8 @@
+                 if (s.backup.cloud.syncs == 0) BackupItem.entries
+                     .filter { it.minResets == everResets && (!screenOnly || it != BackupItem.EventSlot) }
+                     .forEach { note("백업 ${it.label}") }
++                if (s.backup.cloud.syncs == 0 && s.backup.resets == (System.getenv("DND14_APP_SLOT")?.toInt() ?: Int.MAX_VALUE))
++                    note("백업 세 번째 앱 슬롯 +1")
+                 s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
+                 stallSessions = 0
+                 sinceReset = 0
+diff --git a/tools/economy-sim/src/main/kotlin/LaunchV1.kt b/tools/economy-sim/src/main/kotlin/LaunchV1.kt
+--- a/tools/economy-sim/src/main/kotlin/LaunchV1.kt
++++ b/tools/economy-sim/src/main/kotlin/LaunchV1.kt
+@@ -164,7 +164,8 @@
+     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
+     require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
+     val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
+-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots" +
++    val probe = System.getenv().filterKeys { it.startsWith("DND14_") }.toSortedMap()
++    val signature = "probe=$probe;launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots" +
+         if (screenOnly) ";screenOnly=true" else ""
+     out.mkdirs()
+     val manifest = File(out, "parameters.txt")
