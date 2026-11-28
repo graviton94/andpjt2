@@ -427,6 +427,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 if (s.backup.cloud.syncs == 0) BackupItem.entries
                     .filter { it.minResets == everResets }
                     .forEach { note("백업 ${it.label}") }
+                if (s.backup.cloud.syncs == 0 && s.backup.resets == engine.rules.secondEventSlotResets) {
+                    note("백업 두 번째 이벤트 슬롯 +1")
+                }
                 s = refreshDeck(spendBackup(spendCloud(s)))
                 stallSessions = 0
                 sinceReset = 0

@@ -519,7 +519,7 @@ class WebSession(val engine: Engine = Engine(), state: GameState? = null, now: L
         put("swipes", s.swipes)
         put("bestSwipe", big(s.bestSwipe))
         put("deck", s.active.size)
-        put("slots", engine.rules.maxSlots(s.level, s.backup))
+        put("slots", engine.maxSlots(s))
         put("resetLevel", engine.rules.resetLevel)
         put("backupFilesNow", engine.backupFilesNow(s))
         put("files", s.backup.files)

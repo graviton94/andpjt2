@@ -187,7 +187,10 @@ def render_release(directory, rows, expected):
         ("offline_share", "무과금 오프라인 P 몫", 30, 50, 100, "%"),
     ):
         mid, _, value, reached = stats(free, key, scale, unit)
-        emit(label, f"{lo}~{hi}{unit}", f"{mid} · {reached}/{expected}", reached == expected and lo <= value <= hi)
+        within_target = reached == expected and lo <= value <= hi
+        if value is not None and not within_target and lo <= round(value, 2) <= hi:
+            mid = f"{value:.5f}{unit}"
+        emit(label, f"{lo}~{hi}{unit}", f"{mid} · {reached}/{expected}", within_target)
 
     gaps = [float(row["unlock_gap_days"]) for row in free]
     emit("무과금 최대 해금 공백", "중앙 ≤7일 · 최악 ≤9일",

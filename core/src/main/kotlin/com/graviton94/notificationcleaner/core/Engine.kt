@@ -245,6 +245,7 @@ data class OfflineSettlement(
 )
 
 class Engine(val rules: RuleSet = RuleSet()) {
+
     private val hundred = BigInteger.valueOf(100)
 
     // Derived values -------------------------------------------------------------------------
@@ -301,7 +302,11 @@ class Engine(val rules: RuleSet = RuleSet()) {
     fun sandwichPercent(s: GameState) = rules.sandwichPercent + rules.sandwichPerExtraApp * maxOf(0, s.active.size - 4) +
         rules.sandwichPerAssist * s.assist(Assist.Sandwich) + 2 * s.backup.lv(BackupItem.Sandwich) + if (on(s, "feed")) 10 else 0
     fun wildPercent(s: GameState) = rules.wildPerAssist * s.assist(Assist.Wild) + s.backup.lv(BackupItem.Wild)
-    fun maxSlots(s: GameState) = rules.maxSlots(s.level, s.backup)
+    fun maxSlots(s: GameState): Int {
+        val slots = rules.maxSlots(s.level, s.backup)
+        // A saved Lv73 deck may already occupy the slot now earned at Lv74.
+        return if (s.level == 73 && s.active.size == slots + 1) slots + 1 else slots
+    }
     fun minSlots(s: GameState) = minOf(rules.minSlots(s.level), s.appLevels.size)
     fun eventSlots(s: GameState) = rules.eventSlots(s.level, s.backup)
     fun bestTier(s: GameState) = s.active.maxOf { Catalog.app(it).tier }
@@ -479,14 +484,21 @@ class Engine(val rules: RuleSet = RuleSet()) {
     }
 
     /** Backup shop price after 클라우드 할인. */
-    fun backupPrice(s: GameState, item: BackupItem): Long =
-        maxOf(1L, rules.backupPrice(item, s.backup.lv(item)) * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
+    fun backupPrice(s: GameState, item: BackupItem): Long {
+        val owned = s.backup.lv(item)
+        val price = if (item == BackupItem.EventSlot && owned == 1) rules.secondEventSlotPrice else rules.backupPrice(item, owned)
+        return maxOf(1L, price * (10 - s.backup.cloud.lv(CloudItem.Discount)) / 10)
+    }
 
     /** Reset count the backup shop gates on: real resets plus 백업 상점 단계 유지. */
     fun shopStage(s: GameState) = s.backup.resets + 3 * s.backup.cloud.lv(CloudItem.KeepShop)
 
     /** Max level of a backup item; 알림 가치 한도 raises 알림 가치's. */
-    fun backupMax(s: GameState, item: BackupItem) = item.max + if (item == BackupItem.Value) 10 * s.backup.cloud.lv(CloudItem.ValueCap) else 0
+    fun backupMax(s: GameState, item: BackupItem) = item.max + when {
+        item == BackupItem.Value -> 10 * s.backup.cloud.lv(CloudItem.ValueCap)
+        item == BackupItem.EventSlot && s.backup.resets >= rules.secondEventSlotResets -> 1
+        else -> 0
+    }
 
     fun backupOpen(s: GameState, item: BackupItem) = s.backup.lv(item) < backupMax(s, item) && shopStage(s) >= item.minResets
 
@@ -588,6 +600,21 @@ class Engine(val rules: RuleSet = RuleSet()) {
         return null
     }
 
+    /** Check only contacts that change when we swap two notification rows. */
+    private fun quietSwap(s: GameState, rows: List<Row>, from: Int): Int? {
+        fun fits(to: Int): Boolean {
+            fun at(i: Int) = when (i) {
+                from -> rows[to]
+                to -> rows[from]
+                else -> rows.getOrNull(i)
+            }
+            fun clear(a: Row, b: Row?) = b == null || !canMerge(s, a, b)
+            return clear(rows[to], at(from - 1)) && clear(rows[to], at(from + 1)) &&
+                clear(rows[from], at(to - 1)) && clear(rows[from], at(to + 1))
+        }
+        return rows.indices.firstOrNull { it != from && rows[it].merges && fits(it) }
+    }
+
     /** Remove unresolved contacts without reopening a chain, changing the RNG, or granting P. */
     private fun quietRows(s: GameState, original: List<Row>): List<Row> {
         if (!rules.fallingChains) return original  // Historical simulation mode.
@@ -606,6 +633,18 @@ class Engine(val rules: RuleSet = RuleSet()) {
             val replaceUpperFirst = upper.kind == RowKind.Wild || (lower.kind != RowKind.Wild && upper.id > lower.id)
             val first = if (replaceUpperFirst) index - 1 else index
             val second = if (replaceUpperFirst) index else index - 1
+            if (s.level >= rules.stableSandwichFrom) {
+                val firstSwap = quietSwap(s, rows, first)
+                val from = if (firstSwap != null) first else second
+                val to = firstSwap ?: quietSwap(s, rows, second)
+                if (to != null) {
+                    val writable = repaired ?: original.toMutableList().also { repaired = it }
+                    val moved = writable[from]
+                    writable[from] = writable[to]
+                    writable[to] = moved
+                    continue
+                }
+            }
             fun checked(at: Int) = quietRow(s, rows[at], rows, rows.getOrNull(at - 1), rows.getOrNull(at + 1))
             val preferred = checked(first)
             val alternative = if (preferred == null) checked(second) else null
@@ -731,6 +770,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
         // Resolve the deletion seam first, then untouched contacts made by falling rows.
         val falling = rules.fallingChains && !preview
+        val fallOdds = rules.fallMatchPermille + if (s.level >= rules.lateFallMatchFrom) rules.lateFallMatchBonusPermille else 0
         val fallBoardSize = state.rows.size - 1 // Reserve the original swipe's slot for scheduled cards and alerts.
         val landings = ArrayDeque<Pair<Long, Long>>()
         var nextId = maxOf(state.nextId, (state.rows.maxOfOrNull(Row::id) ?: 0L) + 1)
@@ -752,7 +792,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
                         count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold).also { pattern = pattern.drop(1) }
                     below?.kind == RowKind.App && below.app in s.active &&
                         rows.none { it.alert == Alert.Crash && it.app == below.app } &&
-                        rng.next(1_000) < rules.fallMatchPermille ->
+                        rng.next(1_000) < fallOdds ->
                         Row(nextId++, RowKind.App, below.app, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold)
                     else -> spawnApp(s, rows, rng, nextId++)
                 }
@@ -986,10 +1026,13 @@ class Engine(val rules: RuleSet = RuleSet()) {
 
         if (auto && rules.autoSwipePermille != 1_000)
             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
+        val baselineIncome = earned
+        if (!auto && s.level >= rules.lateDirectIncomeFrom)
+            earned = earned * BigInteger.valueOf(rules.lateDirectIncomePermille.toLong()) / BigInteger.valueOf(1_000)
         // Jackpot cap: luck may jump a few levels, never the whole run.
         val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
-        val extraWaveLevels = if (overload && maxOf(s.level, s.backup.bestLevel) >= 124) rules.post124WaveCapSteps else 0
-        val room = jackpotRoom(s, capSteps + extraWaveLevels)
+        val tailHeadroom = if (overload && maxOf(s.level, s.backup.bestLevel) >= 124) rules.post124WaveCapSteps else 0
+        val room = jackpotRoom(s, capSteps + tailHeadroom)
         val capped = (earned - room).max(ZERO)
         if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
 
@@ -1001,6 +1044,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
         val cap = energyCap(s)
         val dt = (if (s.lastSwipeAt == 0L) chargeMs(s) else now - s.lastSwipeAt).coerceIn(chargeMs(s, now), 60_000L)
         val rateWindow = rules.recentIncomeWindow.toLong()
+        val rateIncome = baselineIncome.min(room)
         var next = s.copy(
             rows = rows,
             gauge = gauge,
@@ -1022,7 +1066,7 @@ class Engine(val rules: RuleSet = RuleSet()) {
             categoryCleared = s.categoryCleared.toMutableMap().also { m -> categoryAdd.forEach { (k, v) -> m.merge(k, v, BigInteger::add) } },
             rng = rng.seed,
             // 수입 부스트 is left out of the rate, so offline settlement and 시간 도약 don't inherit it.
-            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) earned * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else earned) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
+            earnRate = (s.earnRate * BigInteger.valueOf(rateWindow - 1) + (if (now < s.backup.cloud.account.boostUntil) rateIncome * BigInteger.valueOf(1_000) / BigInteger.valueOf(rules.boostPermille.toLong()) else rateIncome) * BigInteger.valueOf(60_000 / dt)) / BigInteger.valueOf(rateWindow),
             lastSwipeAt = now,
             lastBurstP = lastBurstP,
             echoSwipes = echoSwipes,
@@ -1115,7 +1159,14 @@ class Engine(val rules: RuleSet = RuleSet()) {
                 pattern.isNotEmpty() -> pattern.removeAt(0).let { a -> Row(id++, RowKind.App, a, count = rng.weighted(rules.countWeights) + 1, threshold = rules.threshold) }
                 else -> spawnApp(state, rows, rng, id++)
             }
-            val arrival = if (rules.fallingChains) quietRow(state, row, rows, null, rows.firstOrNull()) ?: break else row
+            val replacement = if (rules.fallingChains && state.level >= rules.stableSandwichFrom && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
+                val second = rows[1]
+                if (second.kind == RowKind.App && second.app in state.active &&
+                    rows.none { it.alert == Alert.Crash && it.app == second.app } && !canMerge(state, rows[0], second))
+                    row.copy(kind = RowKind.App, app = second.app)
+                else row
+            } else row
+            val arrival = if (rules.fallingChains) quietRow(state, replacement, rows, null, rows.firstOrNull()) ?: break else replacement
             rows.add(0, arrival)
             beats += Beat.Spawned(arrival)
         }

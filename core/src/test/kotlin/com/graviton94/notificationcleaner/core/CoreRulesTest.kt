@@ -402,7 +402,9 @@ class CoreRulesTest {
         assertEquals(6, Assist.Overload.max(8))
         assertEquals(8, Assist.Overload.max(82))
         assertEquals(9, Assist.Overload.max(83))
-        assertEquals(10, e.rules.maxSlots(73, Backup()))
+        assertEquals(listOf(6, 7, 8), (69..71).map(Assist.Wild::max))
+        assertEquals(9, e.rules.maxSlots(73, Backup()))
+        assertEquals(10, e.rules.maxSlots(74, Backup()))
         assertEquals(4, e.rules.eventSlots(63, Backup()))
     }
 

@@ -22,6 +22,14 @@ data class RuleSet(
     val fallingChains: Boolean = true,
     /** A refill can form a pair with the row it lands on. The usual deck distribution supplies other rows. */
     val fallMatchPermille: Int = 100,
+    val lateFallMatchFrom: Int = 69,
+    val lateFallMatchBonusPermille: Int = 30,
+    val stableSandwichFrom: Int = 85,
+    val lateDirectIncomeFrom: Int = 85,
+    val lateDirectIncomePermille: Int = 1_200,
+    val firstCycleFileWallPermille: Int = 25,
+    val secondEventSlotResets: Int = 19,
+    val secondEventSlotPrice: Long = 200_000,
     /** Chain spam starts at this many physical bursts and gains one step per further burst. */
     val fallSpamFrom: Int = 4,
     val fallSpamStepPermille: Int = 45,
@@ -37,7 +45,7 @@ data class RuleSet(
     val sandwichPerAssist: Int = 3,
     val wildPerAssist: Int = 2,
     // Deck: level → slots. A deck must hold at least min(minSlots, owned) apps.
-    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 73 to 10),
+    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 74 to 10),
     val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7, 62 to 8),
     val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2, 38 to 3, 63 to 4),
     // Synergy: same category / region in the deck → bonus % for those apps
@@ -196,7 +204,7 @@ data class RuleSet(
     /** Base level headroom for one swipe, including chains, waves and event payouts. */
     val swipeLevelCap: Int = 3,
     /** Additional swipe headroom once the condensed late level curve begins. */
-    val lateSwipeCapSteps: Int = 2,
+    val lateSwipeCapSteps: Int = 3,
     /** Extra payout room for overload waves after reaching the launch milestone once. */
     val post124WaveCapSteps: Int = 8,
     /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
@@ -330,13 +338,19 @@ data class RuleSet(
         Math.ceil(item.base * Math.pow(item.growthPermille / 1000.0, owned.toDouble())).toLong()
 
     /** Total backup files ever earnable from a best run of [bestRunP]. */
-    fun backupTotal(bestRunP: BigInteger): Long {
+    fun backupTotal(bestRunP: BigInteger, firstCycle: Boolean = false): Long {
         if (bestRunP.signum() <= 0) return 0
         val lx = log10(bestRunP) - log10(levelP(resetLevel))
         if (lx < 0) return 0
         val e = backupExponentPermille / 1000.0
         val logB = if (lx <= backupSoftcapDigits) e * lx else e * backupSoftcapDigits + e / 2 * (lx - backupSoftcapDigits)
-        return minOf(FILE_LIMIT, Math.floor(backupBase * Math.pow(10.0, logB)).toLong())
+        val wall = if (firstCycle) firstCycleFileWallPermille else 0
+        val extra = if (wall == 0) 0.0 else {
+            val start = log10(levelP(syncLevel - 6))
+            val end = log10(levelP(syncLevel))
+            (log10(bestRunP) - start).coerceIn(0.0, end - start) * wall / 1_000.0
+        }
+        return minOf(FILE_LIMIT, Math.floor(backupBase * Math.pow(10.0, logB + extra)).toLong())
     }
 
     /** Cloud multiplier on backup files: 압축 백업 ×1.5 per level × √(1 + [cloudFilePercent]% × GB ever synced). */
@@ -346,7 +360,7 @@ data class RuleSet(
     /** Backup files a factory reset pays now: only what beating the best run adds (no farming of easy resets). */
     fun backupFiles(runEarned: BigInteger, level: Int, backup: Backup): Long {
         if (level < resetLevel) return 0
-        val total = minOf(FILE_LIMIT, Math.floor(backupTotal(runEarned.max(backup.bestRunP)) * fileMultiplier(backup.cloud)).toLong())
+        val total = minOf(FILE_LIMIT, Math.floor(backupTotal(runEarned.max(backup.bestRunP), backup.cloud.syncs == 0) * fileMultiplier(backup.cloud)).toLong())
         return maxOf(0L, total - backup.lifetime)
     }
 
