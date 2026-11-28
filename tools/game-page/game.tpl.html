@@ -2291,7 +2291,8 @@ function drawPrestige(t) {
   gtext(pres.kind === 'reset' ? $t('factory_reset') : $t('cloud_sync'), 195, REVEAL_Y - 110, 30, { alpha: a, appear: pres.t * 5, top: '#FFFFFF', bot: '#FFD66B', wob: 2, t });
   gtext('+' + fmtL(shown), 195, REVEAL_Y - 10, 84, { alpha: a, scale: pres.landed ? 1 + .4 * Math.exp(-(pres.t - .9) * 6) : 1, top: '#FFFFFF', bot: pres.kind === 'reset' ? '#7CE0FF' : '#B98CFF', wob: 2.5, t });
   gtext(pres.kind === 'reset' ? $t('backup_files') : 'GB', 195, REVEAL_Y + 34, 26, { alpha: a, top: '#FFFFFF', bot: '#BFD9FF' });
-  if (pres.t > 1.2) gtext(pres.kind === 'reset' ? $t('your_next_run_is_faster') : $t('gb_stays_forever_to_the'), 195, REVEAL_Y + 74, 15, { alpha: a, appear: (pres.t - 1.2) * 4, top: '#FFFFFF', bot: '#FFE2A0' });
+  if (pres.t > 1.2) { const line = pres.kind === 'reset' ? $t('your_next_run_is_faster') : $t('gb_stays_forever_to_the'); ctx.font = `15px ${FD}`; const fs = Math.min(15, 15 * 350 / Math.max(1, ctx.measureText(line).width));  // English runs longer: shrink to the screen
+  gtext(line, 195, REVEAL_Y + 74, fs, { alpha: a, appear: (pres.t - 1.2) * 4, top: '#FFFFFF', bot: '#FFE2A0' }); }
 }
 function drawHint(t) {
   drawPrestige(t);
@@ -2604,6 +2605,7 @@ function fitLines(root) {
 }
 // app detail: a glass card over the sheet with everything the row leaves out
 function appDetail(id) {
+  if (!P || !P.apps) return loadPanel().then(() => appDetail(id));  // opened before the panel was ever loaded
   const a = P.apps.find(x => x.id === id); if (!a) return;
   const T = TEXTS[id] || [], fx = T[0] || '', msgs = (T[1] || []).slice(0, 2), st = P.state, stars = starsOf(id), lock = !a.owned && !a.open;
   const stat = a.owned ? (a.active ? [$t('in_deck'), 'on'] : [$t('out_of_deck_2'), '']) : lock ? [$t('locked_2'), 'lockc'] : [$t('available'), 'buy'];
