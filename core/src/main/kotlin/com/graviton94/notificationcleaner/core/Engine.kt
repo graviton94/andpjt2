@@ -988,7 +988,8 @@ class Engine(val rules: RuleSet = RuleSet()) {
             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
         // Jackpot cap: luck may jump a few levels, never the whole run.
         val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
-        val room = jackpotRoom(s, capSteps)
+        val extraWaveLevels = if (overload && maxOf(s.level, s.backup.bestLevel) >= 124) rules.post124WaveCapSteps else 0
+        val room = jackpotRoom(s, capSteps + extraWaveLevels)
         val capped = (earned - room).max(ZERO)
         if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
 

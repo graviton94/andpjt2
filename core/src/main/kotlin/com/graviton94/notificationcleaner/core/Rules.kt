@@ -197,6 +197,8 @@ data class RuleSet(
     val swipeLevelCap: Int = 3,
     /** Additional swipe headroom once the condensed late level curve begins. */
     val lateSwipeCapSteps: Int = 2,
+    /** Extra payout room for overload waves after reaching the launch milestone once. */
+    val post124WaveCapSteps: Int = 8,
     /** The caps apply from this level: the first levels are the tutorial and may jump freely. */
     val jackpotCapFrom: Int = 10,
     /** One offline settlement raises the level by at most this many steps. */
