@@ -1356,7 +1356,10 @@ function startEvent(type) {
 function endEvent() {
   ev = null; busy = false; fxT.sat = 1; fxT.bright = 1; lowBat = false;
 }
-const say = (text, y, size, top, bot, life = 1.2) => pops.push({ x: 195, y, text, t: 0, life, rot: (rnd() - .5) * .1, size, col0: [top, bot] });
+// banner lines shrink to the screen width (English lines run much longer than Korean)
+const mctx = document.createElement('canvas').getContext('2d');
+const fitSize = (text, size, max = 340) => { mctx.font = `${size}px ${FD}`; const w = mctx.measureText(String(text)).width; return w > max ? size * max / w : size; };
+const say = (text, y, size, top, bot, life = 1.2) => pops.push({ x: 195, y, text, t: 0, life, rot: (rnd() - .5) * .1, size: fitSize(text, size), col0: [top, bot] });
 function panel(x, y, w, h, r, fill, edge) {
   ctx.save(); rr(x, y, w, h, r); ctx.clip(); ctx.drawImage(bgT, 0, 0, W, H); ctx.fillStyle = fill; ctx.fillRect(x, y, w, h);
   const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(255,255,255,.16)'); g.addColorStop(.3, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); ctx.restore();
@@ -2040,7 +2043,8 @@ function draw(t) {
   pfxDraw();
   if (heat > .02) { const e = ctx.createRadialGradient(195, 400, 230, 195, 400, 470); e.addColorStop(0, 'rgba(255,90,20,0)'); e.addColorStop(1, `rgba(255,90,20,${.38 * heat})`); ctx.fillStyle = e; ctx.fillRect(0, 0, W, H); }
   ctx.globalCompositeOperation = 'source-over';
-  if (plate.phase === 'show') { ctx.fillStyle = `rgba(8,5,3,${.55 * Math.min(1, plate.showT * 6)})`; ctx.fillRect(-20, ROW0 - 8, W + 40, H); drawOverheatWorld(t); }
+  if (plate.phase === 'show') { ctx.fillStyle = day ? `rgba(238,241,247,${.62 * Math.min(1, plate.showT * 6)})` : `rgba(8,5,3,${.55 * Math.min(1, plate.showT * 6)})`;  // light theme: a pale veil, not grey mud
+  ctx.fillRect(-20, ROW0 - 8, W + 40, H); drawOverheatWorld(t); }
   if (ev && EVENTS[ev.type].world) EVENTS[ev.type].world(ev, t);
   ctx.restore();
   if (flash > 0) { ctx.fillStyle = `rgba(255,246,220,${flash})`; ctx.fillRect(0, 0, W, H); }
@@ -2966,6 +2970,7 @@ async function sheetAct(x) {
 const offerEl = $('offer');
 let offerT = null;
 async function offerDouble(total) {
+  if (chal) return;  // the challenge board is a side run: no ad offers on it
   const m = await api('bm'); const ad = m.ads.find(a => a.id === 'BestDouble'); if (!ad || ad.left <= 0 || m.state.level < 20) return;
   offerEl.innerHTML = (m.passActive ? $t('pass_perk') : `<img src="img/ui/ad.webp" style="width:22px;vertical-align:-5px"> ${$t('watch_ad')} `) + $t('best_2', fmtL(total)); offerEl.classList.add('on');
   clearTimeout(offerT); offerT = setTimeout(() => offerEl.classList.remove('on'), 5000);
