@@ -392,7 +392,10 @@ input[type=range]{accent-color:var(--m-primary)}
 .toast svg,.toast img{width:20px;height:20px;flex:none}
 .toast.ok svg{color:var(--m-ter)}.toast.err svg{color:var(--m-error)}
 /* Android 14 quick-settings tiles */
-#shade .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0 12px}
+#shade .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0 12px}#shade .grid>.tile:last-child:nth-child(odd){grid-column:1/-1}
+#sheet .book-hero{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:var(--g-card);border:1px solid var(--g-line);margin-bottom:10px}#sheet .book-hero b{font:900 30px/1 var(--font)}#sheet .book-hero .bk{flex:1;min-width:0}
+#sheet .book-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 14px}#sheet .book-i{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:14px;background:var(--g-card);border:1px solid var(--g-line);font:600 11px/1.2 var(--font);color:inherit;min-width:0}
+#sheet .book-i span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#sheet .book-i>img,#sheet .book-i>.fr{width:44px;height:44px;border-radius:11px;flex:none;position:relative}#sheet .book-i.lock>img{filter:brightness(0);opacity:.28}@media (prefers-color-scheme: dark){#sheet .book-i.lock>img{filter:brightness(0) invert(1);opacity:.22}}#sheet .book-i.lock span{opacity:.55}#sheet .book-i.seen{opacity:.75}#sheet .book-i.own{border-color:rgba(255,200,90,.45)}
 #shade .tile{flex-direction:row;justify-content:flex-start;gap:clamp(8px,2.6vw,12px);height:64px;padding:0 clamp(10px,3.4vw,14px);border-radius:22px;text-align:left;
  background:var(--g-card);border:1px solid var(--g-line);color:var(--m-on-surface);box-shadow:inset 0 1px 0 var(--g-hi);transition:background .2s var(--ease-std)}
 #shade .tile span.c{width:auto;height:auto;background:none!important;box-shadow:none!important;color:inherit}
@@ -2362,7 +2365,7 @@ function drawHint(t) {
 const $ = id => document.getElementById(id);
 const shadeEl = $('shade'), sheetEl = $('sheet'), scrimEl = $('scrim');
 let P = null, sheetKind = null, upMode = '1', shopTier = 0, armReset = false, armSync = false;
-const ICONP = { chal: 'M13 2 4 14h7l-1 8 9-12h-7z', ach: 'M7 4h10v3a5 5 0 0 1-10 0V4zM5 5H3v1a4 4 0 0 0 4 4M19 5h2v1a4 4 0 0 1-4 4M12 12v4M8 20h8M9 16h6v4H9z', data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
+const ICONP = { book: 'M4 5a2 2 0 0 1 2-2h5v18H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v18h5a2 2 0 0 1 2 2zM7 8h2M15 8h2M7 12h2M15 12h2', chal: 'M13 2 4 14h7l-1 8 9-12h-7z', ach: 'M7 4h10v3a5 5 0 0 1-10 0V4zM5 5H3v1a4 4 0 0 0 4 4M19 5h2v1a4 4 0 0 1-4 4M12 12v4M8 20h8M9 16h6v4H9z', data: 'M4 20V14M9 20V10M14 20V6M19 20V3', pass: 'M5 6l7 6-7 6zM13 6l7 6-7 6z', premium: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', attend: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5', shop: 'M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0', up: 'M12 19V5M6 11l6-6 6 6', deck: 'M4 6h16M4 12h16M4 18h10', board: 'M4 4h16v16H4zM4 10h16M10 10v10',
   reset: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4', backup: 'M6 4h9l3 3v13H6zM9 4v5h6V4', cloud: 'M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z', rec: 'M5 19V9M12 19V5M19 19v-7' };
 const svg = d => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
 // premium ★n wraps the icon in frame n: the icon is scaled to the frame's measured hole (centre, size, corner) so the
@@ -2438,6 +2441,7 @@ function renderShade() {
     ['pass', $t('go_faster'), P.bm && P.bm.passActive ? $t('pass_days', P.bm.passDaysLeft) : $t('pass'), false],
     ['premium', $t('premium'), P.bm && P.bm.vouchers ? $t('voucher', P.bm.vouchers) : $t('upgrade_2'), P.bm && P.bm.vouchers > 0],
     ['chal', $t('daily_challenge'), P.meta ? (P.meta.keys ? $t('keys', P.meta.keys, P.meta.keyCap) : $t('again_tomorrow')) : $t('challenge'), P.meta && P.meta.keys > 0],
+    ['book', $t('app_book'), $t('book_progress', apps.filter(a => a.owned).length, apps.length), false],
     ['ach', $t('achievements_titles'), P.meta ? $t('titles', P.meta.titles.length, P.meta.achievements.length) : $t('achievements'), false],
     ['attend', $t('daily_visit'), P.bm ? (P.bm.claimedToday ? $t('day', P.bm.streak) : $t('check_in')) : $t('check_in_2'), P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
@@ -2566,6 +2570,21 @@ function cardsHTML(st) {
     return `<div class="it ${c.open ? '' : 'lock'} ${c.equipped ? 'eq' : ''}"><span class="cardi">${svg(CARD_ICON[c.id])}</span><div class="t"><b>${cardName(c.id)}</b>${c.equipped ? ` <span class="cap">${$t('equipped')}</span>` : ''}<div class="m wrap">${cardLine(c.id)}</div></div>${btn}</div>`;
   }).join('');
 }
+// app collection book: every parody app, owned / seen / silhouette, by tier
+function renderBook(b) {
+  $('sheet-t').textContent = $t('app_book');
+  const apps = P.apps, own = apps.filter(a => a.owned).length, pct = Math.floor(own / Math.max(1, apps.length) * 100);
+  const tiers = [...new Set(apps.map(a => a.tier))].sort((x, y) => x - y);
+  b.innerHTML = `<div class="book-hero"><b>${own}<small style="font-size:15px;opacity:.6"> / ${apps.length}</small></b><div class="bk"><div class="note">${$t('book_collected', pct)}</div><div class="prog"><i style="width:${pct}%"></i></div></div></div>`
+    + tiers.map(t => { const list = apps.filter(a => a.tier === t); const n = list.filter(a => a.owned).length;
+      return `<div class="h3">${$t('tier_2', t)} <span class="note">${n}/${list.length}</span></div><div class="book-g">${list.map(a => {
+        const lock = !a.owned && !a.open, cls = a.owned ? 'own' : lock ? 'lock' : 'seen';
+        return `<button class="book-i ${cls}" data-book="${a.id}" data-lv="${a.minResets > P.resets ? 'r' + a.minResets : a.unlockLevel}">${ico(a.id)}<span>${lock ? '???' : a.name}</span></button>`; }).join('')}</div>`; }).join('');
+  b.querySelectorAll('[data-book]').forEach(x => x.addEventListener('click', () => {
+    if (!x.classList.contains('lock')) return appDetail(x.dataset.book);
+    const lv = x.dataset.lv; sfx.snap(); toast(lv[0] === 'r' ? $t('book_opens_reset', lv.slice(1)) : $t('book_opens_lv', lv));
+  }));
+}
 function renderSheet() {
   const st = P.state, apps = P.apps;
   $('sheet-w').textContent = P$(st.wallet);
@@ -2643,6 +2662,7 @@ function renderSheet() {
   else if (sheetKind === 'premium') renderPremium(b);
   else if (sheetKind === 'attend') renderAttend(b);
   else if (sheetKind === 'ach') renderAch(b);
+  else if (sheetKind === 'book') renderBook(b);
   else if (sheetKind === 'chal') renderChal(b);
   b.querySelectorAll('[data-act]').forEach(x => x.addEventListener('click', () => sheetAct(x)));
   b.querySelectorAll('[data-info]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); appDetail(x.dataset.info); }));

@@ -548,5 +548,10 @@
  "card_slot_free": "A card slot is free",
  "title_q": "“{0}”",
  "goal_buy": "Buy!",
- "now_open": "Now open: {0}"
+ "now_open": "Now open: {0}",
+ "app_book": "App collection",
+ "book_progress": "{0}/{1} collected",
+ "book_collected": "{0}% collected",
+ "book_opens_lv": "Opens at Lv {0}",
+ "book_opens_reset": "Opens after {0} resets"
 }

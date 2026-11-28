@@ -548,5 +548,10 @@
  "card_slot_free": "카드 칸이 비었어요",
  "title_q": "「{0}」",
  "goal_buy": "구매!",
- "now_open": "새로 열림: {0}"
+ "now_open": "새로 열림: {0}",
+ "app_book": "앱 도감",
+ "book_progress": "{0}/{1} 수집",
+ "book_collected": "수집률 {0}%",
+ "book_opens_lv": "Lv {0}에 열려요",
+ "book_opens_reset": "초기화 {0}회 뒤에 열려요"
 }
