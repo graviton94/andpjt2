@@ -747,8 +747,8 @@ if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fon
 
 const lightQ = matchMedia('(prefers-color-scheme: light)');
 const PREF = (() => { try { return JSON.parse(localStorage.getItem('prefs') || '{}'); } catch (e) { return {}; } })();
-let sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
-const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce, lang: PREF.lang || null })); } catch (e) {} };
+let music = PREF.music !== false, mvol = PREF.mvol != null ? PREF.mvol : .7, sound = PREF.sound !== false, reduce = !!PREF.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches && PREF.reduce !== false, day = lightQ.matches, vol = PREF.vol != null ? PREF.vol : 1, vibOn = PREF.vib !== false;
+const savePrefs = () => { try { localStorage.setItem('prefs', JSON.stringify({ sound, vol, vib: vibOn, reduce, music, mvol, lang: PREF.lang || null })); } catch (e) {} };
 const TEXTS = I18N.lang === 'ko' ? __TEXTS__ : __TEXTS_EN__;  // app id → [effect line, [messages]] (docs/content/app-texts.json, l10n/en.json)
 let seed = 11;
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -800,7 +800,7 @@ const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); retur
 // ---------- sound: layered synth through compressor + short echo ----------
 const A = {};
 function ac() {
-  if (!sound) return null;
+  if (!sound && !music) return null;
   try {
     if (!A.c) {
       const c = new (window.AudioContext || window.webkitAudioContext)();
@@ -819,7 +819,7 @@ function ac() {
 }
 function env(g, t, a, peak, dur) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
 function tone(type, f0, f1, dur, vol, o = {}) {
-  const c = ac(); if (!c) return;
+  if (!sound) return; const c = ac(); if (!c) return;
   const t = c.currentTime + (o.at || 0), osc = c.createOscillator(), g = c.createGain();
   osc.type = type; osc.frequency.setValueAtTime(f0, t); if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
   if (o.det) osc.detune.value = o.det;
@@ -828,7 +828,7 @@ function tone(type, f0, f1, dur, vol, o = {}) {
   n.connect(g); g.connect(A.m); osc.start(t); osc.stop(t + dur + .03);
 }
 function hiss(dur, vol, o = {}) {
-  const c = ac(); if (!c) return;
+  if (!sound) return; const c = ac(); if (!c) return;
   const t = c.currentTime + (o.at || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
   s.buffer = A.nb; f.type = o.type || 'bandpass'; f.Q.value = o.q || 1.2;
   f.frequency.setValueAtTime(o.f0 || 2000, t); f.frequency.exponentialRampToValueAtTime(o.f1 || o.f0 || 2000, t + dur);
@@ -875,7 +875,7 @@ async function phoneLoad() {
   for (const [k, v] of Object.entries(PHONE)) { try { const b = await (await fetch(v)).arrayBuffer(); phoneBuf[k] = await c.decodeAudioData(b); } catch (e) {} }
 }
 function phone(id, vol = .5, at = 0) {
-  const c = ac(); if (!c) return; const b = phoneBuf[id]; if (!b) { phoneLoad(); return; }
+  if (!sound) return; const c = ac(); if (!c) return; const b = phoneBuf[id]; if (!b) { phoneLoad(); return; }
   const s = c.createBufferSource(), g = c.createGain(); s.buffer = b; g.gain.value = vol; s.connect(g); g.connect(A.m); s.start(c.currentTime + at);
 }
 function ping(d) { const now = performance.now(); if (now - lastPing < 120) return; lastPing = now;
@@ -978,6 +978,87 @@ function present(t) {
 }
 const ripple = (x, y, amp) => { rips.push({ x: x / W, y: y / H, age: 0, amp }); if (rips.length > 8) rips.shift(); };
 const crackAt = (x, y, amp) => { crack = { x: x / W, y: y / H, age: 0, amp, seed: Math.floor(rnd() * 97) }; };
+
+// ---------- background music: composed note data (music.json) played by a small WebAudio band ----------
+// Two tracks (title, main). The main loop thins out to a pad when nobody has touched the board for a while and adds
+// an arpeggio + 16th hats while chains run. Pops duck it briefly so the hits stay on top. No audio files.
+const MUSIC = __MUSIC__;
+const NOTE = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11 };
+const midiOf = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return m ? 12 * (+m[2] + 1) + NOTE[m[1]] : null; };
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+const CHORD = { C: [0, 4, 7], Dm: [2, 5, 9], Em: [4, 7, 11], F: [5, 9, 12], G: [7, 11, 14], Am: [9, 12, 16], E: [4, 8, 11] };
+const parseBar = str => str.trim().split(/\s+/).map(t => t === '.' ? null : t === '-' ? '-' : midiOf(t));
+const BGM = {
+  track: null, step: 0, next: 0, timer: null, out: null, heat: 0, idle: 0,
+  start(name) {
+    if (!music || !MUSIC.tracks[name]) return;
+    const c = ac(); if (!c) return;
+    if (!this.out) { this.out = c.createGain(); this.out.gain.value = .0001; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000; this.lp = lp; this.out.connect(lp); lp.connect(A.c.destination); }
+    if (this.track === name && this.timer) return;
+    this.track = name; this.song = this.build(MUSIC.tracks[name]); this.step = 0; this.next = c.currentTime + .1;
+    this.out.gain.cancelScheduledValues(c.currentTime); this.out.gain.setTargetAtTime(.42 * mvol, c.currentTime, .6);
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 30);
+  },
+  stop(fade = .5) { if (!this.out || !A.c) return; this.out.gain.setTargetAtTime(.0001, A.c.currentTime, fade / 3); const t = this.timer; this.timer = null; setTimeout(() => { if (!this.timer) clearInterval(t); }, fade * 1000 + 100); if (!this.timer) clearInterval(t); this.track = null; },
+  volume() { if (this.out && A.c) this.out.gain.setTargetAtTime(music ? .42 * mvol : .0001, A.c.currentTime, .1); },
+  duck(k) { if (!this.out || !A.c || !this.timer) return; const g = this.out.gain, t = A.c.currentTime, v = .42 * mvol; g.cancelScheduledValues(t); g.setValueAtTime(Math.max(.0001, g.value), t); g.linearRampToValueAtTime(v * (k >= 6 ? .4 : .62), t + .02); g.linearRampToValueAtTime(v, t + .45); },
+  build(tr) {  // flatten sections into bars: { chord, lead[], bell[], lift }
+    const bars = [];
+    for (const name of tr.order) { const sec = tr.sections[name], base = sec.same ? tr.sections[sec.same] : sec;
+      base.chords.forEach((ch, i) => bars.push({ chord: ch, lead: base.lead ? parseBar(base.lead[i]) : null, bell: base.bell ? parseBar(base.bell[i]) : null, lift: !!sec.lift })); }
+    return { bpm: tr.bpm, bars };
+  },
+  tick() {
+    const c = A.c; if (!c || !this.song) return;
+    if (document.hidden) { this.next = c.currentTime + .1; return; }
+    const spb = 60 / this.song.bpm / 4;
+    while (this.next < c.currentTime + .12) { this.play(this.step, this.next, spb); this.step++; this.next += spb; }
+  },
+  play(step, t, spb) {
+    const bars = this.song.bars, bi = Math.floor(step / 16) % bars.length, s = step % 16, bar = bars[bi], root = CHORD[bar.chord] || CHORD.C;
+    const calm = this.track === 'main' && idleT > 25, hot = this.heat > 0 || bar.lift;
+    // lead / bell melody: note length = following holds
+    const line = bar.lead || bar.bell;
+    if (line && line[s] != null && line[s] !== '-') { let n = 1; while (s + n < 16 && line[s + n] === '-') n++;
+      if (bar.bell || calm) this.v.bell(t, hz(line[s]), n * spb); else this.v.lead(t, hz(line[s]), n * spb, hot); }
+    if (this.track === 'title') {  // pad + soft pulse
+      if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb));
+      if (s % 8 === 0) this.v.bass(t, hz(36 + root[0]), 6 * spb, .1);
+      return;
+    }
+    if (calm) { if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb)); if (s === 0) this.v.bass(t, hz(36 + root[0]), 12 * spb, .08); return; }
+    // bass: root / fifth bounce
+    if ([0, 3, 6, 8, 11, 14].includes(s)) this.v.bass(t, hz(36 + root[0] + (s === 6 || s === 14 ? 7 : 0)), spb * (s % 8 === 0 ? 2.5 : 1.6), .14);
+    // chord stabs on the off-beats
+    if (s % 4 === 2) root.forEach(i => this.v.stab(t, hz(60 + i), spb * 1.4));
+    // drums
+    if (s === 0 || s === 8 || (bar.lift && s === 10)) this.v.kick(t);
+    if (s === 4 || s === 12) this.v.snare(t);
+    if (s % 2 === 0 || hot) this.v.hat(t, s % 4 === 2 ? .05 : .03);
+    // chain layer: rising arpeggio while the heat lasts
+    if (hot) { const tones = [...root, root[0] + 12, root[1] + 12]; this.v.arp(t, hz(72 + tones[s % tones.length]), spb * .9); }
+    if (s === 15) this.heat = Math.max(0, this.heat - 1);
+  },
+  v: {
+    o(t, type, f, dur, vol, o = {}) { const c = A.c, osc = c.createOscillator(), g = c.createGain(); osc.type = type; osc.frequency.setValueAtTime(f, t); if (o.det) osc.detune.value = o.det;
+      g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + (o.a || .005)); g.gain.setTargetAtTime(vol * (o.sus ?? .5), t + (o.a || .005), o.dec || .08); g.gain.setTargetAtTime(.0001, t + dur, o.rel || .05);
+      let n = osc; if (o.lp) { const f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = o.lp; f2.Q.value = o.q || .7; osc.connect(f2); n = f2; }
+      n.connect(g); g.connect(BGM.out); osc.start(t); osc.stop(t + dur + (o.rel || .05) * 6); },
+    lead(t, f, dur, hot) { this.o(t, 'square', f, dur * .92, .05, { lp: hot ? 4200 : 2600, sus: .55, dec: .12 }); if (hot) this.o(t, 'triangle', f * 2, dur * .8, .025, { sus: .4 }); },
+    bell(t, f, dur) { this.o(t, 'sine', f, Math.max(dur, .4), .06, { a: .004, sus: .25, dec: .35, rel: .4 }); this.o(t, 'sine', f * 2.76, .35, .012, { a: .002, sus: .1, dec: .12 }); },
+    bass(t, f, dur, vol) { this.o(t, 'triangle', f, dur, vol, { lp: 900, sus: .8, dec: .2 }); },
+    stab(t, f, dur) { this.o(t, 'sawtooth', f, dur, .018, { lp: 1700, sus: .3, dec: .06 }); },
+    pad(t, f, dur) { this.o(t, 'sawtooth', f, dur, .012, { a: .5, lp: 850, sus: .9, dec: .5, rel: .6, det: -7 }); this.o(t, 'sawtooth', f, dur, .012, { a: .5, lp: 850, sus: .9, dec: .5, rel: .6, det: 7 }); },
+    arp(t, f, dur) { this.o(t, 'square', f, dur, .022, { lp: 3600, sus: .3, dec: .05 }); },
+    kick(t) { const c = A.c, osc = c.createOscillator(), g = c.createGain(); osc.frequency.setValueAtTime(130, t); osc.frequency.exponentialRampToValueAtTime(44, t + .16);
+      g.gain.setValueAtTime(.32, t); g.gain.exponentialRampToValueAtTime(.0001, t + .2); osc.connect(g); g.connect(BGM.out); osc.start(t); osc.stop(t + .22); },
+    noise(t, dur, vol, type, f) { const c = A.c, src = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); src.buffer = A.nb; fl.type = type; fl.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); src.connect(fl); fl.connect(g); g.connect(BGM.out); src.start(t, Math.random() * .5); src.stop(t + dur + .02); },
+    snare(t) { this.noise(t, .13, .11, 'bandpass', 1900); this.o(t, 'triangle', 190, .06, .05, { sus: .2, dec: .03 }); },
+    hat(t, v) { this.noise(t, .035, v, 'highpass', 7500); },
+  },
+};
+document.addEventListener('visibilitychange', () => { if (!A.c || !BGM.out) return; BGM.out.gain.setTargetAtTime(document.hidden ? .0001 : (music ? .42 * mvol : .0001), A.c.currentTime, .1); });
 
 // ---------- state ----------
 const MSG = { Social: [$t('new_message'), $t('a_friend_mentioned_you'), $t('99_new_posts_in_the')], Work: [$t('meeting_starts_in_10_min'), $t('an_approval_request_arrived'), $t('3_new_emails')],
@@ -1936,7 +2017,7 @@ function burstRow(b, k, quiet) {
   if (!reduce) shake = Math.max(shake, T.shake + Math.min(k, 12) * .25);
   heat = Math.max(heat, k >= 6 ? 1 : k >= 4 ? .55 : k >= 2 ? .25 : 0);
   if (k >= 9) { slow = .2; if (!reduce) { kick(zoom, 1.2); const now = performance.now(); flashTimes = flashTimes.filter(x => now - x < 1000); if (flashTimes.length < 3) { flash = .25; flashTimes.push(now); } } }
-  if (!quiet) { sfx.pop(k); buzz(Math.min(40, 8 + k * 3)); }
+  if (!quiet) { sfx.pop(k); buzz(Math.min(40, 8 + k * 3)); BGM.duck(k); if (k >= 2) BGM.heat = Math.max(BGM.heat, k >= 6 ? 4 : 2); }
   const i = board.indexOf(r); if (i >= 0) board.splice(i, 1);
   layout();
 }
@@ -2757,6 +2838,8 @@ async function renderSettings(b) {
   b.innerHTML = `<div class="h3">${$t('sound_vibration')}</div>
     ${row('sound', $t('sound_effects'), $t('chain_payout_and_alert_sounds'), sound)}
     <div class="it" style="min-height:64px"><div class="t"><b>${$t('effect_volume')}</b><input id="vol2" type="range" min="0" max="100" value="${Math.round(vol * 100)}" style="width:100%"></div></div>
+    ${row('music', $t('music'), $t('music_sub'), music)}
+    <div class="it" style="min-height:64px"><div class="t"><b>${$t('music_volume')}</b><input id="mvol" type="range" min="0" max="100" value="${Math.round(mvol * 100)}" style="width:100%"></div></div>
     ${row('vib', $t('vibration'), $t('haptic_kick_on_pops'), vibOn)}
     <div class="h3">${$t('display')}</div>
     ${row('reduce', $t('reduce_motion'), $t('less_shake_flashes_and_debris'), reduce)}
@@ -2786,9 +2869,11 @@ async function renderSettings(b) {
     const k = x.dataset.sw;
     if (k === 'sound') { sound = !sound; if (sound) { ac(); if (vol === 0) vol = 1; } }
     if (k === 'vib') { vibOn = !vibOn; if (vibOn) buzz(20); }
+    if (k === 'music') { music = !music; if (music) BGM.start(started ? 'main' : 'title'); else BGM.stop(); }
     if (k === 'reduce') reduce = !reduce;
     savePrefs(); renderSettings(b); sfx.snap();
   }));
+  $('mvol').addEventListener('input', e => { mvol = e.target.value / 100; BGM.volume(); savePrefs(); });
   $('vol2').addEventListener('input', e => { vol = e.target.value / 100; if (A.m) A.m.gain.value = .6 * vol; sound = vol > 0; savePrefs(); });
   $('wipe').addEventListener('click', async () => {
     if (!wipeArm) { wipeArm = 1; renderSettings(b); sfx.snap(); return; }
@@ -3077,7 +3162,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+if (!window.Game) window.__dbg = { audio: () => ({ A, BGM }), dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
     if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
     if (k === 'wave') return waveHit(a || 0);
     if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
@@ -3113,7 +3198,7 @@ function bootProgress() {
 const preloadImg = src => new Promise(res => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
 async function bootTitle() {
   const box = $('boot'), a = BOOTQ.has('fakeacct') ? { enabled: true, google: true, kakao: true } : acctInfo();  // fakeacct: screenshot the sign-in options in a browser
-  box.classList.add('title');
+  box.classList.add('title'); BGM.start('title');  // the browser may hold it until the first tap; the app's WebView plays it at once
   $('boot-foot2').innerHTML = $('boot-foot').innerHTML;
   bootAcct(a);
   if (BOOTQ.has('notitle')) return;
@@ -3139,7 +3224,7 @@ function bootAcct(a) {
   prog.stop(); sfx && ac && 0;
   await bootTitle();
   ac(); sfx.snap(); $('boot').classList.add('gone'); setTimeout(() => { $('boot').style.display = 'none'; }, 500);
-  started = true; idleT = 0; refreshGoal(true);
+  started = true; idleT = 0; refreshGoal(true); BGM.start('main');
   const fresh = st.swipes === 0 && st.level === 1 && !BOOTQ.has('noftue');
   if (FT.step < 9 && fresh) { autoOn = false; setTimeout(() => ftue('boot'), 600); }
   else { if (FT.step < 9) ftSave(9); afterGuide(); }

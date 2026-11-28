@@ -1,0 +1,59 @@
+{
+ "_note": "Background music, composed as note data and played by the page's WebAudio synth (no audio files). 16 steps per bar; tokens: note (C5, F#4), '-' hold, '.' rest. tools/game-page/music_mid.py exports docs/design/music/*.mid.",
+ "tracks": {
+  "main": {
+   "title": "Notification Pop (main loop)",
+   "bpm": 112,
+   "order": ["A", "A", "B", "A2"],
+   "sections": {
+    "A": {
+     "chords": ["C", "G", "Am", "F", "C", "G", "F", "G"],
+     "lead": [
+      "E5 . G5 . C6 - - . G5 . E5 . D5 - . .",
+      "D5 . G5 . B5 - - . A5 . G5 . D5 - . .",
+      "C5 . E5 . A5 - - . G5 . E5 . C5 . D5 .",
+      "E5 - - . D5 . C5 . A4 - - . . . . .",
+      "E5 . G5 . C6 - - . D6 . C6 . G5 - . .",
+      "B5 . D6 . G6 - - . F6 . D6 . B5 - . .",
+      "A5 . C6 . F6 - . E6 . D6 . C6 . A5 .",
+      "B5 - - . A5 . G5 . D5 - - - . . . ."
+     ]
+    },
+    "B": {
+     "chords": ["Am", "F", "C", "G", "Am", "F", "G", "G"],
+     "lead": [
+      "A4 - - . C5 . E5 - - . D5 . C5 . . .",
+      "F4 - - . A4 . C5 - - . A4 . G4 . . .",
+      "G4 - - . C5 . E5 - . . G5 . E5 . D5 .",
+      "D5 - - . B4 . G4 - - . . . . . . .",
+      "A4 - - . C5 . E5 - - . A5 . G5 . E5 .",
+      "F5 - - . E5 . C5 - - . A4 . C5 . . .",
+      "D5 - . . E5 - . . F5 - . . G5 - . .",
+      "G5 - - - - - - . . . . . . . . ."
+     ]
+    },
+    "A2": { "same": "A", "lift": true }
+   }
+  },
+  "title": {
+   "title": "Do Not Disturb (title)",
+   "bpm": 84,
+   "order": ["T"],
+   "sections": {
+    "T": {
+     "chords": ["F", "C", "Am", "G", "F", "C", "Dm", "G"],
+     "bell": [
+      "C6 - - - . . A5 - . . G5 - . . . .",
+      "E5 - - - . . G5 - . . C6 - . . . .",
+      "C6 - - - . . E6 - . . D6 - . . C6 .",
+      "B5 - - - - - . . . . D6 - . . . .",
+      "A5 - - - . . C6 - . . F6 - . . E6 .",
+      "E6 - - - . . D6 - . . C6 - . . G5 .",
+      "A5 - - - . . F5 - . . D6 - . . C6 .",
+      "B5 - - - - - - - . . . . . . . ."
+     ]
+    }
+   }
+  }
+ }
+}

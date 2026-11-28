@@ -555,5 +555,8 @@
  "book_opens_lv": "Opens at Lv {0}",
  "book_opens_reset": "Opens after {0} resets",
  "mission_done": "Mission done: {0}",
- "missions_all_done": "All of today's missions done! Claim Data {0} in Daily visit"
+ "missions_all_done": "All of today's missions done! Claim Data {0} in Daily visit",
+ "music": "Music",
+ "music_sub": "The music heats up as chains run",
+ "music_volume": "Music volume"
 }
