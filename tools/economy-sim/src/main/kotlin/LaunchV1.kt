@@ -168,8 +168,9 @@ fun launchV1(out: File, days: Int, seeds: Int, profiles: List<Profile>, modes: S
     require(days > 0 && seeds > 0 && modes.all { it in setOf("Best", "Random", "Auto", "NoReset") })
     require(profiles.map { it.payer }.distinct().size == profiles.size) { "Each payer needs its own results directory" }
     val slots = profiles.joinToString(";") { "${it.payer}=${it.slots.map { slot -> slot.name }.sorted()}" }
-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots" +
-        if (screenOnly) ";screenOnly=true;screenActions=v1.5" else ""
+    val actionPlan = if (screenOnly) ";screenOnly=true;screenActions=v1.5" else ""
+    val adPlan = if (scheduledAds) ";adsPlan=scheduled" else ""
+    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
     out.mkdirs()
     val manifest = File(out, "parameters.txt")
     if (manifest.isFile) require(manifest.readText().trim() == signature) { "Results directory already has different parameters" }

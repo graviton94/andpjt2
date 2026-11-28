@@ -160,6 +160,8 @@ def render_release(directory, rows, expected):
     manifest = (directory / "parameters.txt").read_text(encoding="utf-8")
     if "screenOnly=true;screenActions=v1.5" not in manifest or not (directory / "screen-actions.csv").is_file():
         raise ValueError("Release requires SIM_SCREEN_ONLY=1 and the v1.5 screen action audit")
+    if "adsPlan=scheduled" in manifest:
+        raise ValueError("Use the baseline ad policy for the release verdict")
     cohorts = checked_screen_cohorts(rows, expected)
     free = cohorts["Free"]
     print("| 지표 | 목표 | 결과 | 판정 |")

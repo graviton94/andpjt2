@@ -79,6 +79,8 @@ internal fun simRules(): com.graviton94.notificationcleaner.core.RuleSet {
 private val engine = Engine(simRules())
 private val shop = com.graviton94.notificationcleaner.core.Shop(engine)
 private val meta = Meta(engine)
+/** An alternate visible ad policy for comparison against the historical opportunistic policy. */
+internal val scheduledAds = screenOnly && System.getenv("SIM_AD_PLAN") == "scheduled"
 private val traceDays = System.getenv("SIM_TRACE") != null
 private val traceResets = System.getenv("SIM_RESETS") != null
 private val traceSeed = System.getenv("SIM_SEED")?.toLongOrNull() ?: 1L
@@ -273,7 +275,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 t = begin
                 observe()
                 if (reachedTarget(day)) break@play
-                if (AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) {
+                // Save one of the five ads for the longest return; reserve the others for the planned boosts.
+                val takeReturnAd = !scheduledAds || payer != Payer.Ads || session == if (day == 0) plan.sessions / 2 else 0
+                if (takeReturnAd && AdSlot.OfflineDouble in slots && got.signum() > 0 && ads.take(t)) {
                     shop.watchAd(s, AdSlot.OfflineDouble, t, got)?.let {
                         val credited = it.runEarned - s.runEarned
                         s = it
@@ -330,7 +334,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 observe()
                 if (reachedTarget(day)) break@play
                 // 최고 기록 ×2: offered when a swipe beats the run's best (only worth it once the run is going).
-                if (AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best && shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) {
+                val takeRecordAd = !scheduledAds || payer != Payer.Ads || session == plan.sessions - 1
+                if (takeRecordAd && AdSlot.BestDouble in slots && s.level >= engine.rules.bestDoubleFrom && o.earned > best &&
+                    shop.adsLeft(s, AdSlot.BestDouble, t) > 0 && ads.take(t)) {
                     shop.watchAd(s, AdSlot.BestDouble, t, o.earned)?.let {
                         val credited = it.runEarned - s.runEarned
                         s = it
