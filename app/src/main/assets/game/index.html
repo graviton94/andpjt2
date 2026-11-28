@@ -735,6 +735,10 @@ const colOf = d => d.kind === 'Spam' || d.kind === 'Call' ? '#FF3B30' : d.kind =
 let dpr = 1;
 let qScale = 1;  // adaptive: drops when frames run long (see frame())
 const fit = () => { dpr = Math.min(2, window.devicePixelRatio || 1) * qScale; cv.width = scene.width = ui.width = Math.round(W * dpr); cv.height = scene.height = ui.height = Math.round(H * dpr); if (gl) gl.viewport(0, 0, cv.width, cv.height); };
+// short screens (16:9 and wider): the board keeps its proportions, centred with thin side margins, instead of squashing
+const place = () => { const sc = Math.min(innerWidth / W, innerHeight / H), w = Math.round(W * sc), h = Math.round(H * sc), l = Math.round((innerWidth - w) / 2);
+  for (const el of [cv, gl ? uiEl : null]) if (el) Object.assign(el.style, { width: w + 'px', height: h + 'px', left: l + 'px', right: 'auto' }); };
+place(); window.addEventListener('resize', place);
 fit(); window.addEventListener('resize', fit);
 if (document.fonts) { document.fonts.load('40px "Black Han Sans"'); document.fonts.load('700 14px "Pretendard"'); }
 
@@ -3131,7 +3135,7 @@ function gesture(kind, r) {
 }
 function coach({ rect, text, sub = '', finger = 'tap', step = '', place = 'below' }) {
   const el = $('coach'), k = cv.clientWidth / W;
-  const r = rect.canvas ? { x: rect.x * k, y: rect.y * k, w: rect.w * k, h: rect.h * k } : rect;
+  const ox = cv.getBoundingClientRect().left, r = rect.canvas ? { x: ox + rect.x * k, y: rect.y * k, w: rect.w * k, h: rect.h * k } : rect;
   el.innerHTML = `<div class="hole" style="left:${r.x - 6}px;top:${r.y - 6}px;width:${r.w + 12}px;height:${r.h + 12}px"></div>
     ${gesture(finger, r)}
     <div class="bub ${place}" style="${place === 'below' ? `top:${r.y + r.h + (finger === 'pull' ? 150 : 22)}px` : `top:${r.y - 22}px`}"><div class="bt"><span class="gi ${finger}">${GI[finger]}</span><b class="fit1">${text}</b></div>${sub ? `<span class="fit1">${sub}</span>` : ''}
