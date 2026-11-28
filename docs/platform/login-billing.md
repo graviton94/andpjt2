@@ -37,3 +37,13 @@ claim id: 일회성 = `play:<purchaseToken>`, 구독 = `play:<orderId>`(갱신�
 3. **상품 등록** (`Play products` 워크플로, 수동 실행): 위 표 그대로 생성·갱신, 구독 기본 요금제 활성화.
 4. **Play 앱 서명 키 해시**를 카카오 개발자 콘솔에, SHA-1을 Firebase에 추가 (첫 업로드 뒤 Play Console › 앱 무결성).
 5. 라이선스 테스터(Play Console › 설정 › 라이선스 테스트)에 테스트 계정 추가 → 실제 결제 없이 결제 흐름 시험.
+
+## 4. 주간 순위 (11-28)
+
+| 부분 | 어디 | 하는 일 |
+|---|---|---|
+| 보드 | Firestore `weekly/{ISO주}-L0/scores/{uid}` = `{scoreLog, score, name, at}` | 일일 도전(모두 같은 판) 점수. 주마다 새 보드. `L0`은 나중에 리그를 나눌 자리 |
+| 제출 | 도전 끝 → `Game.rankSubmit` → `Account.submitWeekly` (트랜잭션, 더 높을 때만) | 로그인한 플레이어만. 이름은 첫 글자 + 별표(`김**`, `J***`), 이메일은 쓰지 않음 |
+| 조회 | 일일 도전 시트 → `Game.rankTop` → 상위 20 + 내 순위(count 집계) | 게스트도 볼 수 있음 |
+| 규칙 | `firestore.rules` | 읽기 공개, 쓰기는 본인 문서만, 필드·크기 제한, 점수는 올라가기만 |
+| 삭제 | `deleteAccount` | 최근 10주 보드의 본인 기록도 지움 |

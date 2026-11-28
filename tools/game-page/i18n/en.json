@@ -558,5 +558,13 @@
  "missions_all_done": "All of today's missions done! Claim Data {0} in Daily visit",
  "music": "Music",
  "music_sub": "The music heats up as chains run",
- "music_volume": "Music volume"
+ "music_volume": "Music volume",
+ "rank_week": "This week's ranking",
+ "rank_resets": "Starts fresh every Monday",
+ "loading": "Loading…",
+ "rank_offline": "Couldn't load the ranking · check your connection",
+ "rank_me": "You",
+ "rank_empty": "No scores yet · be the first",
+ "rank_sign_in": "Sign in to join the ranking",
+ "rank_posted": "You're on this week's ranking!"
 }

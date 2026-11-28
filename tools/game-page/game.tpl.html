@@ -236,6 +236,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 #cf.on{display:grid}
 #sheet .pro{display:inline-block;font:900 10px/1 var(--font);padding:3px 5px;border-radius:5px;background:var(--soft2);color:var(--m-on-sv);letter-spacing:.04em;vertical-align:1px}#sheet .pro.on{background:linear-gradient(135deg,#FFE27A,#F0A000);color:#2A1800}
 #sheet .pro-b{height:30px;padding:0 10px;margin-top:6px;font-size:12px}#sheet .cardi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--soft2);flex:none}#sheet .it.eq .cardi{background:linear-gradient(135deg,#FFE27A,#F0A000);color:#2A1800}
+#sheet .rank .rk{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:9px 12px;border-radius:14px;background:var(--g-card);border:1px solid var(--g-line);margin-bottom:6px;font:600 14px/1.2 var(--font)}#sheet .rank .rk b{font:900 15px/1 var(--font);text-align:center}#sheet .rank .rk:nth-child(-n+3) b{color:#FFB020}#sheet .rank .rk.me{border-color:rgba(255,176,32,.7)}#sheet .rank em{font-style:normal;font-size:11px;opacity:.7}
 #signing{position:fixed;inset:0;z-index:90;display:none;place-items:center;background:rgba(0,0,0,.45)}#signing.on{display:grid}
 #signing .b{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:18px;background:var(--sheet);color:var(--ink);font:700 15px/1.3 "Pretendard",system-ui,sans-serif;box-shadow:0 12px 40px #0008}
 #signing i{width:22px;height:22px;border-radius:50%;border:3px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
@@ -2945,6 +2946,7 @@ const playIdOf = x => { const a = x.dataset.act; return a === 'buyData' ? x.data
 const waits = {}; let waitN = 0;
 const ask = (fn, ...args) => new Promise(res => { const id = 'r' + (++waitN); waits[id] = res; window.Game[fn](id, ...args); });
 window.onPurchase = (id, ok, reason) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason }); else if (id === 'late' && ok) { toast($t('purchase_restored'), 'ok'); api('snapshot').then(st => afterAct({ ok: true, state: st }, null, null)); } };
+window.onRank = (id, ok, reason, info) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason, info }); };
 window.onAccount = (id, ok, reason, info) => { const w = waits[id]; delete waits[id]; if (w) w({ ok, reason, info }); };
 // value against the smallest pack (₩22 per data, priced to be skipped): what every "N배 이득" means
 const gainX = (data, wonAmt) => data * P.bm.baseWon / wonAmt;
@@ -3332,8 +3334,34 @@ function renderChal(b) {
       <div class="rule"><b class="fit1">${$t('60s_time_attack')}</b></div></div>
     <div class="cols"><div><h4>${$t('my_best_2')}</h4><b class="cbest t-gold">${m.bestShort} P</b></div><div><h4>${$t('keys_left_today')}</h4><div class="keys">${keys}</div><span class="note fit1">${m.keyCap === 3 ? $t('keys_lv52') : $t('from_lv52_3_a_day')}</span></div></div>
     <button class="btn big skin gold ${m.keys ? 'fx-shine' : ''}" id="chal-go" ${m.keys ? '' : 'disabled'}>${m.keys ? $t('start_1_keys') : $t('keys_tomorrow')}</button>
-    <div class="rwd"><span>${$t('on_completion', PIECE)}<b>×1</b></span><span>${$t('on_a_new_best', PIECE)}<b>×2</b></span></div>`;
+    <div class="rwd"><span>${$t('on_completion', PIECE)}<b>×1</b></span><span>${$t('on_a_new_best', PIECE)}<b>×2</b></span></div>
+    <div class="h3">${$t('rank_week')} <span class="note">${$t('rank_resets')}</span></div><div id="rank-list" class="rank"><div class="note">${$t('loading')}</div></div>`;
   const go = $('chal-go'); if (go) go.onclick = startChallenge;
+  loadRank();
+}
+// ---- weekly ranking of the daily challenge (same board for everyone, so one global list per ISO week) ----
+function rankBoard(d = new Date()) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear(), w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7); return `${y}-W${String(w).padStart(2, '0')}-L0`;
+}
+const rankAsk = (fn, ...a) => new Promise(res => { const id = 'k' + (++waitN); waits[id] = res; window.Game[fn](id, ...a); });
+async function loadRank() {
+  const el = $('rank-list'); if (!el) return;
+  let r;
+  if (window.Game && window.Game.rankTop) { const o = await rankAsk('rankTop', rankBoard()); r = o.ok ? o.info : null; }
+  else r = { signedIn: false, top: [['M**', '412M'], ['J***', '388M'], ['H**', '301M'], ['#a1f2', '220M'], ['S***', '97.1M']].map(([name, score]) => ({ name, score })) };  // browser preview
+  if (!$('rank-list')) return;
+  if (!r) { el.innerHTML = `<div class="note">${$t('rank_offline')}</div>`; return; }
+  const rows = r.top.map((x, i) => `<div class="rk ${x.me ? 'me' : ''}"><b>${i + 1}</b><span>${x.name}${x.me ? ` <em>${$t('rank_me')}</em>` : ''}</span><span class="t-gold">${x.score} P</span></div>`).join('') || `<div class="note">${$t('rank_empty')}</div>`;
+  const mine = r.mine && !r.top.some(x => x.me) ? `<div class="rk me"><b>${r.mine.rank}</b><span>${$t('rank_me')}</span><span class="t-gold">${r.mine.score} P</span></div>` : '';
+  const guest = r.signedIn ? '' : `<button class="btn tonal big" id="rank-in" style="margin-top:8px">${$t('rank_sign_in')}</button>`;
+  el.innerHTML = rows + mine + guest;
+  const g = $('rank-in'); if (g) g.onclick = () => openSheet('settings');
+}
+async function submitRank(o) {
+  if (!(window.Game && window.Game.rankSubmit) || !acctInfo().signedIn) return;
+  const lg = L(o.score); if (!(lg > -Infinity)) return;
+  const r = await rankAsk('rankSubmit', rankBoard(), lg, o.scoreShort); if (r.ok && o.newBest) toast($t('rank_posted'), 'ok');
 }
 async function startChallenge() {
   const o = await api('challengeStart');
@@ -3347,6 +3375,7 @@ async function startChallenge() {
 async function endChallenge() {
   if (!chal) return; clearInterval(chal.timer); autoOn = chal.auto; chal = null; $('chud').classList.remove('on');
   const o = await api('challengeEnd'); if (!o.ok) return;
+  submitRank(o);
   applyState(o.state); wallet.v = wallet.to = wallet.shown = L(o.state.wallet); wallet.unit = splitL(wallet.v).unit; reconcile(o.state);
   const el = $('chres');
   el.innerHTML = `<div class="card"><span class="l">${$t('daily_challenge_over')}</span><div class="amt"><span class="v t-gold" id="chres-v">0</span><span class="u">P</span></div>

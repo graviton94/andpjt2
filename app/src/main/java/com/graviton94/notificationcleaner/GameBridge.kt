@@ -219,6 +219,27 @@ class GameBridge(private val context: Context) {
         }
     }
 
+    /** Weekly ranking: answers come back as window.onRank(id, ok, json). board = "<ISO week>-L<league>". */
+    @JavascriptInterface
+    fun rankSubmit(id: String, board: String, scoreLog: Double, scoreShort: String) {
+        val act = activity ?: return cb("onRank", id, false, "unavailable", null)
+        val acc = account?.takeIf { it.enabled && it.uid != null } ?: return cb("onRank", id, false, "guest", null)
+        act.lifecycleScope.launch {
+            try { acc.submitWeekly(board, scoreLog, scoreShort); cb("onRank", id, true, "ok", null) }
+            catch (e: CancellationException) { throw e } catch (e: Exception) { cb("onRank", id, false, "error", JSONObject().put("type", e.javaClass.simpleName)) }
+        }
+    }
+
+    @JavascriptInterface
+    fun rankTop(id: String, board: String) {
+        val act = activity ?: return cb("onRank", id, false, "unavailable", null)
+        val acc = account?.takeIf { it.enabled } ?: return cb("onRank", id, false, "unavailable", null)
+        act.lifecycleScope.launch {
+            try { cb("onRank", id, true, "ok", acc.topWeekly(board)) }
+            catch (e: CancellationException) { throw e } catch (e: Exception) { cb("onRank", id, false, "error", JSONObject().put("type", e.javaClass.simpleName)) }
+        }
+    }
+
     /** Cloud backup of the save while signed in (MainActivity: on pause and every few minutes). */
     fun backup() {
         val acc = account ?: return

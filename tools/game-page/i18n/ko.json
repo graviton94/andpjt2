@@ -558,5 +558,13 @@
  "missions_all_done": "오늘 미션 모두 완료! 매일 들르기에서 데이터 {0} 받기",
  "music": "배경음악",
  "music_sub": "연쇄가 이어지면 음악도 달아올라요",
- "music_volume": "배경음악 크기"
+ "music_volume": "배경음악 크기",
+ "rank_week": "이번 주 순위",
+ "rank_resets": "매주 월요일 새로 시작",
+ "loading": "불러오는 중…",
+ "rank_offline": "순위를 불러오지 못했어요 · 인터넷 연결을 확인해 주세요",
+ "rank_me": "나",
+ "rank_empty": "아직 기록이 없어요 · 첫 번째가 되어 보세요",
+ "rank_sign_in": "로그인하면 순위에 올라요",
+ "rank_posted": "이번 주 순위에 올랐어요!"
 }

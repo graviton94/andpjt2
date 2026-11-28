@@ -117,6 +117,40 @@ class Account(private val context: Context) {
         if (wasKakao && kakaoEnabled) UserApiClient.instance.unlink { }
     }
 
+    // ---- weekly daily-challenge ranking: weekly/{week}-L{league}/scores/{uid} (firestore.rules: public read, own best only)
+
+    /** First letter + stars ("김**", "Ja***"); never the e-mail. Players without a name get a short code. */
+    private fun maskedName(): String {
+        val n = auth.currentUser?.displayName?.trim().orEmpty()
+        if (n.isEmpty()) return "#" + (uid ?: "????").takeLast(4)
+        val first = n.substring(0, n.offsetByCodePoints(0, 1))
+        return first + "*".repeat(if (first.any { it.code > 0x2E80 }) 2 else 3)
+    }
+
+    /** Keeps the better of the stored and the new score (the rules refuse anything lower). */
+    suspend fun submitWeekly(board: String, scoreLog: Double, scoreShort: String) {
+        val u = uid ?: return
+        val ref = db.collection("weekly").document(board).collection("scores").document(u)
+        db.runTransaction { tx ->
+            val cur = tx.get(ref).getDouble("scoreLog") ?: -1.0
+            if (scoreLog > cur) tx.set(ref, mapOf("scoreLog" to scoreLog, "score" to scoreShort, "name" to maskedName(), "at" to FieldValue.serverTimestamp()))
+        }.await()
+    }
+
+    /** Top 20 of a board, plus this player's entry and rank when signed in. */
+    suspend fun topWeekly(board: String): JSONObject {
+        val col = db.collection("weekly").document(board).collection("scores")
+        val top = col.orderBy("scoreLog", com.google.firebase.firestore.Query.Direction.DESCENDING).limit(20).get().await()
+        val list = org.json.JSONArray()
+        top.documents.forEach { d -> list.put(JSONObject().put("name", d.getString("name") ?: "").put("score", d.getString("score") ?: "").put("me", d.id == uid)) }
+        val out = JSONObject().put("top", list).put("signedIn", uid != null)
+        val u = uid ?: return out
+        val mine = col.document(u).get().await()
+        val log = mine.getDouble("scoreLog") ?: return out
+        val above = col.whereGreaterThan("scoreLog", log).count().get(com.google.firebase.firestore.AggregateSource.SERVER).await().count
+        return out.put("mine", JSONObject().put("rank", above + 1).put("score", mine.getString("score") ?: ""))
+    }
+
     // ---- cloud save: users/{uid} = { save, level, savedAt, app } (firestore.rules: owner only)
 
     data class Cloud(val save: String, val level: Int, val savedAt: Long)

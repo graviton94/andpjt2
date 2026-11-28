@@ -5,6 +5,7 @@ Same login pattern as the sister app mint-and-friends.
     uid = "kakao:<Kakao user id>". With KAKAO_APP_ID set, tokens issued to another Kakao app are refused.
 - deleteAccount(): deletes the signed-in user's cloud save (users/{uid}) and the Firebase user (Play policy: in-app deletion).
 """
+import datetime
 import json
 import os
 import urllib.error
@@ -95,5 +96,11 @@ def deleteAccount(req: https_fn.CallableRequest) -> dict:  # noqa: N802 (the nam
     uid = req.auth.uid
     db = firestore.client()
     db.collection('users').document(uid).delete()
+    # weekly ranking entries of the last 10 weeks in every league (older boards are no longer shown)
+    today = datetime.date.today()
+    for w in range(10):
+        y, wk, _ = (today - datetime.timedelta(weeks=w)).isocalendar()
+        for league in range(5):
+            db.collection('weekly').document(f'{y}-W{wk:02d}-L{league}').collection('scores').document(uid).delete()
     auth.delete_user(uid)
     return {'ok': True}

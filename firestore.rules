@@ -11,6 +11,20 @@ service cloud.firestore {
         && request.resource.data.level is int
         && request.resource.data.savedAt == request.time;
     }
+    // Weekly daily-challenge ranking, one board per ISO week and level league: public to read (masked names only),
+    // each signed-in player writes only their own entry and only upward.
+    match /weekly/{board}/scores/{uid} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && board.matches('^[0-9]{4}-W[0-9]{2}-L[0-9]$')
+        && request.resource.data.keys().hasOnly(['scoreLog', 'score', 'name', 'at'])
+        && request.resource.data.scoreLog is number && request.resource.data.scoreLog >= 0 && request.resource.data.scoreLog < 100000
+        && request.resource.data.score is string && request.resource.data.score.size() <= 24
+        && request.resource.data.name is string && request.resource.data.name.size() <= 12
+        && request.resource.data.at == request.time
+        && (resource == null || request.resource.data.scoreLog > resource.data.scoreLog);
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
     match /{document=**} {
       allow read, write: if false;
     }
