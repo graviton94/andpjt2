@@ -2353,10 +2353,15 @@ function renderShade() {
   const canBuy = a => a.canBuy != null ? a.canBuy : geq(st.wallet, a.price), canUp = a => a.canUpgrade != null ? a.canUpgrade : geq(st.wallet, a.price1);
   const newApps = apps.filter(a => !a.owned && a.open && canBuy(a)).length;
   const cheap = apps.filter(a => a.active).some(canUp);
+  // what the new in-run progression has ready: a PRO version, a board boost, a card to buy or a free card slot
+  const proReady = apps.some(a => a.owned && !a.pro && a.proLevel && st.level >= a.proLevel && a.proPrice && geq(st.wallet, a.proPrice));
+  const boostReady = (P.assists || []).some(x => x.open && x.lv < x.max && geq(st.wallet, x.price));
+  const cards = P.cards || [], used = cards.filter(c => c.equipped).length;
+  const cardReady = cards.some(c => c.open && !c.owned && geq(st.wallet, c.price)), slotFree = used < (P.eventSlots || 0) && cards.some(c => c.owned && !c.equipped);
   const T = [
     ['shop', $t('app_store'), newApps ? $t('new_app', newApps) : $t('look_around'), newApps > 0],
-    ['up', $t('upgrade'), cheap ? $t('upgrade_all') : $t('upgrade'), cheap],
-    ['deck', $t('deck'), $t('slots', st.deck, P.maxSlots), false],
+    ['up', $t('upgrade'), proReady ? $t('pro_ready') : cheap ? $t('upgrade_all') : boostReady ? $t('boost_ready') : $t('upgrade'), cheap || proReady || boostReady],
+    ['deck', $t('deck'), cardReady ? $t('new_card_ready') : slotFree ? $t('card_slot_free') : $t('slots', st.deck, P.maxSlots), cardReady || slotFree],
     ['data', $t('top_up_data'), `${fmt(P.bm ? P.bm.data : 0)}`, false],
     ['reset', $t('reset'), P.canReset ? $t('files', shortOf(st.backupFilesNow)) : $t('from_lv', st.resetLevel), P.canReset && st.backupFilesNow > 0],
     ['pass', $t('go_faster'), P.bm && P.bm.passActive ? $t('pass_days', P.bm.passDaysLeft) : $t('pass'), false],

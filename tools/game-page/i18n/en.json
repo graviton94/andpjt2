@@ -541,5 +541,9 @@
  "assist_Wild_d": "Wild notifications that join any app come more often",
  "alert_LowBattery": "Low battery",
  "alert_Storage": "Storage full",
- "alert_Crash": "App crashed"
+ "alert_Crash": "App crashed",
+ "pro_ready": "PRO version ready",
+ "boost_ready": "Board boost ready",
+ "new_card_ready": "New event card",
+ "card_slot_free": "A card slot is free"
 }

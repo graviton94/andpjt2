@@ -541,5 +541,9 @@
  "assist_Wild_d": "아무 앱과도 합쳐지는 와일드 알림이 더 자주 와요",
  "alert_LowBattery": "배터리 부족",
  "alert_Storage": "저장공간 부족",
- "alert_Crash": "앱 충돌"
+ "alert_Crash": "앱 충돌",
+ "pro_ready": "PRO 버전 가능",
+ "boost_ready": "알림창 강화 가능",
+ "new_card_ready": "새 이벤트 카드",
+ "card_slot_free": "카드 칸이 비었어요"
 }
