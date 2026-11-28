@@ -1268,7 +1268,7 @@ let started = false;  // nothing runs (auto-clean, events, input) until the play
 let dndEnd = 0, dndTotal = 20;  // the core's length (panel dnd.activeMs) replaces the 20 s default
 const dndLeft = () => Math.max(0, (dndEnd - performance.now()) / 1000);
 // ---- next goal chip (top right): the next app to buy with a progress ring, or the level that opens the next one ----
-let GOAL = null, goalAt = 0, goalLv = 0, GP = null;
+let GOAL = null, goalAt = 0, goalLv = 0, GP = null, missDone = null;
 // what a new level opens, named in one line under the level-up banner (apps, event cards, board boosts, PRO versions)
 function opensAt(lv) {
   const p = GP || P; if (!p) return '';
@@ -1287,6 +1287,10 @@ function computeGoal(p) {
 function refreshGoal(force) {
   const t = performance.now(); if (!force && t - goalAt < 2500) return; goalAt = t;
   api('panel').then(p => { GOAL = computeGoal(p); goalLv = p.state.level; GP = p; }).catch(() => {});
+  // daily missions: say so the moment one is done (the reward waits in Daily visit)
+  api('bm').then(m => { const done = (m.missions || []).filter(x => x.now >= x.goal).map(x => x.label);
+    if (missDone && started) done.filter(l => !missDone.includes(l)).forEach((l, i) => setTimeout(() => { toast(m.missionsDone ? $t('missions_all_done', m.missionReward) : $t('mission_done', l), 'ok'); sfx.badge(); buzz([10, 30, 10]); }, 900 + i * 1200));
+    missDone = done; }).catch(() => {});
 }
 const goalFrac = () => !GOAL || GOAL.kind !== 'app' || !S ? 0 : Math.min(1, Math.pow(10, L(S.wallet) - L(GOAL.price)));
 function drawGoal(c) {

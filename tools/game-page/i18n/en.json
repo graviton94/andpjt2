@@ -553,5 +553,7 @@
  "book_progress": "{0}/{1} collected",
  "book_collected": "{0}% collected",
  "book_opens_lv": "Opens at Lv {0}",
- "book_opens_reset": "Opens after {0} resets"
+ "book_opens_reset": "Opens after {0} resets",
+ "mission_done": "Mission done: {0}",
+ "missions_all_done": "All of today's missions done! Claim Data {0} in Daily visit"
 }

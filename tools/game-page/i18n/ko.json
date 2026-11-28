@@ -553,5 +553,7 @@
  "book_progress": "{0}/{1} 수집",
  "book_collected": "수집률 {0}%",
  "book_opens_lv": "Lv {0}에 열려요",
- "book_opens_reset": "초기화 {0}회 뒤에 열려요"
+ "book_opens_reset": "초기화 {0}회 뒤에 열려요",
+ "mission_done": "미션 완료: {0}",
+ "missions_all_done": "오늘 미션 모두 완료! 매일 들르기에서 데이터 {0} 받기"
 }
