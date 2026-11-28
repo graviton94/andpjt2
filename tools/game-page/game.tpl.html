@@ -3119,7 +3119,7 @@ function gesture(kind, r) {
   const F = `<div class="fing">${COACH_FINGER}</div>`;
   if (kind === 'swipe') { const cx = r.x + r.w * .5, cy = r.y + r.h * .5;
     return `<div class="g sw" style="left:${cx}px;top:${cy}px"><i class="trk"></i><i class="trail"></i><span class="chev">${CHEV}${CHEV}${CHEV}</span><i class="rip"></i>${F}</div>`; }
-  if (kind === 'pull') { const cx = innerWidth / 2, cy = r.y + r.h * .45;
+  if (kind === 'pull') { const cx = innerWidth * .82, cy = r.y + r.h * .45;  // right of the wallet so the total stays readable
     return `<div class="g pl" style="left:${cx}px;top:${cy}px"><i class="trk"></i><i class="trail"></i><span class="chev">${CHEV}${CHEV}${CHEV}</span><i class="rip"></i>${F}</div>`; }
   const cx = r.x + r.w * .5, cy = r.y + r.h * .5;
   return `<div class="g tp" style="left:${cx}px;top:${cy}px"><i class="ring"></i><i class="ring r2"></i><i class="dot"></i>${F}</div>`;
