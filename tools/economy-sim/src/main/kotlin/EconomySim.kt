@@ -20,7 +20,7 @@ import java.math.BigInteger.ZERO
 
 enum class DeckPolicy(val label: String) { Min("최소 덱"), Max("최대 덱 (가치순)"), Synergy("최대 덱 (시너지)") }
 
-/** The shipping web bridge exposes apps and prestige shops; the reference profile also buys core-only content. */
+/** Require the shipped screen actions and reward eligibility in launch simulations. */
 internal val screenOnly = System.getenv("SIM_SCREEN_ONLY") == "1"
 
 private val e = Engine(simRules())  // same rules as Daily.kt, so SIM_RULES reaches prices too
@@ -42,6 +42,12 @@ private val valuationCount = BigInteger.valueOf(1_000)
 private fun perNotification(s: GameState, app: String): BigInteger = e.earn(s, app, valuationCount, 0)
 private val appPrices = java.util.concurrent.ConcurrentHashMap<com.graviton94.notificationcleaner.core.AppDef, BigInteger>()
 
+// Prefer AllHands sandwiches, then Drill, record events, and permanent upgrade cards.
+private val cardPriority = listOf(
+    EventCard.AllHands, EventCard.Drill, EventCard.Lotto, EventCard.Otp, EventCard.Birthday,
+    EventCard.Firmware, EventCard.GroupText, EventCard.Update, EventCard.Sale, EventCard.Dnd,
+)
+
 /** Rebuild the app deck and the event deck by policy. */
 fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
     val owned = s.appLevels.keys.toList()
@@ -61,9 +67,11 @@ fun chooseDeck(s: GameState, policy: DeckPolicy): GameState {
         }
         else -> owned.sortedByDescending { perNotification(s.copy(active = listOf(it)), it) }.take(size)
     }
-    val cards = listOf(EventCard.AllHands, EventCard.Drill, EventCard.Lotto, EventCard.Otp, EventCard.Birthday, EventCard.Firmware, EventCard.GroupText, EventCard.Update, EventCard.Sale, EventCard.Dnd)
-        .filter { it in s.events }.take(e.eventSlots(s))
-    return e.setDeck(s, deck, cards) ?: s
+    val cards = cardPriority.filter { it in s.events }.take(e.eventSlots(s))
+    if (!screenOnly) return e.setDeck(s, deck, cards) ?: s
+    // The app deck and the cards are separate actions in WebSession.
+    val withApps = if (s.active == deck) s else e.setDeck(s, deck) ?: s
+    return if (withApps.equipped == cards) withApps else e.setDeck(withApps, withApps.active, cards) ?: withApps
 }
 
 /** Greedy spending. Returns the new state and what was bought. */
@@ -80,16 +88,14 @@ fun spend(input: GameState, policy: DeckPolicy): Pair<GameState, List<String>> {
             (nextApp.tier > bestTier || s.active.size < e.maxSlots(s) || policy != DeckPolicy.Min)) {
             s = e.buy(s, nextApp.id); bought += "앱:${nextApp.name}"; continue
         }
-        if (!screenOnly) {
-            // 2. Core event cards, board assists and Pro versions when they cost at most half the wallet.
-            val half = s.wallet / BigInteger.TWO
-            val card = EventCard.entries.firstOrNull { it !in s.events && s.level >= it.unlockLevel && e.rules.cardPrice(it) <= half }
-            if (card != null) { s = e.buyEvent(s, card); bought += "카드:${card.label}"; continue }
-            val assist = Assist.entries.firstOrNull { s.level >= it.unlockLevel && s.assist(it) < it.max(s.level) && e.rules.assistPrice(it, s.assist(it)) <= half }
-            if (assist != null) { s = e.buyAssist(s, assist); bought += "판:${assist.label}"; continue }
-            val pro = s.active.firstOrNull { it !in s.pro && s.level >= Catalog.proLevel.getValue(it) && e.rules.proPrice(it) <= half }
-            if (pro != null) { s = e.buyPro(s, pro); bought += "프로:${Catalog.app(pro).name}"; continue }
-        }
+        // 2. Event cards, board assists and Pro versions when they cost at most half the wallet.
+        val half = s.wallet / BigInteger.TWO
+        val card = EventCard.entries.firstOrNull { it !in s.events && s.level >= it.unlockLevel && e.rules.cardPrice(it) <= half }
+        if (card != null) { s = e.buyEvent(s, card); bought += "카드:${card.label}"; continue }
+        val assist = Assist.entries.firstOrNull { s.level >= it.unlockLevel && s.assist(it) < it.max(s.level) && e.rules.assistPrice(it, s.assist(it)) <= half }
+        if (assist != null) { s = e.buyAssist(s, assist); bought += "판:${assist.label}"; continue }
+        val pro = s.active.firstOrNull { it !in s.pro && s.level >= Catalog.proLevel.getValue(it) && e.rules.proPrice(it) <= half }
+        if (pro != null) { s = e.buyPro(s, pro); bought += "프로:${Catalog.app(pro).name}"; continue }
         // 3. The upgrade with the best value gain per P, unless saving for an app it would delay a lot.
         val ups = s.active.asSequence().map { id -> id to e.upgradePrice(s, id) }
             .filter { (_, price) -> s.wallet >= price }
@@ -113,7 +119,7 @@ private val backupOrder = listOf(
 fun spendBackup(input: GameState): GameState {
     var s = input
     while (true) {
-        val open = BackupItem.entries.filter { (!screenOnly || it != BackupItem.EventSlot) && e.backupOpen(s, it) }
+        val open = BackupItem.entries.filter { e.backupOpen(s, it) }
         // The infinite value sink first whenever it costs no more than twice the cheapest other item.
         val cheapest = open.minByOrNull { e.backupPrice(s, it) } ?: break
         val value = open.firstOrNull { it == BackupItem.Value }
@@ -131,7 +137,7 @@ fun spendCloud(input: GameState): GameState {
     while (true) {
         val c = s.backup.cloud
         val item = CloudItem.entries
-            .filter { (!screenOnly || it != CloudItem.CloudEventSlot) && e.cloudOpen(s, it) }
+            .filter { e.cloudOpen(s, it) }
             .minByOrNull { e.rules.cloudPrice(it, c.lv(it)) } ?: break
         val next = e.buyCloud(s, item)
         if (next == s) break
