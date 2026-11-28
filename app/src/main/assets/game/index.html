@@ -952,7 +952,8 @@ void main(){
     [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(p => gl.texParameteri(gl.TEXTURE_2D, p, gl.LINEAR));
   });
   ['T', 'glitch', 'crt', 'sat', 'bright', 'alarm', 'tint', 'A', 't', 'seed', 'heat', 'chroma', 'amt', 'band', 'bandAmp', 'rip', 'crk', 'pix', 'noi', 'psy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
-  gl.uniform1i(U.T, 0); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);  // the scene is opaque: lets the browser copy it GPU to GPU gl.uniform1f(U.A, W / H);
+  gl.uniform1i(U.T, 0); gl.uniform1f(U.A, W / H);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);  // the scene is opaque: lets the browser copy it GPU to GPU
 }
 const ripArr = new Float32Array(32);
 function present(t) {
@@ -1214,11 +1215,17 @@ function snapCard(r, y) {
 // crack an image (card, call screen) into a spider web of shards around the impact point
 
 // the card breaks into its own pixels: 10 px blocks sampled from the card, flung out from the hit, falling, shrinking in steps
+// one pixel per 10 px block, on a small CPU-side canvas: reading a full-size GPU canvas back stalled phones on every pop
+const pbCv = document.createElement('canvas'); pbCv.width = Math.ceil(CW / 10); pbCv.height = Math.ceil(CH / 10);
+const pbCtx = pbCv.getContext('2d', { willReadFrequently: true });
 function pixelBurst(r, y, ix, iy, power) {
-  const snap = snapCard(r, y), g = snap.getContext('2d'), B = 10, sx = dpr, data = g.getImageData(0, 0, snap.width, snap.height).data;
+  const B = 10;
+  pbCtx.setTransform(1, 0, 0, 1, 0, 0); pbCtx.clearRect(0, 0, pbCv.width, pbCv.height);
+  pbCtx.setTransform(1 / B, 0, 0, 1 / B, -CX0 / B, -y / B); drawCard(pbCtx, r, y);
+  const data = pbCtx.getImageData(0, 0, pbCv.width, pbCv.height).data;
   const step = reduce ? 2 : 1;
   for (let by = 0; by < CH; by += B * step) for (let bx = 0; bx < CW; bx += B * step) {
-    const px0 = Math.floor((bx + B / 2 + 4) * sx), py0 = Math.floor((by + B / 2 + 4) * sx), o = (py0 * snap.width + px0) * 4;
+    const o = (Math.floor(by / B) * pbCv.width + Math.floor(bx / B)) * 4;
     if (data[o + 3] < 40) continue;
     const x = CX0 + bx + B / 2, yy = y + by + B / 2, dx = x - ix, dy = yy - iy, d = Math.hypot(dx, dy) + 8, sp = (220 + rnd() * 380) * power * (60 / (d + 40));
     spawn('BLOCK', x, yy, dx / d * sp * 4 + (rnd() - .5) * 120, dy / d * sp * 3 - 160 - rnd() * 220, .55 + rnd() * .45, [data[o], data[o + 1], data[o + 2]], B);
