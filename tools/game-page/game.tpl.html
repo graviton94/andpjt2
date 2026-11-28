@@ -2113,7 +2113,7 @@ function draw(t) {
   ctx = sctx;
   present(t);
 }
-let last = performance.now(), acc = 0, autoT = 0;
+let last = performance.now(), acc = 0, autoT = 0, lastActive = 0;
 function frame(now) {
   const t = now / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
   let gdt = dt;
@@ -2164,7 +2164,11 @@ function frame(now) {
   // a menu over the board (shade or sheet, settled): keep the game running but stop painting the hidden board,
   // so the blurred glass above it stops being re-blurred every frame
   const covered = shadeEl && (shadeEl.classList.contains('open') || sheetEl.classList.contains('open')) && !shadeEl.style.transition;
-  if (!covered || frameNo % 20 === 0) draw(t);
+  // nothing moving for a while (an idle game left open): paint at ~20 fps to save battery; the game itself keeps full rate
+  if (parts.length || pops.length || tokens.length || timeline.length || lights.length || shards.length || pfxLive.length || ev || busy || plate.phase !== 'idle' || wallet.t < 1 || drag.r || pull.on || shake > 0 || flash > 0
+    || board.some(r => r.fly || r.a < 1 || Math.abs(r.y.x - r.y.t) > .5 || Math.abs(r.q.x) > .01 || Math.abs(r.sc.x - 1) > .01)) lastActive = now;
+  const calm = now - lastActive > 1500;
+  if ((!covered || frameNo % 20 === 0) && (!calm || frameNo % 3 === 0)) draw(t);
   adaptQuality(now, covered);
   requestAnimationFrame(frame);
 }
