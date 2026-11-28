@@ -1249,9 +1249,12 @@ const clock = () => { const d = new Date(); return String(d.getHours()).padStart
 // quick tiles (screens-v1 Main): 자동 정리 on/off · 방해 금지 = mute · 덱 · 배속 (shop for now)
 let autoOn = !/[?&]auto=0/.test(location.search);  // tests start with the auto-cleaner off
 let started = false;  // nothing runs (auto-clean, events, input) until the player taps through the title screen
+// 방해 금지 card running: its tile lights up and counts down
+let dndEnd = 0, dndTotal = 20;  // the core's length (panel dnd.activeMs) replaces the 20 s default
+const dndLeft = () => Math.max(0, (dndEnd - performance.now()) / 1000);
 const TILES = [
   { key: 'auto', label: $t('auto'), on: () => autoOn, icon: 'M4 12a8 8 0 1 1 8 8M4 12h4m-4 0V8' },
-  { key: 'dnd', label: $t('do_not_disturb'), on: () => !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
+  { key: 'dnd', label: $t('do_not_disturb'), on: () => dndLeft() > 0 || !sound, icon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
   { key: 'deck', label: $t('deck'), on: () => false, icon: 'M4 6h16M4 12h16M4 18h10' },
   { key: 'speed', label: $t('speed'), on: () => false, icon: 'M5 6l7 6-7 6zM13 6l7 6-7 6z' },
 ];
@@ -1276,7 +1279,8 @@ const decor = [
     c.globalAlpha = a;
     c.fillStyle = on ? (day ? '#3867F0' : ACC) : (day ? 'rgba(30,42,80,.08)' : 'rgba(255,255,255,.12)'); c.beginPath(); c.arc(0, 0, 26, 0, 6.28); c.fill();
     c.strokeStyle = on ? (day ? '#FFFFFF' : '#1E1408') : (day ? '#3C4250' : '#E9E3DC'); tileIcon(c, tl.icon);
-    c.fillStyle = ink0(); c.font = `600 12px ${FB}`; c.textAlign = 'center'; c.fillText(tl.label, 0, 44);
+    if (tl.key === 'dnd' && dndLeft() > 0) { const f = dndLeft() / dndTotal; c.strokeStyle = day ? '#3867F0' : '#FFD66B'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, 30, -1.5708, -1.5708 + 6.2832 * f); c.stroke(); }
+    c.fillStyle = ink0(); c.font = `600 12px ${FB}`; c.textAlign = 'center'; c.fillText(tl.key === 'dnd' && dndLeft() > 0 ? Math.ceil(dndLeft()) + 's' : tl.label, 0, 44);
     c.globalAlpha = 1;
   } })),
   { x: 195, y: 684 + EX + 6, draw: c => { c.fillStyle = day ? '#5F6674' : 'rgba(179,168,155,.9)'; c.font = `500 12px ${FB}`; c.textAlign = 'center'; c.fillText($t('pull_down_shop_upgrades_deck'), 0, 0); } },
@@ -2166,11 +2170,19 @@ const drag = { r: null, x0: 0, y0: 0, t0: 0, moved: false }, pull = { on: false,
 function tapTile(k) {
   sfx.snap(); buzz(8); armScrim();
   if (k === 'auto') { if (FT.step > 0 && FT.step < 6) { ftNudge(); return; } autoOn = !autoOn; toast(autoOn ? $t('auto_clean_on') : $t('auto_clean_off')); if (FT.step === 6) ftue('auto'); }
-  else if (k === 'dnd' && P && P.dnd && P.dnd.equipped) {  // the 방해 금지 card: a quiet, faster stretch a few times a day
-    if (P.dnd.activeMs > 0) toast($t('dnd_running')); else if (P.dnd.left <= 0) toast($t('dnd_used_up'), 'err');
-    else api('dnd').then(o => { if (o.ok) { toast($t('dnd_on'), 'ok'); fx.tint = [0.2, 0.25, 0.6, .25]; } loadPanel(); });
-  }
-  else if (k === 'dnd') { sound = !sound; if (sound) ac(); toast(sound ? $t('sound_on') : $t('do_not_disturb_sound_off')); }
+  else if (k === 'dnd') (async () => {
+    if (!P || !P.dnd) await loadPanel().catch(() => {});
+    if (P && P.dnd && P.dnd.equipped) {  // the 방해 금지 card: a quiet, faster stretch a few times a day
+      if (dndLeft() > 0 || P.dnd.activeMs > 0) return toast($t('dnd_running'));
+      if (P.dnd.left <= 0) return toast($t('dnd_used_up'), 'err');
+      const o = await api('dnd');
+      if (o.ok) { dndEnd = performance.now() + dndTotal * 1000; toast($t('dnd_on'), 'ok'); fx.tint = [0.2, 0.25, 0.6, .25]; buzz([10, 40, 10]); }  // light up at once, then take the core's exact time
+      const q = await api('panel'); if (q.dnd && q.dnd.activeMs > 0) { dndTotal = q.dnd.activeMs / 1000; dndEnd = performance.now() + q.dnd.activeMs; }
+      loadPanel();
+      return;
+    }
+    sound = !sound; if (sound) ac(); toast(sound ? $t('sound_on') : $t('do_not_disturb_sound_off'));
+  })();
   else if (k === 'deck') openSheet('deck');
   else openSheet('pass');
 }
@@ -2980,7 +2992,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+if (!window.Game) window.__dbg = { dnd: () => dndLeft(), refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
     if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
     if (k === 'wave') return waveHit(a || 0);
     if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
