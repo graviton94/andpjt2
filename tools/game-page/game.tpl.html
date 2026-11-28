@@ -1265,7 +1265,16 @@ let started = false;  // nothing runs (auto-clean, events, input) until the play
 let dndEnd = 0, dndTotal = 20;  // the core's length (panel dnd.activeMs) replaces the 20 s default
 const dndLeft = () => Math.max(0, (dndEnd - performance.now()) / 1000);
 // ---- next goal chip (top right): the next app to buy with a progress ring, or the level that opens the next one ----
-let GOAL = null, goalAt = 0, goalLv = 0;
+let GOAL = null, goalAt = 0, goalLv = 0, GP = null;
+// what a new level opens, named in one line under the level-up banner (apps, event cards, board boosts, PRO versions)
+function opensAt(lv) {
+  const p = GP || P; if (!p) return '';
+  const names = [...p.apps.filter(a => a.unlockLevel === lv && a.minResets <= (p.resets || 0)).map(a => a.name),
+    ...(p.cards || []).filter(c => c.unlockLevel === lv && CARD_T[c.id]).map(c => CARD_T[c.id][0]),
+    ...(p.assists || []).filter(x => x.unlockLevel === lv && ASSIST_T[x.id]).map(x => ASSIST_T[x.id][0]),
+    ...p.apps.filter(a => a.owned && a.proLevel === lv).map(a => a.name + ' PRO')];
+  return names.length ? $t('now_open', names.slice(0, 2).join(' · ') + (names.length > 2 ? ' +' + (names.length - 2) : '')) : '';
+}
 function computeGoal(p) {
   const st = p.state, open = p.apps.filter(a => !a.owned && a.open && a.price);
   if (open.length) { const a = open.sort((x, y) => L(x.price) - L(y.price))[0]; return { kind: 'app', id: a.id, price: a.price, priceShort: a.priceShort }; }
@@ -1274,7 +1283,7 @@ function computeGoal(p) {
 }
 function refreshGoal(force) {
   const t = performance.now(); if (!force && t - goalAt < 2500) return; goalAt = t;
-  api('panel').then(p => { GOAL = computeGoal(p); goalLv = p.state.level; }).catch(() => {});
+  api('panel').then(p => { GOAL = computeGoal(p); goalLv = p.state.level; GP = p; }).catch(() => {});
 }
 const goalFrac = () => !GOAL || GOAL.kind !== 'app' || !S ? 0 : Math.min(1, Math.pow(10, L(S.wallet) - L(GOAL.price)));
 function drawGoal(c) {
@@ -1879,7 +1888,7 @@ function play(o, quiet = false) {
     } else if (b.t === 'chainEnd') {
       if (b.reason === 'spam') after(t + .05, () => say2($t('chain_end_spam'), 150, 22));
     } else if (b.t === 'spawned') arrivals.push(b.row.id);
-    else if (b.t === 'levelUp') { const lv = b.level; after(t + .1, () => { say2($t('level_up', lv), 150, 28); phone('ui.levelup', .4); }); }
+    else if (b.t === 'levelUp') { const lv = b.level; after(t + .1, () => { say2($t('level_up', lv), 150, 28); phone('ui.levelup', .4); const o = opensAt(lv); if (o) after(.35, () => say(o, 182, 17, '#FFFFFF', '#9FE3FF', 1.8)); refreshGoal(true); }); }
     else if (b.t === 'freeUpgrade') { const n = b.name, lv = b.level; after(t, () => say2($t('free_upgrade_to', n, lv), 150, 22)); }
   }
   window.__lastPlay = { beats: o.beats.map(b => b.t[0]).join(''), t: +t.toFixed(2), sp: +sp.toFixed(2) };  // QA: replay length
