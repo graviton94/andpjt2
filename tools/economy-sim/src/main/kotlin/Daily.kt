@@ -3,6 +3,7 @@ import com.graviton94.notificationcleaner.core.Assist
 import com.graviton94.notificationcleaner.core.BackupItem
 import com.graviton94.notificationcleaner.core.Beat
 import com.graviton94.notificationcleaner.core.Catalog
+import com.graviton94.notificationcleaner.core.CloudItem
 import com.graviton94.notificationcleaner.core.Engine
 import com.graviton94.notificationcleaner.core.EventCard
 import com.graviton94.notificationcleaner.core.GameState
@@ -187,13 +188,15 @@ fun unlockLevels(): Map<Int, List<String>> {
     val m = sortedMapOf<Int, MutableList<String>>()
     fun add(l: Int, s: String) { m.getOrPut(l) { mutableListOf() } += s }
     Catalog.apps.filter { it.unlockLevel > 1 }.forEach { add(it.unlockLevel, "앱 ${it.name}") }
-    EventCard.entries.forEach { add(it.unlockLevel, "카드 ${it.label}") }
-    Assist.entries.forEach { a -> add(a.unlockLevel, "판 강화 ${a.label}"); a.caps.drop(1).forEach { add(it.first, "${a.label} 최대 ${it.second}") } }
-    Catalog.proLevel.forEach { (id, l) -> add(l, "${Catalog.app(id).name} 프로") }
+    if (!screenOnly) {
+        EventCard.entries.forEach { add(it.unlockLevel, "카드 ${it.label}") }
+        Assist.entries.forEach { a -> add(a.unlockLevel, "판 강화 ${a.label}"); a.caps.drop(1).forEach { add(it.first, "${a.label} 최대 ${it.second}") } }
+        Catalog.proLevel.forEach { (id, l) -> add(l, "${Catalog.app(id).name} 프로") }
+    }
     r.offlineCapSteps.drop(1).forEach { add(it.first, "오프라인 ${it.second}시간") }
     r.maxSlotSteps.drop(1).forEach { add(it.first, "덱 최대 ${it.second}") }
     r.minSlotSteps.drop(1).forEach { add(it.first, "덱 최소 ${it.second}") }
-    r.eventSlotSteps.forEach { add(it.first, "이벤트 슬롯 ${it.second}") }
+    if (!screenOnly) r.eventSlotSteps.forEach { add(it.first, "이벤트 슬롯 ${it.second}") }
     add(r.resetLevel, "공장 초기화")
     add(r.syncLevel, "클라우드 동기화")
     add(r.callUnlockLevel, "스팸 전화")
@@ -356,7 +359,8 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 s = synced
                 tl.syncDays += dayOf(t)
                 everSyncs++
-                com.graviton94.notificationcleaner.core.CloudItem.entries.filter { it.minSyncs == everSyncs }.forEach { note("클라우드 ${it.label}") }
+                CloudItem.entries.filter { it.minSyncs == everSyncs && (!screenOnly || it != CloudItem.CloudEventSlot) }
+                    .forEach { note("클라우드 ${it.label}") }
                 s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
                 stallSessions = 0
                 sinceReset = 0
@@ -371,7 +375,9 @@ fun playDays(seed: Long, days: Int, plan: DayPlan, resets: Boolean, spam: Boolea
                 s = reset
                 tl.resetDays += dayOf(t)
                 everResets++
-                if (s.backup.cloud.syncs == 0) BackupItem.entries.filter { it.minResets == everResets }.forEach { note("백업 ${it.label}") }
+                if (s.backup.cloud.syncs == 0) BackupItem.entries
+                    .filter { it.minResets == everResets && (!screenOnly || it != BackupItem.EventSlot) }
+                    .forEach { note("백업 ${it.label}") }
                 s = chooseDeck(spendBackup(spendCloud(s)), DeckPolicy.Synergy)
                 stallSessions = 0
                 sinceReset = 0
