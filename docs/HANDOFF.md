@@ -169,6 +169,7 @@ v1.1은 화면 원본 `280ec1b`를 `b299f07`에서 병합했다. v1.2 화면 병
 - 조작: 위쪽 덱·배속 버튼이 열자마자 닫히던 문제 수정(같은 터치의 뒤따르는 클릭을 0.45초 흡수). 안드로이드 뒤로가기는 대화상자 → 시트 → 셰이드 순으로 닫고, 판에서는 2초 안에 두 번 눌러야 종료. 낙하 연쇄가 처음 이어질 때 1회 안내.
 - 기기 스모크(CI 에뮬레이터)가 다시 통과한다: 타이틀·가이드 통과, 페이지 안 클릭, 영어 문구 허용, 캡처 버퍼, 꽉 찬 덱 처리.
 - 11-28 화면 개선 라운드: PRO·이벤트 카드·알림창 강화 연결, 카드 줄 아이콘·문구, 셰이드 타일 알림, 방해 금지 카드 카운트다운. 셰이더 화면 비율 미설정 버그 수정과 `rendertest.js` 추가. 시트 문구 줄바꿈·칭호 따옴표·영어 문법, 배너 폭 맞춤·"Combo" 단계명, 라이트 테마 정산 막, 도전 중 광고 제안 제거. 360px 폭 타일·스타터 카드, 16:9 화면 비율 유지, ⚠ 표시, 정지 화면 20fps(배터리). 3분 자동 플레이 메모리·오류 이상 없음.
+- 사운드 모음 아티팩트: https://claude.ai/artifact/2U5joM5fgoKrXvo1HximEN (slug `0be123ea-4ca6-4d52-ad2f-226b14c4160f`). 원본 `docs/design/sounds.json`, 다시 만들기 `node tools/sounds/render.js` → `python3 tools/sounds/build_board.py` → `tools/sounds/board/` 게시. 배경음악 악보 `tools/game-page/music.json`, 미디 `docs/design/music/`.
 - 로그인: 한 번에 하나만 진행하고 "로그인하는 중…"을 표시한다. 서버 단계에 30초 제한을 둔다. 앱 시작 때 `login` 함수를 미리 깨운다(`provider: warm`). 카카오톡에서 돌아오는 것을 복귀 정산으로 보지 않는다. 타이틀에서 로그인한 뒤 시작 대기가 두 번 걸리던 버그를 고쳤다.
 
 v1.2 작업 원본은 화면 세션 `e9469c1`의 [balance-session-v1.2.md](prompts/balance-session-v1.2.md)다. [v1.2 밸런스 보고서](balance/LAUNCH-V12-REPORT.md) · [낙하 비트 계약](balance/api-changes.md#v12-낙하-연쇄). `spawn`을 도착 위치에 삽입하고 `chainEnd`를 종료 표시로 쓴다. 전체 애니메이션을 6초 이하로 압축하는 작업은 화면 통합에서 검수한다.

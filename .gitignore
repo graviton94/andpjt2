@@ -7,3 +7,7 @@ local.properties
 *.jks
 *.keystore
 node_modules/
+
+# sound board: rebuild with tools/sounds/render.js + build_board.py
+docs/design/sounds/*.wav
+tools/sounds/board/

@@ -1,0 +1,67 @@
+{
+ "_note": "Sound collection: every sound in the game, where it plays, and its review status. Source of truth for the sound board artifact (tools/sounds/build_board.py). status: live (in the game) · review (waiting for the user's ear) · redo (asked to change) · planned. kind: bgm (music.json score), synth (WebAudio code in game.tpl.html sfx), sample (docs/design/fx-demo/phone-sfx.json).",
+ "groups": [
+  { "id": "bgm", "name": "배경음악", "desc": "음표 데이터(tools/game-page/music.json)를 게임 안 신시사이저가 연주. 미디: docs/design/music/*.mid",
+    "items": [
+     { "id": "bgm.title", "kind": "bgm", "name": "타이틀 · Do Not Disturb", "when": "로딩 뒤 타이틀 화면", "spec": "84 BPM · 8마디 · 종소리 멜로디 + 패드", "status": "review" },
+     { "id": "bgm.main", "kind": "bgm", "name": "메인 루프 · Notification Pop", "when": "게임 중 계속 · 손을 25초 떼면 패드만, 연쇄 중엔 아르페지오와 16분 하이햇이 겹침", "spec": "112 BPM · A-A-B-A′ 32마디(약 68초) · 리드·베이스·코드·드럼", "status": "review" }
+    ] },
+  { "id": "chain", "name": "연쇄 · 점수", "desc": "연쇄가 길수록 음이 펜타토닉으로 올라감",
+    "items": [
+     { "id": "pop-1", "kind": "synth", "call": "pop(1)", "name": "팡 · 1연쇄", "when": "같은 앱 두 줄이 닿아 터질 때", "status": "live" },
+     { "id": "pop-4", "kind": "synth", "call": "pop(4)", "name": "팡 · 4연쇄", "when": "연쇄 4번째 폭발", "status": "live" },
+     { "id": "pop-9", "kind": "synth", "call": "pop(9)", "name": "팡 · 9연쇄+", "when": "알림 해일 단계", "status": "live" },
+     { "id": "chip", "kind": "synth", "call": "chip(3)", "name": "칩 쌓임", "when": "폭발 점수가 파란 칸으로 날아갈 때", "status": "live" },
+     { "id": "mult", "kind": "synth", "call": "mult(3)", "name": "배율 상승", "when": "빨간 배율 칸이 오를 때", "status": "live" },
+     { "id": "coin", "kind": "synth", "call": "coin(.6)", "name": "동전 카운트", "when": "정산 숫자가 올라가는 동안 연타", "status": "live" },
+     { "id": "payoff", "kind": "synth", "call": "payoff(5)", "name": "정산", "when": "연쇄 끝 합계가 나올 때", "status": "live" },
+     { "id": "land", "kind": "synth", "call": "land()", "name": "지갑 착지", "when": "합계가 지갑에 들어갈 때", "status": "live" },
+     { "id": "unit", "kind": "synth", "call": "unit()", "name": "단위 승격", "when": "지갑이 K→M→B로 넘어갈 때", "status": "live" },
+     { "id": "stamp", "kind": "synth", "call": "stamp()", "name": "과열 도장", "when": "과열 상한에 걸린 정산", "status": "live" },
+     { "id": "wave", "kind": "synth", "call": "wave(1)", "name": "과부하 파동", "when": "과부하 게이지가 터질 때", "status": "live" },
+     { "id": "thud", "kind": "synth", "call": "thud(.8)", "name": "합쳐짐 쿵", "when": "위 줄이 아래 줄에 내리꽂힐 때", "status": "live" }
+    ] },
+  { "id": "ui", "name": "조작 · 화면", "desc": "버튼, 시트, 스와이프",
+    "items": [
+     { "id": "snap", "kind": "synth", "call": "snap()", "name": "탭", "when": "버튼·타일·시트 열기", "status": "live" },
+     { "id": "whoosh", "kind": "synth", "call": "whoosh()", "name": "밀기", "when": "알림을 옆으로 밀어 날릴 때", "status": "live" },
+     { "id": "badge", "kind": "synth", "call": "badge()", "name": "성공 띵", "when": "구매·보상·목표 달성", "status": "live" },
+     { "id": "soft", "kind": "synth", "call": "soft()", "name": "부드러운 종", "when": "방해 금지 시간의 잔잔한 알림", "status": "live" },
+     { "id": "snapback", "kind": "synth", "call": "snapback()", "name": "되돌아감", "when": "덜 밀어서 줄이 제자리로 돌아올 때", "status": "live" }
+    ] },
+  { "id": "events", "name": "돌발 이벤트", "desc": "이벤트 카드·알림 행이 터질 때의 장면 소리",
+    "items": [
+     { "id": "siren", "kind": "synth", "call": "siren(.5)", "name": "알림훈련 사이렌", "when": "알림훈련 시작", "status": "live" },
+     { "id": "drill", "kind": "synth", "call": "drill(4)", "name": "훈련 연타", "when": "알림훈련 중 화면을 두드릴 때", "status": "live" },
+     { "id": "ring", "kind": "synth", "call": "ring()", "name": "전화 벨", "when": "스팸 전화가 올 때", "status": "live" },
+     { "id": "smash", "kind": "synth", "call": "smash()", "name": "화면 깨짐", "when": "스팸 전화를 거절할 때", "status": "live" },
+     { "id": "glitch", "kind": "synth", "call": "glitch()", "name": "앱 충돌 글리치", "when": "앱 충돌 알림", "status": "live" },
+     { "id": "powerDown", "kind": "synth", "call": "powerDown()", "name": "꺼짐", "when": "충돌한 앱 재시작(화면 꺼짐)", "status": "live" },
+     { "id": "boot", "kind": "synth", "call": "boot()", "name": "켜짐", "when": "재시작 뒤 다시 켜질 때", "status": "live" },
+     { "id": "heart", "kind": "synth", "call": "heart()", "name": "배터리 심장박동", "when": "배터리 부족 · 누르고 있기", "status": "live" },
+     { "id": "zap", "kind": "synth", "call": "zap()", "name": "충전 완료", "when": "배터리 이벤트 성공", "status": "live" },
+     { "id": "reel", "kind": "synth", "call": "reel()", "name": "슬롯 회전", "when": "행운 알림 숫자가 돌 때", "status": "live" },
+     { "id": "jackpot", "kind": "synth", "call": "jackpot()", "name": "잭팟", "when": "행운 알림 당첨", "status": "live" },
+     { "id": "fail", "kind": "synth", "call": "fail()", "name": "꽝", "when": "행운 알림 꽝", "status": "live" },
+     { "id": "pad", "kind": "synth", "call": "pad()", "name": "방해 금지 패드", "when": "방해 금지 시작", "status": "live" },
+     { "id": "beep", "kind": "synth", "call": "beep(.5)", "name": "과열 경고음", "when": "정산이 과열될 때 삑삑", "status": "live" },
+     { "id": "boil", "kind": "synth", "call": "boil()", "name": "끓음", "when": "과열 장면", "status": "live" },
+     { "id": "steam", "kind": "synth", "call": "steam()", "name": "증기 배출", "when": "과열 해소", "status": "live" }
+    ] },
+  { "id": "phone", "name": "폰 샘플", "desc": "실제 폰 알림음 느낌의 짧은 샘플(OGG)",
+    "items": [
+     { "id": "notify.social", "kind": "sample", "name": "알림 · 소셜", "when": "소셜 앱 줄 도착", "status": "live" },
+     { "id": "notify.media", "kind": "sample", "name": "알림 · 미디어", "when": "미디어 앱 줄 도착", "status": "live" },
+     { "id": "notify.money", "kind": "sample", "name": "알림 · 금융·업무", "when": "금융·업무 앱 줄 도착", "status": "live" },
+     { "id": "notify.spam", "kind": "sample", "name": "알림 · 스팸", "when": "스팸 줄 도착", "status": "live" },
+     { "id": "phone.buzz", "kind": "sample", "name": "진동", "when": "전화·알림 행", "status": "live" },
+     { "id": "phone.lock", "kind": "sample", "name": "잠금", "when": "화면 잠금 장면", "status": "live" },
+     { "id": "phone.wake", "kind": "sample", "name": "깨우기", "when": "셰이드 열기", "status": "live" },
+     { "id": "phone.sleep", "kind": "sample", "name": "잠들기", "when": "방해 금지 장면", "status": "live" },
+     { "id": "phone.connect", "kind": "sample", "name": "연결", "when": "알림 행 처리", "status": "live" },
+     { "id": "phone.typing", "kind": "sample", "name": "타자", "when": "알림훈련 연타", "status": "live" },
+     { "id": "ui.bonus", "kind": "sample", "name": "보너스", "when": "이벤트 카드·보상", "status": "live" },
+     { "id": "ui.levelup", "kind": "sample", "name": "레벨업", "when": "레벨업·단위 승격", "status": "live" }
+    ] }
+ ]
+}

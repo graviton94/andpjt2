@@ -812,7 +812,7 @@ function ac() {
       m.connect(comp); m.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(wet); wet.connect(comp); comp.connect(c.destination);
       const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), ch = nb.getChannelData(0);
       for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
-      Object.assign(A, { c, m, nb });
+      Object.assign(A, { c, m, nb, comp });
     }
     if (A.c.state === 'suspended') A.c.resume();
     return A.c;
@@ -3164,7 +3164,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { audio: () => ({ A, BGM }), dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+if (!window.Game) window.__dbg = { audio: () => ({ A, BGM, sfx }), dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
     if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
     if (k === 'wave') return waveHit(a || 0);
     if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
