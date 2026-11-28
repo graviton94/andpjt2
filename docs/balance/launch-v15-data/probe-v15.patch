@@ -1,0 +1,116 @@
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Content.kt
+@@ -170,5 +170,5 @@
+         // 6티어
+         app("mall", "쿠빵", 6, 0, AS, Category.Money, 72), // 쿠팡 패러디
+-        app("portal", "메이버", 6, 1, AS, Category.Work, 74), // Naver 패러디
++        app("portal", "메이버", 6, 1, AS, Category.Work, if (System.getenv("DND15_PORTAL_SHIFT") == "1") 73 else 74), // Naver 패러디
+         app("michat", "미챗챗", 6, 2, SE, Category.Social, 76), // MiChat 패러디
+         app("agoda", "아고다다", 6, 3, SE, Category.Daily, 78), // Agoda 패러디
+@@ -220,5 +220,5 @@
+         "ctaxi" to 45, "pay" to 47, "glints" to 48, "bigo" to 51, "pin" to 53, "meet" to 54,
+         "food" to 50, "edit" to 58, "travel" to 60, "joox" to 62, "reddit" to 64, "career" to 66,
+-        "mall" to 97, "portal" to 99, "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
++        "mall" to 97, "portal" to (if (System.getenv("DND15_PORTAL_SHIFT") == "1") 98 else 99), "michat" to 101, "agoda" to 103, "paypal" to 105, "match" to 107,
+         "superapp" to 98, "line" to 99, "jobs" to 100, "lazada" to 101, "ride" to 102, "robin" to 103,
+         "dance" to 99, "chat" to 100, "grab" to 101, "shopee" to 102, "beat" to 103, "why" to 104,
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Engine.kt
+@@ -250,4 +250,8 @@
+     private val seamGuard = System.getenv("DND14_SEAM_GUARD") != "0"
+     private val preferRowSwap = System.getenv("DND14_SWAP") == "1"
++    private val post124WaveHeadroom = System.getenv("DND15_WAVE_HEADROOM")?.toIntOrNull() ?: 0
++    private val manualAfterSync = System.getenv("DND15_AFTER_SYNC") == "1"
++    private val swapFrom = System.getenv("DND15_SWAP_FROM")?.toIntOrNull() ?: 1
++    private val preSyncManualPermille = System.getenv("DND15_ZONE_PERMILLE")?.toIntOrNull() ?: 1_000
+     private val quietSandwich = System.getenv("DND14_QUIET_SANDWICH") == "1"
+     private val extraSlotReset = System.getenv("DND14_SLOT")?.toInt() ?: Int.MAX_VALUE
+@@ -641,5 +645,5 @@
+             val first = if (replaceUpperFirst) index - 1 else index
+             val second = if (replaceUpperFirst) index else index - 1
+-            if (preferRowSwap) {
++            if (preferRowSwap && s.level >= swapFrom) {
+                 val firstSwap = quietSwap(s, rows, first)
+                 val from = if (firstSwap != null) first else second
+@@ -1036,9 +1040,15 @@
+             earned = earned * BigInteger.valueOf(rules.autoSwipePermille.toLong()) / BigInteger.valueOf(1_000)
+         val baselineIncome = earned
+-        if (!auto && s.level >= manualFrom && manualPermille != 1_000)
+-            earned = earned * BigInteger.valueOf(manualPermille.toLong()) / BigInteger.valueOf(1_000)
++        val directPermille = when {
++            s.level >= manualFrom && (!manualAfterSync || s.backup.cloud.syncs > 0) -> manualPermille
++            s.level in 68..75 -> preSyncManualPermille
++            else -> 1_000
++        }
++        if (!auto && directPermille != 1_000)
++            earned = earned * BigInteger.valueOf(directPermille.toLong()) / BigInteger.valueOf(1_000)
+         // Jackpot cap: luck may jump a few levels, never the whole run.
+         val capSteps = rules.swipeLevelCap + if (s.level >= rules.lateGrowthFrom) rules.lateSwipeCapSteps else 0
+-        val room = jackpotRoom(s, capSteps)
++        val tailHeadroom = if (overload && maxOf(s.level, s.backup.bestLevel) >= 124) post124WaveHeadroom else 0
++        val room = jackpotRoom(s, capSteps + tailHeadroom)
+         val capped = (earned - room).max(ZERO)
+         if (capped.signum() > 0) { earned = room; beats += Beat.Capped(capped) }
+@@ -1167,5 +1177,5 @@
+                 else -> spawnApp(state, rows, rng, id++)
+             }
+-            val replacement = if (quietSandwich && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
++            val replacement = if (quietSandwich && state.level >= swapFrom && row.merges && rows.size >= 2 && canMerge(state, row, rows[0])) {
+                 val second = rows[1]
+                 if (second.kind == RowKind.App && second.app in state.active &&
+--- a/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
++++ b/core/src/main/kotlin/com/graviton94/notificationcleaner/core/Rules.kt
+@@ -38,5 +38,5 @@
+     val wildPerAssist: Int = 2,
+     // Deck: level → slots. A deck must hold at least min(minSlots, owned) apps.
+-    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, 73 to 10),
++    val maxSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 3 to 4, 8 to 5, 20 to 6, 30 to 7, 40 to 8, 50 to 9, (if (System.getenv("DND15_PORTAL_SHIFT") == "1") 74 else 73) to 10),
+     val minSlotSteps: List<Pair<Int, Int>> = listOf(1 to 3, 10 to 4, 20 to 5, 30 to 6, 40 to 7, 62 to 8),
+     val eventSlotSteps: List<Pair<Int, Int>> = listOf(6 to 1, 14 to 2, 38 to 3, 63 to 4),
+@@ -329,5 +329,5 @@
+
+     /** Total backup files ever earnable from a best run of [bestRunP]. */
+-    fun backupTotal(bestRunP: BigInteger): Long {
++    fun backupTotal(bestRunP: BigInteger, firstCycle: Boolean = false): Long {
+         if (bestRunP.signum() <= 0) return 0
+         val lx = log10(bestRunP) - log10(levelP(resetLevel))
+@@ -335,5 +335,11 @@
+         val e = backupExponentPermille / 1000.0
+         val logB = if (lx <= backupSoftcapDigits) e * lx else e * backupSoftcapDigits + e / 2 * (lx - backupSoftcapDigits)
+-        return minOf(FILE_LIMIT, Math.floor(backupBase * Math.pow(10.0, logB)).toLong())
++        val wall = if (firstCycle) System.getenv("DND15_WALL")?.toIntOrNull() ?: 0 else 0
++        val extra = if (wall == 0) 0.0 else {
++            val start = log10(levelP(syncLevel - 6))
++            val end = log10(levelP(syncLevel))
++            (log10(bestRunP) - start).coerceIn(0.0, end - start) * wall / 1_000.0
++        }
++        return minOf(FILE_LIMIT, Math.floor(backupBase * Math.pow(10.0, logB + extra)).toLong())
+     }
+
+@@ -345,5 +351,5 @@
+     fun backupFiles(runEarned: BigInteger, level: Int, backup: Backup): Long {
+         if (level < resetLevel) return 0
+-        val total = minOf(FILE_LIMIT, Math.floor(backupTotal(runEarned.max(backup.bestRunP)) * fileMultiplier(backup.cloud)).toLong())
++        val total = minOf(FILE_LIMIT, Math.floor(backupTotal(runEarned.max(backup.bestRunP), backup.cloud.syncs == 0) * fileMultiplier(backup.cloud)).toLong())
+         return maxOf(0L, total - backup.lifetime)
+     }
+--- a/tools/economy-sim/src/main/kotlin/Daily.kt
++++ b/tools/economy-sim/src/main/kotlin/Daily.kt
+@@ -428,4 +428,7 @@
+                     .filter { it.minResets == everResets }
+                     .forEach { note("백업 ${it.label}") }
++                if (s.backup.cloud.syncs == 0 && s.backup.resets == (System.getenv("DND14_SLOT")?.toIntOrNull() ?: Int.MAX_VALUE)) {
++                    note("백업 두 번째 이벤트 슬롯 +1")
++                }
+                 s = refreshDeck(spendBackup(spendCloud(s)))
+                 stallSessions = 0
+--- a/tools/economy-sim/src/main/kotlin/LaunchV1.kt
++++ b/tools/economy-sim/src/main/kotlin/LaunchV1.kt
+@@ -171,5 +171,6 @@
+     val actionPlan = if (screenOnly) ";screenOnly=true;screenActions=v1.5" else ""
+     val adPlan = if (scheduledAds) ";adsPlan=scheduled" else ""
+-    val signature = "launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
++    val probe = System.getenv().filterKeys { it.startsWith("DND14_") || it.startsWith("DND15_") }.toSortedMap()
++    val signature = "probe=$probe;launch-v1;schema=2;days=$days;seeds=$seeds;profiles=${profiles.map { it.payer }};modes=${modes.sorted()};rules=${System.getenv("SIM_RULES").orEmpty()};slots=$slots$actionPlan$adPlan"
+     out.mkdirs()
+     val manifest = File(out, "parameters.txt")
