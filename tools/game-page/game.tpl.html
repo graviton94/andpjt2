@@ -106,7 +106,7 @@ body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:trans
 .fr{position:relative;flex:none;width:58px;height:58px;margin:-9px -7px}
 .fr img{position:absolute;margin:0}.fr img.ring{inset:0;width:100%;height:100%;border-radius:0;z-index:1}
 .slot .fr{width:52px;height:52px;margin:-6px 0 -8px}
-.it .t{flex:1;min-width:0}.it .t b{font-size:14.5px}.it .t .m{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .t{flex:1;min-width:0}.it .t .m.wrap{white-space:normal;overflow:visible;line-height:1.35}.it .t b{font-size:14.5px}.it .t .m{font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tier{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;color:var(--acc2)}
 .btn{flex:none;min-width:88px;height:40px;padding:0 12px;border-radius:999px;border:0;font:inherit;font-size:12.5px;font-weight:800;background:var(--acc);color:var(--on-acc)}
 .btn:disabled{background:var(--dis);color:var(--dis-ink)}.btn.own{background:var(--ok-bg);color:var(--ok)}
@@ -364,7 +364,7 @@ input[type=range]{accent-color:var(--m-primary)}
 .bk-it{position:relative;overflow:hidden;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:20px;margin-bottom:8px;background:linear-gradient(135deg,rgba(40,110,190,.22),rgba(20,40,80,.12));border:1px solid rgba(120,200,255,.35);animation:rise .45s cubic-bezier(.2,1.4,.4,1) both}
 .bk-it .tier{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(160deg,#5CC8FF,#2A6FD6);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 12px rgba(40,120,220,.4);font:900 13px "Pretendard",sans-serif;color:#fff;text-align:center;line-height:1.05}
 .bk-it .tier small{display:block;font-size:9px;opacity:.85}
-.bk-it .t b{font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-it .t b{font-size:14.5px;display:block;line-height:1.25}
 .bk-it .bar{display:flex;gap:2px;margin-top:6px;height:7px}.bk-it .bar i{flex:1;border-radius:2px;background:rgba(127,160,200,.25)}.bk-it .bar i.on{background:linear-gradient(180deg,#9FE3FF,#3A9BFF);box-shadow:0 0 6px rgba(90,180,255,.7)}
 .bk-it .pr{height:7px;border-radius:4px;margin-top:6px;background:rgba(127,160,200,.25);overflow:hidden}.bk-it .pr i{display:block;height:100%;background:linear-gradient(90deg,#3A9BFF,#9FE3FF);box-shadow:0 0 8px rgba(90,180,255,.8)}
 .bk-it .lvl{font-size:11px;color:var(--sub);margin-top:3px}
@@ -2391,7 +2391,7 @@ function renderShade() {
     ['attend', $t('daily_visit'), P.bm ? (P.bm.claimedToday ? $t('day', P.bm.streak) : $t('check_in')) : $t('check_in_2'), P.bm && (!P.bm.claimedToday || P.bm.missionsDone)],
   ];
   shadeEl.innerHTML = `<div class="cur"><span><img src="img/bm/currency-p.webp">${shortOf(st.wallet, st.walletShort)}</span><span><img src="img/bm/currency-data.webp">${fmt(P.bm.data)}</span><span><img src="img/bm/currency-backup.webp">${shortOf(P.files)}</span></div><div class="sh-top"><div class="sh-wallet">${shortOf(st.wallet, st.walletShort).replace(/([A-Za-z]+)$/, '<small>$1</small>')} <small>P</small></div><div class="sh-act"><div class="chip">🔋 ${st.energy}/${st.energyCap}</div><button class="x" id="gear" aria-label="${$t('settings')}">${svg('M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z')}</button></div></div>
-    <div class="lv"><b>Lv ${st.level}</b>${TITLE() ? `<span class="ttl">「${TITLE()}」</span>` : ''}<span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>${$t('next', shortOf(P.nextLevelP, P.nextLevelPShort))}</span></div>
+    <div class="lv"><b>Lv ${st.level}</b>${TITLE() ? `<span class="ttl">${$t('title_q', TITLE())}</span>` : ''}<span class="bar"><i style="width:${P.levelProgress / 10}%"></i></span><span>${$t('next', shortOf(P.nextLevelP, P.nextLevelPShort))}</span></div>
     <div class="grid">${T.map(([k, l, sub, hot, lock]) => `<button class="tile ${hot ? 'hot fx-shine' : ''} ${lock ? 'lock' : ''}" data-k="${k}"><span class="c">${svg(ICONP[k])}</span><span class="tx"><b>${l}</b><em>${sub}</em></span>${k === 'shop' && newApps ? `<i class="m3b">${newApps}</i>` : ''}</button>`).join('')}</div>
     <div class="row2"><label>${$t('sound_effects')}</label><input id="vol" type="range" min="0" max="100" value="${Math.round(vol * 100)}"></div>
     <div class="row2"><label>${$t('vibration')}</label><button class="sw ${vibOn ? 'on' : ''}" id="vib" role="switch" aria-checked="${vibOn}" aria-label="${$t('vibration')}"></button></div>
@@ -2493,14 +2493,14 @@ const cardName = id => CARD_T[id][0], cardLine = id => CARD_T[id][1];
 function proLine(a, st) {
   if (!a.proLevel) return '';
   if (a.pro) return `<div class="note"><span class="pro on">PRO</span> ${$t('pro_owned', P.proMultiplier || 2)}</div>`;
-  if (st.level < a.proLevel) return `<div class="note"><span class="pro">PRO</span> ${$t('pro_opens_at', a.proLevel)}</div>`;
+  if (st.level < a.proLevel) return st.level >= a.proLevel - 10 ? `<div class="note"><span class="pro">PRO</span> ${$t('pro_opens_at', a.proLevel)}</div>` : '';  // only once it is in sight
   return `<div class="note"><button class="btn skin gold pro-b" data-act="buyPro" data-id="${a.id}" ${geq(st.wallet, a.proPrice) ? '' : 'disabled'}><span class="pro on">PRO</span> ×${P.proMultiplier || 2} · ${P$(a.proPrice)}</button></div>`;
 }
 function assistHTML(st) {
   const list = P.assists || []; if (!list.length) return '';
   return `<div class="h3">${$t('board_boosts')}</div>` + list.map(x => {
     const done = x.max > 0 && x.lv >= x.max, bar = `<div class="prog"><i style="width:${x.max ? Math.round(x.lv / x.max * 100) : 0}%"></i></div>`;
-    return `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${ASSIST_T[x.id] ? ASSIST_T[x.id][0] : x.id}</b> <span class="note">${x.open ? `${x.lv}/${x.max}` : `Lv ${x.unlockLevel}`}</span><div class="m">${ASSIST_T[x.id] ? ASSIST_T[x.id][1] : ''}</div>${x.open ? bar : ''}</div>
+    return `<div class="it ${x.open ? '' : 'lock'}"><div class="t"><b>${ASSIST_T[x.id] ? ASSIST_T[x.id][0] : x.id}</b> <span class="note">${x.open ? `${x.lv}/${x.max}` : `Lv ${x.unlockLevel}`}</span><div class="m wrap">${ASSIST_T[x.id] ? ASSIST_T[x.id][1] : ''}</div>${x.open ? bar : ''}</div>
       <button class="btn skin gold" data-act="buyAssist" data-item="${x.id}" ${x.open && !done && geq(st.wallet, x.price) ? '' : 'disabled'}>${!x.open ? $t('locked', ic('lock')) : done ? $t('done') : P$(x.price)}</button></div>`;
   }).join('');
 }
@@ -2512,7 +2512,7 @@ function cardsHTML(st) {
       : !c.owned ? `<button class="btn skin gold" data-act="buyEvent" data-item="${c.id}" ${geq(st.wallet, c.price) ? '' : 'disabled'}>${P$(c.price)}</button>`
       : c.equipped ? `<button class="btn tonal" data-unequip="${c.id}">${$t('unequip')}</button>`
       : `<button class="btn skin gold" data-equip="${c.id}" ${used < slots ? '' : 'disabled'}>${$t('equip')}</button>`;
-    return `<div class="it ${c.open ? '' : 'lock'} ${c.equipped ? 'eq' : ''}"><span class="cardi">${svg(CARD_ICON[c.id])}</span><div class="t"><b>${cardName(c.id)}</b>${c.equipped ? ` <span class="cap">${$t('equipped')}</span>` : ''}<div class="m">${cardLine(c.id)}</div></div>${btn}</div>`;
+    return `<div class="it ${c.open ? '' : 'lock'} ${c.equipped ? 'eq' : ''}"><span class="cardi">${svg(CARD_ICON[c.id])}</span><div class="t"><b>${cardName(c.id)}</b>${c.equipped ? ` <span class="cap">${$t('equipped')}</span>` : ''}<div class="m wrap">${cardLine(c.id)}</div></div>${btn}</div>`;
   }).join('');
 }
 function renderSheet() {
@@ -3145,10 +3145,10 @@ function renderAch(b) {
   b.innerHTML = `<div class="achsum"><div><span class="l">${$t('titles_earned')}</span><b>${got}<small> / ${m.achievements.length}</small></b></div>
       <div><span class="l">${$t('cosmetic_pieces')}</span><b>${PIECE}${m.pieces}<small> / 10</small></b><span class="bar"><i style="width:${Math.min(100, m.pieces * 10)}%"></i></span></div></div>
     <div class="h3">${$t('equipped_title')}</div>
-    <div class="ttlnow">${on ? `<span class="ttl big">「${on}」</span><button class="btn tonal sm" data-unequip>${$t('unequip')}</button>` : `<span class="note">${$t('earn_achievements_to_unlock_titles')}</span>`}</div>
+    <div class="ttlnow">${on ? `<span class="ttl big">${$t('title_q', on)}</span><button class="btn tonal sm" data-unequip>${$t('unequip')}</button>` : `<span class="note">${$t('earn_achievements_to_unlock_titles')}</span>`}</div>
     <div class="h3">${$t('achievements')}</div>
     ${m.achievements.map(a => `<div class="it ach ${a.got ? 'got' : ''}"><span class="medal">${svg(ICONP.ach)}</span>
-      <div class="t"><b class="fit1" style="display:block">「${a.title}」</b><div class="m fit1">${ACH_DESC[a.id] || ''}</div>
+      <div class="t"><b class="fit1" style="display:block">${$t('title_q', a.title)}</b><div class="m fit1">${ACH_DESC[a.id] || ''}</div>
       ${a.got ? '' : `<div class="prog"><i style="width:${Math.min(100, a.now / a.goal * 100)}%"></i></div><div class="note fit1">${a.now.toLocaleString()} / ${a.goal.toLocaleString()}</div>`}</div>
       ${a.got ? (on === a.title ? `<span class="cap on">${$t('equipped')}</span>` : `<button class="btn skin gold sm" data-equip="${a.title}">${$t('equip')}</button>`) : `<span class="cap">${PIECE}×${a.pieces}</span>`}</div>`).join('')}
     ${foot([$t('titles_are_just_for_show'), $t('10_pieces_1_cosmetics_coming')])}`;

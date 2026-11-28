@@ -398,7 +398,7 @@
  "spam_call": "Spam call",
  "spam_text": "Spam text",
  "speed": "Speed",
- "start_1_keys": "Start · 1 keys",
+ "start_1_keys": "Start · uses 1 key",
  "starter_pack": "Starter Pack",
  "starter_pack_2": "Starter Pack {0}",
  "starter_pack_claimed": "Starter Pack claimed",
@@ -545,5 +545,6 @@
  "pro_ready": "PRO version ready",
  "boost_ready": "Board boost ready",
  "new_card_ready": "New event card",
- "card_slot_free": "A card slot is free"
+ "card_slot_free": "A card slot is free",
+ "title_q": "“{0}”"
 }
