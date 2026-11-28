@@ -1020,7 +1020,7 @@ const BGM = {
   build(tr) {  // flatten sections into bars: { chord, lead[], bell[], lift }
     const bars = [];
     for (const name of tr.order) { const sec = tr.sections[name], base = sec.same ? tr.sections[sec.same] : sec;
-      base.chords.forEach((ch, i) => bars.push({ chord: ch, lead: base.lead ? parseBar(base.lead[i]) : null, bell: base.bell ? parseBar(base.bell[i]) : null, lift: !!sec.lift })); }
+      base.chords.forEach((ch, i) => bars.push({ chord: ch, lead: base.lead ? parseBar(base.lead[i]) : null, bell: base.bell ? parseBar(base.bell[i]) : null, lift: !!sec.lift, intro: !!sec.intro })); }
     return { bpm: tr.bpm, bars };
   },
   tick() {
@@ -1036,11 +1036,6 @@ const BGM = {
     const line = bar.lead || bar.bell;
     if (line && line[s] != null && line[s] !== '-') { let n = 1; while (s + n < 16 && line[s + n] === '-') n++;
       if (bar.bell || calm) this.v.bell(t, hz(line[s]), n * spb); else this.v.lead(t, hz(line[s]), n * spb, hot); }
-    if (this.track === 'title') {  // pad + soft pulse
-      if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb));
-      if (s % 8 === 0) this.v.bass(t, hz(36 + root[0]), 6 * spb, .1);
-      return;
-    }
     if (calm) { if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb)); if (s === 0) this.v.bass(t, hz(36 + root[0]), 12 * spb, .08); return; }
     // bass: root / fifth bounce
     if ([0, 3, 6, 8, 11, 14].includes(s)) this.v.bass(t, hz(36 + root[0] + (s === 6 || s === 14 ? 7 : 0)), spb * (s % 8 === 0 ? 2.5 : 1.6), .14);
@@ -1048,7 +1043,8 @@ const BGM = {
     if (s % 4 === 2) root.forEach(i => this.v.stab(t, hz(60 + i), spb * 1.4));
     // drums
     if (s === 0 || s === 8 || (bar.lift && s === 10)) this.v.kick(t);
-    if (s === 4 || s === 12) this.v.snare(t);
+    if ((s === 4 || s === 12) && !bar.intro) this.v.snare(t);  // the title's first pass: kick and ticks only, the snare joins on the lift
+    if (bar.intro && s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb));
     if (s % 2 === 0 || hot) this.v.hat(t, s % 4 === 2 ? .05 : .03);
     // chain layer: rising arpeggio while the heat lasts
     { const tones = [...root, root[0] + 12, root[1] + 12]; if (hot || s % 2 === 1) this.v.arp(t, hz(72 + tones[s % tones.length]), spb * .9); }  // the digital shimmer: 8ths always, 16ths while chains run

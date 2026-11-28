@@ -11,7 +11,7 @@
      "kind": "bgm",
      "name": "타이틀 · Do Not Disturb",
      "when": "로딩 뒤 타이틀 화면",
-     "spec": "84 BPM · 8마디 · 종소리 멜로디 + 패드",
+     "spec": "120 BPM · 16마디(인트로 8 + 리프트 8) · 메인 루프와 같은 편성 · 메인 동기 인용",
      "status": "review"
     },
     {

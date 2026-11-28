@@ -46,14 +46,14 @@ def bars_of(tr):
         base = tr["sections"][sec["same"]] if "same" in sec else sec
         for i, ch in enumerate(base["chords"]):
             line = (base.get("lead") or base.get("bell"))[i].split()
-            bars.append((ch, line, sec.get("lift", False)))
+            bars.append((ch, line, sec.get("lift", False), base.get("intro", False)))
     return bars
 
 
 def export(key, tr):
     lead, bass, chords, drums = [], [], [], []
-    title = key == "title"
-    for b, (ch, line, lift) in enumerate(bars_of(tr)):
+    title = False  # both tracks use the full band now (the title's first pass is kick + ticks + pad)
+    for b, (ch, line, lift, intro) in enumerate(bars_of(tr)):
         t0, root = b * 16 * STEP, CHORD[ch]
         for s, tok in enumerate(line):
             m = midi_of(tok)
@@ -77,7 +77,7 @@ def export(key, tr):
         for s in range(16):
             if s in (0, 8) or (lift and s == 10):
                 note(drums, 9, 36, t0 + s * STEP, STEP, 110)
-            if s in (4, 12):
+            if s in (4, 12) and not intro:
                 note(drums, 9, 38, t0 + s * STEP, STEP, 96)
             if s % 2 == 0 or lift:
                 note(drums, 9, 42, t0 + s * STEP, STEP // 2, 70 if s % 4 == 2 else 50)

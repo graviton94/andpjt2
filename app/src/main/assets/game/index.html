@@ -997,7 +997,7 @@ const crackAt = (x, y, amp) => { crack = { x: x / W, y: y / H, age: 0, amp, seed
 // ---------- background music: composed note data (music.json) played by a small WebAudio band ----------
 // Two tracks (title, main). The main loop thins out to a pad when nobody has touched the board for a while and adds
 // an arpeggio + 16th hats while chains run. Pops duck it briefly so the hits stay on top. No audio files.
-const MUSIC = {"_note": "Background music, composed as note data and played by the page's WebAudio synth (no audio files). 16 steps per bar; tokens: note (C5, F#4), '-' hold, '.' rest. tools/game-page/music_mid.py exports docs/design/music/*.mid.", "tracks": {"main": {"title": "Notification Pop (main loop)", "bpm": 112, "order": ["A", "A", "B", "A2"], "sections": {"A": {"chords": ["C", "G", "Am", "F", "C", "G", "F", "G"], "lead": ["E5 . G5 . C6 - - . G5 . E5 . D5 - . .", "D5 . G5 . B5 - - . A5 . G5 . D5 - . .", "C5 . E5 . A5 - - . G5 . E5 . C5 . D5 .", "E5 - - . D5 . C5 . A4 - - . . . . .", "E5 . G5 . C6 - - . D6 . C6 . G5 - . .", "B5 . D6 . G6 - - . F6 . D6 . B5 - . .", "A5 . C6 . F6 - . E6 . D6 . C6 . A5 .", "B5 - - . A5 . G5 . D5 - - - . . . ."]}, "B": {"chords": ["Am", "F", "C", "G", "Am", "F", "G", "G"], "lead": ["A4 - - . C5 . E5 - - . D5 . C5 . . .", "F4 - - . A4 . C5 - - . A4 . G4 . . .", "G4 - - . C5 . E5 - . . G5 . E5 . D5 .", "D5 - - . B4 . G4 - - . . . . . . .", "A4 - - . C5 . E5 - - . A5 . G5 . E5 .", "F5 - - . E5 . C5 - - . A4 . C5 . . .", "D5 - . . E5 - . . F5 - . . G5 - . .", "G5 - - - - - - . . . . . . . . ."]}, "A2": {"same": "A", "lift": true}}}, "title": {"title": "Do Not Disturb (title)", "bpm": 84, "order": ["T"], "sections": {"T": {"chords": ["F", "C", "Am", "G", "F", "C", "Dm", "G"], "bell": ["C6 - - - . . A5 - . . G5 - . . . .", "E5 - - - . . G5 - . . C6 - . . . .", "C6 - - - . . E6 - . . D6 - . . C6 .", "B5 - - - - - . . . . D6 - . . . .", "A5 - - - . . C6 - . . F6 - . . E6 .", "E6 - - - . . D6 - . . C6 - . . G5 .", "A5 - - - . . F5 - . . D6 - . . C6 .", "B5 - - - - - - - . . . . . . . ."]}}}}};
+const MUSIC = {"_note": "Background music, composed as note data and played by the page's WebAudio synth (no audio files). 16 steps per bar; tokens: note (C5, F#4), '-' hold, '.' rest. tools/game-page/music_mid.py exports docs/design/music/*.mid.", "tracks": {"main": {"title": "Notification Pop (main loop)", "bpm": 112, "order": ["A", "A", "B", "A2"], "sections": {"A": {"chords": ["C", "G", "Am", "F", "C", "G", "F", "G"], "lead": ["E5 . G5 . C6 - - . G5 . E5 . D5 - . .", "D5 . G5 . B5 - - . A5 . G5 . D5 - . .", "C5 . E5 . A5 - - . G5 . E5 . C5 . D5 .", "E5 - - . D5 . C5 . A4 - - . . . . .", "E5 . G5 . C6 - - . D6 . C6 . G5 - . .", "B5 . D6 . G6 - - . F6 . D6 . B5 - . .", "A5 . C6 . F6 - . E6 . D6 . C6 . A5 .", "B5 - - . A5 . G5 . D5 - - - . . . ."]}, "B": {"chords": ["Am", "F", "C", "G", "Am", "F", "G", "G"], "lead": ["A4 - - . C5 . E5 - - . D5 . C5 . . .", "F4 - - . A4 . C5 - - . A4 . G4 . . .", "G4 - - . C5 . E5 - . . G5 . E5 . D5 .", "D5 - - . B4 . G4 - - . . . . . . .", "A4 - - . C5 . E5 - - . A5 . G5 . E5 .", "F5 - - . E5 . C5 - - . A4 . C5 . . .", "D5 - . . E5 - . . F5 - . . G5 - . .", "G5 - - - - - - . . . . . . . . ."]}, "A2": {"same": "A", "lift": true}}}, "title": {"title": "Do Not Disturb (title)", "bpm": 120, "order": ["T", "T2"], "sections": {"T": {"intro": true, "chords": ["F", "C", "Am", "G", "F", "C", "Dm", "G"], "lead": ["C6 . A5 . F5 - - . G5 . A5 . C6 - . .", "E5 . G5 . C6 - - . G5 . E5 . D5 - . .", "C5 . E5 . A5 - - . G5 . E5 . C5 . D5 .", "D5 - - . B4 . G4 . D5 - - . . . . .", "A5 . C6 . F6 - - . E6 . C6 . A5 - . .", "G5 . C6 . E6 - - . D6 . C6 . G5 - . .", "F5 . A5 . D6 - . C6 . A5 . F5 . D5 .", "B4 - - . D5 . G5 . B5 - - - . . . ."]}, "T2": {"same": "T", "lift": true}}}}};
 const NOTE = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11 };
 const midiOf = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return m ? 12 * (+m[2] + 1) + NOTE[m[1]] : null; };
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -1020,7 +1020,7 @@ const BGM = {
   build(tr) {  // flatten sections into bars: { chord, lead[], bell[], lift }
     const bars = [];
     for (const name of tr.order) { const sec = tr.sections[name], base = sec.same ? tr.sections[sec.same] : sec;
-      base.chords.forEach((ch, i) => bars.push({ chord: ch, lead: base.lead ? parseBar(base.lead[i]) : null, bell: base.bell ? parseBar(base.bell[i]) : null, lift: !!sec.lift })); }
+      base.chords.forEach((ch, i) => bars.push({ chord: ch, lead: base.lead ? parseBar(base.lead[i]) : null, bell: base.bell ? parseBar(base.bell[i]) : null, lift: !!sec.lift, intro: !!sec.intro })); }
     return { bpm: tr.bpm, bars };
   },
   tick() {
@@ -1036,11 +1036,6 @@ const BGM = {
     const line = bar.lead || bar.bell;
     if (line && line[s] != null && line[s] !== '-') { let n = 1; while (s + n < 16 && line[s + n] === '-') n++;
       if (bar.bell || calm) this.v.bell(t, hz(line[s]), n * spb); else this.v.lead(t, hz(line[s]), n * spb, hot); }
-    if (this.track === 'title') {  // pad + soft pulse
-      if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb));
-      if (s % 8 === 0) this.v.bass(t, hz(36 + root[0]), 6 * spb, .1);
-      return;
-    }
     if (calm) { if (s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb)); if (s === 0) this.v.bass(t, hz(36 + root[0]), 12 * spb, .08); return; }
     // bass: root / fifth bounce
     if ([0, 3, 6, 8, 11, 14].includes(s)) this.v.bass(t, hz(36 + root[0] + (s === 6 || s === 14 ? 7 : 0)), spb * (s % 8 === 0 ? 2.5 : 1.6), .14);
@@ -1048,7 +1043,8 @@ const BGM = {
     if (s % 4 === 2) root.forEach(i => this.v.stab(t, hz(60 + i), spb * 1.4));
     // drums
     if (s === 0 || s === 8 || (bar.lift && s === 10)) this.v.kick(t);
-    if (s === 4 || s === 12) this.v.snare(t);
+    if ((s === 4 || s === 12) && !bar.intro) this.v.snare(t);  // the title's first pass: kick and ticks only, the snare joins on the lift
+    if (bar.intro && s === 0) root.forEach(i => this.v.pad(t, hz(60 + i), 16 * spb));
     if (s % 2 === 0 || hot) this.v.hat(t, s % 4 === 2 ? .05 : .03);
     // chain layer: rising arpeggio while the heat lasts
     { const tones = [...root, root[0] + 12, root[1] + 12]; if (hot || s % 2 === 1) this.v.arp(t, hz(72 + tones[s % tones.length]), spb * .9); }  // the digital shimmer: 8ths always, 16ths while chains run
