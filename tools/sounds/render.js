@@ -8,13 +8,15 @@ const wav = (pcm, sr, f) => { const n = pcm.length, b = Buffer.alloc(44 + n * 2)
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }); const p = await b.newPage();
   await p.addInitScript(() => localStorage.setItem('prefs', JSON.stringify({ sound: true, music: false, vol: 1 })));
   await p.goto('http://127.0.0.1:8765/index.html?notitle&noftue&noattend&auto=0&lang=ko'); await p.waitForTimeout(1500);
-  const synth = reg.groups.flatMap(g => g.items).filter(i => i.kind === 'synth');
+  await p.evaluate(async () => { const { phoneLoad } = __dbg.audio(); await phoneLoad(); });
+  // phone samples go through the same effects bus in the game (crusher included), so record them from the page too
+  const synth = reg.groups.flatMap(g => g.items).filter(i => i.kind === 'synth' || i.kind === 'sample').map(i => i.kind === 'sample' ? { ...i, call: `__phone('${i.id}', .8)` } : i);
   for (const it of synth) {
     const secs = /siren|reel|boil|steam|payoff|jackpot|wave|pad|unit|stamp|heart|powerDown|boot/.test(it.call) ? 2.4 : 1.1;
     const { pcm, sr } = await p.evaluate(async ([call, secs]) => {
       const { A, sfx } = __dbg.audio(); const c = A.c; const sp = c.createScriptProcessor(2048, 1, 1); const buf = [];
       sp.onaudioprocess = e => buf.push(Array.from(e.inputBuffer.getChannelData(0))); A.comp.connect(sp); sp.connect(c.destination);
-      await new Promise(r => setTimeout(r, 60)); new Function('sfx', 'sfx.' + call)(sfx);
+      await new Promise(r => setTimeout(r, 60)); if (call.startsWith('__phone')) { const { phone } = __dbg.audio(); new Function('__phone', call)(phone); } else new Function('sfx', 'sfx.' + call)(sfx);
       await new Promise(r => setTimeout(r, secs * 1000)); A.comp.disconnect(sp); sp.disconnect();
       return { pcm: buf.flat(), sr: c.sampleRate };
     }, [it.call, secs]);

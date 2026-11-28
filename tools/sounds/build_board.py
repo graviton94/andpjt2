@@ -37,7 +37,7 @@ def make_audio():
     for g in REG["groups"]:
         for it in g["items"]:
             dst = AUD / f"{it['id']}.mp3"
-            if it["kind"] == "synth":
+            if it["kind"] in ("synth", "sample"):
                 # trim the silent tail, even the loudness, small mono MP3
                 ff("-i", str(SRC / f"{it['id']}.wav"), "-af", "silenceremove=stop_periods=-1:stop_duration=0.25:stop_threshold=-55dB,loudnorm=I=-18:TP=-1.5",
                    "-ac", "1", "-b:a", "96k", str(dst))
@@ -46,8 +46,10 @@ def make_audio():
                 ogg.write_bytes(base64.b64decode(SAMPLES[it["id"]].split(",", 1)[1]))
                 ff("-i", str(ogg), "-ac", "1", "-b:a", "96k", str(dst))
                 ogg.unlink()
-            else:
-                shutil.copy(ROOT / f"docs/design/music/preview-{it['id'].split('.')[1]}.mp3", dst)
+            else:  # music: recorded by record-music.js; also refreshes the MP3 previews next to the MIDI files
+                name = it["id"].split(".")[1]
+                ff("-i", str(SRC / f"music-{name}.wav"), "-af", "loudnorm=I=-16:TP=-1.5", "-b:a", "128k", str(dst))
+                shutil.copy(dst, ROOT / f"docs/design/music/preview-{name}.mp3")
             out[it["id"]] = peaks(dst)
     return out
 

@@ -813,6 +813,19 @@ function ac() {
       const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), ch = nb.getChannelData(0);
       for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
       Object.assign(A, { c, m, nb, comp });
+      // digital colour: a 25% pulse wave for melodic voices and a crusher (bit depth + sample-and-hold) mixed in parallel
+      const N = 32, re = new Float32Array(N), im = new Float32Array(N);
+      for (let n = 1; n < N; n++) re[n] = 2 / (n * Math.PI) * Math.sin(n * Math.PI * .25);
+      A.pulse = c.createPeriodicWave(re, im);
+      A.crush = (bits, down, wet, from, to) => {
+        if (!c.audioWorklet) return;
+        const code = `class C extends AudioWorkletProcessor{constructor(o){super();this.b=o.processorOptions.b;this.d=o.processorOptions.d;this.n=0;this.h=[0,0]}process(i,o){const x=i[0],y=o[0];if(!x||!x.length)return true;const q=Math.pow(2,this.b-1);for(let k=0;k<y[0].length;k++){if(this.n++%this.d===0)for(let ch=0;ch<y.length;ch++)this.h[ch]=Math.round((x[ch]||x[0])[k]*q)/q;for(let ch=0;ch<y.length;ch++)y[ch][k]=this.h[ch]}return true}}registerProcessor('crush'+${bits}+'_'+${down},C)`;
+        c.audioWorklet.addModule(URL.createObjectURL(new Blob([code], { type: 'application/javascript' }))).then(() => {
+          const n = new AudioWorkletNode(c, 'crush' + bits + '_' + down, { processorOptions: { b: bits, d: down } }), g = c.createGain(); g.gain.value = wet;
+          from.connect(n); n.connect(g); g.connect(to);
+        }).catch(() => {});
+      };
+      A.crush(7, 3, .55, m, comp);
     }
     if (A.c.state === 'suspended') A.c.resume();
     return A.c;
@@ -822,7 +835,8 @@ function env(g, t, a, peak, dur) { g.gain.setValueAtTime(.0001, t); g.gain.expon
 function tone(type, f0, f1, dur, vol, o = {}) {
   if (!sound) return; const c = ac(); if (!c) return;
   const t = c.currentTime + (o.at || 0), osc = c.createOscillator(), g = c.createGain();
-  osc.type = type; osc.frequency.setValueAtTime(f0, t); if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  if ((type === 'triangle' || (type === 'sine' && f0 > 400)) && A.pulse) osc.setPeriodicWave(A.pulse); else osc.type = type;  // digital: melodic voices on a pulse wave
+  osc.frequency.setValueAtTime(f0, t); if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
   if (o.det) osc.detune.value = o.det;
   env(g, t, o.a || .004, vol, dur);
   let n = osc; if (o.filt) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.filt; f.Q.value = o.q || 1; osc.connect(f); n = f; }
@@ -994,7 +1008,7 @@ const BGM = {
   start(name) {
     if (!music || !MUSIC.tracks[name]) return;
     const c = ac(); if (!c) return;
-    if (!this.out) { this.out = c.createGain(); this.out.gain.value = .0001; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000; this.lp = lp; this.out.connect(lp); lp.connect(A.c.destination); }
+    if (!this.out) { this.out = c.createGain(); this.out.gain.value = .0001; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000; this.lp = lp; this.bus = c.createGain(); this.out.connect(lp); lp.connect(this.bus); this.bus.connect(A.c.destination); A.crush(6, 4, .5, this.out, this.bus); }
     if (this.track === name && this.timer) return;
     this.track = name; this.song = this.build(MUSIC.tracks[name]); this.step = 0; this.next = c.currentTime + .1;
     this.out.gain.cancelScheduledValues(c.currentTime); this.out.gain.setTargetAtTime(.42 * mvol, c.currentTime, .6);
@@ -1037,26 +1051,30 @@ const BGM = {
     if (s === 4 || s === 12) this.v.snare(t);
     if (s % 2 === 0 || hot) this.v.hat(t, s % 4 === 2 ? .05 : .03);
     // chain layer: rising arpeggio while the heat lasts
-    if (hot) { const tones = [...root, root[0] + 12, root[1] + 12]; this.v.arp(t, hz(72 + tones[s % tones.length]), spb * .9); }
+    { const tones = [...root, root[0] + 12, root[1] + 12]; if (hot || s % 2 === 1) this.v.arp(t, hz(72 + tones[s % tones.length]), spb * .9); }  // the digital shimmer: 8ths always, 16ths while chains run
     if (s === 15) this.heat = Math.max(0, this.heat - 1);
   },
   v: {
-    o(t, type, f, dur, vol, o = {}) { const c = A.c, osc = c.createOscillator(), g = c.createGain(); osc.type = type; osc.frequency.setValueAtTime(f, t); if (o.det) osc.detune.value = o.det;
+    o(t, type, f, dur, vol, o = {}) { const c = A.c, osc = c.createOscillator(), g = c.createGain(); if (type === 'pulse' && A.pulse) osc.setPeriodicWave(A.pulse); else osc.type = type === 'pulse' ? 'square' : type; osc.frequency.setValueAtTime(f, t); if (o.det) osc.detune.value = o.det;
       g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + (o.a || .005)); g.gain.setTargetAtTime(vol * (o.sus ?? .5), t + (o.a || .005), o.dec || .08); g.gain.setTargetAtTime(.0001, t + dur, o.rel || .05);
       let n = osc; if (o.lp) { const f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = o.lp; f2.Q.value = o.q || .7; osc.connect(f2); n = f2; }
       n.connect(g); g.connect(BGM.out); osc.start(t); osc.stop(t + dur + (o.rel || .05) * 6); },
-    lead(t, f, dur, hot) { this.o(t, 'square', f, dur * .92, .05, { lp: hot ? 4200 : 2600, sus: .55, dec: .12 }); if (hot) this.o(t, 'triangle', f * 2, dur * .8, .025, { sus: .4 }); },
-    bell(t, f, dur) { this.o(t, 'sine', f, Math.max(dur, .4), .06, { a: .004, sus: .25, dec: .35, rel: .4 }); this.o(t, 'sine', f * 2.76, .35, .012, { a: .002, sus: .1, dec: .12 }); },
+    lead(t, f, dur, hot) { this.o(t, 'pulse', f, dur * .9, .055, { lp: hot ? 6000 : 4200, sus: .5, dec: .1 }); this.fm(t, f * 2, .18, .018); if (hot) this.o(t, 'square', f * 2, dur * .6, .02, { lp: 5000, sus: .3 }); },
+    fm(t, f, dur, vol, ratio = 3.5, index = 5) { const c = A.c, car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain();  // FM bell: a metallic digital chime
+      car.frequency.value = f; mod.frequency.value = f * ratio; mg.gain.setValueAtTime(f * index, t); mg.gain.exponentialRampToValueAtTime(f * .2, t + dur);
+      g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .003); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      mod.connect(mg); mg.connect(car.frequency); car.connect(g); g.connect(BGM.out); car.start(t); mod.start(t); car.stop(t + dur + .02); mod.stop(t + dur + .02); },
+    bell(t, f, dur) { this.fm(t, f, Math.max(dur, .5), .07, 3.5, 4); this.fm(t, f * 2, .25, .015, 1.41, 3); },
     bass(t, f, dur, vol) { this.o(t, 'triangle', f, dur, vol, { lp: 900, sus: .8, dec: .2 }); },
-    stab(t, f, dur) { this.o(t, 'sawtooth', f, dur, .018, { lp: 1700, sus: .3, dec: .06 }); },
-    pad(t, f, dur) { this.o(t, 'sawtooth', f, dur, .012, { a: .5, lp: 850, sus: .9, dec: .5, rel: .6, det: -7 }); this.o(t, 'sawtooth', f, dur, .012, { a: .5, lp: 850, sus: .9, dec: .5, rel: .6, det: 7 }); },
-    arp(t, f, dur) { this.o(t, 'square', f, dur, .022, { lp: 3600, sus: .3, dec: .05 }); },
+    stab(t, f, dur) { this.o(t, 'pulse', f, dur * .7, .02, { lp: 3000, sus: .2, dec: .04 }); },
+    pad(t, f, dur) { this.o(t, 'pulse', f, dur, .013, { a: .4, lp: 1400, sus: .9, dec: .5, rel: .6, det: -9 }); this.o(t, 'square', f * 2, dur, .006, { a: .6, lp: 1800, sus: .9, dec: .5, rel: .6, det: 9 }); },
+    arp(t, f, dur) { this.o(t, 'pulse', f, dur * .5, .024, { lp: 6000, sus: .2, dec: .03 }); },
     kick(t) { const c = A.c, osc = c.createOscillator(), g = c.createGain(); osc.frequency.setValueAtTime(130, t); osc.frequency.exponentialRampToValueAtTime(44, t + .16);
       g.gain.setValueAtTime(.32, t); g.gain.exponentialRampToValueAtTime(.0001, t + .2); osc.connect(g); g.connect(BGM.out); osc.start(t); osc.stop(t + .22); },
     noise(t, dur, vol, type, f) { const c = A.c, src = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain(); src.buffer = A.nb; fl.type = type; fl.frequency.value = f;
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); src.connect(fl); fl.connect(g); g.connect(BGM.out); src.start(t, Math.random() * .5); src.stop(t + dur + .02); },
-    snare(t) { this.noise(t, .13, .11, 'bandpass', 1900); this.o(t, 'triangle', 190, .06, .05, { sus: .2, dec: .03 }); },
-    hat(t, v) { this.noise(t, .035, v, 'highpass', 7500); },
+    snare(t) { this.noise(t, .1, .12, 'bandpass', 2600); this.o(t, 'pulse', 220, .05, .05, { sus: .2, dec: .02 }); },
+    hat(t, v) { this.noise(t, .018, v * 1.2, 'highpass', 9500); },  // short digital tick
   },
 };
 document.addEventListener('visibilitychange', () => { if (!A.c || !BGM.out) return; BGM.out.gain.setTargetAtTime(document.hidden ? .0001 : (music ? .42 * mvol : .0001), A.c.currentTime, .1); });
@@ -3164,7 +3182,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 // test hook for tools/game-page/*.js (browser only; the app has window.Game)
 document.getElementById('chud-x').onclick = () => { if (chal) chal.ends = Date.now(); };
-if (!window.Game) window.__dbg = { audio: () => ({ A, BGM, sfx }), dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
+if (!window.Game) window.__dbg = { audio: () => ({ A, BGM, sfx, phone, phoneLoad }), dnd: () => dndLeft(), aspect: () => gl ? gl.getUniform(U.prog, U.A) : W / H, refresh: () => api('snapshot').then(st => { applyState(st); reconcile(st); }), auto: v => { autoOn = v; }, rowY: id => { const r = byId(id); return r ? r.y.t : -1; }, ev: () => ev && ev.type, ids: () => board.map(r => r.id + ':' + r.d.kind).join(' '), flags: () => JSON.stringify({ busy, boardBusy, pendingCall, phase: plate.phase, S: !!S }), open: k => openSheet(k), shade: () => openShade(), fx: (k, a) => {  // visual QA only: fire one effect on its own
     if (EVENTS[k]) { ev = null; busy = false; startEvent(k, a || {}); return; }
     if (k === 'wave') return waveHit(a || 0);
     if (k === 'reset' && a === 'real') return api('snapshot').then(b4 => api('reset').then(o => { if (o.ok) prestigeShow('reset', b4.backupFilesNow, o.state); return o.ok; }));
